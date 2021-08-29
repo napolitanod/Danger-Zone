@@ -1,0 +1,235 @@
+{
+    "DANGERZONE": {
+        "add": "Add",
+        "edit": "Edit",
+        "cancel": "Cancel",
+        "location-picker": "Select the zone dimensions",
+        "save": "Save",
+        "yes": "Ok",
+        "view": "View",
+        "alerts": {
+            "no-trigger-if-not-on-combat-scene": "Danger Zones will not trigger while you are not active on the current combat scene.",
+            "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
+            "select-zone-end": "Select an end location for this zone. Selected area will snap to grid and represent the lower right corner of this zone.",
+            "select-target": "Select a location to target in the Danger Zone. Selected area will snap to grid and represent the top left corner of the area targetted."
+        },
+        "controls": {
+            "clearEffectsTile.label": "Clear Danger Zone Effects"
+        },
+        "edit-form": {
+            "allInArea.label": "Target All Tokens In Targeted Area",
+            "allInArea.description": "If more than one token is in a target area, they will all be targeted. Otherwise only one random token is targeted.",
+            "bleed.label": "Bleed",
+            "bleed.description": "For zones types with size > 1 unit, determines if the effect will exceed the zone when targets are near the zone edge. If not set, units closer to center within the zone have a greater likelihood of being targeted.",
+            "boundary": {
+                "end.label": "End:",
+                "label": "Dimensions",
+                "description": "The zone's starting and ending x and y position. The zone dimensions will use the center points of the grids that hold these positions.",
+                "start.label": "Start:",
+                "x.label": "x",
+                "y.label": "y"
+            },
+            "enabled.label": "Active",
+            "enabled.description": "Zone is active and will trigger following trigger settings (can be toggled from scene navigation.)",
+            "flavor.label": "Flavor",
+            "flavor.description": "Flavor will output to chat message when zone triggers.",
+            "likelihood.label": "Likelihood",
+            "likelihood.description": "The likelihood that effects will generate on trigger.",
+            "name": "Configure Danger Zone",
+            "placeTemplate.label": "Choose Location",
+            "placeTemplate.description": "Prompts you to select the scene position to target (otherwise position is randomly selected.)",
+            "random.label": "Randomize",
+            "random.description": "All danger zones in this scene that share the same trigger are grouped and only one is triggered at random. Assign a weight to control how often one triggers in relation to the others.",
+            "replace.label": "Replace Lasting Effect",
+            "replace.description": "Choose whether effect replaces any existing lasting effects on when it triggers.",
+            "runUntilTokenFound.label": "Always Hits a Token",
+            "runUntilTokenFound.description": "The effect will target an area of the zone where at least one token is present.",
+            "title.label": "Title",
+            "trigger.label": "Trigger",
+            "trigger.description": "Select how this danger zone will be triggered on this scene",
+            "type.label": "Type",
+            "type.description": "Select a default or custom type",
+            "types.add": "Add or edit zone types",
+            "weight.label": "Weight"
+        },
+        "export":{
+            "title": "Export Danger Zone Types"
+        },
+        "import":{
+            "title": "Import Danger Zone Types",
+            "noFile": "You did not upload a data file!",
+            "complete": "Import complete",
+            "success": "imported successfully",
+            "error": "failed import due to invalid data",
+            "skipped": "skipped because id is duplicate of an existing type.",
+            "short-title": "Import"
+        },
+        "record": {
+            "title.label": "Title",
+            "likelihood.label": "Likelihood",
+            "likelihood.description": "Likelihood",
+            "isActive.label": "Active"            
+        },
+        "replace-types": {
+            "A.label": "Clear All Lasting Effects",
+            "N.label": "Retain Existing Effects",
+            "R.label": "Clear Effects With This Trigger",
+            "T.label": "Clear Effects With This Zone Type",
+            "Z.label": "Clear Effects Of This Zone"
+        },
+        "scene": {
+            "add-danger-zone": "Add danger zone",
+            "delete-danger-zone": "Delete danger zone",
+            "description": "Add danger zone effects to this scene (this will cause form refresh so save any scene changes before proceeding).",
+            "edit-danger-zone": "Edit danger zone",
+            "label": "Danger Zone",
+            "random": "Random",
+            "random-trigger.label": "Random Manual Trigger",
+            "title": "Title",
+            "trigger": "Trigger",
+            "type": "Type"
+        },
+        "setting": {
+            "danger-zone-types-config.name": "Danger Zone Types",
+            "danger-zone-types-config.label": "Configure Danger Zone Types",
+            "scene-control-button-display.label": "Display Clear Danger Zone Effects Button",
+            "scene-control-button-display.description": "Toggles the display of the Clear Danger Zone Effects button within the scene control buttons tiles grouping",
+            "scene-enabled-default.label": "New Danger Zone Trigger Active by Default",
+            "scene-enabled-default.description": "Select whether or not new danger zones default to active. This means the zone will be active on scene activation, subject to the zone's trigger rules."  
+        },
+        "trigger-types": {
+            "manual.label": "Manual",
+            "combat-start.label": "Combat Start",
+            "combat-end.label": "Combat End",
+            "round-start.label": "Round Start",
+            "round-end.label": "Round End",
+            "turn-start.label": "Turn Start",
+            "turn-end.label": "Turn End"
+        },
+        "type-form": {
+            "active-effect":{
+                "clear": "Clear active effect",
+                "confirm": "Are you sure you want to clear the active effect data?",
+                "label": "Apply Active Effect to Target",
+                "notes": "Active effect will be transferred to each target in the danger zone.",
+                "edit.title": "Edit Active Effect",
+                "delete.title": "Delete Active Effect",
+                "cleared.info": "Active effect data has been deleted from this zone type."
+            },
+            "animation.label": "Animation",
+            "area-x.label": "Width (Grid Units)",
+            "area-y.label": "Height (Grid Units)",
+            "audio":{
+                "label": "Audio",
+                "file.label": "File",
+                "file.find": "Browse for Audio File",
+                "delay.label": "Delay (ms)",
+                "volume.label": "Volume"
+            },
+            "backgroundEffect":{
+                "label": "Secondary/Impact Effect",
+                "file.find": "Browse for Effect",
+                "file.label": "File",
+                "scale.label": "Scale",
+                "repeat.label": "Repeats",
+                "duration.label": "Duration (ms)"
+            },
+            "dimensions.label": "Dimensions",
+            "fluidCanvas": {
+                "delay.label":"Delay (ms)",
+                "duration.label":"Duration (ms)",
+                "intensity.label":"Intensity",
+                "iteration.label":"Iteration",
+                "label":"Kandashi's Fluid Canvas",
+                "type.label":"Type",
+                "notes": "Invokes Fluid Canvas effects at the start of the zone effect."
+            },
+            "foregroundEffect":{
+                "label": "Primary/Environmental Effect",
+                "file.label": "File",
+                "file.find": "Browse for Effect",
+                "scale.label": "Scale",
+                "repeat.label": "Repeats",
+                "duration.label": "Duration (ms)"
+            },
+            "icon.label": "Icon",
+            "icon.find": "Browse for Icon",
+            "macro.label": "Macro",
+            "macro.notes": "The macro in this world that will run when the danger zone triggers.",
+            "monks-active-tiles":{
+                "label": "Monk's Active Tiles",
+                "macro": {
+                    "after.label": "After (s)",
+                    "args.label": "Args",
+                    "label": "Run Macro",
+                    "macro.label": "Macro"
+                },
+                "notes": "These triggers will be added to the tile that is created by the active effect.",
+                "teleport":{
+                    "after.label": "After (sec)",
+                    "avoid.label": "Avoid Others At Destination",
+                    "label": "Teleport",
+                    "pan.label": "Show Pan",
+                    "source.label": "Delete Source",
+                    "twin.label": "Twin (Portal)",
+                    "add.label": "Teleport"
+                }
+            },
+            "name.label": "Name",
+            "tab" :{
+                "modules.title": "Module Integration",
+                "main.title": "Core Configuration"
+            },
+            "tile":{
+                "delay.label": "Delay (ms)",
+                "effect.label": "File",
+                "file.find": "Browse for Effect",
+                "label": "Lasting Zone Effect",
+                "loop.label": "Loop",
+                "scale.label": "Scale"
+            },
+            "token-says": {
+                "compendium.label": "Compendium",
+                "label": "Token Says",
+                "notes": "Trigger Token Says functionality for a given playlist or rolltable source. Entering a data into 'Token Says' field will always say that thing or play that playlist's track, otherwise the source data is randomized.",
+                "rule-type.label": "Type",
+                "rule-type-option": {
+                    "playlist": "Audio Playlist",
+                    "roll-table": "Rollable Table"
+                },
+                "says.label": "Token Says",
+                "source.label": "Source"
+            },
+            "warpgate": {
+                "actor.label": "Name",
+                "duplicates.label": "Duplicates",
+                "delay.label": "Delay",
+                "isRolltable.label": "Is Rolltable",
+                "label": "Warpgate",
+                "notes": "Spawn creatures using the actor name or, if 'Is Rolltable' is checked, spawn will be random actor matching name pulled from the specified rolltable in this world."
+            }
+        },
+        "types-form": {
+            "header.name": "Danger Zone Types",
+            "search.placeholder": "Enter text to filter types",
+            "search.clear": "Clear Search",
+            "export.title": "Export Zone Types",
+            "import.title": "Import Zone Types",
+            "defaultTypes": "Default Zone Types",
+            "customTypes": "Custom Zone Types",
+            "type.name.label": "Name"
+        },
+        "zone-active-effect-form": {
+            "form-name": "Danger Zone Active Effect"
+        },
+        "zone-type-form": {
+            "form-name": "Danger Zone Type",
+            "name": "Name"
+        },
+        "zone-types": {
+            "possession.label": "Possession",
+            "lightning.label": "Lightning"
+        }
+    }
+
+}

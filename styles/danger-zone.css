@@ -1,0 +1,457 @@
+form.danger-zone-types .content{
+    height: 460px;
+}
+
+.danger-zone-types .tabs .item {
+    font-size: 16px;
+    margin-bottom: 12px;
+}
+
+.danger-zone-type-form .tabs .item  {
+    font-size: 16px;
+    margin: 12px 0px;
+}
+
+.danger-zone-add, .danger-zone-type-add {
+    float: right;
+}
+
+form.danger-zone-record .hidden, 
+form.danger-zone-type-form .hidden, 
+#danger-zone-type-search-clear.hidden {
+    display: none !important;
+}
+
+.danger-zone-scene-header, 
+.danger-zone-types-header {
+    flex: 1 1 100%;
+    height: 30px;
+    margin-bottom: 2px;
+    padding: 6px 5px;
+    color: #7a7971;
+    font-size: 16px;
+    font-weight: 700;
+    background: rgba(0, 0, 0, 0.05);
+    border: 2px groove #eeede0;
+    align-items: center;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    font-family: "Modesto Condensed", "Palatino Linotype", serif;
+}
+
+form .form-group ol.danger-zone-scene-list, form ol.danger-zone-types-list {
+    flex-basis: 100%;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    background: rgba(0, 0, 0, 0.03);
+}
+
+form.danger-zone-type-form .form-group {
+    margin: 0;
+    padding: .55rem;
+    align-items: flex-start;
+    justify-content: flex-end;
+    border-bottom: 1px solid rgba(0,0,0,.1);
+    transition: background .3s ease;
+    position: relative;
+    display: block;
+}
+
+.danger-zone-scene-list li.scene-config, 
+.danger-zone-types-list li.type-record {
+    flex: 1 1 100%;
+    padding: 5px;
+    text-overflow: ellipsis;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+    align-items: center;
+    border-bottom: 1px solid #c9c7b8;
+    font-size: 14px;
+    font-family: "Signika", sans-serif;
+}
+
+.danger-zone-type-details, .danger-zone-details {
+    flex: 0 0 90%;
+    white-space: nowrap;
+    overflow-x: hidden; 
+    flex-wrap: nowrap;
+    text-overflow: ellipsis;
+}
+
+.danger-zone-type-details img  {
+    flex: 0 0 24px;
+    height: 24px;
+    margin-right: 6px;
+    border-width: 0;
+}
+
+.danger-zone-type-details .name  {
+    flex: 0 0 90%;
+    padding: 3px 15px 0px 0px;
+    white-space: nowrap;
+    overflow-x: hidden; 
+    flex-wrap: nowrap;
+    text-overflow: ellipsis;
+}
+
+.danger-zone-scene {
+    border: 1px solid #999;
+    border-radius: 8px;
+    margin: 8px 0;
+    padding: 5px 10px 5px 10px;
+}
+
+.danger-zone-scene > legend {
+    padding: 0 5px;
+    margin-left: -7px;
+}
+
+.danger-zone-scene > legend > span {
+    margin-left: 5px;
+}
+
+.danger-zone-types-header .danger-zone-controls, 
+.danger-zone-scene .danger-zone-controls,
+.danger-zone-types-list .danger-zone-controls {
+    flex: 0 0 10%;
+    text-align: right;
+    color: #7a7971;
+    padding: 0px 4px 0px 0px;
+}
+
+.danger-zone-types-header .danger-zone-details, 
+.danger-zone-types-list .danger-zone-details,
+.danger-zone-scene .danger-zone-details {
+    flex: 1 1 auto;
+    align-items: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-wrap: nowrap;
+}
+
+.danger-zone-details .title {
+    flex: 0 0 45%;
+    white-space: nowrap;
+    overflow-x: hidden; 
+    flex-wrap: nowrap;
+    text-overflow: ellipsis;
+    padding: 0px 6px 0px 0px;
+}
+.danger-zone-details .type {
+    flex: 0 0 30%;
+    white-space: nowrap;
+    overflow-x: hidden; 
+    flex-wrap: nowrap;
+    text-overflow: ellipsis;
+    padding: 0px 6px 0px 0px;
+}
+.danger-zone-details .trigger {flex: 0 0 15%;}
+.danger-zone-details .random {flex: 0 0 10%; text-align: center;}
+
+form.danger-zone-record .form-group .form-fields {
+    justify-content: flex-start;
+    align-items: center;
+    flex-grow: 4;
+}
+
+form.danger-zone-record .form-group .type-select-label {
+    justify-content: flex-start;
+    align-items: center;
+    flex-grow: 2;
+}
+
+form.danger-zone-record .form-group .type-select-label > a {
+    text-align: right;
+    color: #7a7971;
+    padding-right: 10px;
+}
+
+form.danger-zone-record .form-group {
+    margin: 7px 0px;
+}
+
+.danger-zone-record .form-group.flexrow {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+}
+
+.danger-zone-record .form-group.flexrow .checkbox-value {
+    flex: 0 0 7%;
+}
+
+.danger-zone-record .weight, .danger-zone-record .weight-label {
+    float: right;
+    flex: 0 0 15%; 
+} 
+
+.danger-zone-record .weight-label,
+.danger-zone-record .custom
+{margin-right: 15px;}
+
+/*scene navigation*/
+.danger-zone-scene-trigger {
+    position: relative;
+    list-style: none;
+    margin: 0px 4px 4px 0px;
+    padding: 0;
+    border-width: 0px;
+    background-color: transparent;
+    height: 34px; 
+    float: left;
+    pointer-events: auto;
+}
+
+.danger-zone-scene-trigger-button {
+    position: relative;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 28px 28px;
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px #000;;
+    color: #FFF;
+    width: 34px;
+    height: 34px;
+    border-radius: 5px;
+    align-items: center;
+    cursor: pointer;
+    float: left;
+    font-size: 26px;
+    margin-right: 4px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.danger-zone-scene-trigger-button:hover {
+    color: #FFF;
+    border: 1px solid red;
+    border-bottom: 1px solid #ff6400;
+    box-shadow: 0 0 10px #ff6400;
+}
+
+.danger-zone-scene-trigger-button.active{
+    background-color: rgba(60, 0, 120, 0.5);
+    box-shadow: 0 0 10px #9b8dff;
+}
+
+.danger-zone-scene-trigger-button.random {
+    font-size: 28px;
+}
+
+/*danger zone type form*/
+.danger-zone-type-form .form-header {
+    margin-bottom: 5px;
+    padding-bottom: 6px;
+    border-top: none;
+}
+
+.danger-zone-type-form .form-group .flexrow {
+    flex: 0 0 100%;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.danger-zone-type-form .audio-file, 
+.danger-zone-type-form .backgroundEffect-file, 
+.danger-zone-type-form .foregroundEffect-file, 
+.danger-zone-type-form .tile-file,
+.danger-zone-type-form .warpgate-actor-input {
+    flex: 0 0 50%;
+}
+
+.danger-zone-type-form .monks-active-tiles-macro-input,
+.danger-zone-type-form .monks-active-tiles-args-input {
+    flex: 0 0 33%;
+}
+
+.danger-zone-type-form .file-picker-wrapper {
+    display: flex;
+    flex: 0 0 100%;
+}
+.danger-zone-type-form .audio-delay-label, .danger-zone-type-form .tile-delay-label {
+    flex: 0 0 9%;
+}
+
+.danger-zone-type-form .fluid-canvas-duration-label,
+.danger-zone-type-form .foregroundEffect-duration-label, 
+.danger-zone-type-form .backgroundEffect-duration-label {
+    flex: 0 0 12%;
+}
+
+.danger-zone-type-form .audio-delay {
+    flex: 0 0 55px;
+    margin-right: 8px;
+}
+
+.danger-zone-type-form .audio-volume,
+.danger-zone-type-form .monks-active-tiles-teleport-avoid {
+    flex: 0 0 22%;
+}
+.danger-zone-type-form .foregroundEffect-scale, 
+.danger-zone-type-form .backgroundEffect-scale,  
+.danger-zone-type-form .tile-scale, 
+.danger-zone-type-form .audio-file-label, 
+.danger-zone-type-form .foregroundEffect-file-label, 
+.danger-zone-type-form .backgroundEffect-file-label, 
+.danger-zone-type-form .tile-file-label {
+    flex: 0 0 6%;
+}
+
+.danger-zone-type-form .audio-file,
+.danger-zone-type-form .foregroundEffect-file,
+.danger-zone-type-form .backgroundEffect-file,
+.danger-zone-type-form .tile-file  {
+    margin-right: 10px;
+}
+
+.danger-zone-type-form .foregroundEffect-duration,
+.danger-zone-type-form .backgroundEffect-duration,
+.danger-zone-type-form .monks-active-tiles-delay,
+.danger-zone-type-form .dz-monks-active-tiles .after-label {
+    flex: 0 0 8%;
+}
+.danger-zone-type-form .foregroundEffect-scale,
+.danger-zone-type-form .backgroundEffect-scale,
+.danger-zone-type-form .tile-scale  {
+    margin-right: 10px;
+}
+
+form.danger-zone-type-form .dz-token-says .flexrow,
+form.danger-zone-type-form .dz-monks-active-tiles .flexrow
+ {
+    margin-bottom: 5px;
+}
+
+form.danger-zone-type-form .dz-token-says .flexrow div, 
+form.danger-zone-type-form .dz-token-says .flexrow select {
+    flex: 0 0 36%;
+}
+
+.danger-zone-type-form .monks-active-tiles-teleport-input,
+.danger-zone-type-form .warpgate-isRolltable-checkbox {
+    flex: 0 0 3%;
+}
+
+.danger-zone-type-form .warpgate-isRolltable-label,
+.danger-zone-type-form .warpgate-duplicates-label {
+    flex: 0 0 10%;
+}
+
+.danger-zone-type-form .tab h4 {
+    margin: 9px 0px 4px 0px;
+    font-weight: 600;
+}
+
+.danger-zone-type-form .dimensions {
+    width: 50%;
+}
+
+.danger-zone-type-form .dimensions .config-value {
+    flex: 0 0 15%;
+}
+
+form.danger-zone-type-form .dimensions .buffer,
+form.danger-zone-type-form .dz-fluid-canvas .buffer,
+form.danger-zone-type-form .dz-token-says .buffer,
+form.danger-zone-type-form .dz-warpgate .buffer,
+form.danger-zone-type-form .dz-monks-active-tiles .buffer  {
+    margin-left: 15px;
+}
+
+/*search*/
+#danger-zone-type-primary-controls {
+    width: 100%;
+    margin: 10px 0px 24px 0px;
+    height: 36px;
+}
+
+.danger-zone-type-search {
+    display: inline-block;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    height: 34px;
+    border: 1px solid rgba(0, 0, 0, .3);
+    border-radius: 2px;
+    width: 84%;
+}
+
+.danger-zone-type-json-export, .danger-zone-type-json-import {
+    display: inline-block;
+    width:7%;
+    position: relative;
+    height: 36px;
+}
+  
+#danger-zone-type-search-input  {
+    outline: none;
+    padding: 0 38px 0 38px;
+    height: 100%;
+    border: none;
+}
+
+#danger-zone-type-search-input.outline {
+    box-shadow: 0 0 5px red;
+}
+  
+#danger-zone-type-search-clear {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translate(0, -50%);
+    width: 24px;
+    height: 24px;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-radius: 50%;
+    padding: 0;
+    margin: 0;
+}
+  
+  
+#danger-zone-type-search-clear i {
+    margin: 0;
+}
+
+#danger-zone-type-search-icon {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translate(0, -50%);
+    width: 14px;
+    height: 14px;
+    justify-content: center;
+    align-items: center;
+    border: none;
+    border-radius: 50%;
+    padding: 0;
+    margin: 0;
+}
+  
+#danger-zone-type-search-icon i, #danger-zone-type-active-effect-edit > i, #danger-zone-type-active-effect-delete > i {
+    margin: 0;
+}
+
+#danger-zone-type-active-effect-edit, #danger-zone-type-active-effect-delete {
+    justify-content: center;
+    align-items: center;
+    display: inline-block;
+    position: relative;
+    height: 36px;
+    width: 36px;
+}
+
+#danger-zone-type-active-effect-delete {
+    float: right;
+}
+#danger-zone-type-active-effect-edit {
+    margin-left: 15px;
+}
+
+.location-picker > i {
+    margin-right: 0px;
+}
