@@ -26,3 +26,6 @@ See [Triggers](../../wiki/Triggers) for more info.
 
 ## Module Integration
 Danger Zone integrates with a series of other Foundary modules in order to provide enhanced effects and token targetting. See the [Module Integration](../../Module-Integration) page for details on which modules extend Danger Zone base functionality if installed.
+
+## Future Enhancements
+See the [Future Enhancements](../../projects/1) board for a list of upcoming enhancements to this module.
