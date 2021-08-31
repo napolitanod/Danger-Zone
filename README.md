@@ -68,8 +68,8 @@ If sequencer is installed, you have access to add temporary effects to the zone 
 ![image](https://user-images.githubusercontent.com/22696153/131543713-193c3cd2-9283-4dd5-85cd-86e1f67c87c4.png)
 If installed, Token Says functionality is available for use utilizing that module's .saysDirect() method in the [API](https://github.com/napolitanod/Token-Says/blob/main/README.md). Any token targetted by a zone using a zone type with Token Says parameters set will invoke that token to say something.
 
-### Warpgate
+### Warp Gate
 ![image](https://user-images.githubusercontent.com/22696153/131544351-5b8836d1-e3b0-4d7c-950b-43c7a8106818.png)
-If installed, Warpgate will summon the given actor as a token to the location targetted by the zone that uses a zone type with this configured. You can summon either a specific actor each time or point to a rollable table in order to randomize the actor summoned.
+If installed, Warp Gate will summon the given actor as a token to the location targetted by the zone that uses a zone type with this configured. You can summon either a specific actor each time or point to a rollable table in order to randomize the actor summoned.
 * Delay: pause executing Warpgate for the amount of stated milliseconds after the zone triggers.
 * Duplicates: Set the number of tokens to spawn to the targetted location, with the default being 1.
