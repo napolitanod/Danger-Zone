@@ -9,7 +9,7 @@ Foundational to all zones is the zone type, an entity that defines an effect tha
 
 Access your world's zone type list by navigating to Foundry's 'Configure Settings' > 'Module Settings', locating Danger Zone, and selecting the 'Configure Danger Zone Types' button. Depending on your personalized module settings, you can also access this list by clicking the 'Danger Zone Types' button found in the footer of the Scenes sidebar. 
 
-For detailed information on configuring Zone Types, see the Zone Types Wiki page.
+For detailed information on configuring Zone Types, see the [Zone Types](../../wiki/Zone-Types)  page.
 
 ### 2. Add Zone to Scene
 <img src="https://user-images.githubusercontent.com/22696153/131511349-1c85213c-46cf-4a2a-87db-345989b10603.png"  height="400">
@@ -20,7 +20,7 @@ The zone type, defined in step one, defines how the zone interacts with the scen
 
 Create and edit zones by accessing the Danger Zone section from within the scene configuration form. The active scene will also display active zones as buttons within the top navigation beside the scene name. Right clicking the button here also launches that zone's configuration page.
 
-For detailed information on configuring zones, see the Zones Wiki page.
+For detailed information on configuring zones, see the [Zones](../../wiki/Zones)  page.
 
 ### 3. Trigger Zone
 ![image](https://user-images.githubusercontent.com/22696153/131510995-6ca6cee0-9a8a-4ff4-ad82-561c76090cdc.png)
@@ -29,7 +29,7 @@ The zone's trigger launches the associated zone type's effects. A trigger can be
 
 Once triggered, a workflow initiates that performs a set of operations that includes processing any randomized logic included in the zone, calculating likelihoods and weighting, determining effect location and targets, and generating all effects.
 
-For detailed information on triggering a zone, see the Trigger Wiki page.
+For detailed information on triggering a zone, see the [Triggers](../../wiki/Triggers)  page.
 
 ## Module Integration
 Danger Zone integrates with a series of other Foundary modules in order to provide enhanced effects and token targetting. Below is a list of the module integrations. It is not required to have these modules installed in order for Danger Zone to work.
