@@ -1,14 +1,3 @@
-/**
-  * FUTURE
-  *   height (z)
-  *   DONT REFRESH SCENE FORM
-  *   target token type (friendly, etc)
-  *   avoid existing effects
-  *   access scene zones from scene context menu
-  *   support gridless
- */
-
-
 import {dangerZoneDimensions} from './apps/dimensions.js';
 import {DangerZoneTypesForm} from './apps/zone-type-list-form.js';
 

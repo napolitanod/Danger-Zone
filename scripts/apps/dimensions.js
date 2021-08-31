@@ -45,9 +45,8 @@ export class dangerZoneDimensions {
         const zn = dangerZone.getZoneFromScene(this.zoneId, this.sceneId);
         const znType = dangerZoneType.getDangerZoneType(zn.type).dimensions.units;
         const g = this.getUnitDimensions();
-        const gU = canvas.grid.grid.getGridPositionFromPixels(g.start[0], g.start[1]);
-        const adjX = Math.min(gU[0], (znType.w-1));
-        const adjY = Math.min(gU[1], (znType.h-1));
+        const adjX = Math.min(g.start[0], (znType.w-1));
+        const adjY = Math.min(g.start[1], (znType.h-1));
         if(zn.options.bleed){
             g.w += adjX;
             g.h += adjY;

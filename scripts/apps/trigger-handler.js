@@ -11,6 +11,16 @@ export const DANGERZONETRIGGERS = {
     "turn-end":  "DANGERZONE.trigger-types.turn-end.label"
 } 
 
+export const DANGERZONETRIGGERSORT = {
+    "manual":  6,
+    "combat-start":  5,
+    "combat-end":  0,
+    "round-start":  1,
+    "round-end":  2,
+    "turn-start":  3,
+    "turn-end":  4
+} 
+
 export class triggerManager {
 
     constructor(sceneId, data, sceneZones, hook) {
@@ -45,8 +55,8 @@ export class triggerManager {
 
     async _next(zone){
         const flow = new workflow(zone);
-        await flow.next();
-        this.next();
+        await flow.next(); 
+        await this.next();
     }
 
     async trigger() {
@@ -81,7 +91,7 @@ export class triggerManager {
             }
         }
         await this.reconcileRandomZones();
-        this.zones.sort((a, b) => { return a.trigger < b.trigger ? -1 : (a.trigger > b.trigger ? 1 : 0)});
+        this.zones.sort((a, b) => { return DANGERZONETRIGGERSORT[a.trigger] < DANGERZONETRIGGERSORT[b.trigger] ? -1 : (DANGERZONETRIGGERSORT[a.trigger] > DANGERZONETRIGGERSORT[b.trigger] ? 1 : 0)});
         this.next();
     }
 

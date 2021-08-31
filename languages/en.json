@@ -207,7 +207,7 @@
                 "duplicates.label": "Duplicates",
                 "delay.label": "Delay",
                 "isRolltable.label": "Is Rolltable",
-                "label": "Warpgate",
+                "label": "Warp Gate",
                 "notes": "Spawn creatures using the actor name or, if 'Is Rolltable' is checked, spawn will be random actor matching name pulled from the specified rolltable in this world."
             }
         },
