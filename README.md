@@ -49,6 +49,14 @@ In the event that the zone type creates a lasting effect, if installed, Monk's A
 #### Macros
 * Add the selected macro to the lasting effect's tile actions. Other options provided here follow this module's definitions for this action type.
 
+### Sequencer 
+![image](https://user-images.githubusercontent.com/22696153/131546705-20c9ac83-8795-4b61-886a-2bcf30e49864.png)
+If sequencer is installed, you have access to add temporary effects to the zone type. These begin execution asynchronously before the lasting effect is created and add the selected animations to enhance the visual effect when the zone is triggered. Effects are located at the center of the targetted area. Both the primary and secondary effects have the same settings, but the primary appears above the tokens on the scene and the secondary will appear under the tokens on the scene.
+* File: the given file to play. See other available modules, such as JB2A, for ready available animations to use. The primary or secondary effect will not generate unless this is populated.
+* Scale: increases or decreases the scale of the animation from that file's default (in decimal multiplier form with 1.0 being the file's default size).
+* Repeats: uses the sequencer .repeats() method in order to generate the animation an additional number of times (as a count of repeats).
+* Duration: uses the sequencer .duration() method in order to cap the duration of the animation and end it (in milliseconds).
+
 #### Teleport
 * Embed the teleport action into the lasting effect's tile. The location teleported to will be a second random location within the zone. Options provided follow this module's definitions for this action type with the following additions:
      * Twin: Creates a second tile at the teleport location that carries the same lasting effect settings as the first, but with a teleport location that points back to the first lasting effect. In  other words, the two new tiles will be paired and will teleport between each other.
