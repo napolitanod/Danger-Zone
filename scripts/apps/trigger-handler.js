@@ -55,7 +55,7 @@ export class triggerManager {
 
     async _next(zone){
         const flow = new workflow(zone);
-        let response = await flow.next(); 
+        await flow.next(); 
         await this.next();
     }
 
