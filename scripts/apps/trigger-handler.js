@@ -1,4 +1,4 @@
-import { dangerZone } from '../danger-zone.js';
+import {dangerZone} from '../danger-zone.js';
 import {workflow} from './workflow.js';
 
 export const DANGERZONETRIGGERS = {
@@ -133,13 +133,18 @@ export class triggerManager {
     }
 
     static async findCombatTriggers(combat, hook){
-        const sceneZones = dangerZone.getCombatZonesFromScene(combat.scene.id);
-        if(sceneZones.size){
-            const tm = new triggerManager(combat.scene.id, combat, sceneZones, hook);
-            await tm.combatTrigger();
-            tm.log(`Initiating combat trigger handler...`, {});
-        } 
-        return
+        if(game.user.isGM && combat.scene) {
+            const sceneZones = dangerZone.getCombatZonesFromScene(combat.scene.id);
+            if(sceneZones.size){
+                const scene = game.scenes.get(combat.scene.id);
+                if(!scene?.data?.gridType){return dangerZone.log(false,'No Combat Triggers When Gridless ', {combat, hook})}
+
+                const tm = new triggerManager(combat.scene.id, combat, sceneZones, hook);
+                await tm.combatTrigger();
+                tm.log(`Initiating combat trigger handler...`, {combat, hook});
+            } 
+            return
+        }
     }
 }
 

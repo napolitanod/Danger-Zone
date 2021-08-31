@@ -1,9 +1,11 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {DangerZoneTypeForm} from './zone-type-form.js'
-import {setDangerZoneTypesCurrentSearch, dangerZoneTypesCurrentSearch} from "../index.js"
+
+export var lastSearch = '';
 
 export class DangerZoneTypesForm extends FormApplication {
+
   static get defaultOptions(){
     const defaults = super.defaultOptions;
 
@@ -66,7 +68,7 @@ export class DangerZoneTypesForm extends FormApplication {
   getData(options){
       return {
           dangerZoneTypes: Object.values(dangerZoneType.allDangerZoneTypes).sort((a, b) => a.name.localeCompare(b.name)),
-          dangerZoneTypesCurrentSearch: dangerZoneTypesCurrentSearch
+          lastSearch: lastSearch
       }
   }
 
@@ -74,21 +76,16 @@ export class DangerZoneTypesForm extends FormApplication {
     return
   }
 
-  _preFilter(search) {
-    let searchTerm = search.target.value;
-    setDangerZoneTypesCurrentSearch(searchTerm);
-    this._filter(searchTerm);
+  _preFilter(event) {
+    lastSearch = event.target.value;
+    this._filter();
   }
 
-  _filter(searchTerm) {
+  _filter() {
     const clear = document.getElementById("danger-zone-type-search-clear");
     const searchBox = document.getElementById("danger-zone-type-search-input");
-    function lower(phrase) {
-      return phrase.toLowerCase();
-    }
 
-    if(searchTerm != ''){
-      searchTerm = lower(searchTerm);
+    if(lastSearch != ''){
       clear.classList.remove('hidden');
       searchBox.classList.add('outline');
     } else {
@@ -97,8 +94,8 @@ export class DangerZoneTypesForm extends FormApplication {
     }
 
     $("form.danger-zone-types").find(".name").each(function() {
-      let label = lower(this.innerText);
-      if (label.search(searchTerm) > -1) {
+      let label = this.innerText.toLowerCase();
+      if (label.search(lastSearch.toLowerCase()) > -1) {
         $(this).closest('.type-record').show();
       } else {
         $(this).closest('.type-record').hide();
@@ -106,13 +103,11 @@ export class DangerZoneTypesForm extends FormApplication {
     });
   }
 
-  _clearFilter(clear){
-    clear.preventDefault();
-    let search = document.getElementById("danger-zone-type-search-input")
-    search.value = '';
-    search.innerHTML = '';
-    setDangerZoneTypesCurrentSearch('');
-    this._filter('');
+  _clearFilter(event){
+    event.preventDefault();
+    document.getElementById("danger-zone-type-search-input").value = '';
+    lastSearch = '';
+    this._filter();
   }
 
   async exportToJSON() {
@@ -166,6 +161,3 @@ export class DangerZoneTypesForm extends FormApplication {
     }).render(true);
   }
 }
-  
-
-

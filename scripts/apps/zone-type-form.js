@@ -1,4 +1,4 @@
-import { dangerZone} from "../danger-zone.js";
+import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {DangerZoneTypeActiveEffectForm} from "./active-effect-form.js"
 import {sequencerOn,tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn} from '../index.js';
@@ -7,6 +7,7 @@ export class DangerZoneTypeForm extends FormApplication {
   constructor(zoneTypeId, ...args) {
     super(...args);
     this.zoneTypeId = zoneTypeId;
+    this.effect = {};
   }
 
   static get defaultOptions(){
@@ -36,11 +37,8 @@ export class DangerZoneTypeForm extends FormApplication {
   }
 
   async _activeEffectClear() {
-    let response = await dangerZoneType.deleteActiveEffect(this.options.zoneTypeId);
-    if(response) {
-      let info = game.i18n.localize("DANGERZONE.zone-type-form.active-effect.cleared.info") ;
-      ui.notifications?.info(info)
-      }
+    this.effect = {};
+    ui.notifications?.info(game.i18n.localize("DANGERZONE.zone-type-form.active-effect.cleared.info"));
   }
 
   async _activeEffectConfirmClear(event) {
@@ -67,35 +65,29 @@ export class DangerZoneTypeForm extends FormApplication {
 
   async _activeEffectConfig(event) {
     event.preventDefault();
-    let effectdata = dangerZoneType.getDangerZoneTypeActiveEffect(this.options.zoneTypeId);
 
-    if (!effectdata || !Object.keys(effectdata).length){
+    if (!Object.keys(this.effect).length){  
       const zoneName = $(event.delegateTarget).find('input[name="name"]').val();
       const icon = $(event.delegateTarget).find('input[name="icon"]').val();
-      effectdata = {
+      this.effect = {
         label: zoneName,
         icon: icon,
         changes: [],
         disable: false,
         transfer: false,
-        origin: this.options.zoneTypeId
+        origin: this.zoneTypeId
       }
     }
 
-    if (
-      !hasProperty(effectdata, `flags.${dangerZone.ID}.${dangerZone.ID}.${dangerZone.FLAGS.ZONETYPE}`)) {
-      setProperty(effectdata, `flags.${dangerZone.ID}.${dangerZone.FLAGS.ZONETYPE}`, this.options.zoneTypeId);
-    } 
-    
     const effect = {
       documentName: "ActiveEffect",
-      data: effectdata,
+      data: this.effect,
       testUserPermission: (...args) => { return true},
       parent: {documentName: "Actor"},
       apps: {},
       isOwner: true
     }
-    new DangerZoneTypeActiveEffectForm(effect).render(true);
+    new DangerZoneTypeActiveEffectForm(this, effect).render(true);
   }
 
   _determineTokenSaysTypes() {
@@ -135,6 +127,8 @@ export class DangerZoneTypeForm extends FormApplication {
       instance = dangerZoneType.getDangerZoneType(this.zoneTypeId)
     }
 
+    this.effect = instance.options.effect;
+
     const dataToSend =  {
       zone: instance,
       fluidCanvasOps: this._determineFluidCanvasTypes(),
@@ -151,6 +145,7 @@ export class DangerZoneTypeForm extends FormApplication {
   
   async _updateObject(event, formData) {
     const expandedData = foundry.utils.expandObject(formData); 
+    expandedData.options.effect = this.effect;
     await dangerZoneType.updateDangerZoneType(expandedData.id, expandedData);
     dangerZone.DangerZoneTypesForm.refresh();
   }

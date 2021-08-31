@@ -45,41 +45,41 @@ export class dangerZoneDimensions {
         const zn = dangerZone.getZoneFromScene(this.zoneId, this.sceneId);
         const znType = dangerZoneType.getDangerZoneType(zn.type).dimensions.units;
         const g = this.getUnitDimensions();
+        const gU = canvas.grid.grid.getGridPositionFromPixels(g.start[0], g.start[1]);
+        const adjX = Math.min(gU[0], (znType.w-1));
+        const adjY = Math.min(gU[1], (znType.h-1));
         if(zn.options.bleed){
-            let gU = canvas.grid.grid.getGridPositionFromPixels(g.start[0], g.start[1]);
-            let adjX = Math.min(gU[0], (znType.x-1));
-            let adjY = Math.min(gU[1], (znType.y-1));
             g.w += adjX;
-            g.h += + adjY;
+            g.h += adjY;
             g.start[0] -= adjX;
             g.start[1] -= adjY;
+        } else {
+            g.w -= adjX;
+            g.h -= adjY;
         }
-        let die = `1d` + (g.w * g.h);
+        const area = (g.w * g.h);
+        if(area < 1){return dangerZone.log(false,'Invalid zone settings ', {unitDimensions: g, startGridPos: gU, zoneType: znType, zone: zn})}
+        let die = `1d${area}`;
         const randomRoll = new Roll(die);
         let rolledResult = await randomRoll.roll().result;
         let posY = g.start[1] + Math.floor((rolledResult-1)/g.w);
         let posX = g.start[0] + ((rolledResult - 1) % g.w);  
         let start = canvas.grid.grid.getPixelsFromGridPosition(posX, posY);
-        let end = canvas.grid.grid.getPixelsFromGridPosition(posX+znType.x, posY+znType.y);
+        let end = canvas.grid.grid.getPixelsFromGridPosition(posX+znType.w, posY+znType.h);
         
         dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, randomArea: {units: g, start: start, end: end}, roll: rolledResult})
         return this._conformBoundary(start[0], start[1], end[0], end[1])
     }
 
-    widthHeightCenterFromLocation(x,y,units){
-        let bnd = this.locationToBoundary(x, y, units)
-        const w = bnd.end.x - bnd.start.x;
-        const h = bnd.end.y - bnd.start.y;
-        const c = {x: x + (w/2), y: y + (h/2)}
-        return {w: w, h: h, c: c}
-    }
-
-    locationToBoundary(x,y, units){
-        let start = canvas.grid.grid.getGridPositionFromPixels(x, y);
-        let end = canvas.grid.grid.getPixelsFromGridPosition(start[0]+units.x, start[1]+units.y);
-        return this._conformBoundary(x, y, end[0], end[1])
-    }
-
+    /**
+     * intakes PIXEL coordinates for to locations on the grid and conforms them to the expected boundary object structure 
+     * with locations shifted to be top right and bottom left and to be top left point of grid location
+     * @param {integer} x1 location 1 x
+     * @param {integer} y1 location 1 y
+     * @param {integer} x2 location 2 x
+     * @param {integer} y2 location 2 y
+     * @returns object with x and y coordinates for top left and bottom right of boundary in PIXELS
+     */
     static conformBoundary(x1, y1, x2, y2){    
         const s = canvas.grid.getTopLeft(Math.min(x1, x2), Math.min(y1, y2));
         const e = canvas.grid.getTopLeft(Math.max(x1, x2), Math.max(y1, y2));
@@ -95,10 +95,79 @@ export class dangerZoneDimensions {
         }
     }
 
+    /**
+     * private call of conformBoundary. See that method's definition
+     */
     _conformBoundary(x1, y1, x2, y2){
         return dangerZoneDimensions.conformBoundary(x1, y1, x2, y2);
     }
 
+    /**
+     * convert a given pixel location and heigh and width in grid units to 2 x/y pixel coordinates
+     * @param {integer} x - starting location position x in PIXELS
+     * @param {integer} y - starting location position y in PIXELS
+     * @param {array} units -array of width and height in grid units 
+     * @returns objects with two x/y PIXEL coordinates in boundary structure
+     */
+    locationToBoundary(x,y, units){
+        let start = canvas.grid.grid.getGridPositionFromPixels(x, y);
+        let end = canvas.grid.grid.getPixelsFromGridPosition(start[0]+units.w, start[1]+units.h);
+        return this._conformBoundary(x, y, end[0], end[1])
+    }
+
+    /**
+     * Returns an array of tokens that have x and y coordinate that fit within the boundary provided.
+     * @param {array} tokens - an array of tokens
+     * @param {object} boundary - an object indicating the top left start point and bottom right end point 
+     *                              in a boundy {start: {x: , y: }, end: {x: , y: }}
+     * @returns array of tokens
+    */
+     static tokensInBoundary(tokens, boundary){
+        boundary = dangerZoneDimensions.conformBoundary(boundary.start.x, boundary.start.y, boundary.end.x, boundary.end.y);
+        const g = dangerZoneDimensions.getUnitDimensions(boundary);
+        let kept = [];
+        for(let token of tokens){
+            if(dangerZoneDimensions.conformLocationToBoundary(token.data.x, token.data.y, boundary, true))
+                kept.push(token);
+        }
+        return kept
+    } 
+
+    /**
+     * intakes an array of tokens and identifies which are in a given zone (the whole zone)
+     * @param {array} tokens 
+     * @returns array of tokens
+     */
+    tokensInZone(tokens){
+        if(!tokens){tokens = game.scenes.get(this.sceneId)}
+        return dangerZoneDimensions.tokensInBoundary(tokens, {start: this.start, end: this.end});
+    } 
+
+    /**
+     * Returns tokens from an array that are found in the given boundary as well as the given zone
+     * @param {array} tokens - an array of tokens 
+     * @param {object} boundary - an object in standard boundary structure
+     * @returns array of tokens
+     */
+    tokensInBoundaryInZone(tokens, boundary){
+        return dangerZoneDimensions.tokensInBoundary(this.tokensInZone(tokens), boundary);
+    }
+
+    /**
+     * convert a given pixel location along with it's height and width in grid units to a PIXEL based x/y center point and the width and height in PIXELS
+     * @param {integer} x - starting location position x in PIXELS
+     * @param {integer} y - starting location position y in PIXELS
+     * @param {array} units -array of width and height in grid units 
+     * @returns objects with width and height in PIXELS and the center point location on the grid as x/y object in PIXELS
+     */
+    widthHeightCenterFromLocation(x,y,units){
+        let bnd = this.locationToBoundary(x, y, units)
+        const w = bnd.end.x - bnd.start.x;
+        const h = bnd.end.y - bnd.start.y;
+        const c = {x: x + (w/2), y: y + (h/2)}
+        return {w: w, h: h, c: c}
+    }
+    
     _conformBoundaryToZone(boundary){
         let start = this._conformLocationToZone(boundary.start.x, boundary.start.y);
         let end = this._conformLocationToZone(boundary.end.x, boundary.end.y);
@@ -126,9 +195,9 @@ export class dangerZoneDimensions {
         let g = canvas.grid.grid.getGridPositionFromPixels(x, y);
         let location={x:g[0], y:g[1]}; let conforms = true;
         if(g[0] >= b.start[0]){
-            if (g[0] > (b.start[0] + b.w)) {
+            if (g[0] >= (b.start[0] + b.w)) {
                 if(conformOnly){return false}
-                location.x=b.start[0] + b.w; conforms = false;
+                location.x=b.start[0] + (b.w -1); conforms = false;
             } 
         } else {
             if(conformOnly){return false}
@@ -136,41 +205,15 @@ export class dangerZoneDimensions {
         }
 
         if(g[1] >= b.start[1]){
-            if (g[1] > (b.start[1] + b.h)) {
+            if (g[1] >= (b.start[1] + b.h)) {
                 if(conformOnly){return false}
-                location.y=b.start[1] + b.h; conforms = false;
+                location.y=b.start[1] + (b.h-1); conforms = false;
             } 
         } else {
             if(conformOnly){return false}
             location.y=b.start[1]; conforms = false;
         }
         return {location: location, conforms: conforms}
-    }
-
-    /**
-     * Returns an array of tokens that have x and y coordinate that fit within the boundary provided.
-     * @param {array} tokens - an array of tokens
-     * @param {object} boundary - an object indicating the top left start point and bottom right end point in a boundy {start: {x: , y: }, end: {x: , y: }}
-    */
-    static tokensInBoundary(tokens, boundary){
-        boundary = dangerZoneDimensions.conformBoundary(boundary.start.x, boundary.start.y, boundary.end.x, boundary.end.y);
-        const g = dangerZoneDimensions.getUnitDimensions(boundary);
-        let kept = [];
-        for(let token of tokens){
-            if(dangerZoneDimensions.conformLocationToBoundary(token.data.x, token.data.y, boundary, true))
-                kept.push(token);
-        }
-        return kept
-    }  
-
-    tokensInZoneBoundary(tokens, boundary){
-        boundary = this._conformBoundaryToZone(boundary);
-        return dangerZoneDimensions.tokensInBoundary(tokens, boundary);
-    }
-
-    tokensInZone(tokens){
-        if(!tokens){tokens = game.scenes.get(this.sceneId)}
-        return dangerZoneDimensions.tokensInBoundary(tokens, {start: this.start, end: this.end});
     }
 
     static getUnitDimensions(boundary){

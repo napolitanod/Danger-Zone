@@ -1,17 +1,17 @@
 {
     "DANGERZONE": {
         "add": "Add",
-        "edit": "Edit",
         "cancel": "Cancel",
+        "edit": "Edit",
         "location-picker": "Select the zone dimensions",
         "save": "Save",
-        "yes": "Ok",
         "view": "View",
+        "yes": "Ok",
         "alerts": {
             "no-trigger-if-not-on-combat-scene": "Danger Zones will not trigger while you are not active on the current combat scene.",
             "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
             "select-zone-end": "Select an end location for this zone. Selected area will snap to grid and represent the lower right corner of this zone.",
-            "select-target": "Select a location to target in the Danger Zone. Selected area will snap to grid and represent the top left corner of the area targetted."
+            "select-target": "Select a location to target in the Danger Zone. Selected area will snap to grid and represent the top left and bottom right corners of the zone."
         },
         "controls": {
             "clearEffectsTile.label": "Clear Danger Zone Effects"
@@ -20,7 +20,7 @@
             "allInArea.label": "Target All Tokens In Targeted Area",
             "allInArea.description": "If more than one token is in a target area, they will all be targeted. Otherwise only one random token is targeted.",
             "bleed.label": "Bleed",
-            "bleed.description": "For zones types with size > 1 unit, determines if the effect will exceed the zone when targets are near the zone edge. If not set, units closer to center within the zone have a greater likelihood of being targeted.",
+            "bleed.description": "Determines if the effect boundary (based on the Type's width and height) will exceed this zone's boundary. If not set, units closer to center within the zone have a greater likelihood of being targeted.",
             "boundary": {
                 "end.label": "End:",
                 "label": "Dimensions",
@@ -92,10 +92,12 @@
         "setting": {
             "danger-zone-types-config.name": "Danger Zone Types",
             "danger-zone-types-config.label": "Configure Danger Zone Types",
-            "scene-control-button-display.label": "Display Clear Danger Zone Effects Button",
+            "scene-control-button-display.label": "Display Clear Effects Button",
             "scene-control-button-display.description": "Toggles the display of the Clear Danger Zone Effects button within the scene control buttons tiles grouping",
-            "scene-enabled-default.label": "New Danger Zone Trigger Active by Default",
-            "scene-enabled-default.description": "Select whether or not new danger zones default to active. This means the zone will be active on scene activation, subject to the zone's trigger rules."  
+            "types-button-display.label": "Display Types Button",
+            "types-button-display.description": "Toggles the display of the Danger Zone Types button at the bottom of the scenes side bar",
+            "scene-enabled-default.label": "New Zone Active by Default",
+            "scene-enabled-default.description": "Select whether or not new danger zones default to active when you first create them."  
         },
         "trigger-types": {
             "manual.label": "Manual",

@@ -1,4 +1,4 @@
-import { dangerZone, zone } from '../danger-zone.js';
+import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {dangerZoneDimensions} from './dimensions.js';
 import {DANGERZONETRIGGERS} from './trigger-handler.js';

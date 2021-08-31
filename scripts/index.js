@@ -8,15 +8,11 @@ import {triggerManager}  from './apps/trigger-handler.js';
  * global variables
  */
 export var sequencerOn = false, warpgateOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false; //active modules
-export var dangerZoneTypesCurrentSearch = ''; //current search on zone types form
 
 /**
  * retains the most recent search term while in session for the danger zone type list form
  * @param {string} inSearch - most recent term
  */
-export function setDangerZoneTypesCurrentSearch(inSearch) {
-	dangerZoneTypesCurrentSearch = inSearch;
-}
 
 Hooks.once('init', async function() {  
     
@@ -48,6 +44,15 @@ Hooks.once('init', async function() {
 		type: Boolean,
 	});
 
+	game.settings.register(modulename, "types-button-display", {
+		name: game.i18n.localize("DANGERZONE.setting.types-button-display.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.types-button-display.description"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
+
 	game.settings.register(modulename, 'zone-types', {
         name: game.i18n.localize('DANGERZONE.setting.zone-types.label'),
         hint: game.i18n.localize('DANGERZONE.setting.zone-types.description'),
@@ -60,11 +65,9 @@ Hooks.once('init', async function() {
 	dangerZone.initialize();
 
     //hook to ensure that, on settings render, the search is applied to the list
-    Hooks.on("renderApplication", (message, element, tabs) => {
-        if(message.id ==="danger-zone-types"){
-            message._filter(dangerZoneTypesCurrentSearch);
-        }
-    });
+	Hooks.on("renderDangerZoneTypesForm", (app, html, options) => {
+        app._filter();
+	});
 });
 
 /**
@@ -77,7 +80,7 @@ Hooks.once('ready', async function() {
 /**
  * Register debug flag with developer mode's custom hook
  */
-Hooks.once('devModeReady', ({ registerPackageDebugFlag }) => {
+Hooks.once('devModeReady', ({registerPackageDebugFlag}) => {
     registerPackageDebugFlag(dangerZone.ID);
 });
 
@@ -85,9 +88,7 @@ Hooks.once('devModeReady', ({ registerPackageDebugFlag }) => {
  * add zone clear button to canvas controls
  */
 Hooks.on("getSceneControlButtons", (controls, b, c) => {
-	if(game.settings.get('danger-zone', 'scene-control-button-display') === true){
-		insertTileEffectsClearButton(controls, b, c);
-	}
+	insertTileEffectsClearButton(controls, b, c);
 });
 
 /**
@@ -101,27 +102,26 @@ Hooks.on('renderSceneConfig', async (app, html, options) => {
  * Hook for the rendering of the scene list at top of canvas display. Adds zone trigger buttons to scene navigation bar on canvas
  */
 Hooks.on('renderSceneNavigation', async(app, html, options) => {
-	if(game.user.isGM && game.user.viewedScene === game.scenes.find(scene => scene.data.active)?.id){
-		addTriggersToSceneNavigation(app, html, options);
-	}
+	addTriggersToSceneNavigation(app, html, options);
+});
+
+
+Hooks.on("renderSidebarTab", async(app, html) => {
+	addQuickZonesLaunch(app, html);
 });
 
 /**
  * in combat hook for when combat ends. Used for managing in combat zone triggers
  */
 Hooks.on('deleteCombat', async(combat, round, options, id) => {
-	if(game.user.isGM && combat.scene) {
-		triggerManager.findCombatTriggers(combat, 'deleteCombat')
-	}
+	triggerManager.findCombatTriggers(combat, 'deleteCombat')
 });
 
 /**
  * in combat hook for when combat begins or round/turn changes. Used for managing in combat zone triggers
  */
 Hooks.on('updateCombat', async(combat, round, options, id) => {
-	if(game.user.isGM && combat.scene) {
-		triggerManager.findCombatTriggers(combat, 'updateCombat')
-	}
+	triggerManager.findCombatTriggers(combat, 'updateCombat')
 });
 
 /**
@@ -142,19 +142,33 @@ function setModsAvailable () {
  * @param {*} c 
  */
 function insertTileEffectsClearButton (controls, b, c) {
-	const tileButton = controls.find(b => b.name == "tiles")
+	if(game.user.isGM && game.settings.get('danger-zone', 'scene-control-button-display') === true){
+		const tileButton = controls.find(b => b.name == "tiles")
 
-	if (tileButton) {
-		tileButton.tools.push({
-			name: "danger-zone-tile-effects-clear",
-			title:  game.i18n.localize("DANGERZONE.controls.clearEffectsTile.label"),
-			icon: "fas fa-radiation",
-			visible: game.user.isGM,
-			onClick: async () => {
-				let tileIds=canvas.background.tiles.filter(t => t.data.flags[dangerZone.ID]).map(t => t.id);
-				await canvas.scene.deleteEmbeddedDocuments("Tile", tileIds);
-			},
-			button: true
-		});
+		if (tileButton) {
+			tileButton.tools.push({
+				name: "danger-zone-tile-effects-clear",
+				title:  game.i18n.localize("DANGERZONE.controls.clearEffectsTile.label"),
+				icon: "fas fa-radiation",
+				visible: game.user.isGM,
+				onClick: async () => {
+					let tileIds=canvas.background.tiles.filter(t => t.data.flags[dangerZone.ID]).map(t => t.id);
+					await canvas.scene.deleteEmbeddedDocuments("Tile", tileIds);
+				},
+				button: true
+			});
+		}
 	}
 }
+
+export function addQuickZonesLaunch(app, html) {
+	if (game.user.isGM && app.options.id == "scenes" && game.settings.get('danger-zone', 'types-button-display') === true) {
+		let button = $('<div class="header-actions action-buttons flexrow"><button class="danger-zone-types-launcher"><i class="fas fa-radiation"></i> ' + game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.name")+ '</button></div>');
+	
+		button.click(async () => {
+			dangerZone.DangerZoneTypesForm.render(true);
+		});
+		$(html).find(".directory-footer").append(button);
+	}
+}
+

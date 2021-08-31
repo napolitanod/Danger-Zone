@@ -4,8 +4,8 @@ export class dangerZoneType {
     constructor() {
       this.dimensions = {
         units: {
-          x: 1, 
-          y: 1
+          w: 1, 
+          h: 1
         }
       },
       this.icon = '',
@@ -15,11 +15,11 @@ export class dangerZoneType {
         audio: {
           file:'',
           delay: 0,
-          volume: 0.50
+          volume: 0.5
         },
         backgroundEffect: {
           file: '',
-          scale: 1,
+          scale: 1.0,
           repeat: 0,
           duration: 30
         },
@@ -27,14 +27,14 @@ export class dangerZoneType {
         flags: {},
         foregroundEffect: {
           file: '',
-          scale: 1,
+          scale: 1.0,
           repeat: 0,
           duration: 0
         },
         lastingEffect: {
           delay: 0,
           file: '',
-          scale: 1,
+          scale: 1.0,
           loop: true
         },
         macro: ''
@@ -43,9 +43,6 @@ export class dangerZoneType {
 
   async _update(){
     let allTypes = dangerZoneType.allDangerZoneTypes; 
-    if(allTypes[this.id].options.effect){
-      this.options.effect = allTypes[this.id].options.effect
-    }
     allTypes[this.id] = this;
     await dangerZoneType.setZoneTypes(allTypes);
     return this
@@ -72,14 +69,6 @@ export class dangerZoneType {
     return this.allDangerZoneTypes[id];
   }
 
-  static getDangerZoneTypeActiveEffect(zoneTypeId) {
-    const type = this.getDangerZoneType(zoneTypeId);
-    let aEff = type.options.effect;
-    if(!aEff){aEff = {}}
-    dangerZone.log(false,'Zone Type Active Effect Got ', {"effect": aEff, "zoneType": type, "zoneTypeId": zoneTypeId});
-    return aEff;
-  }
-
   /**
    * converts a JSON object to a zone class
    * @param {object} flag 
@@ -101,11 +90,6 @@ export class dangerZoneType {
     dangerZone.log(false,'Zone Type Deleted ', {deleted: id, remaining: allTypes});
     return id
   } 
-
-  static async deleteActiveEffect(zoneTypeId) {
-    await this.updateActiveEffect(zoneTypeId, {})
-    dangerZone.log(false,'Zone Type Active Effect Deleted ', {"zoneTypeId": zoneTypeId});
-  }
   
   static async addZoneType() {
     const newType = new dangerZoneType; 
@@ -127,16 +111,6 @@ export class dangerZoneType {
     return 
   }
 
-  static async updateActiveEffect(id, updateData) {
-    let allTypes = this.allDangerZoneTypes;
-    let typeToUpdate = allTypes[id];
-    typeToUpdate.options['effect'] = updateData;
-    allTypes[id] = typeToUpdate;
-    await game.settings.set('danger-zone', 'zone-types', allTypes);
-    dangerZone.log(false,'Zone Type Active Effect Updated ', {"effect": updateData});
-    return true
-  }
-
   static async importFromJSON(json){
     const allTypes = this.allDangerZoneTypes;
     let added = [], alreadyExists = [], inError = [];
@@ -148,12 +122,12 @@ export class dangerZoneType {
             } else if (allTypes[addId]) {
               alreadyExists.push(record);
             } else{
-              allTypes[record.id]=this.toClass(record, true);
+              allTypes[record.id]=this.toClass(record, false);
               added.push(record);
             }
         }
     } else{inError.push(json)}
-    await this.updateDangerZoneTypes(allTypes);
+    await this.setZoneTypes(allTypes);
     return {"added": added, "skipped": alreadyExists, "error": inError}
   }
 

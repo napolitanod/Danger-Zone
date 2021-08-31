@@ -263,7 +263,7 @@ export class workflow {
     getChosenLocationBoundary(){
         let boundary = this.zone.scene.locationToBoundary(this.userSelectedLocation.x, this.userSelectedLocation.y, this.zoneType.dimensions.units);
         mergeObject(this.targetBoundary, boundary, {insertKeys: false, enforceTypes: true});
-        this.eligibleTargets = this.zone.scene.tokensInZoneBoundary(this.zoneTokens, this.targetBoundary);
+        this.eligibleTargets = this.zone.scene.tokensInBoundaryInZone(this.zoneTokens, this.targetBoundary);
         return boundary
     }
 
@@ -273,7 +273,8 @@ export class workflow {
         do {
             i++;
             testBoundary = await this.zone.scene.randomArea();
-            this.eligibleTargets = this.zone.scene.tokensInZoneBoundary(this.zoneTokens, testBoundary);
+            if(!testBoundary){return this.next(WORKFLOWSTATES.CANCEL)}
+            this.eligibleTargets = this.zone.scene.tokensInBoundaryInZone(this.zoneTokens, testBoundary);
         }
         while(this.eligibleTargets.length === 0 && i < max);
         mergeObject(this.targetBoundary, testBoundary, {insertKeys: false, enforceTypes: true});

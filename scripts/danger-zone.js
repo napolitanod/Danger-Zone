@@ -1,29 +1,15 @@
 /**
- * DO
-  * DIFFERENT GRID BEHAVIORS
-  * warpgate and monks and tiles sizing in workflow
-  * 
-  * Cleaned u
-  *   zone-form
-  *   scene-settings
-  *   scene-navigation
-  *   trigger-handler - needs comments
-  *   danger-zone
-  *   helpers
-  *   index
-
-  * 
-  * 
   * FUTURE
   *   height (z)
   *   DONT REFRESH SCENE FORM
   *   target token type (friendly, etc)
+  *   avoid existing effects
+  *   access scene zones from scene context menu
+  *   support gridless
  */
 
 
 import {dangerZoneDimensions} from './apps/dimensions.js';
-import {DangerZoneForm } from './apps/zone-form.js';
-import {DangerZoneTypeForm} from './apps/zone-type-form.js';
 import {DangerZoneTypesForm} from './apps/zone-type-list-form.js';
 
 /**

@@ -2,8 +2,9 @@ import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {dangerZoneDimensions} from './dimensions.js';
 import {DANGERZONETRIGGERS} from './trigger-handler.js';
-import { DangerZoneForm } from './zone-form.js';
+import {DangerZoneForm} from './zone-form.js';
 export function initializeScene(app, html, options) {
+    if(!app.object?.data?.gridType){return dangerZone.log(false,'No Danger Zone Scene List When Gridless ', {app, html, options})};
     //location
     let weatherParent = $('select[name="weather"]', html).parent();
     if(!weatherParent){return}
@@ -38,7 +39,7 @@ export function initializeScene(app, html, options) {
 function _setList (app, html, options) {
     let list = $('<ol>').addClass("danger-zone-scene-list flexrow");
     let scene = app.object;
-    let zones = dangerZone.getAllZonesFromScene(scene.id);console.log(zones)
+    let zones = dangerZone.getAllZonesFromScene(scene.id);
     for (const [id, zn] of zones) {
         let typeDisplay = '', randomIcn = ''; 
         const zoneType = dangerZoneType.getDangerZoneType(zn.type);
