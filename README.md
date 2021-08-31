@@ -1,5 +1,9 @@
-# Danger-Zone
-
+# What Is Danger-Zone?
+Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT module that provides GMs the ability to easily invoke localized effects within a scene. Examples of what you can do with this module:
+* A storm where the danger of being struck by lightning is a deadly possibility.
+* A crumbling building where the collapsing ceiling can injure or trap occupants.
+* A twisted field of magic with portals that blink in and out of existance.
+* A blessed glade offering healing to those who walk through.
 
 ## Getting Started
 
