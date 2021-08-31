@@ -303,6 +303,7 @@
                         <span>{{localize "DANGERZONE.type-form.token-says.rule-type.label"}}</span>
                     </label>
                     <select name="options.flags.tokenSays.fileType" value="{{zone.options.flags.tokenSays.fileType}}">  
+                        <option value=""></option>  
                         {{selectOptions tokenSaysOps selected=zone.options.flags.tokenSays.fileType localize=true}}
                     </select>
                     <label class="buffer">

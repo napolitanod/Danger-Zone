@@ -84,18 +84,9 @@ export class workflow {
         dangerZone.log(false,`${message}... `, {workflow: this, data:data});
     }
 
-    async destroyFlow(documentType, id, duration){
-        let delay = duration; if(!duration){delay = 3000}
-        await wait(delay);
-        switch (documentType) {
-            case 'Tile':
-              await this.scene.deleteEmbeddedDocuments(documentType, [id]);
-              break;
-          }
-    }
-
     async next(nextState){
-        return await this._next(nextState);
+        await this._next(nextState);
+        if(WORKFLOWSTATES[nextState]>=98){return this}
     }
 
     async _next(state){
@@ -207,7 +198,7 @@ export class workflow {
                     })
                     .catch((e) => {
                         this.log('Zone workflow promise errors ', e);
-                        return this.next(WORKFLOWSTATES.COMPLETE) 
+                        return this.next(WORKFLOWSTATES.CANCEL) 
                     });
 
             case WORKFLOWSTATES.COMPLETE: 
@@ -313,6 +304,7 @@ export class workflow {
 
     async createEffectTile(twinTile) {
         const effect = this.zoneTypeOptions.lastingEffect;
+        const tiles = [];
 
         let boundary; 
         if(twinTile){
@@ -322,7 +314,7 @@ export class workflow {
         }
 
         let whc = this.zone.scene.widthHeightCenterFromLocation(boundary.start.x, boundary.start.y, this.zoneType.dimensions.units)
-        const rotation = Math.floor(Math.random() * 90) - 45;
+        
 
         let newTile = {
             flags: {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.zone.trigger, type: this.zone.type}}},
@@ -331,7 +323,7 @@ export class workflow {
             locked: false,
             height: whc.h * effect.scale,
             overhead: false,
-            rotation: rotation,
+            rotation: 0,
             scale: effect.scale,
             width: whc.w * effect.scale,
             video: {autoplay: true, loop: effect.loop, volume: 0},
@@ -402,7 +394,11 @@ export class workflow {
                 }
             }
         }
-        return await this.scene.createEmbeddedDocuments("Tile", [newTile, twinTile]);
+
+        tiles.push(newTile);
+        if(twinTile){tiles.push(twinTile)}
+
+        return await this.scene.createEmbeddedDocuments("Tile", tiles);
     }
 
     flavor() {
@@ -423,13 +419,14 @@ export class workflow {
             location =this.targetBoundary.start
         }
         const whc = this.zone.scene.widthHeightCenterFromLocation(location.x, location.y, this.zoneType.dimensions.units)
-                    
+        //const rotation = Math.floor(Math.random() * 90) - 45;
         if(this.zoneTypeOptions.foregroundEffect?.file) {
             const s = new Sequence()
                 .effect()
                     .file(this.zoneTypeOptions.foregroundEffect.file)
                     .atLocation(whc.c)
                     .scale(this.zoneTypeOptions.foregroundEffect.scale)
+                    .randomizeMirrorX()
 
                     if(this.zoneTypeOptions.foregroundEffect.duration){
                         s.duration(this.zoneTypeOptions.foregroundEffect.duration)
@@ -462,7 +459,8 @@ export class workflow {
                     .atLocation(whc.c)
                     .scale(this.zoneTypeOptions.backgroundEffect.scale)
                     .belowTokens()
-
+                    .randomRotation()
+                    
                     if(this.zoneTypeOptions.backgroundEffect.duration){
                         s.duration(this.zoneTypeOptions.backgroundEffect.duration)
                     }
