@@ -48,7 +48,6 @@ export class dangerZoneDimensions {
         //const gU = canvas.grid.grid.getGridPositionFromPixels(g.start[0], g.start[1]);
         const adjX = Math.min(g.start[0], (znType.w-1));
         const adjY = Math.min(g.start[1], (znType.h-1));
-        console.log(g);console.log(adjX);console.log(adjY);
         if(zn.options.bleed){
             g.w += adjX;
             g.h += adjY;
@@ -57,7 +56,7 @@ export class dangerZoneDimensions {
         } else {
             g.w -= adjX;
             g.h -= adjY;
-        }console.log(g)
+        }
         const area = (g.w * g.h);
         if(area < 1){return dangerZone.log(false,'Invalid zone settings ', {unitDimensions: g, startGridPos: gU, zoneType: znType, zone: zn})}
         let die = `1d${area}`;
