@@ -121,7 +121,7 @@ export class dangerZone {
   }
   
   /**
-   * Returns all zones on a given scene that automatically triggered during combat
+   * Returns all zones on a given scene that are either manual and enabled or triggered in an automated fashion
    * @param {string} sceneId  the scene id
    * @returns 
    */
@@ -129,7 +129,7 @@ export class dangerZone {
     let mp = new Map
     let zones = this.getAllZonesFromScene(sceneId); 
     for (let [k,zn] of zones) {
-      if(zn.trigger && zn.type && zn.scene?.sceneId && (!zn.random || zn.trigger === 'manual')){mp.set(k, zn)}
+      if(zn.trigger && zn.type && zn.scene?.sceneId && (zn.enabled || zn.trigger !== 'manual')){mp.set(k, zn)}
     }
     return mp
   }

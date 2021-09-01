@@ -37,25 +37,29 @@ export function initializeScene(app, html, options) {
 }
 
 function _setList (app, html, options) {
-    let list = $('<ol>').addClass("danger-zone-scene-list flexrow");
-    let scene = app.object;
-    let zones = dangerZone.getAllZonesFromScene(scene.id);
-    for (const [id, zn] of zones) {
-        let typeDisplay = '', randomIcn = ''; 
-        const zoneType = dangerZoneType.getDangerZoneType(zn.type);
-        if(zoneType) {typeDisplay = zoneType.name}
-        if(zn.random){randomIcn = '<i class="fas fa-radiation"></i>'}
-        let row = $('<li>').addClass('flexrow scene-config');
-        let title = $('<div>').addClass('title').text(zn.title);
-        let type = $('<div>').addClass('type').text(typeDisplay);
-        let trigger = $('<div>').addClass('trigger').text(game.i18n.localize(DANGERZONETRIGGERS[zn.trigger]));
-        let random = $('<div>').addClass('random').append($(randomIcn));
-        let editSection = $('<a>').addClass("danger-zone-edit").attr("title", game.i18n.localize("DANGERZONE.scene.edit-danger-zone")).append($('<i>').addClass("fas fa-edit")).append($('<span>').html('&nbsp;&nbsp;&nbsp;')).click((event) => {event.preventDefault(); _handleEditClick(event, app)});
-        let deleteSection = $('<a>').addClass("danger-zone-delete").attr("title", game.i18n.localize("DANGERZONE.scene.delete-danger-zone")).append($('<i>').addClass("fas fa-trash")).click(_handleDeleteClick);
-        let details = $('<div>').data("data-id", {"zone": id, "scene": scene.id}).addClass("danger-zone-details flexrow").hover(_showZoneHighlight, _hideZoneHighlight).append(title).append(type).append(trigger).append(random); 
-        let controls = $('<div>').data("data-id", {"zone": id, "scene": scene.id}).addClass("danger-zone-controls").append(editSection).append(deleteSection);
-        row.append(details).append(controls);
-        list.append(row);
+    const list = $('<ol>').addClass("danger-zone-scene-list flexrow");
+    const scene = app.object;
+    const zonesInit = dangerZone.getAllZonesFromScene(scene.id);
+    if(zonesInit.size){
+        const zones = Array.from(zonesInit, ([name, value]) => (value)).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)});
+        for (let i = 0; i < zones.length; i++){
+            let zn = zones[i];
+            let typeDisplay = '', randomIcn = ''; 
+            const zoneType = dangerZoneType.getDangerZoneType(zn.type);
+            if(zoneType) {typeDisplay = zoneType.name}
+            if(zn.random){randomIcn = '<i class="fas fa-radiation"></i>'}
+            let row = $('<li>').addClass('flexrow scene-config');
+            let title = $('<div>').addClass('title').text(zn.title);
+            let type = $('<div>').addClass('type').text(typeDisplay);
+            let trigger = $('<div>').addClass('trigger').text(game.i18n.localize(DANGERZONETRIGGERS[zn.trigger]));
+            let random = $('<div>').addClass('random').append($(randomIcn));
+            let editSection = $('<a>').addClass("danger-zone-edit").attr("title", game.i18n.localize("DANGERZONE.scene.edit-danger-zone")).append($('<i>').addClass("fas fa-edit")).append($('<span>').html('&nbsp;&nbsp;&nbsp;')).click((event) => {event.preventDefault(); _handleEditClick(event, app)});
+            let deleteSection = $('<a>').addClass("danger-zone-delete").attr("title", game.i18n.localize("DANGERZONE.scene.delete-danger-zone")).append($('<i>').addClass("fas fa-trash")).click(_handleDeleteClick);
+            let details = $('<div>').data("data-id", {"zone": zn.id, "scene": scene.id}).addClass("danger-zone-details flexrow").hover(_showZoneHighlight, _hideZoneHighlight).append(title).append(type).append(trigger).append(random); 
+            let controls = $('<div>').data("data-id", {"zone": zn.id, "scene": scene.id}).addClass("danger-zone-controls").append(editSection).append(deleteSection);
+            row.append(details).append(controls);
+            list.append(row);
+        }
     }
     dangerZone.log(false,'Danger Zone Scene List Built ', {app, html, options, "list": list});
     return list

@@ -196,7 +196,7 @@ form.danger-zone-record .form-group {
 .danger-zone-scene-trigger {
     position: relative;
     list-style: none;
-    margin: 0px 4px 4px 0px;
+    margin: 0px 4px 8px 0px;
     padding: 0;
     border-width: 0px;
     background-color: transparent;
