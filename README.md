@@ -5,6 +5,9 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 * A twisted field of magic with portals that blink in and out of existance.
 * A blessed glade offering healing to those who walk through.
 
+<img src="https://user-images.githubusercontent.com/22696153/131688065-208aedc4-8c3c-4a3f-acab-bed0f103046e.gif" height="400">
+
+
 ## Getting Started
 
 ### 1. Create a Zone Type
