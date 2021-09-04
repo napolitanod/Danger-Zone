@@ -57,9 +57,18 @@ When a scene is activated, if you are a GM and viewing that scene, you will see 
 * Active zones are displayed with a blue highlight effect. Inactive are displayed without the highlight effect.
 * Selecting a button toggles it from active to inactive or vice versa.
 
+#### On Hover
+Hovering over any button, aside from the manual trigger grouping, will highlight it's area within the scene grid.
+
 ### Danger Zone Lasting Effect Clear
 <img src="https://user-images.githubusercontent.com/22696153/132107176-928adf83-cd37-47e4-a3b3-c792cbdb2151.png">
 A button is added to the tile controls. Selecting this will clear all lasting effects (tiles) on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
+
+### Danger Zone Types Button
+Aside from accessing zone types from the Danger Zone Configuration area in the Foundry Module Configurations, you can also add these by selecting the button located in the footer of the scenes sidebar. This button can be suppressed as an option within the Danger Zone Configurations.
+
+![image](https://user-images.githubusercontent.com/22696153/132108049-18416af0-5ff1-4cf0-8863-90bbe9d61fbb.png)
+
 
 ## Module Integration
 Danger Zone integrates with a series of other Foundary modules in order to provide enhanced effects and token targetting. See the [Module Integration](../../wiki/Module-Integration) page for details on which modules extend Danger Zone base functionality if installed.
