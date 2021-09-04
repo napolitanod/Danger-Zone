@@ -58,7 +58,7 @@ When a scene is activated, if you are a GM and viewing that scene, you will see 
 * Selecting a button toggles it from active to inactive or vice versa.
 
 ### Danger Zone Lasting Effect Clear
-<img src="https:///user-images.githubusercontent.com/22696153/132107128-6adad0b0-f966-4c52-aee0-e712427ed93d.png">
+<img src="https://user-images.githubusercontent.com/22696153/132107176-928adf83-cd37-47e4-a3b3-c792cbdb2151.png">
 A button is added to the tile controls. Selecting this will clear all lasting effects (tiles) on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
 
 ## Module Integration
