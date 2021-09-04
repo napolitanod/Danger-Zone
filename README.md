@@ -13,6 +13,12 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 <img src="https://user-images.githubusercontent.com/22696153/131688065-208aedc4-8c3c-4a3f-acab-bed0f103046e.gif" height="400">
 
 
+## What's in the module
+Danger Zone effectively turns your scene into an actor, adding defined zones to the scene where effects that you specify can be triggered while adding effect trigger buttons to the scene's navbar that give you the ability to generate effects with the click of a button. Zone effects can be associated with game events, such as combat turn change, and can be triggered automatically when such events occur. Danger Zone also provides easy to use forms within which you can define what happens when a given effect triggers, such as adding visual and audio components, macros, tiles, and chat messaging and includes workflow functionality that completes the effect in sequence. Finally, Danger Zone has a token targeting component, which gives you the ability to add active effects or generate macro code on tokens targetted by a zone effect. Danger Zone functionality can be expanded through other Foundry modules - see the Module Integration section below.
+
+## What's not in the module
+Danger Zone does not include any video, image or audio components. When another module can do something well, such as summoning a token (Warpgate), shaking the screen canvas (Kandashi's Fluid Canvas), or teleporting tokens (Monk's Active Tiles) then Danger Zone will integrate with that module to provide those effects rather than include them in the module itself.
+
 ## Getting Started
 
 ### 1. Create a Zone Type
