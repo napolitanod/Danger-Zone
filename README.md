@@ -38,9 +38,28 @@ Access the Danger Zone section from within scene configuration in order to creat
 ### 3. Trigger Zone
 The trigger causes the lava bubble to erupt from the lava field. A trigger can be invoked either manually or as part of a Foundary event.
 
-![image](https://user-images.githubusercontent.com/22696153/131510995-6ca6cee0-9a8a-4ff4-ad82-561c76090cdc.png)
-
 See [Triggers](../../wiki/Triggers) for more info.
+
+## Added to Foundry
+
+### Danger Zone Trigger Buttons
+<img src="https://user-images.githubusercontent.com/22696153/132107140-2fb0f79d-ab56-425f-8733-c01677602ad5.png" height="70px">
+When a scene is activated, if you are a GM and viewing that scene, you will see an array of buttons located to the right of that scene in the scene top navigation. Each button is a zone in that scene and displays the icon for that zone type. The buttons function as follows:
+
+#### Manually triggered zones
+* Zones that are active are listed individually here except for those which have the 'Randomize' enabled. 
+* All active randomized zones are grouped and only a single random button (using the Danger Zone radiation logo) is displayed for all of them. 
+* Inactive zones are not displayed.
+* Selecting a button triggers ths zone.
+
+#### Automatically triggered zones (e.g. combat turn start trigger)
+* All zones are listed individually here.
+* Active zones are displayed with a blue highlight effect. Inactive are displayed without the highlight effect.
+* Selecting a button toggles it from active to inactive or vice versa.
+
+### Danger Zone Lasting Effect Clear
+<img src="https:///user-images.githubusercontent.com/22696153/132107128-6adad0b0-f966-4c52-aee0-e712427ed93d.png">
+A button is added to the tile controls. Selecting this will clear all lasting effects (tiles) on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
 
 ## Module Integration
 Danger Zone integrates with a series of other Foundary modules in order to provide enhanced effects and token targetting. See the [Module Integration](../../wiki/Module-Integration) page for details on which modules extend Danger Zone base functionality if installed.
