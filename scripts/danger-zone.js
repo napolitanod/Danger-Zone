@@ -178,6 +178,7 @@ export class zone {
    */
   constructor (sceneId) {
     this.id = foundry.utils.randomID(16);
+    this.actor = '',
     this.enabled = game.settings.get('danger-zone', 'scene-enabled-default'),
     this.flavor = '',
     this.likelihood = 100,
@@ -192,6 +193,7 @@ export class zone {
     this.replace = 'N',
     this.scene = new dangerZoneDimensions(sceneId, this.id),
     this.title = '',
+    this.tokenDisposition = '',
     this.trigger = 'manual',
     this.type = '',
     this.weight = 1
@@ -238,6 +240,29 @@ export class zone {
   async toggleZoneActive() {
     if(this.enabled){this.enabled = false} else {this.enabled = true}
     return await this._setFlag();
+  }
+
+  zoneTokens(tokens){
+    if(!tokens){tokens = game.scenes.get(this.scene.sceneId).tokens}
+    return dangerZoneDimensions.tokensInBoundary(tokens, {start: this.scene.start, end: this.scene.end});
+  }
+
+  zoneEligibleTokens(tokens){
+    const inBoundary = this.zoneTokens(tokens);
+    let kept = [];
+    if(this.actor || this.tokenDisposition){
+      for(let token of inBoundary){
+        let keep = 1;
+        if(this.actor && token.data.actorId !== this.actor){
+          keep = 0;
+        }
+        if(this.tokenDisposition && parseInt(this.tokenDisposition) !== token.data.disposition){
+          keep = 0;
+        }
+        if(keep){kept.push(token)}
+      }
+    } else {kept = inBoundary}
+    return kept
   }
 }
 

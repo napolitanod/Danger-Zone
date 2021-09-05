@@ -16,7 +16,7 @@
                     <span>{{localize 'DANGERZONE.type-form.name.label'}}</span>
                 </label>
                 <div class="config-value form-fields">
-                    <input type="text" name="name" value="{{zone.name}}" maxlength="75" required/>
+                    <input type="text" name="name" value="{{zone.name}}" maxlength="75" required>
                 </div>
             </div>
             <div class="form-group">
@@ -25,7 +25,7 @@
                 </label>
                 <div class="config-value form-fields">
                     {{filePicker target="icon" type="image"}}
-                    <input type="text" name="icon" value="{{zone.icon}}" required/>
+                    <input type="text" name="icon" value="{{zone.icon}}" required>
                 </div>
             </div>
             <div class="form-group">
@@ -77,7 +77,7 @@
                     <div class="audio-file">
                         <div class="file-picker-wrapper">
                             {{filePicker target="options.audio.file" type="audio"}}
-                            <input type="text" name="options.audio.file" value={{zone.options.audio.file}}>
+                            <input type="text" name="options.audio.file" value="{{zone.options.audio.file}}">
                         </div>
                     </div>
                     <label class="audio-delay-label">{{localize "DANGERZONE.type-form.audio.delay.label"}}</label>
@@ -104,7 +104,7 @@
                     <div class="tile-file">
                         <div class="file-picker-wrapper">
                             {{filePicker target="options.lastingEffect.file" type="imagevideo"}}
-                            <input type="text" name="options.lastingEffect.file" value={{zone.options.lastingEffect.file}}>
+                            <input type="text" name="options.lastingEffect.file" value="{{zone.options.lastingEffect.file}}">
                         </div>
                     </div>
                     <label class="tile-scale-label">{{localize "DANGERZONE.type-form.tile.scale.label"}}</label>
@@ -135,22 +135,33 @@
                     <div class="foregroundEffect-file">
                         <div class="file-picker-wrapper">
                             {{filePicker target="options.foregroundEffect.file" type="imagevideo"}}
-                            <input type="text" name="options.foregroundEffect.file" value={{zone.options.foregroundEffect.file}}>
+                            <input type="text" name="options.foregroundEffect.file" value="{{zone.options.foregroundEffect.file}}">
                         </div>
                     </div>
                     <label class="foregroundEffect-scale-label">{{localize "DANGERZONE.type-form.foregroundEffect.scale.label"}}</label>
                     <div class="foregroundEffect-scale">
-                        <input type="Number" name="options.foregroundEffect.scale" value="{{zone.options.foregroundEffect.scale}}" min="0.01" max="50" step="0.01" required/>
+                        <input type="Number" name="options.foregroundEffect.scale" value="{{zone.options.foregroundEffect.scale}}" min="0.01" max="50" step="0.01" required>
                     </div>
                     <label>
                         <span>{{localize 'DANGERZONE.type-form.foregroundEffect.repeat.label'}}</span>
                     </label>
                     <div class="forgroundEffect-repeat">
-                        <input type="Number" name="options.foregroundEffect.repeat" value={{zone.options.foregroundEffect.repeat}} min="0" max="10" steps="1" required/>
+                        <input type="Number" name="options.foregroundEffect.repeat" value={{zone.options.foregroundEffect.repeat}} min="0" max="10" steps="1" required>
                     </div>
                     <label class="foregroundEffect-duration-label">{{localize "DANGERZONE.type-form.foregroundEffect.duration.label"}}</label>
                     <div class="foregroundEffect-duration">
                         <input type="Number" name="options.foregroundEffect.duration" min="0" step="1" value={{zone.options.foregroundEffect.duration}} required>
+                    </div>
+                </div>
+                <div class="flexrow">
+                    <label class="foregroundEffect-mustache-label">
+                    </label>
+                    <div class="foregroundEffect-mustache">
+                    </div>
+                    <div>&nbsp;</div>
+                    <label class="foregroundEffect-delay-label">{{localize "DANGERZONE.type-form.foregroundEffect.delay.label"}}</label>
+                    <div class="foregroundEffect-delay">
+                        <input type="Number" name="options.foregroundEffect.delay" min="0" step="1" value={{zone.options.foregroundEffect.delay}} required>
                     </div>
                 </div>
             </div>
@@ -166,7 +177,7 @@
                     <div class="backgroundEffect-file">
                         <div class="file-picker-wrapper">
                             {{filePicker target="options.backgroundEffect.file" type="imagevideo"}}
-                            <input type="text" name="options.backgroundEffect.file" value={{zone.options.backgroundEffect.file}}>
+                            <input type="text" name="options.backgroundEffect.file" value="{{zone.options.backgroundEffect.file}}">
                         </div>
                     </div>
                     <label class="backgroundEffect-scale-label">{{localize "DANGERZONE.type-form.backgroundEffect.scale.label"}}</label>
@@ -182,6 +193,17 @@
                     <label class="backgroundEffect-duration-label">{{localize "DANGERZONE.type-form.backgroundEffect.duration.label"}}</label>
                     <div class="backgroundEffect-duration">
                         <input type="Number" name="options.backgroundEffect.duration" min="0" step="1" value={{zone.options.backgroundEffect.duration}}>
+                    </div>
+                </div>
+                <div class="flexrow">
+                    <label class="backgroundEffect-mustache-label">
+                    </label>
+                    <div class="backgroundEffect-mustache">
+                    </div>
+                    <div>&nbsp;</div>
+                    <label class="backgroundEffect-delay-label">{{localize "DANGERZONE.type-form.backgroundEffect.delay.label"}}</label>
+                    <div class="backgroundEffect-delay">
+                        <input type="Number" name="options.backgroundEffect.delay" min="0" step="1" value={{zone.options.backgroundEffect.delay}} required>
                     </div>
                 </div>
             </div>

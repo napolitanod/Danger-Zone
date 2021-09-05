@@ -9,9 +9,10 @@ export const WORKFLOWSTATES = {
     INIT: 0,
     AWAITLOCATION: 1,
     EXECUTELIKELIHOOD: 2,
-    GETZONEELIGIBLETOKENS: 3,
-    ESTABLISHTARGETBOUNDARY: 4,
-    GETZONETARGETS: 5,
+    GETZONEDATA: 3,
+    GETZONEELIGIBLETOKENS: 4,
+    ESTABLISHTARGETBOUNDARY: 5,
+    GETZONETARGETS: 6,
     GENERATEFLAVOR: 10,
     GENERATEFLUIDCANVAS: 15,
     GENERATEFOREGROUNDEFFECT: 20,
@@ -64,6 +65,7 @@ export class workflow {
         this.twinLocation = {},
         this.userSelectedLocation = {},
         this.zone = zone,
+        this.zoneEligibleTokens = [], 
         this.zoneTokens = [], 
         this.zoneType = dangerZoneType.getDangerZoneType(zone.type)
     };
@@ -105,14 +107,19 @@ export class workflow {
                 await this.happens();
                 this.log('Zone likelihood executed', {});
                 if(this.active && this.zoneType) {
-                    return this.next(WORKFLOWSTATES.GETZONEELIGIBLETOKENS)
+                    return this.next(WORKFLOWSTATES.GETZONEDATA)
                 } else {
                     return this.next(WORKFLOWSTATES.CANCEL)
                 }  
             
+            case WORKFLOWSTATES.GETZONEDATA:
+                this.getZoneData();
+                this.log('Zone tokens got ', {});
+                return this.next(WORKFLOWSTATES.GETZONEELIGIBLETOKENS)
+
             case WORKFLOWSTATES.GETZONEELIGIBLETOKENS:
-                let boundary = this.getZoneEligibleTokens();
-                this.log('Zone eligible tokens got ', {zoneSceneBoundary: boundary});
+                this.getZoneEligibleTokens();
+                this.log('Zone eligible tokens got ', {});
                 return this.next(WORKFLOWSTATES.ESTABLISHTARGETBOUNDARY)
 
             case WORKFLOWSTATES.ESTABLISHTARGETBOUNDARY:
@@ -240,8 +247,12 @@ export class workflow {
         }
     }
 
+    getZoneData(){
+        return this.zoneTokens = this.zone.zoneTokens();
+    }
+
     getZoneEligibleTokens(){
-        return this.zoneTokens = this.zone.scene.tokensInZone(this.sceneTokens);
+        return this.zoneEligibleTokens = this.zone.zoneEligibleTokens(this.zoneTokens);
     }
 
     async establishTargetBoundary() {
@@ -254,18 +265,20 @@ export class workflow {
     getChosenLocationBoundary(){
         let boundary = this.zone.scene.locationToBoundary(this.userSelectedLocation.x, this.userSelectedLocation.y, this.zoneType.dimensions.units);
         mergeObject(this.targetBoundary, boundary, {insertKeys: false, enforceTypes: true});
-        this.eligibleTargets = this.zone.scene.tokensInBoundaryInZone(this.zoneTokens, this.targetBoundary);
+        this.eligibleTargets = this.zone.scene.tokensInBoundaryInZone(this.zoneEligibleTokens, this.targetBoundary);
         return boundary
     }
 
     async getRandomLocationBoundary() {
         let max = 1, i=0, testBoundary = [];
-        if(this.zone.options.runUntilTokenFound){max = 10000}
+        if(this.zone.options.runUntilTokenFound && this.zoneEligibleTokens.length){
+            max = 10000;
+        }
         do {
             i++;
             testBoundary = await this.zone.scene.randomArea();
             if(!testBoundary){return this.next(WORKFLOWSTATES.CANCEL)}
-            this.eligibleTargets = this.zone.scene.tokensInBoundaryInZone(this.zoneTokens, testBoundary);
+            this.eligibleTargets = this.zone.scene.tokensInBoundaryInZone(this.zoneEligibleTokens, testBoundary);
         }
         while(this.eligibleTargets.length === 0 && i < max);
         mergeObject(this.targetBoundary, testBoundary, {insertKeys: false, enforceTypes: true});
@@ -421,19 +434,23 @@ export class workflow {
         const whc = this.zone.scene.widthHeightCenterFromLocation(location.x, location.y, this.zoneType.dimensions.units)
         //const rotation = Math.floor(Math.random() * 90) - 45;
         if(this.zoneTypeOptions.foregroundEffect?.file) {
-            const s = new Sequence()
-                .effect()
+            let s = new Sequence()
+                if(this.zoneTypeOptions.foregroundEffect.delay){
+                   s = s.wait(this.zoneTypeOptions.foregroundEffect.delay)
+                }
+                
+                s = s.effect()
                     .file(this.zoneTypeOptions.foregroundEffect.file)
                     .atLocation(whc.c)
                     .scale(this.zoneTypeOptions.foregroundEffect.scale)
                     .randomizeMirrorX()
 
                     if(this.zoneTypeOptions.foregroundEffect.duration){
-                        s.duration(this.zoneTypeOptions.foregroundEffect.duration)
+                        s = s.duration(this.zoneTypeOptions.foregroundEffect.duration)
                     }
 
                     if(this.zoneTypeOptions.foregroundEffect.repeat){
-                        s.repeats(this.zoneTypeOptions.foregroundEffect.repeat)
+                        s = s.repeats(this.zoneTypeOptions.foregroundEffect.repeat)
                     }
 
                 s.play()
@@ -453,8 +470,12 @@ export class workflow {
         const whc = this.zone.scene.widthHeightCenterFromLocation(location.x, location.y, this.zoneType.dimensions.units)
         
         if(this.zoneTypeOptions.backgroundEffect?.file) {
-            const s = new Sequence()
-                .effect()
+            let s = new Sequence()
+                if(this.zoneTypeOptions.backgroundEffect.delay){
+                    s = s.wait(this.zoneTypeOptions.backgroundEffect.delay)
+                }
+                
+                s = s.effect()
                     .file(this.zoneTypeOptions.backgroundEffect.file)
                     .atLocation(whc.c)
                     .scale(this.zoneTypeOptions.backgroundEffect.scale)
@@ -462,11 +483,11 @@ export class workflow {
                     .randomRotation()
                     
                     if(this.zoneTypeOptions.backgroundEffect.duration){
-                        s.duration(this.zoneTypeOptions.backgroundEffect.duration)
+                        s = s.duration(this.zoneTypeOptions.backgroundEffect.duration)
                     }
 
                     if(this.zoneTypeOptions.backgroundEffect.repeat){
-                        s.repeats(this.zoneTypeOptions.backgroundEffect.repeat)
+                        s = s.repeats(this.zoneTypeOptions.backgroundEffect.repeat)
                     }
 
                 s.play()
@@ -567,7 +588,7 @@ export class workflow {
 
     async tokenSays() {
         const flag = this.flags?.tokenSays;
-        if(flag?.fileType && (flag?.fileName || flag?.fileType)) {
+        if(this.targets.length && flag?.fileType && (flag?.fileName || flag?.fileType)) {
             const options = {
                 type: flag.fileType,
                 source: flag.fileName,

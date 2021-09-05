@@ -60,6 +60,11 @@ form.danger-zone-type-form .form-group {
     display: block;
 }
 
+form.danger-zone-type-form h3 {
+    padding-bottom: 0px;
+    border-bottom: none;
+}
+
 .danger-zone-scene-list li.scene-config, 
 .danger-zone-types-list li.type-record {
     flex: 1 1 100%;
@@ -258,7 +263,9 @@ form.danger-zone-record .form-group {
 .danger-zone-type-form .backgroundEffect-file, 
 .danger-zone-type-form .foregroundEffect-file, 
 .danger-zone-type-form .tile-file,
-.danger-zone-type-form .warpgate-actor-input {
+.danger-zone-type-form .warpgate-actor-input,
+.danger-zone-type-form .backgroundEffect-mustache, 
+.danger-zone-type-form .foregroundEffect-mustache  {
     flex: 0 0 50%;
 }
 
@@ -277,8 +284,16 @@ form.danger-zone-record .form-group {
 
 .danger-zone-type-form .fluid-canvas-duration-label,
 .danger-zone-type-form .foregroundEffect-duration-label, 
-.danger-zone-type-form .backgroundEffect-duration-label {
+.danger-zone-type-form .backgroundEffect-duration-label, 
+.danger-zone-type-form .foregroundEffect-delay-label, 
+.danger-zone-type-form .backgroundEffect-delay-label {
     flex: 0 0 12%;
+}
+
+.danger-zone-type-form .foregroundEffect-delay-label, 
+.danger-zone-type-form .backgroundEffect-delay-label {
+    float: right;
+    margin-top: 6px;
 }
 
 .danger-zone-type-form .audio-delay {
@@ -296,6 +311,8 @@ form.danger-zone-record .form-group {
 .danger-zone-type-form .audio-file-label, 
 .danger-zone-type-form .foregroundEffect-file-label, 
 .danger-zone-type-form .backgroundEffect-file-label, 
+.danger-zone-type-form .foregroundEffect-mustache-label, 
+.danger-zone-type-form .backgroundEffect-mustache-label, 
 .danger-zone-type-form .tile-file-label {
     flex: 0 0 6%;
 }
@@ -309,6 +326,8 @@ form.danger-zone-record .form-group {
 
 .danger-zone-type-form .foregroundEffect-duration,
 .danger-zone-type-form .backgroundEffect-duration,
+.danger-zone-type-form .foregroundEffect-delay,
+.danger-zone-type-form .backgroundEffect-delay,
 .danger-zone-type-form .monks-active-tiles-delay,
 .danger-zone-type-form .dz-monks-active-tiles .after-label {
     flex: 0 0 8%;
