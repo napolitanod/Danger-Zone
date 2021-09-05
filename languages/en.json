@@ -17,6 +17,7 @@
             "clearEffectsTile.label": "Clear Danger Zone Effects"
         },
         "edit-form": {
+            "actor.label": "Actor",
             "allInArea.label": "Target All Tokens In Targeted Area",
             "allInArea.description": "If more than one token is in a target area, they will all be targeted. Otherwise only one random token is targeted.",
             "bleed.label": "Bleed",
@@ -45,6 +46,8 @@
             "runUntilTokenFound.label": "Always Hits a Token",
             "runUntilTokenFound.description": "The effect will target an area of the zone where at least one token is present.",
             "title.label": "Title",
+            "token-targeting.label": "Token Targeting",
+            "token-disposition.label": "Disposition",
             "trigger.label": "Trigger",
             "trigger.description": "Select how this danger zone will be triggered on this scene",
             "type.label": "Type",
@@ -99,6 +102,12 @@
             "scene-enabled-default.label": "New Zone Active by Default",
             "scene-enabled-default.description": "Select whether or not new danger zones default to active when you first create them."  
         },
+        "token-disposition": {
+            "all.label": "All",
+            "friendly.label": "Friendly",
+            "hostile.label": "Hostile",
+            "neutral.label": "Neutral"
+        },
         "trigger-types": {
             "manual.label": "Manual",
             "combat-start.label": "Combat Start",
@@ -129,9 +138,11 @@
                 "volume.label": "Volume"
             },
             "backgroundEffect":{
+                "delay.label": "Delay",
                 "label": "Secondary/Impact Effect",
                 "file.find": "Browse for Effect",
                 "file.label": "File",
+                "mustache.label": "Stache",
                 "scale.label": "Scale",
                 "repeat.label": "Repeats",
                 "duration.label": "Duration (ms)"
@@ -147,9 +158,11 @@
                 "notes": "Invokes Fluid Canvas effects at the start of the zone effect."
             },
             "foregroundEffect":{
+                "delay.label": "Delay",
                 "label": "Primary/Environmental Effect",
                 "file.label": "File",
                 "file.find": "Browse for Effect",
+                "mustache.label": "Stache",
                 "scale.label": "Scale",
                 "repeat.label": "Repeats",
                 "duration.label": "Duration (ms)"

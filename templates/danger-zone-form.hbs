@@ -30,10 +30,12 @@
                     </select>
                 </div>
             </div>
+            <hr>
             <div class="form-group">
-                <label>
+                <h3>
+                    <i class="fas fa-ruler"></i>&nbsp;
                     <span>{{localize 'DANGERZONE.edit-form.boundary.label'}}</span>
-                </label>
+                </h3>
             </div>
             <div class="form-group">
                 <div class="form-fields flexrow">
@@ -84,9 +86,10 @@
             </div>
             <hr>
             <div class="form-group">
-                <label>
+                <h3>
+                    <i class="fas fa-play"></i>&nbsp;
                     <span>{{localize 'DANGERZONE.edit-form.trigger.label'}}</span>
-                </label>
+                </h3>
                 <div class="form-fields">
                     <select name="trigger" value="{{zone.trigger}}">
                         {{selectOptions triggerOps selected=zone.trigger localize=true}}
@@ -119,18 +122,6 @@
                 </div>
                 <p class="notes">{{localize 'DANGERZONE.edit-form.likelihood.description'}}</p>
             </div>
-            <hr>
-            <div class="form-group">
-                <label>
-                    <span>{{localize 'DANGERZONE.edit-form.replace.label'}}</span>
-                </label>
-                <div class="form-fields">
-                    <select name="replace" value="{{zone.replace}}">
-                        {{selectOptions replaceOps selected=zone.replace localize=true}}
-                    </select>
-                </div>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.replace.description'}}</p>
-            </div>
             <div class="form-group flexrow">
                 <div class="checkbox-value">
                     <input type="checkbox" name="options.placeTemplate" {{checked zone.options.placeTemplate}} />
@@ -139,6 +130,32 @@
                     <span>{{localize 'DANGERZONE.edit-form.placeTemplate.label'}}</span>
                 </label>
                 <p class="notes">{{localize 'DANGERZONE.edit-form.placeTemplate.description'}}</p>
+            </div>
+            <hr>
+            <h3>
+                <i class="fas fa-users"></i>&nbsp;
+                <span>{{localize 'DANGERZONE.edit-form.token-targeting.label'}}</span>
+            </h3>
+            <div class="form-group flexrow">
+                <label>
+                    <span>{{localize 'DANGERZONE.edit-form.token-disposition.label'}}</span>
+                </label>
+                <div class="form-fields">
+                    <select name="tokenDisposition" value="{{zone.tokenDisposition}}">
+                        <option value="">{{localize 'DANGERZONE.token-disposition.all.label'}}</option>
+                        {{selectOptions tokenDispositionOps selected=zone.tokenDisposition localize=true}}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group flexrow">
+                <label>
+                    <span>{{localize 'DANGERZONE.edit-form.actor.label'}}</span>
+                </label>
+                <div class="form-fields actor-select">
+                    <select name="actor" value="{{zone.actor}}">
+                        {{selectOptions actorOps selected=zone.actor}}
+                    </select>
+                </div>
             </div>
             <div class="form-group flexrow">
                 <div class="checkbox-value">
@@ -157,6 +174,18 @@
                     <span>{{localize 'DANGERZONE.edit-form.runUntilTokenFound.label'}}</span>
                 </label>
                 <p class="notes">{{localize 'DANGERZONE.edit-form.runUntilTokenFound.description'}}</p>
+            </div>
+            <hr>
+            <div class="form-group">
+                <label>
+                    <span>{{localize 'DANGERZONE.edit-form.replace.label'}}</span>
+                </label>
+                <div class="form-fields">
+                    <select name="replace" value="{{zone.replace}}">
+                        {{selectOptions replaceOps selected=zone.replace localize=true}}
+                    </select>
+                </div>
+                <p class="notes">{{localize 'DANGERZONE.edit-form.replace.description'}}</p>
             </div>
             <div class="form-group flexrow">
                 <label>

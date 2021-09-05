@@ -3,6 +3,7 @@ import {dangerZoneType} from './zone-type.js';
 import {dangerZoneDimensions} from './dimensions.js';
 import {DANGERZONETRIGGERS} from './trigger-handler.js';
 import {DANGERZONEREPLACE} from './workflow.js';
+import {TOKENDISPOSITION, actorOps} from './constants.js';
 
 export class DangerZoneForm extends FormApplication {
   constructor(app, zoneId, sceneId, ...args) {
@@ -60,7 +61,9 @@ export class DangerZoneForm extends FormApplication {
 
     return {
       "zone": instance,
+      actorOps: actorOps(),
       replaceOps: DANGERZONEREPLACE,
+      tokenDispositionOps: TOKENDISPOSITION,
       triggerOps: DANGERZONETRIGGERS,
       zoneTypeOps: dangerZoneType.dangerZoneTypeList
     } 

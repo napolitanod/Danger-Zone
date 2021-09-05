@@ -18,6 +18,7 @@ export class dangerZoneType {
           volume: 0.5
         },
         backgroundEffect: {
+          delay: 0,
           file: '',
           scale: 1.0,
           repeat: 0,
@@ -26,6 +27,7 @@ export class dangerZoneType {
         effect: {},
         flags: {},
         foregroundEffect: {
+          delay: 0,
           file: '',
           scale: 1.0,
           repeat: 0,
