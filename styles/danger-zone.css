@@ -197,6 +197,21 @@ form.danger-zone-record .form-group {
 .danger-zone-record .custom
 {margin-right: 15px;}
 
+form.danger-zone-record .form-fields .boundary-z{
+    flex: 0 0 15.5%; 
+}
+
+form.danger-zone-record .form-fields .boundary-bottom-label {
+    flex: 0 0 37.5%; 
+    text-align: right;
+}
+
+form.danger-zone-record .form-fields .boundary-top-label {
+    flex: 0 0 30%; 
+    text-align: right;
+}
+
+
 /*scene navigation*/
 .danger-zone-scene-trigger {
     position: relative;
@@ -379,6 +394,11 @@ form.danger-zone-type-form .dz-warpgate .buffer,
 form.danger-zone-type-form .dz-monks-active-tiles .buffer  {
     margin-left: 15px;
 }
+
+.danger-zone-type-form label[class^="area-"] {
+    padding-right: 7px;
+}
+
 
 /*search*/
 #danger-zone-type-primary-controls {

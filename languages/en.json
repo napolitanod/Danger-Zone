@@ -2,69 +2,70 @@
     "DANGERZONE": {
         "add": "Add",
         "cancel": "Cancel",
+        "delete": "Delete",
         "edit": "Edit",
         "location-picker": "Select the zone dimensions",
         "save": "Save",
         "view": "View",
         "yes": "Ok",
         "alerts": {
-            "no-trigger-if-not-on-combat-scene": "Danger Zones will not trigger while you are not active on the current combat scene.",
+            "input-z": "Elevation",
+            "no-trigger-if-not-on-combat-scene": "Danger Zones do not trigger while you are not active on the current combat scene.",
             "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
             "select-zone-end": "Select an end location for this zone. Selected area will snap to grid and represent the lower right corner of this zone.",
-            "select-target": "Select a location to target in the Danger Zone. Selected area will snap to grid and represent the top left and bottom right corners of the zone."
+            "select-target": "Select a location in the zone. Selected area will snap to grid and represent the top left corner of the danger's target."
         },
         "controls": {
-            "clearEffectsTile.label": "Clear Danger Zone Effects"
+            "clearEffectsTile.label": "Clear Danger Zone Lasting Effects"
         },
         "edit-form": {
             "actor.label": "Actor",
             "allInArea.label": "Target All Tokens In Targeted Area",
             "allInArea.description": "If more than one token is in a target area, they will all be targeted. Otherwise only one random token is targeted.",
             "bleed.label": "Bleed",
-            "bleed.description": "Determines if the effect boundary (based on the Type's width and height) will exceed this zone's boundary. If not set, units closer to center within the zone have a greater likelihood of being targeted.",
+            "bleed.description": "If set, the danger's boundary (based on its width, height and depth) can partially exceed this zone's boundary. Danger effects will span into the bleed but tokens that are not in the zone boundary will not be targeted in the bleed. If not set, units closer to center within the zone have a greater likelihood of being targeted.",
             "boundary": {
+                "bottom.label": "Bottom",
                 "end.label": "End:",
                 "label": "Dimensions",
-                "description": "The zone's starting and ending x and y position. The zone dimensions will use the center points of the grids that hold these positions.",
+                "description": "The zone dimensions will use the center points of the grids that hold the x and y positions and will encompass elevations between the bottom and up to, but not including, the top.",
                 "start.label": "Start:",
+                "top.label": "Top",
                 "x.label": "x",
                 "y.label": "y"
             },
             "enabled.label": "Active",
-            "enabled.description": "Zone is active and will trigger following trigger settings (can be toggled from scene navigation.)",
             "flavor.label": "Flavor",
             "flavor.description": "Flavor will output to chat message when zone triggers.",
             "likelihood.label": "Likelihood",
-            "likelihood.description": "The likelihood that effects will generate on trigger.",
-            "name": "Configure Danger Zone",
+            "likelihood.description": "The likelihood that a danger will generate on trigger.",
+            "name": "Configure Zone",
             "placeTemplate.label": "Choose Location",
-            "placeTemplate.description": "Prompts you to select the scene position to target (otherwise position is randomly selected.)",
+            "placeTemplate.description": "On trigger, prompts you to select the scene location to target with the danger (otherwise location is randomly selected from within the bounds of the zone and bleed). If location is fully outside the zone, danger effects will generate but location tokens will not be targeted. ",
             "random.label": "Randomize",
-            "random.description": "All danger zones in this scene that share the same trigger are grouped and only one is triggered at random. Assign a weight to control how often one triggers in relation to the others.",
+            "random.description": "All zones in this scene that share the same trigger are grouped and only one is triggered at random. Assign a weight to control how often one triggers in relation to the others.",
             "replace.label": "Replace Lasting Effect",
-            "replace.description": "Choose whether effect replaces any existing lasting effects on when it triggers.",
+            "replace.description": "Choose what to do with existing lasting effects when this zone triggers.",
             "runUntilTokenFound.label": "Always Hits a Token",
-            "runUntilTokenFound.description": "The effect will target an area of the zone where at least one token is present.",
+            "runUntilTokenFound.description": "The danger will target an area of the zone where at least one token is present, if able.",
             "title.label": "Title",
             "token-targeting.label": "Token Targeting",
             "token-disposition.label": "Disposition",
             "trigger.label": "Trigger",
-            "trigger.description": "Select how this danger zone will be triggered on this scene",
-            "type.label": "Type",
-            "type.description": "Select a default or custom type",
-            "types.add": "Add or edit zone types",
+            "type.label": "Danger",
+            "types.add": "View dangers",
             "weight.label": "Weight"
         },
         "export":{
-            "title": "Export Danger Zone Types"
+            "title": "Export Dangers"
         },
         "import":{
-            "title": "Import Danger Zone Types",
+            "title": "Import Dangers",
             "noFile": "You did not upload a data file!",
             "complete": "Import complete",
             "success": "imported successfully",
             "error": "failed import due to invalid data",
-            "skipped": "skipped because id is duplicate of an existing type.",
+            "skipped": "skipped because id is duplicate of an existing danger.",
             "short-title": "Import"
         },
         "record": {
@@ -74,11 +75,11 @@
             "isActive.label": "Active"            
         },
         "replace-types": {
-            "A.label": "Clear All Lasting Effects",
-            "N.label": "Retain Existing Effects",
-            "R.label": "Clear Effects With This Trigger",
-            "T.label": "Clear Effects With This Zone Type",
-            "Z.label": "Clear Effects Of This Zone"
+            "A.label": "Clear all lasting effects",
+            "N.label": "Retain all lasting effects",
+            "R.label": "Clear effects that share this trigger",
+            "T.label": "Clear effects that share this danger",
+            "Z.label": "Clear effects that share this zone"
         },
         "scene": {
             "add-danger-zone": "Add danger zone",
@@ -90,17 +91,21 @@
             "random-trigger.label": "Random Manual Trigger",
             "title": "Title",
             "trigger": "Trigger",
-            "type": "Type"
+            "type": "Danger"
         },
         "setting": {
-            "danger-zone-types-config.name": "Danger Zone Types",
-            "danger-zone-types-config.label": "Configure Danger Zone Types",
-            "scene-control-button-display.label": "Display Clear Effects Button",
-            "scene-control-button-display.description": "Toggles the display of the Clear Danger Zone Effects button within the scene control buttons tiles grouping",
-            "types-button-display.label": "Display Types Button",
-            "types-button-display.description": "Toggles the display of the Danger Zone Types button at the bottom of the scenes side bar",
+            "chat-details-to-gm.label": "Chat Zone Details to GM on Trigger",
+		    "chat-details-to-gm.description": "Will send a private chat message to GM that includes details on the danger zone on trigger, such as target location, eligible tokens, and targeted tokens.",
+            "danger-zone-types-config.name": "Dangers",
+            "danger-zone-types-config.label": "Configure Dangers",
+            "scene-control-button-display.label": "Display Clear Lasting Effects Button",
+            "scene-control-button-display.description": "Toggles the display of the Clear Danger Zone Lasting Effects button within the scene control buttons tiles grouping",
+            "types-button-display.label": "Display Dangers Button",
+            "types-button-display.description": "Toggles the display of the Dangers button at the bottom of the scenes side bar",
             "scene-enabled-default.label": "New Zone Active by Default",
-            "scene-enabled-default.description": "Select whether or not new danger zones default to active when you first create them."  
+            "scene-enabled-default.description": "Select whether or not new danger zones default to active when you first create them.",
+            "token-depth-multiplier.label": "Token Depth Multiplier",
+		    "token-depth-multiplier.description": "For purposes of zone depth targeting, set a multiplier that calculates how tall a token is in relation to the scene distance, the token's scale, and the number of grid squares that that token takes up. A token in a single grid square with a scale of 1.0, a scene distance of 5, and a multiplier of 1.2 will have a tallness of 6 (1 * 1.0 * 5 * 1.2)."
         },
         "token-disposition": {
             "all.label": "All",
@@ -122,14 +127,15 @@
                 "clear": "Clear active effect",
                 "confirm": "Are you sure you want to clear the active effect data?",
                 "label": "Apply Active Effect to Target",
-                "notes": "Active effect will be transferred to each target in the danger zone.",
+                "notes": "Active effect will be transferred to each danger target.",
                 "edit.title": "Edit Active Effect",
                 "delete.title": "Delete Active Effect",
-                "cleared.info": "Active effect data has been deleted from this zone type."
+                "cleared.info": "Active effect data has been deleted from this danger."
             },
             "animation.label": "Animation",
-            "area-x.label": "Width (Grid Units)",
-            "area-y.label": "Height (Grid Units)",
+            "area-x.label": "Width",
+            "area-y.label": "Height",
+            "area-z.label": "Depth",
             "audio":{
                 "label": "Audio",
                 "file.label": "File",
@@ -147,7 +153,8 @@
                 "repeat.label": "Repeats",
                 "duration.label": "Duration (ms)"
             },
-            "dimensions.label": "Dimensions",
+            "dimensions.label": "Danger Dimensions (in units)",
+            "dimensions.notes": "Enter width and height as grid units (e.g. count of grid squares). For depth, enter the difference between the top and bottom z positions (i.e. elevation).",
             "fluidCanvas": {
                 "delay.label":"Delay (ms)",
                 "duration.label":"Duration (ms)",
@@ -155,7 +162,7 @@
                 "iteration.label":"Iteration",
                 "label":"Kandashi's Fluid Canvas",
                 "type.label":"Type",
-                "notes": "Invokes Fluid Canvas effects at the start of the zone effect."
+                "notes": "Invokes Fluid Canvas effects at the start of the danger effect."
             },
             "foregroundEffect":{
                 "delay.label": "Delay (ms)",
@@ -179,7 +186,7 @@
                     "label": "Run Macro",
                     "macro.label": "Macro"
                 },
-                "notes": "These triggers will be added to the tile that is created by the active effect.",
+                "notes": "These triggers will be added to the tile that is created by the lasting effect.",
                 "teleport":{
                     "after.label": "After (sec)",
                     "avoid.label": "Avoid Others At Destination",
@@ -190,7 +197,7 @@
                     "add.label": "Teleport"
                 }
             },
-            "name.label": "Name",
+            "name.label": "Danger Name",
             "tab" :{
                 "modules.title": "Module Integration",
                 "main.title": "Core Configuration"
@@ -206,7 +213,7 @@
             "token-says": {
                 "compendium.label": "Compendium",
                 "label": "Token Says",
-                "notes": "Trigger Token Says functionality for a given playlist or rolltable source. Entering a data into 'Token Says' field will always say that thing or play that playlist's track, otherwise the source data is randomized.",
+                "notes": "Trigger Token Says functionality on danger targets for a given playlist or rolltable source. Entering a data into 'Token Says' field will always say that thing or play that playlist's track, otherwise the source data is randomized.",
                 "rule-type.label": "Type",
                 "rule-type-option": {
                     "playlist": "Audio Playlist",
@@ -225,25 +232,19 @@
             }
         },
         "types-form": {
-            "header.name": "Danger Zone Types",
-            "search.placeholder": "Enter text to filter types",
+            "header.name": "Dangers",
+            "search.placeholder": "Enter text to filter dangers",
             "search.clear": "Clear Search",
-            "export.title": "Export Zone Types",
-            "import.title": "Import Zone Types",
-            "defaultTypes": "Default Zone Types",
-            "customTypes": "Custom Zone Types",
+            "export.title": "Export Dangers",
+            "import.title": "Import Dangers",
             "type.name.label": "Name"
         },
         "zone-active-effect-form": {
-            "form-name": "Danger Zone Active Effect"
+            "form-name": "Danger Active Effect"
         },
         "zone-type-form": {
-            "form-name": "Danger Zone Type",
+            "form-name": "Danger",
             "name": "Name"
-        },
-        "zone-types": {
-            "possession.label": "Possession",
-            "lightning.label": "Lightning"
         }
     }
 

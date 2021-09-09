@@ -47,7 +47,7 @@ export class dangerZone {
     let flag = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE + `.${zoneId}`);
     if(!flag){return}
     const zn = this._toClass(flag);
-    dangerZone.log(false,'Zone Got Got ', {"zone": zn, zoneId, sceneId});
+    //dangerZone.log(false,'Zone Got Got ', {"zone": zn, zoneId, sceneId});
     return zn
   }
 

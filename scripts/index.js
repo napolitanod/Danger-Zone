@@ -7,7 +7,7 @@ import {triggerManager}  from './apps/trigger-handler.js';
 /**
  * global variables
  */
-export var sequencerOn = false, warpgateOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false; //active modules
+export var sequencerOn = false, warpgateOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
 
 /**
  * retains the most recent search term while in session for the danger zone type list form
@@ -51,6 +51,29 @@ Hooks.once('init', async function() {
 		config: true,
 		default: true,
 		type: Boolean,
+	});
+
+	game.settings.register(modulename, "chat-details-to-gm", {
+		name: game.i18n.localize("DANGERZONE.setting.chat-details-to-gm.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.chat-details-to-gm.description"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
+
+	game.settings.register(modulename, "token-depth-multiplier", {
+		name: game.i18n.localize("DANGERZONE.setting.token-depth-multiplier.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.token-depth-multiplier.description"),
+		scope: "world",
+		config: true,
+		default: 1,
+		type: Number,
+		range: {
+			min: 0.1,
+			max: 10,
+			step: 0.1
+		}
 	});
 
 	game.settings.register(modulename, 'zone-types', {
@@ -128,6 +151,8 @@ Hooks.on('updateCombat', async(combat, round, options, id) => {
  * sets global variables that indicate which modules that danger zone integrates with are available
  */
 function setModsAvailable () {
+	if (game.modules.get("betterroofs")?.active){betterRoofsOn = true} ;
+	if (game.modules.get("levels")?.active){levelsOn = true} ;
 	if (game.modules.get("monks-active-tiles")?.active){monksActiveTilesOn = true} ;
 	if (game.modules.get("token-says")?.active){tokenSaysOn = true} ;
 	if (game.modules.get("warpgate")?.active){warpgateOn = true} ;
@@ -152,7 +177,7 @@ function insertTileEffectsClearButton (controls, b, c) {
 				icon: "fas fa-radiation",
 				visible: game.user.isGM,
 				onClick: async () => {
-					let tileIds=canvas.background.tiles.filter(t => t.data.flags[dangerZone.ID]).map(t => t.id);
+					let tileIds=canvas.scene.tiles.filter(t => t.data.flags[dangerZone.ID]).map(t => t.id);
 					await canvas.scene.deleteEmbeddedDocuments("Tile", tileIds);
 				},
 				button: true

@@ -73,6 +73,22 @@
                         <input type="Number" name="scene.end.y" min="1" step="any" value={{zone.scene.end.y}} required>
                     </div>
                 </div>
+            </div>
+            <div class="form-group">
+                <div class="form-fields flexrow">
+                    <label class="boundary-bottom-label">
+                        <span>{{localize 'DANGERZONE.edit-form.boundary.bottom.label'}}</span>
+                    </label>
+                    <div class="boundary-z">
+                        <input type="Number" name="scene.start.z" step="1" value={{zone.scene.start.z}} required>
+                    </div>
+                    <label class="boundary-top-label">
+                        <span>{{localize 'DANGERZONE.edit-form.boundary.top.label'}}</span>
+                    </label>
+                    <div class="boundary-z">
+                        <input type="Number" name="scene.end.z" step="1" value={{zone.scene.end.z}} required>
+                    </div>
+                </div>
                 <p class="notes">{{localize 'DANGERZONE.edit-form.boundary.description'}}</p>
             </div>
             <div class="form-group flexrow">

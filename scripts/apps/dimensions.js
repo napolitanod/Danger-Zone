@@ -1,4 +1,8 @@
-//test scene update hook on close of config form
+/*
+lock bottom or top
+better roofs/levels
+*/
+
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 
@@ -13,11 +17,13 @@ export class dangerZoneDimensions {
         this.sceneId = sceneId,
         this.end = {
             x: 0,
-            y: 0
+            y: 0,
+            z: 0
         },
         this.start = {
             x: 0,
-            y: 0
+            y: 0,
+            z: 0
         }
         ;
         this._init();
@@ -47,17 +53,22 @@ export class dangerZoneDimensions {
         const g = this.getUnitDimensions();
         const adjX = Math.min(g.start[0], (znType.w-1));
         const adjY = Math.min(g.start[1], (znType.h-1));
+        let adjZ = 0;
+        if(!znType.d){adjZ = g.d} //only calculate depth if zoneType has depth defined.
         if(zn.options.bleed){
             g.w += adjX;
             g.h += adjY;
+            g.d += adjZ;
             g.start[0] -= adjX;
             g.start[1] -= adjY;
+            g.start[2] -= adjZ;
         } else {
-            g.w -= adjX;
-            g.h -= adjY;
+            g.w -= (znType.w-1);
+            g.h -= (znType.h-1);
+            g.d -= (znType.d - 1);
         }
         const area = (g.w * g.h);
-        if(area < 1){return dangerZone.log(false,'Invalid zone settings ', {unitDimensions: g, startGridPos: gU, zoneType: znType, zone: zn})}
+        if(area < 1 || g.d < 0){return dangerZone.log(false,'Invalid zone settings ', {unitDimensions: g, area: area, zoneType: znType, zone: zn})}
         let die = `1d${area}`;
         const randomRoll = new Roll(die);
         let rolledResult = await randomRoll.roll().result;
@@ -66,30 +77,44 @@ export class dangerZoneDimensions {
         let start = canvas.grid.grid.getPixelsFromGridPosition(posX, posY);
         let end = canvas.grid.grid.getPixelsFromGridPosition(posX+znType.w, posY+znType.h);
         
-        dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, randomArea: {units: g, start: start, end: end}, roll: rolledResult})
-        return this._conformBoundary(start[0], start[1], end[0], end[1])
+        if(g.d > 0){
+            const zResult = await new Roll(`1d${g.d}`).roll().result;
+            let zStart = g.start[2] + (zResult-1);
+            start.push(zStart);
+            end.push(zStart + znType.d);
+        } else {
+            start.push(g.start[2]);
+            end.push(g.start[2] + znType.d);
+        }
+
+        dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, randomArea: {units: g, start: start, end: end}, roll: rolledResult, zoneType: znType, zone: zn})
+        return this._conformBoundary(start[0], start[1], start[2], end[0], end[1], end[2])
     }
 
     /**
-     * intakes PIXEL coordinates for to locations on the grid and conforms them to the expected boundary object structure 
+     * intakes PIXEL coordinates for two locations on the grid and conforms them to the expected boundary object structure 
      * with locations shifted to be top right and bottom left and to be top left point of grid location
      * @param {integer} x1 location 1 x
      * @param {integer} y1 location 1 y
+     * @param {integer} z1 location 1 z
      * @param {integer} x2 location 2 x
      * @param {integer} y2 location 2 y
-     * @returns object with x and y coordinates for top left and bottom right of boundary in PIXELS
+     * @param {integer} z2 location 2 z
+     * @returns object with x, y, and z coordinates for top left and bottom right of boundary in PIXELS
      */
-    static conformBoundary(x1, y1, x2, y2){    
+    static conformBoundary(x1, y1, z1, x2, y2, z2){    
         const s = canvas.grid.getTopLeft(Math.min(x1, x2), Math.min(y1, y2));
         const e = canvas.grid.getTopLeft(Math.max(x1, x2), Math.max(y1, y2));
         return {
             start: {
                 x: s[0], 
-                y: s[1]
+                y: s[1],
+                z: Math.min(z1, z2)
             }, 
             end: {
                 x: e[0], 
-                y: e[1]
+                y: e[1],
+                z: Math.max(z1, z2)
             }
         }
     }
@@ -97,37 +122,43 @@ export class dangerZoneDimensions {
     /**
      * private call of conformBoundary. See that method's definition
      */
-    _conformBoundary(x1, y1, x2, y2){
-        return dangerZoneDimensions.conformBoundary(x1, y1, x2, y2);
+    _conformBoundary(x1, y1, z1, x2, y2, z2){
+        return dangerZoneDimensions.conformBoundary(x1, y1, z1, x2, y2, z2);
     }
 
     /**
-     * convert a given pixel location and heigh and width in grid units to 2 x/y pixel coordinates
+     * convert a given pixel location and one object in height, width and depth in grid units to 2 x/y/z pixel coordinates
      * @param {integer} x - starting location position x in PIXELS
      * @param {integer} y - starting location position y in PIXELS
-     * @param {array} units -array of width and height in grid units 
-     * @returns objects with two x/y PIXEL coordinates in boundary structure
+     * @param {integer} z - starting location position z 
+     * @param {array} units -array of width, height and depth in grid units
+     * @returns objects with two x/y/z PIXEL coordinates in boundary structure
      */
-    locationToBoundary(x,y, units){
+    locationToBoundary(x,y,z, units){
         let start = canvas.grid.grid.getGridPositionFromPixels(x, y);
         let end = canvas.grid.grid.getPixelsFromGridPosition(start[0]+units.w, start[1]+units.h);
-        return this._conformBoundary(x, y, end[0], end[1])
+        return this._conformBoundary(x, y, z, end[0], end[1], (z + units.d))
     }
 
     /**
      * Returns an array of tokens that have x and y coordinate that fit within the boundary provided.
      * @param {array} tokens - an array of tokens
      * @param {object} boundary - an object indicating the top left start point and bottom right end point 
-     *                              in a boundy {start: {x: , y: }, end: {x: , y: }}
+     *                            in a boundy {start: {x: , y:, z: }, end: {x: , y: ,z: }}
      * @returns array of tokens
     */
      static tokensInBoundary(tokens, boundary){
-        boundary = dangerZoneDimensions.conformBoundary(boundary.start.x, boundary.start.y, boundary.end.x, boundary.end.y);
-        const g = dangerZoneDimensions.getUnitDimensions(boundary);
+        const b = dangerZoneDimensions.conformBoundary(boundary.start.x, boundary.start.y, boundary.start.z, boundary.end.x, boundary.end.y, boundary.end.z);
+        const multiplier = game.settings.get(dangerZone.ID, 'scene-control-button-display');
         let kept = [];
         for(let token of tokens){
-            if(dangerZoneDimensions.conformLocationToBoundary(token.data.x, token.data.y, boundary, true))
-                kept.push(token);
+            let d = (token.parent.dimensions.distance * Math.max(token.data.width, token.data.height) * token.data.scale * multiplier);
+            let s = canvas.grid.grid.getGridPositionFromPixels(token.data.x, token.data.y);
+            s.push(token.data.elevation);
+            let g = {w: token.data.width, h: token.data.height, d: d, start:s};
+            if(dangerZoneDimensions.unitDimensionsInBoundary(g, b)){
+                kept.push(token)
+            }
         }
         return kept
     } 
@@ -156,43 +187,45 @@ export class dangerZoneDimensions {
      * convert a given pixel location along with it's height and width in grid units to a PIXEL based x/y center point and the width and height in PIXELS
      * @param {integer} x - starting location position x in PIXELS
      * @param {integer} y - starting location position y in PIXELS
-     * @param {array} units -array of width and height in grid units 
-     * @returns objects with width and height in PIXELS and the center point location on the grid as x/y object in PIXELS
+     * @param {integer} z - starting z location position 
+     * @param {array} units -array of width, height and depth in grid units 
+     * @returns objects with width, height and depth in PIXELS, the center point location on the grid as x/y object in PIXELS, and top and bottom elevations
      */
-    widthHeightCenterFromLocation(x,y,units){
-        let bnd = this.locationToBoundary(x, y, units)
+    widthHeightCenterFromLocation(x,y,z,units){
+        let bnd = this.locationToBoundary(x,y,z,units)
         const w = bnd.end.x - bnd.start.x;
         const h = bnd.end.y - bnd.start.y;
+        const d = bnd.end.z - bnd.start.z;
         const c = {x: x + (w/2), y: y + (h/2)}
-        return {w: w, h: h, c: c}
+        return {w: w, h: h, d: d, c: c, bottom: bnd.start.z, top: bnd.end.z}
     }
     
     _conformBoundaryToZone(boundary){
-        let start = this._conformLocationToZone(boundary.start.x, boundary.start.y);
-        let end = this._conformLocationToZone(boundary.end.x, boundary.end.y);
+        let start = this._conformLocationToZone(boundary.start.x, boundary.start.y, boundary.start.z);
+        let end = this._conformLocationToZone(boundary.end.x, boundary.end.y, boundary.end.z);
         dangerZone.log(false, 'Conform to zone', {boundary: boundary, conform: {start: start, end: end}});
         return {start: start.location, end: end.location}
     }
 
-    static conformLocationToZone(x,y, zoneId, sceneId, conformOnly = false){
+    static conformLocationToZone(x,y,z,zoneId,sceneId,conformOnly = false){
         let zn = dangerZone.getZoneFromScene(zoneId, sceneId);
         const g = zn.getUnitDimensions();
-        return zn._conformLocationToZone(x,y,g, conformOnly)
+        return zn._conformLocationToZone(x,y,z,g, conformOnly)
     }
 
-    _conformLocationToZone(x,y, conformOnly = false){
+    _conformLocationToZone(x,y,z,conformOnly = false){
         let b = this.getUnitDimensions();
-        return dangerZoneDimensions.conformCheck(x,y,b,conformOnly)
+        return dangerZoneDimensions.conformCheck(x,y,z,b,conformOnly)
     }
  
-    static conformLocationToBoundary(x,y, boundary, conformOnly = false){
+    static conformLocationToBoundary(x,y,z,boundary,conformOnly = false){
         let b = dangerZoneDimensions.getUnitDimensions(boundary);
-        return dangerZoneDimensions.conformCheck(x,y,b,conformOnly)
+        return dangerZoneDimensions.conformCheck(x,y,z,b,conformOnly)
     }
 
-    static conformCheck(x,y,b,conformOnly){
+    static conformCheck(x,y,z,b,conformOnly){
         let g = canvas.grid.grid.getGridPositionFromPixels(x, y);
-        let location={x:g[0], y:g[1]}; let conforms = true;
+        let location={x:g[0], y:g[1], z:z}; let conforms = true;
         if(g[0] >= b.start[0]){
             if (g[0] >= (b.start[0] + b.w)) {
                 if(conformOnly){return false}
@@ -212,7 +245,44 @@ export class dangerZoneDimensions {
             if(conformOnly){return false}
             location.y=b.start[1]; conforms = false;
         }
+
+        if(!b.d || z >= b.start[2]){
+            if (b.d && z >= (b.start[2] + b.d)) {
+                if(conformOnly) {
+                    return false
+                }
+                location.z = b.start[2] + (b.d - 1); 
+                conforms = false;
+            } 
+        } else {
+            if(conformOnly){
+                return false
+            }
+            location.z = b.start[2]; 
+            conforms = false;
+        }
+
         return {location: location, conforms: conforms}
+    }
+
+    static unitDimensionsInBoundary(g, boundary){
+        let b = dangerZoneDimensions.getUnitDimensions(boundary);
+        if(
+            g.start[0] >= (b.start[0] + b.w)
+            || g.start[1] >= (b.start[1] + b.h)
+            || (g.start[0] + g.w) <= b.start[0] 
+            || (g.start[1] + g.h) <= b.start[1] 
+            || (
+                b.d && (
+                    (g.start[2] + g.d) <= b.start[2] 
+                 || g.start[2] >= (b.start[2] + b.d)
+                )
+            )
+        ){
+            return false
+        }
+
+        return true
     }
 
     static getUnitDimensions(boundary){
@@ -221,7 +291,11 @@ export class dangerZoneDimensions {
         let es = canvas.grid.grid.getGridPositionFromPixels(boundary.end.x, boundary.start.y);
         let w = se[0] - s[0];
         let h = es[1] - s[1];
-        return {w: w, h: h, start: s}
+        let d = boundary.end.z - boundary.start.z
+        s.push(boundary.start.z)
+
+        //dangerZone.log(false, 'Unit dimensions', {s: s, se: se, es:es, w:w, h:h, d:d});
+        return {w: w, h: h, d:d, start: s}
     }
 
     getUnitDimensions(){

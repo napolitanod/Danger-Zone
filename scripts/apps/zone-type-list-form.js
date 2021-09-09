@@ -29,7 +29,7 @@ export class DangerZoneTypesForm extends FormApplication {
     const clickedElement = $(event.currentTarget);
     const action = clickedElement.data().action;
     const zoneTypeId = clickedElement.parents('[data-id]')?.data()?.id;
-    dangerZone.log(false, 'Zone Type Button Clicked!', {action, zoneTypeId});
+    //dangerZone.log(false, 'Zone Type Button Clicked!', {action, zoneTypeId});
 
     switch (action) {
       case 'add-zone-type': {
@@ -111,14 +111,14 @@ export class DangerZoneTypesForm extends FormApplication {
   }
 
   async exportToJSON() {
-    saveDataToFile(JSON.stringify(dangerZoneType.allDangerZoneTypes, null, 2), "text/json", `fvtt-danger-zone-types.json`);  
+    saveDataToFile(JSON.stringify(dangerZoneType.allDangerZoneTypes, null, 2), "text/json", `fvtt-danger-zone-dangers.json`);  
   }
 
   async importFromJSON(json) {
     const data = JSON.parse(json);
     dangerZone.log(false, 'JSON Import Parse Complete ', data);
     let response = await dangerZoneType.importFromJSON(data); 
-    dangerZone.log(false, 'Zone Types Import Complete ', response);
+    dangerZone.log(false, 'Dangers Import Complete ', response);
     this.refresh();
     if(response) {
       ui.notifications?.info(
