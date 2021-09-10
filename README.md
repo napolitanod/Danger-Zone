@@ -21,15 +21,15 @@ Danger Zone does not include any video, image or audio components. When another 
 
 ## Getting Started
 
-### 1. Create a Zone Type
-The zone type is the lava bubble or vent of poisonous gas released from a lava field. It defines an effect that executes within a zone.
+### 1. Create a Danger
+The danger is the lava bubble that bursts to the surface or the vent of poisonous gas that releases from a lava field. It defines an effect that executes within a zone.
 
-<img src="https://user-images.githubusercontent.com/22696153/131511482-314d13d4-aaeb-4ef6-9ef9-8be9a2c4f8a9.png"  height="300">
+<img src="https://user-images.githubusercontent.com/22696153/132788292-b46c4a20-8266-4fa7-aafd-133f92235094.png"  height="300">
 
-Add zone types by going to Foundry's 'Configure Settings' > 'Module Settings', locating Danger Zone, and selecting the 'Configure Danger Zone Types' button. See [Zone Types](../../wiki/Zone-Types) for more info.
+Add dangers by going to Foundry's 'Configure Settings' > 'Module Settings', locating Danger Zone, and selecting the 'Configure Dangers' button. See [Dangers](../../wiki/Dangers) for more info.
 
 ### 2. Add Zone to Scene
-The zone is the lava field. Within the zone's boundary tokens may be targetted and zone type effects generated. 
+The zone is the lava field. Within the zone's boundary the dangers are generated. 
 
 <img src="https://user-images.githubusercontent.com/22696153/131511349-1c85213c-46cf-4a2a-87db-345989b10603.png"  height="400">
 
@@ -44,7 +44,7 @@ See [Triggers](../../wiki/Triggers) for more info.
 
 ### Danger Zone Trigger Buttons
 <img src="https://user-images.githubusercontent.com/22696153/132107140-2fb0f79d-ab56-425f-8733-c01677602ad5.png" height="70px">
-When a scene is activated, if you are a GM and viewing that scene, you will see an array of buttons located to the right of that scene in the scene top navigation. Each button is a zone in that scene and displays the icon for that zone type. The buttons function as follows:
+When a scene is activated, if you are a GM and viewing that scene, you will see an array of buttons located to the right of that scene in the scene top navigation. Each button is a zone in that scene and displays the icon for the danger held within. The buttons function as follows:
 
 #### Manually triggered zones
 * Zones that are active are listed individually here except for those which have the 'Randomize' enabled. 
@@ -64,10 +64,10 @@ Hovering over any button, aside from the manual trigger grouping, will highlight
 <img src="https://user-images.githubusercontent.com/22696153/132107176-928adf83-cd37-47e4-a3b3-c792cbdb2151.png">
 A button is added to the tile controls. Selecting this will clear all lasting effects (tiles) on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
 
-### Danger Zone Types Button
-Aside from accessing zone types from the Danger Zone Configuration area in the Foundry Module Configurations, you can also add these by selecting the button located in the footer of the scenes sidebar. This button can be suppressed as an option within the Danger Zone Configurations.
+### Dangers Button
+Aside from accessing dangers from the Danger Zone Configuration area in the Foundry Module Configurations, you can also add these by selecting the button located in the footer of the scenes sidebar. This button can be suppressed as an option within the Danger Zone Configurations.
 
-![image](https://user-images.githubusercontent.com/22696153/132108049-18416af0-5ff1-4cf0-8863-90bbe9d61fbb.png)
+![image](https://user-images.githubusercontent.com/22696153/132788217-c98c6ac9-6a57-48cb-95d2-f7885322c698.png)
 
 
 ## Module Integration
