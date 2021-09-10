@@ -333,16 +333,16 @@ export class workflow {
         let tileIds;
         switch (this.zone.replace) {
             case 'Z':
-                tileIds=canvas.background.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.zone.id).map(t => t.id);
+                tileIds=this.scene.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.zone.id).map(t => t.id);
                 break;
             case 'T':
-                tileIds=canvas.background.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.zone.type).map(t => t.id);
+                tileIds=this.scene.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.zone.type).map(t => t.id);
                 break;
             case 'R':
-                tileIds=canvas.background.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.trigger === this.zone.trigger).map(t => t.id);
+                tileIds=this.scene.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.trigger === this.zone.trigger).map(t => t.id);
                 break;
             case 'A':
-                tileIds=canvas.background.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]).map(t => t.id);
+                tileIds=this.scene.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]).map(t => t.id);
                 break;
             default:
                 return this.log('Zone does not clear lasting effects', {});
@@ -364,7 +364,6 @@ export class workflow {
         }
 
         let whc = this.zone.scene.widthHeightCenterFromLocation(boundary.start.x, boundary.start.y, boundary.start.z, this.zoneType.dimensions.units)
-        
 
         let newTile = {
             flags: {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.zone.trigger, type: this.zone.type}}},

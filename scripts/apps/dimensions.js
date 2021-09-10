@@ -87,7 +87,7 @@ export class dangerZoneDimensions {
             end.push(g.start[2] + znType.d);
         }
 
-        dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, randomArea: {units: g, start: start, end: end}, roll: rolledResult, zoneType: znType, zone: zn})
+        //dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, randomArea: {units: g, start: start, end: end}, roll: rolledResult, zoneType: znType, zone: zn})
         return this._conformBoundary(start[0], start[1], start[2], end[0], end[1], end[2])
     }
 
@@ -192,12 +192,16 @@ export class dangerZoneDimensions {
      * @returns objects with width, height and depth in PIXELS, the center point location on the grid as x/y object in PIXELS, and top and bottom elevations
      */
     widthHeightCenterFromLocation(x,y,z,units){
-        let bnd = this.locationToBoundary(x,y,z,units)
-        const w = bnd.end.x - bnd.start.x;
-        const h = bnd.end.y - bnd.start.y;
-        const d = bnd.end.z - bnd.start.z;
-        const c = {x: x + (w/2), y: y + (h/2)}
-        return {w: w, h: h, d: d, c: c, bottom: bnd.start.z, top: bnd.end.z}
+        let xyU = canvas.grid.grid.getGridPositionFromPixels(x, y);
+        let px = canvas.grid.grid.getPixelsFromGridPosition(xyU[0] + units.w, xyU[1]);
+        let py = canvas.grid.grid.getPixelsFromGridPosition(xyU[0], xyU[1] + units.h);
+        //dangerZone.log(false, 'Width Height Center Initial Boundary ', {xyAsUnits:xyU, unitsIn: units, py: py, px: px});
+
+        const w = Math.max(px[0], py[0]) - x;
+        const h = Math.max(px[1], py[1]) - y;
+        const cnt = canvas.grid.getCenter(x + (w/2), y + (h/2))
+        const c = {x: cnt[0], y: cnt[1]}
+        return {w: w, h: h, d: units.d, c: c, bottom: z, top: z + units.d}
     }
     
     _conformBoundaryToZone(boundary){
@@ -265,24 +269,16 @@ export class dangerZoneDimensions {
         return {location: location, conforms: conforms}
     }
 
-    static unitDimensionsInBoundary(g, boundary){
-        let b = dangerZoneDimensions.getUnitDimensions(boundary);
-        if(
-            g.start[0] >= (b.start[0] + b.w)
-            || g.start[1] >= (b.start[1] + b.h)
-            || (g.start[0] + g.w) <= b.start[0] 
-            || (g.start[1] + g.h) <= b.start[1] 
-            || (
-                b.d && (
-                    (g.start[2] + g.d) <= b.start[2] 
-                 || g.start[2] >= (b.start[2] + b.d)
-                )
-            )
-        ){
-            return false
+    static unitDimensionsInBoundary(tokenU, boundary){
+        let g = dangerZoneDimensions.getUnitDimensions(boundary);
+        for(let j=0; j < g.h || j===0; j++){
+            for(let i=0; i < g.w || i===0; i++){
+                if (tokenU.start[0] === g.start[0]+i &&  tokenU.start[1] === g.start[1]+j) {
+                    return true
+                }
+            }
         }
-
-        return true
+        return false
     }
 
     static getUnitDimensions(boundary){
@@ -294,7 +290,7 @@ export class dangerZoneDimensions {
         let d = boundary.end.z - boundary.start.z
         s.push(boundary.start.z)
 
-        //dangerZone.log(false, 'Unit dimensions', {s: s, se: se, es:es, w:w, h:h, d:d});
+        dangerZone.log(false, 'Unit dimensions', {s: s, se: se, es:es, w:w, h:h, d:d});
         return {w: w, h: h, d:d, start: s}
     }
 
