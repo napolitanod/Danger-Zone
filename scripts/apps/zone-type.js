@@ -5,7 +5,8 @@ export class dangerZoneType {
       this.dimensions = {
         units: {
           w: 1, 
-          h: 1
+          h: 1,
+          d: 1
         }
       },
       this.icon = '',

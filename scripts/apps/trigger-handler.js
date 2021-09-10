@@ -143,7 +143,7 @@ export class triggerManager {
     }
 
     static async findCombatTriggers(combat, hook){
-        if(game.user.isGM && combat.scene) {
+        if(game.user.isGM && combat.scene && combat.started) {
             const sceneZones = dangerZone.getCombatZonesFromScene(combat.scene.id);
             if(sceneZones.size){
                 const scene = game.scenes.get(combat.scene.id);

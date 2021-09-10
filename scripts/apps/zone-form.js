@@ -113,7 +113,7 @@ export class DangerZoneForm extends FormApplication {
   }
 
   pickToForm(){
-    let pick = dangerZoneDimensions.conformBoundary(this.pickerStart.x, this.pickerStart.y, this.pickerEnd.x, this.pickerEnd.y);
+    let pick = dangerZoneDimensions.conformBoundary(this.pickerStart.x, this.pickerStart.y, 0, this.pickerEnd.x, this.pickerEnd.y, 0);
     let size = game.scenes.get(this.sceneId).dimensions.size;
     pick.end.x = pick.end.x + size;
     pick.end.y = pick.end.y + size;
