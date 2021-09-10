@@ -28,7 +28,7 @@
                 "bottom.label": "Bottom",
                 "end.label": "End:",
                 "label": "Dimensions",
-                "description": "The zone dimensions will use the center points of the grids that hold the x and y positions and will encompass elevations between the bottom and up to, but not including, the top.",
+                "description": "The zone dimensions will use the grids that hold the given x and y positions and will encompass elevations between the bottom and up to, but not including, the top. If bottom and top are the same then the zone has infinite depth.",
                 "start.label": "Start:",
                 "top.label": "Top",
                 "x.label": "x",
@@ -154,7 +154,7 @@
                 "duration.label": "Duration (ms)"
             },
             "dimensions.label": "Danger Dimensions (in units)",
-            "dimensions.notes": "Enter width and height as grid units (e.g. count of grid squares). For depth, enter the difference between the top and bottom z positions (i.e. elevation).",
+            "dimensions.notes": "Enter width and height as grid units (e.g. count of grid squares). For depth, enter the difference between the top and bottom elevations. A depth of 0 will default to the zone's depth.",
             "fluidCanvas": {
                 "delay.label":"Delay (ms)",
                 "duration.label":"Duration (ms)",
