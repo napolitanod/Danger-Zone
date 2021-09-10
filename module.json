@@ -20,12 +20,13 @@
         "scripts/index.js",
         "scripts/danger-zone.js"
     ],
+    "socket": true,
     "styles": [
         "styles/danger-zone.css"
     ],
     "title": "Danger Zone",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "url": "https://github.com/napolitanod/Danger-Zone",
     "manifest": "https://raw.githubusercontent.com/napolitanod/Danger-Zone/master/module.json",
-    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/0.0.5/module.zip"
+    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/0.0.6/module.zip"
 }

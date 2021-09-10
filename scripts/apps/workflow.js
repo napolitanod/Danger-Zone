@@ -89,8 +89,8 @@ export class workflow {
     }
 
     async next(nextState){
+        if(!this.active){return this}
         await this._next(nextState);
-        if(WORKFLOWSTATES[nextState]>=98){return this}
     }
 
     async _next(state){
