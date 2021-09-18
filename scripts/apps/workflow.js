@@ -22,19 +22,13 @@ export const WORKFLOWSTATES = {
     GENERATELASTINGEFFECT: 31,
     GENERATEACTIVEEFFECT: 32,
     GENERATEMACRO: 33,
+    CLEARLIGHT: 34,
+    GENERATELIGHT: 35,
     TOKENSAYS: 50,
     WARPGATE: 51,
     AWAITPROMISES: 95,
     CANCEL: 98,
     COMPLETE: 99
-}
-
-export const DANGERZONEREPLACE = {
-    "N": "DANGERZONE.replace-types.N.label", 
-    "R": "DANGERZONE.replace-types.R.label",
-    "T": "DANGERZONE.replace-types.T.label",
-    "Z": "DANGERZONE.replace-types.Z.label",
-    "A": "DANGERZONE.replace-types.A.label"
 }
 
 function getRandomFromArray(array){
@@ -48,6 +42,7 @@ export class workflow {
         this.active = true,
         this.currentState = WORKFLOWSTATES.INIT,
         this.eligibleTargets = [],
+        this.id = foundry.utils.randomID(16),
         this.likelihoodResult = 100,
         this.promises = [],
         this.scene = game.scenes.get(zone.scene.sceneId),
@@ -180,6 +175,14 @@ export class workflow {
 
             case WORKFLOWSTATES.GENERATEMACRO:
                 this.promises.push(this.macro());
+                return this.next(WORKFLOWSTATES.CLEARLIGHT) 
+
+            case WORKFLOWSTATES.CLEARLIGHT:
+                await this.deleteLight();//hard stop here
+                return this.next(WORKFLOWSTATES.GENERATELIGHT)
+
+            case WORKFLOWSTATES.GENERATELIGHT:
+                this.promises.push(this.createLight());
                 return this.next(WORKFLOWSTATES.TOKENSAYS) 
 
             case WORKFLOWSTATES.TOKENSAYS:
@@ -594,6 +597,63 @@ export class workflow {
         }
         this.log('Zone macro skipped', {});
         return {macro: false}
+    }
+
+    async deleteLight() {
+        let lightIds;
+        switch (this.zone.lightReplace) {
+            case 'Z':
+                lightIds=this.scene.lights.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.zone.id).map(t => t.id);
+                break;
+            case 'T':
+                lightIds=this.scene.lights.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.zone.type).map(t => t.id);
+                break;
+            case 'R':
+                lightIds=this.scene.lights.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.trigger === this.zone.trigger).map(t => t.id);
+                break;
+            case 'A':
+                lightIds=this.scene.lights.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]).map(t => t.id);
+                break;
+            default:
+                return this.log('Zone does not clear ambient lighting', {});
+        }
+		await canvas.scene.deleteEmbeddedDocuments("AmbientLight", lightIds);
+        return this.log('Ambient light cleared', {lights: lightIds})
+    }
+
+    async createLight() {
+        if(this.zoneTypeOptions.ambientLight?.dim || this.zoneTypeOptions.ambientLight?.bright) {
+            let whc = this.zone.scene.widthHeightCenterFromLocation(this.targetBoundary.start.x, this.targetBoundary.start.y, this.targetBoundary.start.z, this.zoneType.dimensions.units)
+
+            const light = {
+                t: "l",
+                x: this.targetBoundary.start.x + (whc.w/2),
+                y: this.targetBoundary.start.y + (whc.h/2),
+                rotation: this.zoneTypeOptions.ambientLight.rotation,
+                dim: this.zoneTypeOptions.ambientLight.dim,
+                bright: this.zoneTypeOptions.ambientLight.bright,
+                angle: this.zoneTypeOptions.ambientLight.angle,
+                tintColor: this.zoneTypeOptions.ambientLight.tintColor,
+                tintAlpha: this.zoneTypeOptions.ambientLight.tintAlpha,
+                lightAnimation: {
+                    speed: this.zoneTypeOptions.ambientLight.lightAnimation.speed,
+                    intensity: this.zoneTypeOptions.ambientLight.lightAnimation.intensity,
+                    type: this.zoneTypeOptions.ambientLight.lightAnimation.type
+                },
+                hidden: false,
+                flags: {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.zone.trigger, type: this.zone.type}}}
+            }
+
+            if(levelsOn && (whc.bottom || whc.top)){
+                light.flags['levels'] = {
+                    "rangeTop": whc.top,
+                    "rangeBottom": whc.bottom
+                }
+            }
+            await this.scene.createEmbeddedDocuments("AmbientLight",[light]);
+            return this.log('Zone ambient light generated', {light: light});
+        }
+        return this.log('Zone ambient light not generated', {});
     }
 
     /*Module Integrations*/

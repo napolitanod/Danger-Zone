@@ -2,9 +2,13 @@
     "DANGERZONE": {
         "add": "Add",
         "cancel": "Cancel",
+        "degrees": "Degrees",
         "delete": "Delete",
         "edit": "Edit",
+        "grids": "Grids",
+        "gridUnits": "Grid Units",
         "location-picker": "Select the zone dimensions",
+        "none": "None",
         "save": "Save",
         "view": "View",
         "yes": "Ok",
@@ -16,6 +20,7 @@
             "select-target": "Select a location in the zone. Selected area will snap to grid and represent the top left corner of the danger's target."
         },
         "controls": {
+            "clearAmbientLight.label": "Clear Danger Zone Ambient Lighting",
             "clearEffectsTile.label": "Clear Danger Zone Lasting Effects"
         },
         "edit-form": {
@@ -37,6 +42,8 @@
             "enabled.label": "Active",
             "flavor.label": "Flavor",
             "flavor.description": "Flavor will output to chat message when zone triggers.",
+            "light.replace.label": "Replace Ambient Light",
+            "light.replace.description": "Choose what to do with existing ambient light when this zone triggers.",
             "likelihood.label": "Likelihood",
             "likelihood.description": "The likelihood that a danger will generate on trigger.",
             "name": "Configure Zone",
@@ -67,6 +74,13 @@
             "error": "failed import due to invalid data",
             "skipped": "skipped because id is duplicate of an existing danger.",
             "short-title": "Import"
+        },
+        "light.replace-types": {
+            "A.label": "Clear all ambient lighting",
+            "N.label": "Retain all ambient lighting",
+            "R.label": "Clear lights that share this trigger",
+            "T.label": "Clear lights that share this danger",
+            "Z.label": "Clear lights that share this zone"
         },
         "record": {
             "title.label": "Title",
@@ -100,6 +114,8 @@
             "danger-zone-types-config.label": "Configure Dangers",
             "scene-control-button-display.label": "Display Clear Lasting Effects Button",
             "scene-control-button-display.description": "Toggles the display of the Clear Danger Zone Lasting Effects button within the scene control buttons tiles grouping",
+            "scene-control-light-button-display.label": "Display Clear Ambient Light Button",
+            "scene-control-light-button-display.description": "Toggles the display of the Clear Ambient Light button within the scene control buttons lighting control grouping",
             "types-button-display.label": "Display Dangers Button",
             "types-button-display.description": "Toggles the display of the Dangers button at the bottom of the scenes side bar",
             "scene-enabled-default.label": "New Zone Active by Default",
@@ -126,7 +142,7 @@
             "active-effect":{
                 "clear": "Clear active effect",
                 "confirm": "Are you sure you want to clear the active effect data?",
-                "label": "Apply Active Effect to Target",
+                "label": "Active Effect",
                 "notes": "Active effect will be transferred to each danger target.",
                 "edit.title": "Edit Active Effect",
                 "delete.title": "Delete Active Effect",
@@ -153,8 +169,8 @@
                 "repeat.label": "Repeats",
                 "duration.label": "Duration (ms)"
             },
-            "dimensions.label": "Danger Dimensions (in units)",
-            "dimensions.notes": "Enter width and height as grid units (e.g. count of grid squares). For depth, enter the difference between the top and bottom elevations. A depth of 0 will default to the zone's depth.",
+            "dimensions.label": "Dimensions",
+            "dimensions.notes": "For depth, specify the difference in grid units between the top and bottom elevations. A depth of 0 will default to the zone's depth.",
             "fluidCanvas": {
                 "delay.label":"Delay (ms)",
                 "duration.label":"Duration (ms)",
@@ -176,6 +192,18 @@
             },
             "icon.label": "Icon",
             "icon.find": "Browse for Icon",
+            "light":{
+                "animationIntensity.label": "Intensity",
+                "animation.label": "Animation",
+                "brightLight.label": "Bright Light Radius",
+                "color.label": "Color",
+                "dimLight.label": "Dim Light Radius",
+                "emission.label": "Angle",
+                "intensity.label": "Intensity",
+                "label": "Ambient Local Light",
+                "rotation.label": "Rotation",
+                "speed.label": "Speed"
+            },
             "macro.label": "Macro",
             "macro.notes": "The macro in this world that will run when the danger zone triggers.",
             "monks-active-tiles":{
@@ -197,7 +225,7 @@
                     "add.label": "Teleport"
                 }
             },
-            "name.label": "Danger Name",
+            "name.label": "Name",
             "tab" :{
                 "modules.title": "Module Integration",
                 "main.title": "Core Configuration"

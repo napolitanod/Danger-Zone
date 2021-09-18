@@ -65,6 +65,9 @@ form.danger-zone-type-form h3 {
     border-bottom: none;
 }
 
+form.danger-zone-type-form .main-danger {
+    background: rgba(0, 0, 0, 0.1);
+}
 .danger-zone-scene-list li.scene-config, 
 .danger-zone-types-list li.type-record {
     flex: 1 1 100%;
@@ -274,6 +277,14 @@ form.danger-zone-record .form-fields .boundary-top-label {
     flex-wrap: nowrap;
 }
 
+.danger-zone-type-form .form-group .flexrow.one-line > label {
+    flex: 1;
+}
+
+.danger-zone-type-form .form-group .flexrow.one-line > div {
+    flex: 5;
+}
+
 .danger-zone-type-form .audio-file, 
 .danger-zone-type-form .backgroundEffect-file, 
 .danger-zone-type-form .foregroundEffect-file, 
@@ -293,21 +304,54 @@ form.danger-zone-record .form-fields .boundary-top-label {
     display: flex;
     flex: 0 0 100%;
 }
+
+.danger-zone-type-form .light-animation-label,
+.danger-zone-type-form .light-color-label,
+.danger-zone-type-form .light-color-value,
 .danger-zone-type-form .audio-delay-label, .danger-zone-type-form .tile-delay-label {
     flex: 0 0 9%;
+}
+
+.danger-zone-type-form .dim-light-label,
+.danger-zone-type-form .bright-light-label {
+    flex: 0 0 16%;
+}
+
+.danger-zone-type-form .dim-light-label {
+    flex: 0 0 14%;
 }
 
 .danger-zone-type-form .fluid-canvas-duration-label,
 .danger-zone-type-form .foregroundEffect-duration-label, 
 .danger-zone-type-form .backgroundEffect-duration-label, 
 .danger-zone-type-form .foregroundEffect-delay-label, 
-.danger-zone-type-form .backgroundEffect-delay-label {
+.danger-zone-type-form .backgroundEffect-delay-label,
+.danger-zone-type-form .light-color {
     flex: 0 0 12%;
 }
 
+.danger-zone-type-form input[type="color" i] {
+    width: 94px;
+}
+
+.danger-zone-type-form .light-animation-intensity > input,
+.danger-zone-type-form .light-speed > input,
+.danger-zone-type-form .light-intensity > input {
+    width: 70%;
+}
+.danger-zone-type-form .light-animation-intensity > .range-value,
+.danger-zone-type-form .light-speed > .range-value,
+.danger-zone-type-form .light-intensity > .range-value {
+    display: inline-block;
+    width: 20%;
+}
 .danger-zone-type-form .foregroundEffect-delay-label, 
 .danger-zone-type-form .backgroundEffect-delay-label {
     float: right;
+    margin-top: 6px;
+}
+
+.danger-zone-type-form .flexrow.additional-row {
     margin-top: 6px;
 }
 
@@ -316,19 +360,29 @@ form.danger-zone-record .form-fields .boundary-top-label {
     margin-right: 8px;
 }
 
+.danger-zone-type-form .light-animation-type,
 .danger-zone-type-form .audio-volume,
 .danger-zone-type-form .monks-active-tiles-teleport-avoid {
     flex: 0 0 22%;
 }
+
+.danger-zone-type-form .light-intensity {
+    flex: 0 0 26%;
+}
+
+
 .danger-zone-type-form .foregroundEffect-scale, 
 .danger-zone-type-form .backgroundEffect-scale,  
+.danger-zone-type-form .light-scale,  
 .danger-zone-type-form .tile-scale, 
 .danger-zone-type-form .audio-file-label, 
 .danger-zone-type-form .foregroundEffect-file-label, 
 .danger-zone-type-form .backgroundEffect-file-label, 
 .danger-zone-type-form .foregroundEffect-mustache-label, 
 .danger-zone-type-form .backgroundEffect-mustache-label, 
-.danger-zone-type-form .tile-file-label {
+.danger-zone-type-form .tile-file-label,
+.danger-zone-type-form .light-speed-label,
+.danger-zone-type-form .light-emission-label {
     flex: 0 0 6%;
 }
 
@@ -339,7 +393,11 @@ form.danger-zone-record .form-fields .boundary-top-label {
     margin-right: 10px;
 }
 
+.danger-zone-type-form .light-intensity-label,
+.danger-zone-type-form .light-animation-intensity-label,
 .danger-zone-type-form .foregroundEffect-duration,
+.danger-zone-type-form .light-rotation,
+.danger-zone-type-form .light-emission,
 .danger-zone-type-form .backgroundEffect-duration,
 .danger-zone-type-form .foregroundEffect-delay,
 .danger-zone-type-form .backgroundEffect-delay,
@@ -349,6 +407,7 @@ form.danger-zone-record .form-fields .boundary-top-label {
 }
 .danger-zone-type-form .foregroundEffect-scale,
 .danger-zone-type-form .backgroundEffect-scale,
+.danger-zone-type-form .tile-scale,  
 .danger-zone-type-form .tile-scale  {
     margin-right: 10px;
 }
@@ -387,6 +446,7 @@ form.danger-zone-type-form .dz-token-says .flexrow select {
     flex: 0 0 15%;
 }
 
+form.danger-zone-type-form .ambient-light .buffer,
 form.danger-zone-type-form .dimensions .buffer,
 form.danger-zone-type-form .dz-fluid-canvas .buffer,
 form.danger-zone-type-form .dz-token-says .buffer,
@@ -397,6 +457,7 @@ form.danger-zone-type-form .dz-monks-active-tiles .buffer  {
 
 .danger-zone-type-form label[class^="area-"] {
     padding-right: 7px;
+    flex: 0 0 8%;
 }
 
 
@@ -478,8 +539,6 @@ form.danger-zone-type-form .dz-monks-active-tiles .buffer  {
 #danger-zone-type-active-effect-edit, #danger-zone-type-active-effect-delete {
     justify-content: center;
     align-items: center;
-    display: inline-block;
-    position: relative;
     height: 36px;
     width: 36px;
 }
@@ -487,9 +546,7 @@ form.danger-zone-type-form .dz-monks-active-tiles .buffer  {
 #danger-zone-type-active-effect-delete {
     float: right;
 }
-#danger-zone-type-active-effect-edit {
-    margin-left: 15px;
-}
+
 
 .location-picker > i {
     margin-right: 0px;

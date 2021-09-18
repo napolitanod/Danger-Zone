@@ -13,6 +13,20 @@ export class dangerZoneType {
       this.id = foundry.utils.randomID(16),
       this.name = '',
       this.options = {
+        ambientLight: {
+          active: 0,
+          angle: 360,
+          bright: 0,
+          dim: 0,
+          lightAnimation: {
+              speed: 5,
+              intensity: 5,
+              type: ""
+          },
+          rotation: 0,
+          tintColor: "",
+          tintAlpha: 0.5
+        },
         audio: {
           file:'',
           delay: 0,
@@ -69,7 +83,7 @@ export class dangerZoneType {
   }
 
   static getDangerZoneType(id) {
-    return this.allDangerZoneTypes[id];
+    return this.toClass(this.allDangerZoneTypes[id]);
   }
 
   /**
