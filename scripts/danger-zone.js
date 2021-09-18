@@ -181,6 +181,7 @@ export class zone {
     this.actor = '',
     this.enabled = game.settings.get('danger-zone', 'scene-enabled-default'),
     this.flavor = '',
+    this.lightReplace = 'N',
     this.likelihood = 100,
     this.options = {
       allInArea: false,

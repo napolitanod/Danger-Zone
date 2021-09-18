@@ -129,11 +129,17 @@ export class DangerZoneTypeForm extends FormApplication {
 
     this.effect = instance.options.effect;
 
+    const animationTypes = {"": game.i18n.localize("DANGERZONE.none")};
+    for ( let [k, v] of Object.entries(CONFIG.Canvas.lightAnimations) ) {
+      animationTypes[k] = v.label;
+    }
+
     const dataToSend =  {
       zone: instance,
       fluidCanvasOps: this._determineFluidCanvasTypes(),
       tokenSaysOps: this._determineTokenSaysTypes(),
       macroOps: this._determineMacroList(),
+      lightAnimations: animationTypes,
       tokenSaysOnNot: !tokenSaysOn, 
       monksActiveTilesOnNot: !monksActiveTilesOn,
       sequencerOnNot: !sequencerOn,

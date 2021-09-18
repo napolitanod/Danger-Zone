@@ -44,6 +44,15 @@ Hooks.once('init', async function() {
 		type: Boolean,
 	});
 
+	game.settings.register(modulename, "scene-control-light-button-display", {
+		name: game.i18n.localize("DANGERZONE.setting.scene-control-light-button-display.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.scene-control-light-button-display.description"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+	});
+
 	game.settings.register(modulename, "types-button-display", {
 		name: game.i18n.localize("DANGERZONE.setting.types-button-display.label"),
 		hint: game.i18n.localize("DANGERZONE.setting.types-button-display.description"),
@@ -112,6 +121,7 @@ Hooks.once('devModeReady', ({registerPackageDebugFlag}) => {
  */
 Hooks.on("getSceneControlButtons", (controls, b, c) => {
 	insertTileEffectsClearButton(controls, b, c);
+	insertAmbientLightClearButton(controls, b, c);
 });
 
 /**
@@ -179,6 +189,32 @@ function insertTileEffectsClearButton (controls, b, c) {
 				onClick: async () => {
 					let tileIds=canvas.scene.tiles.filter(t => t.data.flags[dangerZone.ID]).map(t => t.id);
 					await canvas.scene.deleteEmbeddedDocuments("Tile", tileIds);
+				},
+				button: true
+			});
+		}
+	}
+}
+
+/**
+ * adds the ambient light clear button to the controls on the canvas
+ * @param {object} controls 
+ * @param {*} b 
+ * @param {*} c 
+ */
+ function insertAmbientLightClearButton (controls, b, c) {
+	if(game.user.isGM && game.settings.get('danger-zone', 'scene-control-light-button-display') === true){
+		const lightingButton = controls.find(b => b.name == "lighting")
+
+		if (lightingButton) {
+			lightingButton.tools.push({
+				name: "danger-zone-lighting-effects-clear",
+				title:  game.i18n.localize("DANGERZONE.controls.clearAmbientLight.label"),
+				icon: "fas fa-radiation",
+				visible: game.user.isGM,
+				onClick: async () => {
+					let lightIds=canvas.scene.lights.filter(t => t.data.flags[dangerZone.ID]).map(t => t.id);
+					await canvas.scene.deleteEmbeddedDocuments("AmbientLight", lightIds);
 				},
 				button: true
 			});

@@ -203,6 +203,17 @@
                 </div>
                 <p class="notes">{{localize 'DANGERZONE.edit-form.replace.description'}}</p>
             </div>
+            <div class="form-group">
+                <label>
+                    <span>{{localize 'DANGERZONE.edit-form.light.replace.label'}}</span>
+                </label>
+                <div class="form-fields">
+                    <select name="lightReplace" value="{{zone.lightReplace}}">
+                        {{selectOptions lightReplaceOps selected=zone.lightReplace localize=true}}
+                    </select>
+                </div>
+                <p class="notes">{{localize 'DANGERZONE.edit-form.light.replace.description'}}</p>
+            </div>
             <div class="form-group flexrow">
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.flavor.label'}}</span>
