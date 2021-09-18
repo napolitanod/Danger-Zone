@@ -21,7 +21,7 @@ export class dangerZoneType {
           lightAnimation: {
               speed: 5,
               intensity: 5,
-              type: "dome"
+              type: ""
           },
           rotation: 0,
           tintColor: "",

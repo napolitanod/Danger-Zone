@@ -38,7 +38,7 @@ export class DangerZoneTypeForm extends FormApplication {
 
   async _activeEffectClear() {
     this.effect = {};
-    ui.notifications?.info(game.i18n.localize("DANGERZONE.zone-type-form.active-effect.cleared.info"));
+    ui.notifications?.info(game.i18n.localize("DANGERZONE.type-form.active-effect.cleared.info"));
   }
 
   async _activeEffectConfirmClear(event) {
