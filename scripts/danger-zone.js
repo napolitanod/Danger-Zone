@@ -6,6 +6,8 @@ import {DangerZoneTypesForm} from './apps/zone-type-list-form.js';
  */
 export class dangerZone {
   static ID = 'danger-zone';
+
+  static NAME = 'dangerZone';
   
   static FLAGS = {
     SCENEZONE: 'sceneZone',
@@ -37,7 +39,7 @@ export class dangerZone {
       }
   }
 
-  /**
+ /**
    * Returns a specific zone from the given scene
    * @param {string} zoneId the danger zone id
    * @param {string} sceneId  the scene id
@@ -49,7 +51,21 @@ export class dangerZone {
     const zn = this._toClass(flag);
     //dangerZone.log(false,'Zone Got Got ', {"zone": zn, zoneId, sceneId});
     return zn
-  }
+  } 
+
+   /**
+   * Returns a specific zone from the given scene using its name
+   * @param {string} zoneName the danger zone name
+   * @param {string} sceneId  the scene id
+   * @returns 
+   */
+    static getZoneNameFromScene(zoneName, sceneId) {
+      let flags = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE);
+      if(!flags){return}
+      for (var zn in flags) {
+        if (flags[zn].title === zoneName){return this._toClass(flags[zn])}
+      }
+    }
 
   /**
    * adds a new zone to a scene

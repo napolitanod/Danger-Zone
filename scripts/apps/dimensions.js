@@ -242,7 +242,7 @@ export class dangerZoneDimensions {
         const multiplier = game.settings.get(dangerZone.ID, 'scene-control-button-display');
         let kept = [];
         for(let token of tokens){
-            let d = (token.parent.dimensions.distance * Math.max(token.data.width, token.data.height) * token.data.scale * multiplier);
+            let d = (token.parent.dimensions.distance * Math.max(token.data.height, token.data.width) * multiplier);
             let s = canvas.grid.grid.getGridPositionFromPixels(token.data.x, token.data.y);
             s.push(token.data.elevation);
             let g = {w: token.data.width, h: token.data.height, d: d, start:s};

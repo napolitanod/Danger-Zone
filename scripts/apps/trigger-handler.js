@@ -142,6 +142,18 @@ export class triggerManager {
         return await tm.trigger();
     }
 
+    static async apiDirectTrigger(zn, sceneId, restrictToActive){
+        const tm = new triggerManager(sceneId, {zone: 'direct', scene: sceneId});
+        tm.zones.push(zn);
+        if(tm.enabled || !restrictToActive){
+            tm.zones.push(zn);
+            dangerZone.log(false,'API trigger ready ', {zone: zn, trigger: tm, restrictToActive: restrictToActive});
+            return await tm.next();
+        }
+        dangerZone.log(false,'API trigger bypassed scene disabled ', {zone: zn, trigger: tm, restrictToActive: restrictToActive});
+        return tm
+    }
+
     static async findCombatTriggers(combat, hook){
         if(game.user.isGM && combat.scene && combat.started) {
             const sceneZones = dangerZone.getCombatZonesFromScene(combat.scene.id);
