@@ -10,7 +10,7 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 * A twisted field of magic with portals that blink in and out of existance.
 * A blessed glade offering healing to those who walk through.
 
-<img src="https://user-images.githubusercontent.com/22696153/131688065-208aedc4-8c3c-4a3f-acab-bed0f103046e.gif" height="400">
+<img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/crumbling%20ceiling%20gif.gif" height="400">
 
 
 ## What's in the module
@@ -80,6 +80,9 @@ Aside from accessing dangers from the Danger Zone Configuration area in the Foun
 
 ![image](https://user-images.githubusercontent.com/22696153/132788217-c98c6ac9-6a57-48cb-95d2-f7885322c698.png)
 
+## API
+Trigger zones and access other Danger Zone features directly from the API
+See [API](../../wiki/API) for more info.
 
 ## Module Integration
 Danger Zone integrates with a series of other Foundary modules in order to provide enhanced effects and token targetting. See the [Module Integration](../../wiki/Module-Integration) page for details on which modules extend Danger Zone base functionality if installed.
