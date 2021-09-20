@@ -41,9 +41,11 @@ export class triggerManager {
     }
 
     async next(){
-        if(game.user.isGM && canvas.scene.id !== this.sceneId){ 
-            ui.notifications?.warning(game.i18n.localize("DANGERZONE.alerts.no-trigger-if-not-on-combat-scene"));
-            return
+        if(canvas.scene.id !== this.sceneId){ 
+           if(game.user.isGM){
+                ui.notifications?.warning(game.i18n.localize("DANGERZONE.alerts.no-trigger-if-not-on-combat-scene"));
+                return
+           }
         }
         if (this.zones.length){
             return await this._next(this.zones.pop());
@@ -145,8 +147,7 @@ export class triggerManager {
     static async apiDirectTrigger(zn, sceneId, restrictToActive){
         const tm = new triggerManager(sceneId, {zone: 'direct', scene: sceneId});
         tm.zones.push(zn);
-        if(tm.enabled || !restrictToActive){
-            tm.zones.push(zn);
+        if(zn.enabled || !restrictToActive){
             dangerZone.log(false,'API trigger ready ', {zone: zn, trigger: tm, restrictToActive: restrictToActive});
             return await tm.next();
         }
