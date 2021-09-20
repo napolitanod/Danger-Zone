@@ -22,6 +22,7 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 * Handles the complex targetting of a 3D effect within the zone's width, height and depth dimensions, for square and hex grids.
 * Provides easy to use forms for defining zones, triggers and effects, including visual and audio components, macros, tiles, and chat messaging.
 * Functionality can be expanded through other Foundry modules - see the Module Integration section below.
+* Accessible API for accessing Danger Zone functionality from another module or macro.
 
 ## What's not in the module
 * Does not include any video, image or audio components. 
