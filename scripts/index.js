@@ -3,6 +3,7 @@ import {initializeScene} from './apps/scene-settings.js';
 import {DangerZoneTypesForm} from './apps/zone-type-list-form.js'
 import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
 import {triggerManager}  from './apps/trigger-handler.js';
+import {api} from "./apps/api.js";
 
 /**
  * global variables
@@ -108,6 +109,13 @@ Hooks.once('init', async function() {
 Hooks.once('ready', async function() { 
 	setModsAvailable();
 });
+
+/**
+ * Registers the api and makes available
+ */
+Hooks.once('setup', async function() {
+    api.register();
+ });
 
 /**
  * Register debug flag with developer mode's custom hook
