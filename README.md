@@ -28,6 +28,9 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 * Does not include any video, image or audio components. 
 * When another module can do something well, such as summoning a token (Warpgate), shaking the screen canvas (Kandashi's Fluid Canvas), or teleporting tokens (Monk's Active Tiles) then Danger Zone will integrate with that module to provide those effects rather than include them in the module itself.
 
+### Gridless scenes not supported
+* The module currently does not extend to include gridless scenes (though a gridded scene with a transparent grid is supported). This is a planned future extension of the module, the math is just much more difficult.
+
 ## Getting Started
 
 ### 1. Create a Danger
