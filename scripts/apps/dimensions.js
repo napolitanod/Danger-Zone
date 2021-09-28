@@ -5,6 +5,7 @@ better roofs/levels
 
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
+import {taggerOn} from '../index.js';
 
 export class dangerZoneDimensions {
 
@@ -33,16 +34,17 @@ export class dangerZoneDimensions {
      * refreshes class data with scene data
      */
      _init() {
-        const scene = game.scenes.get(this.sceneId);
-        const dim = scene.dimensions;
-
+        const dim = this.scene.dimensions;
         this.start.x = dim.paddingX,
         this.start.y = dim.paddingY,
         this.end.x = dim.sceneWidth + dim.paddingX,
         this.end.y = dim.sceneHeight + dim.paddingY;
     }
 
-  
+    get scene(){
+        return game.scenes.get(this.sceneId);
+    }
+
    /**
     * generates a random target area based on zone size zone bleed, scene size and zone type size
     * @returns object with dimension coordinats indicating boundary of the area
@@ -259,7 +261,7 @@ export class dangerZoneDimensions {
      * @returns array of tokens
      */
     tokensInZone(tokens){
-        if(!tokens){tokens = game.scenes.get(this.sceneId)}
+        if(!tokens){tokens = this.scene.tokens}
         return dangerZoneDimensions.tokensInBoundary(tokens, {start: this.start, end: this.end});
     } 
 
@@ -311,7 +313,7 @@ export class dangerZoneDimensions {
         return dangerZoneDimensions.getUnitDimensions({start: this.start, end: this.end});
     }
 
-    static addHighlightZone(zoneId, sceneId, nameModifier = ''){
+    static async addHighlightZone(zoneId, sceneId, nameModifier = ''){
         let hId = 'dz-'+ zoneId + nameModifier;
         canvas.grid.addHighlightLayer(hId);
         const zn = dangerZone.getZoneFromScene(zoneId, sceneId).scene;
@@ -322,9 +324,29 @@ export class dangerZoneDimensions {
                 canvas.grid.highlightPosition(hId, {x: pos[0], y: pos[1], color:16737280});
             }
         }
+        await zn.excludedGrids();
     }
 
     static destroyHighlightZone(zoneId, nameModifier = ''){
         canvas.grid.destroyHighlightLayer('dz-'+zoneId + nameModifier)
+    }
+
+    async excludedGrids(){
+        const tagged = await this.excludedTagged();
+        dangerZone.log(false, 'Tagged ', {tagged: tagged, dim: this});
+    }
+
+    async excludedTagged(){
+        const tag = game.settings.get(dangerZone.ID, 'zone-exclusion-tag');
+        const d = this.scene.drawings.filter(d => d.data.text === tag);
+        if(taggerOn){
+            const t = await Tagger.getByTag(tag, {caseInsensitive: false, matchAll: false, sceneId: this.sceneId })
+            return d.concat(t)
+        }
+        return d
+    }
+
+    get gridsOccupiedRect(){
+
     }
 }

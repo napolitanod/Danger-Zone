@@ -244,7 +244,7 @@ export class workflow {
     async promptSelectXYArea(){
         let currentLayer = canvas.activeLayer;
         canvas.activateLayer('grid');
-        dangerZoneDimensions.addHighlightZone(this.zone.id, this.scene.id, '_wf');
+        await dangerZoneDimensions.addHighlightZone(this.zone.id, this.scene.id, '_wf');
 
         let x = new Promise(function(resolve, reject){
             ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
