@@ -181,6 +181,20 @@ export class dangerZone {
     }
     dangerZone.log(false,'Random Zone Not Identified ', {sceneZones: zones, eligibleZones: keptZones, roll: randomResult, range: {min: 1, max:max}});
   }
+
+  static validatePreupdateZones(scene){
+    const flag = scene.data.flags?.[dangerZone.ID]?.[dangerZone.FLAGS.SCENEZONE];
+    let b = false;
+    if(flag){
+      Object.keys(flag).forEach(function(key) {
+        if(flag[key].scene.sceneId !== scene.id){
+          flag[key].scene.sceneId = scene.id
+          b=true;
+        }
+      });
+    }
+    return b ? flag : b
+  }
 }
 
 /**
