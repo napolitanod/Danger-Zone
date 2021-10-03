@@ -92,6 +92,10 @@ export class workflow {
         this.currentState = state;
         switch(state) {
             case WORKFLOWSTATES.NONE:
+                if (!this.zoneType){
+                    this.log('Zone type does not exist', {});
+                    return this.next(WORKFLOWSTATES.CANCEL)
+                }
                 if (this.zone.options.placeTemplate) {
                     return this.next(WORKFLOWSTATES.AWAITLOCATION);
                 } else {return this.next(WORKFLOWSTATES.EXECUTELIKELIHOOD)}

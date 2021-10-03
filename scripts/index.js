@@ -149,6 +149,16 @@ Hooks.on('renderSceneConfig', async (app, html, options) => {
 });
 
 /**
+ * Hook for preupdating the scene form. Confirms compatibility of zone scene ids in update with current scene 
+ */
+Hooks.on('preUpdateScene', (scene, change, options, userId) => {
+	const flag = dangerZone.validatePreupdateZones(scene);
+	if(flag){
+		change[`flags.${dangerZone.ID}.${dangerZone.FLAGS.SCENEZONE}`] = flag;
+	}
+});
+
+/**
  * Hook for the rendering of the scene list at top of canvas display. Adds zone trigger buttons to scene navigation bar on canvas
  */
 Hooks.on('renderSceneNavigation', async(app, html, options) => {
