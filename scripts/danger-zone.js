@@ -1,5 +1,6 @@
 import {dangerZoneDimensions} from './apps/dimensions.js';
 import {DangerZoneTypesForm} from './apps/zone-type-list-form.js';
+import {dangerZoneType} from './apps/zone-type.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -230,6 +231,10 @@ export class zone {
     this.weight = 1
   }
 
+  get danger(){
+    return dangerZoneType.getDangerZoneType(this.type)
+  }
+
   /**
    * sets the flag data for the module on the scene for this zone, effectively saving the zone 
    * @returns module flag on the scene
@@ -273,16 +278,10 @@ export class zone {
     return await this._setFlag();
   }
 
-  zoneTokens(tokens){
-    if(!tokens){tokens = game.scenes.get(this.scene.sceneId).tokens}
-    return dangerZoneDimensions.tokensInBoundary(tokens, {start: this.scene.start, end: this.scene.end});
-  }
-
   zoneEligibleTokens(tokens){
-    const inBoundary = this.zoneTokens(tokens);
     let kept = [];
     if(this.actor || this.tokenDisposition){
-      for(let token of inBoundary){
+      for(let token of tokens){
         let keep = 1;
         if(this.actor && token.data.actorId !== this.actor){
           keep = 0;
@@ -292,7 +291,7 @@ export class zone {
         }
         if(keep){kept.push(token)}
       }
-    } else {kept = inBoundary}
+    } else {kept = tokens}
     return kept
   }
 }

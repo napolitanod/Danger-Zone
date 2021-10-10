@@ -8,7 +8,7 @@ import {api} from "./apps/api.js";
 /**
  * global variables
  */
-export var sequencerOn = false, warpgateOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
+export var taggerOn = false, sequencerOn = false, warpgateOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
 
 /**
  * retains the most recent search term while in session for the danger zone type list form
@@ -26,6 +26,15 @@ Hooks.once('init', async function() {
         type: DangerZoneTypesForm,
         restricted: true
     });
+
+	game.settings.register(modulename, "display-danger-boundary", {
+		name: game.i18n.localize("DANGERZONE.setting.display-danger-boundary.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.display-danger-boundary.description"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
 
 	game.settings.register(modulename, "scene-enabled-default", {
 		name: game.i18n.localize("DANGERZONE.setting.scene-enabled-default.label"),
@@ -84,6 +93,15 @@ Hooks.once('init', async function() {
 			max: 10,
 			step: 0.1
 		}
+	});
+
+	game.settings.register(modulename, "zone-exclusion-tag", {
+		name: game.i18n.localize("DANGERZONE.setting.zone-exclusion-tag.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.zone-exclusion-tag.description"),
+		scope: "world",
+		config: true,
+		default: "xZone",
+		type: String,
 	});
 
 	game.settings.register(modulename, 'zone-types', {
@@ -186,6 +204,7 @@ function setModsAvailable () {
 	if (game.modules.get("warpgate")?.active){warpgateOn = true} ;
 	if (game.modules.get("kandashis-fluid-canvas")?.active){fluidCanvasOn = true} ;
 	if (game.modules.get("sequencer")?.active){sequencerOn = true} ;
+	if (game.modules.get("tagger")?.active){taggerOn = true} ;
 }
 
 /**

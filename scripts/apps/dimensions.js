@@ -1,13 +1,7 @@
-/*
-lock bottom or top
-better roofs/levels
-*/
-
 import {dangerZone} from '../danger-zone.js';
-import {dangerZoneType} from './zone-type.js';
+import {taggerOn} from '../index.js';
 
 export class dangerZoneDimensions {
-
     /**
      * @param {string} zoneId - id of the parent zone
      * @param {string} sceneId - the id of the scene  
@@ -24,8 +18,7 @@ export class dangerZoneDimensions {
             x: 0,
             y: 0,
             z: 0
-        }
-        ;
+        };
         this._init();
     }
   
@@ -33,298 +26,319 @@ export class dangerZoneDimensions {
      * refreshes class data with scene data
      */
      _init() {
-        const scene = game.scenes.get(this.sceneId);
-        const dim = scene.dimensions;
-
+        const dim = this.scene.dimensions;
         this.start.x = dim.paddingX,
         this.start.y = dim.paddingY,
         this.end.x = dim.sceneWidth + dim.paddingX,
         this.end.y = dim.sceneHeight + dim.paddingY;
     }
 
-  
-   /**
-    * generates a random target area based on zone size zone bleed, scene size and zone type size
-    * @returns object with dimension coordinats indicating boundary of the area
-    */
-    async randomArea() {
-        const zn = dangerZone.getZoneFromScene(this.zoneId, this.sceneId);
-        const znType = dangerZoneType.getDangerZoneType(zn.type).dimensions.units;
-        const g = this.getUnitDimensions();
+    get scene(){
+        return game.scenes.get(this.sceneId);
+    }
 
-        const adjX = Math.min(g.start[0], (znType.w-1));
-        const adjY = Math.min(g.start[1], (znType.h-1));
-        let adjZ = 0;
-        if(g.d){
-            if(znType.d){
-                adjZ = znType.d
-            } else {
-                adjZ = (g.d - 1)
+    get danger(){
+        return this.zone.danger;
+    }
+
+    get zone(){
+        return dangerZone.getZoneFromScene(this.zoneId, this.sceneId);
+    }
+
+    async boundary(){
+        const ex = await this._excludedTagged();
+        return new boundary(this.start, this.end, {exclude: ex})
+    }
+
+    async boundaryBleed(){
+        const {w,h,d} = this.danger.dimensions.units; 
+        const b = await this.boundary(); 
+        const dim = b.dimensions;
+        const [x,y] = canvas.grid.grid.getPixelsFromGridPosition(dim.y -(Math.min(dim.y, (h-1))), dim.x - (Math.min(dim.x, (w-1))));
+        const p = new point({x: x, y: y, z: dim.z - (d ? d-1 : 0)})
+        return new boundary(p, b.B, {excludes: b.excludes})
+    }
+
+    async boundaryConstrained(){
+        const {w,h,d} = this.danger.dimensions.units;
+        const b = await this.boundary();
+        const dim = b.dimensions;
+        return locationToBoundary(b.A, {d: dim.d - (d ? d : dim.d ? dim.d : 0), h:dim.h - (h-1), w:dim.w - (w-1)}, {excludes: b.excludes})
+    }
+
+    async grids(){
+        const b = await this.boundary();
+        return b.grids()
+    }
+
+    async randomDangerBoundary() {
+        const {w,h,d} = this.danger.dimensions.units;
+        const b = this.zone.options.bleed ? await this.boundaryBleed() : await this.boundaryConstrained();
+        const grids = b.randomBoundary({range:{w: w, h: h, d: d}});
+        dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, boundary: b, dangerUnits: [w,h,d], zone: this.zone})
+        return grids
+    }
+
+    static async addHighlightZone(zoneId, sceneId, nameModifier = ''){
+        const zn = dangerZone.getZoneFromScene(zoneId, sceneId).scene;
+        await zn.addHighlightZone(nameModifier)
+    }
+
+    async addHighlightZone(nameModifier = ''){
+        const boundary = await this.boundary()
+        boundary.highlight(this.zoneId + nameModifier, 16737280)
+    }
+
+    static destroyHighlightZone(zoneId, nameModifier = ''){
+        canvas.grid.destroyHighlightLayer('dz-'+zoneId + nameModifier)
+    }
+
+    destroyHighlightZone(nameModifier = ''){
+        canvas.grid.destroyHighlightLayer('dz-'+ this.zoneId + nameModifier)
+    }
+
+    async _excludedTagged(){
+        const tag = game.settings.get(dangerZone.ID, 'zone-exclusion-tag');
+        const d = this.scene.getEmbeddedCollection("Drawing").filter(d => d.data.text === tag);
+        if(taggerOn){
+            const t = await Tagger.getByTag(tag, {caseInsensitive: false, matchAll: false, sceneId: this.sceneId })
+            return d.concat(t)
+        }
+        return d
+    }
+}
+
+export class boundary{
+    constructor (a = {x:0, y:0, z:0}, b = {x:0, y:0, z:0}, options = {}) {
+        this.A = {
+            x: a.x ? Math.min(a.x, a.x ? b.x : b.x) : 0,
+            y: a.y ? Math.min(a.y, a.y ? b.y : b.y) : 0,
+            z: a.z ? Math.min(a.z, a.z ? b.z : b.z) : 0
+        },
+        this.B = {
+            x: b.x ? Math.max(a.x ? a.x : b.x, b.x) : 0,
+            y: b.y ? Math.max(a.y ? a.y : b.y, b.y) : 0,
+            z: b.z ? Math.max(a.z ? a.z : b.z, b.z) : 0
+        },
+        this.excludes = options.excludes ? options.excludes : new Set(),
+        this.gridIndex = new Set();
+        this._toTopLeft();
+        if(options.exclude){this._exclude(options.exclude)}
+        this._setGridIndex();
+    }
+
+    get width(){
+        return this.B.x - this.A.x
+    }
+
+    get height(){
+        return this.B.y - this.A.y
+    }
+
+    get depth(){
+        return this.B.z - this.A.z
+    }
+
+    get bottom(){
+        return this.A.z
+    }
+
+    get top(){
+        return this.B.z
+    }
+
+    get center(){
+        return {x: this.A.x + (this.width/2), y: this.A.y + (this.height/2)}
+    }
+
+    get dimensions(){
+        const [topY, topX] = canvas.grid.grid.getGridPositionFromPixels(this.A.x, this.A.y);
+        const [leftY, leftX] = canvas.grid.grid.getGridPositionFromPixels(this.A.x, this.B.y);
+        const [rightY, rightX] = canvas.grid.grid.getGridPositionFromPixels(this.B.x, this.A.y);
+        const [bottomY, bottomX] = canvas.grid.grid.getGridPositionFromPixels(this.B.x, this.B.y);
+        const w = Math.max(rightX,bottomX) - Math.min(topX,leftX);
+        const h = Math.max(leftY,bottomY) - Math.min(topY,rightY);
+        const d = this.B.z - this.A.z;
+        return {w: w, h: h, d:d, x:topX, y:topY, z:this.A.z}
+    }
+
+    _setGridIndex(){
+        const grids = this.grids();
+        for(const [yPos, xPos] of grids){
+            this.gridIndex.add(yPos + '_' + xPos)
+        }
+    }
+
+    _toTopLeft(){    
+        const [x1, y1] = canvas.grid.getTopLeft(this.A.x, this.A.y);
+        const [x2, y2] = canvas.grid.getTopLeft(this.B.x, this.B.y);
+        this.A.x = x1;
+        this.A.y = y1;
+        this.B.x = x2;
+        this.B.y = y2;
+    }
+
+    * grids(options={}){
+        const {w,h,d,x,y,z} = this.dimensions;
+        for(let j=0; (options.inclusive ? j<=w : j<w) || j===0; j++){
+            for(let i=0; (options.inclusive ? i<=h: i<h) || i===0; i++){
+                if(!this.excludes.has((y+i) + '_' + (x+j))){yield[y+i, x+j, z, [i, j]]}
             }
-        } 
-        
-        if(zn.options.bleed){
-            g.w += adjX;
-            g.h += adjY;
-            g.d += adjZ;
-            g.start[0] -= adjX;
-            g.start[1] -= adjY;
-            g.start[2] -= adjZ;
-        } else {
-            g.w -= (znType.w-1);
-            g.h -= (znType.h-1);
-            g.d -= adjZ;
         }
+    } 
 
-        const area = (g.w * g.h);
-        if(area < 1 || g.d < 0){
-            return dangerZone.log(false,'Invalid zone settings ', {unitDimensions: g, area: area, zoneType: znType, zone: zn})
-        }
-
-        const rolledResult = await new Roll(`1d${area}`).roll().result;
-        const posY = g.start[1] + Math.floor((rolledResult-1)/g.w);
-        const posX = g.start[0] + ((rolledResult - 1) % g.w);  
-
-        let start = canvas.grid.grid.getPixelsFromGridPosition(posX, posY);
-        let end = canvas.grid.grid.getPixelsFromGridPosition(posX+znType.w, posY+znType.h);
-        
-        if(g.d > 0){
-            const zResult = await new Roll(`1d${g.d}`).roll().result;
-            let zStart = g.start[2] + (zResult-1);
-            start.push(zStart);
-            end.push(zStart + adjZ);
-        } else {
-            start.push(g.start[2]);
-            end.push(g.start[2] + adjZ);
-        }
-
-        //dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, randomArea: {units: g, start: start, end: end}, roll: rolledResult, zoneType: znType, zone: zn})
-        return this._conformBoundary(start[0], start[1], start[2], end[0], end[1], end[2])
-    }
-
-    /**
-     * intakes PIXEL coordinates for two locations on the grid and conforms them to the expected boundary object structure 
-     * with locations shifted to be top right and bottom left and to be top left point of grid location
-     * @param {integer} x1 location 1 x
-     * @param {integer} y1 location 1 y
-     * @param {integer} z1 location 1 z
-     * @param {integer} x2 location 2 x
-     * @param {integer} y2 location 2 y
-     * @param {integer} z2 location 2 z
-     * @returns object with x, y, and z coordinates for top left and bottom right of boundary in PIXELS
-     */
-    static conformBoundary(x1, y1, z1, x2, y2, z2){    
-        const s = canvas.grid.getTopLeft(Math.min(x1, x2), Math.min(y1, y2));
-        const e = canvas.grid.getTopLeft(Math.max(x1, x2), Math.max(y1, y2));
-        return {
-            start: {
-                x: s[0], 
-                y: s[1],
-                z: Math.min(z1, z2)
-            }, 
-            end: {
-                x: e[0], 
-                y: e[1],
-                z: Math.max(z1, z2)
+    * randomBoundary (options={}){
+        const grids = this.grids(options);
+        const all = []
+        for(const [y,x,z] of grids){all.push([y,x, z])}
+        const dim = this.dimensions;
+        const w = options.range?.w ? options.range?.w : 0
+        const h = options.range?.h ? options.range?.h : 0
+        const d = options.range?.d ? options.range?.d : 0
+        if(all.length < 1 || dim.d < 0){
+            if(dim.d<0 && game.user.isGM){
+                ui.notifications?.error(game.i18n.localize("DANGERZONE.alerts.danger-depth-exceeds-zone"));
             }
+            return dangerZone.log(false,'Invalid zone settings ', {boundary: this})
         }
-    }
+        const zAdj = dim.d ? d ? d : dim.d-1 : 0
 
-    /**
-     * private call of conformBoundary. See that method's definition
-     */
-    _conformBoundary(x1, y1, z1, x2, y2, z2){
-        return dangerZoneDimensions.conformBoundary(x1, y1, z1, x2, y2, z2);
-    }
+        while(true){
+            const [posY, posX, posZ] = all[Math.floor(Math.random() * all.length)]
+            const [x1,y1] = canvas.grid.grid.getPixelsFromGridPosition(posY, posX);
+            const [x2,y2] = canvas.grid.grid.shiftPosition(x1, y1, w, h)
+            const z1 = posZ + Math.floor(Math.random() * dim.d);
+            yield new boundary({x:x1, y:y1, z:z1}, {x:x2, y:y2, z:z1 + zAdj}, {excludes: this.excludes})
+        }
 
-    /**
-     * convert a given pixel location and one object in height, width and depth in grid units to 2 x/y/z pixel coordinates
-     * @param {integer} x - starting location position x in PIXELS
-     * @param {integer} y - starting location position y in PIXELS
-     * @param {integer} z - starting location position z 
-     * @param {array} units -array of width, height and depth in grid units
-     * @returns objects with two x/y/z PIXEL coordinates in boundary structure
-     */
-    locationToBoundary(x,y,z, units){
-        let start = canvas.grid.grid.getGridPositionFromPixels(x, y);
-        let end = canvas.grid.grid.getPixelsFromGridPosition(start[0]+units.w, start[1]+units.h);
-        return this._conformBoundary(x, y, z, end[0], end[1], (z + units.d))
     }
     
-    _conformBoundaryToZone(boundary){
-        let start = this._conformLocationToZone(boundary.start.x, boundary.start.y, boundary.start.z);
-        let end = this._conformLocationToZone(boundary.end.x, boundary.end.y, boundary.end.z);
-        dangerZone.log(false, 'Conform to zone', {boundary: boundary, conform: {start: start, end: end}});
-        return {start: start.location, end: end.location}
-    }
-
-    static conformLocationToZone(x,y,z,zoneId,sceneId,conformOnly = false){
-        let zn = dangerZone.getZoneFromScene(zoneId, sceneId);
-        const g = zn.getUnitDimensions();
-        return zn._conformLocationToZone(x,y,z,g, conformOnly)
-    }
-
-    _conformLocationToZone(x,y,z,conformOnly = false){
-        let b = this.getUnitDimensions();
-        return dangerZoneDimensions.conformCheck(x,y,z,b,conformOnly)
-    }
- 
-    static conformLocationToBoundary(x,y,z,boundary,conformOnly = false){
-        let b = dangerZoneDimensions.getUnitDimensions(boundary);
-        return dangerZoneDimensions.conformCheck(x,y,z,b,conformOnly)
-    }
-
-    static conformCheck(x,y,z,b,conformOnly){
-        let g = canvas.grid.grid.getGridPositionFromPixels(x, y);
-        let location={x:g[0], y:g[1], z:z}; let conforms = true;
-        if(g[0] >= b.start[0]){
-            if (g[0] >= (b.start[0] + b.w)) {
-                if(conformOnly){return false}
-                location.x=b.start[0] + (b.w -1); conforms = false;
-            } 
-        } else {
-            if(conformOnly){return false}
-            location.x=b.start[0]; conforms = false;
-        }
-
-        if(g[1] >= b.start[1]){
-            if (g[1] >= (b.start[1] + b.h)) {
-                if(conformOnly){return false}
-                location.y=b.start[1] + (b.h-1); conforms = false;
-            } 
-        } else {
-            if(conformOnly){return false}
-            location.y=b.start[1]; conforms = false;
-        }
-
-        if(!b.d || z >= b.start[2]){
-            if (b.d && z >= (b.start[2] + b.d)) {
-                if(conformOnly) {
-                    return false
-                }
-                location.z = b.start[2] + (b.d - 1); 
-                conforms = false;
-            } 
-        } else {
-            if(conformOnly){
-                return false
-            }
-            location.z = b.start[2]; 
-            conforms = false;
-        }
-
-        return {location: location, conforms: conforms}
-    }
-
-    static unitDimensionsInBoundary(tokenU, boundary){
-        let g = dangerZoneDimensions.getUnitDimensions(boundary);
-        if(!g.d || (tokenU.start[2] <= (g.start[2] + g.d)) && ((tokenU.start[2] + tokenU.d) >= g.start[2])) {
-            for(let j=0; j < g.h || j===0; j++){
-                for(let i=0; i < g.w || i===0; i++){
-                    if (tokenU.start[0] === g.start[0]+i && tokenU.start[1] === g.start[1]+j) {
-                        return true
+    _exclude(tagged){
+        for(let i=0; i<tagged.length; i++){
+            const document = tagged[i]
+            const documentName = document.documentName ? document.documentName : document.document.documentName;
+            const b = documentBoundary(documentName, document);
+            const dim=b.dimensions
+            const inclusive = documentName === "Token" ? false : true
+            const grids = b.grids({inclusive:inclusive})  
+            switch(documentName){
+                case "Wall":
+                    for(const [yPos,xPos] of grids){
+                        if(this.excludes.has(yPos + '_' + xPos)){continue}
+                        if(rayIntersectsGrid([yPos,xPos], document.toRay())){this.excludes.add(yPos + '_' + xPos)}
                     }
-                }
+                    break
+                case "AmbientLight":
+                    for(const [yPos,xPos, zPos, [xLoc, yLoc]] of grids){
+                        if(this.excludes.has(yPos + '_' + xPos)){continue}
+                        if(circleAreaGrid(xLoc,yLoc,dim.w, dim.h)){this.excludes.add(yPos + '_' + xPos)}
+                    }
+                    break
+                default: 
+                    for(const [yPos,xPos] of grids){
+                        if(this.excludes.has(yPos + '_' + xPos)){continue}
+                        this.excludes.add(yPos + '_' + xPos)
+                    }
             }
         }
-        return false
+        dangerZone.log(false, 'Tagged ', {tagged: tagged, boundary: this});
     }
 
-    /**
-     * Returns an array of tokens that have x and y coordinate that fit within the boundary provided.
-     * @param {array} tokens - an array of tokens
-     * @param {object} boundary - an object indicating the top left start point and bottom right end point 
-     *                            in a boundy {start: {x: , y:, z: }, end: {x: , y: ,z: }}
-     * @returns array of tokens
-    */
-     static tokensInBoundary(tokens, boundary){
-        const b = dangerZoneDimensions.conformBoundary(boundary.start.x, boundary.start.y, boundary.start.z, boundary.end.x, boundary.end.y, boundary.end.z);
+    tokensIn(tokens){
         const multiplier = game.settings.get(dangerZone.ID, 'scene-control-button-display');
         let kept = [];
         for(let token of tokens){
-            let d = (token.parent.dimensions.distance * Math.max(token.data.height, token.data.width) * multiplier);
-            let s = canvas.grid.grid.getGridPositionFromPixels(token.data.x, token.data.y);
-            s.push(token.data.elevation);
-            let g = {w: token.data.width, h: token.data.height, d: d, start:s};
-            if(dangerZoneDimensions.unitDimensionsInBoundary(g, b)){
+            const b = documentBoundary('Token', token);
+            if(this.intersectsBoundary(b)){
                 kept.push(token)
             }
         }
         return kept
     } 
 
-    /**
-     * intakes an array of tokens and identifies which are in a given zone (the whole zone)
-     * @param {array} tokens 
-     * @returns array of tokens
-     */
-    tokensInZone(tokens){
-        if(!tokens){tokens = game.scenes.get(this.sceneId)}
-        return dangerZoneDimensions.tokensInBoundary(tokens, {start: this.start, end: this.end});
-    } 
-
-    /**
-     * Returns tokens from an array that are found in the given boundary as well as the given zone
-     * @param {array} tokens - an array of tokens 
-     * @param {object} boundary - an object in standard boundary structure
-     * @returns array of tokens
-     */
-    tokensInBoundaryInZone(tokens, boundary){
-        return dangerZoneDimensions.tokensInBoundary(this.tokensInZone(tokens), boundary);
-    }
-
-    /**
-     * convert a given pixel location along with it's height and width in grid units to a PIXEL based x/y center point and the width and height in PIXELS
-     * @param {integer} x - starting location position x in PIXELS
-     * @param {integer} y - starting location position y in PIXELS
-     * @param {integer} z - starting z location position 
-     * @param {array} units -array of width, height and depth in grid units 
-     * @returns objects with width, height and depth in PIXELS, the center point location on the grid as x/y object in PIXELS, and top and bottom elevations
-     */
-    widthHeightCenterFromLocation(x,y,z,units){
-        let xyU = canvas.grid.grid.getGridPositionFromPixels(x, y);
-        let px = canvas.grid.grid.getPixelsFromGridPosition(xyU[0] + units.w, xyU[1]);
-        let py = canvas.grid.grid.getPixelsFromGridPosition(xyU[0], xyU[1] + units.h);
-        //dangerZone.log(false, 'Width Height Center Initial Boundary ', {xyAsUnits:xyU, unitsIn: units, py: py, px: px});
-
-        const w = Math.max(px[0], py[0]) - x;
-        const h = Math.max(px[1], py[1]) - y;
-        const cnt = canvas.grid.getCenter(x + (w/2), y + (h/2))
-        const c = {x: cnt[0], y: cnt[1]}
-        return {w: w, h: h, d: units.d, c: c, bottom: z, top: z + units.d}
-    }
-
-    static getUnitDimensions(boundary){
-        let s = canvas.grid.grid.getGridPositionFromPixels(boundary.start.x, boundary.start.y);
-        let se = canvas.grid.grid.getGridPositionFromPixels(boundary.start.x, boundary.end.y);
-        let es = canvas.grid.grid.getGridPositionFromPixels(boundary.end.x, boundary.start.y);
-        let w = se[0] - s[0];
-        let h = es[1] - s[1];
-        let d = boundary.end.z - boundary.start.z
-        s.push(boundary.start.z)
-
-        //dangerZone.log(false, 'Unit dimensions', {s: s, se: se, es:es, w:w, h:h, d:d});
-        return {w: w, h: h, d:d, start: s}
-    }
-
-    getUnitDimensions(){
-        return dangerZoneDimensions.getUnitDimensions({start: this.start, end: this.end});
-    }
-
-    static addHighlightZone(zoneId, sceneId, nameModifier = ''){
-        let hId = 'dz-'+ zoneId + nameModifier;
-        canvas.grid.addHighlightLayer(hId);
-        const zn = dangerZone.getZoneFromScene(zoneId, sceneId).scene;
-        const g = zn.getUnitDimensions();
-        for(let j=0; j < g.h; j++){
-            for(let i=0; i < g.w; i++){
-                let pos = canvas.grid.grid.getPixelsFromGridPosition((g.start[0]+i), (g.start[1]+j));
-                canvas.grid.highlightPosition(hId, {x: pos[0], y: pos[1], color:16737280});
+    intersectsBoundary(boundary){
+        if(!this.depth || (this.bottom <= boundary.top) && (this.top > boundary.bottom)) {
+            const grids = boundary.grids()
+            for(const [yPos,xPos] of grids){
+                if(this.gridIndex.has(yPos + '_' + xPos)){return true}
             }
+        }
+        return false
+    }
+
+    highlight(name, color = 16737280){
+        let hId = 'dz-' + name;
+        canvas.grid.addHighlightLayer(hId);
+        const grids = this.grids();
+        for(const [yPos,xPos] of grids){
+            let [x, y] = canvas.grid.grid.getPixelsFromGridPosition(yPos, xPos);
+            canvas.grid.highlightPosition(hId, {x: x, y: y, color:color});
         }
     }
 
-    static destroyHighlightZone(zoneId, nameModifier = ''){
-        canvas.grid.destroyHighlightLayer('dz-'+zoneId + nameModifier)
+    destroyHighlight(name){
+        canvas.grid.destroyHighlightLayer('dz-' + name)
     }
+}
+
+export class point{
+    constructor({x, y, z=0}){
+        this.x = x ? x : 0, 
+        this.y = y ? y : 0,
+        this.z = z ? z : 0;
+        this._toTopLeft();
+    }
+    
+    _toTopLeft(){    
+        const [x1, y1] = canvas.grid.getTopLeft(this.x, this.y);
+        this.x = x1;
+        this.y = y1;
+    }
+}
+
+export function circleAreaGrid(xLoc,yLoc,w,h){
+    if((!xLoc &&!yLoc) || (yLoc===h&&!xLoc) || (xLoc===w&&!yLoc) || (xLoc===w&&yLoc===h)){return false}
+    return true
+}
+
+export function rayIntersectsGrid([yPos,xPos], r){
+    const [xl,yl] = canvas.grid.grid.getPixelsFromGridPosition(yPos, xPos);
+    const [xc,yc] = canvas.grid.grid.getCenter(xl, yl);
+    const wg = (xc - xl) * 2, hg = (yc - yl) * 2;
+    if(r.intersectSegment([xl, yl, xl+wg, yl]) || r.intersectSegment([xl, yl, xl, yl+hg])
+        || r.intersectSegment([xl, yl+hg, xl+wg, yl+hg]) || r.intersectSegment([xl+wg, yl, xl+wg, yl+hg])
+        ){
+            return true
+        }
+    return false
+}
+
+export function locationToBoundary(point, units, options={}){
+    let [x1,y1] = canvas.grid.grid.shiftPosition(point.x, point.y, units.w, units.h)
+    return new boundary(point,{x:x1, y:y1, z:(point.z + units.d)},options)
+}
+
+export function documentBoundary(documentName, document){
+    let dim;
+    switch(documentName){
+        case "Wall":
+            dim=document.bounds;
+            break
+        case "AmbientLight":
+            const dm = (document.radius*2)-1
+            dim={x:document.bounds.x, y:document.bounds.y, width: dm, height: dm} 
+            break
+        case "Token":
+            const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
+            const [TyPos, TxPos] = canvas.grid.grid.getGridPositionFromPixels(document.data.x, document.data.y);
+            const [Tx2, Ty2] = canvas.grid.grid.getPixelsFromGridPosition(TyPos + document.data.height, TxPos + document.data.width); 
+            const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
+            const Td = (distance * Math.max(document.data.width, document.data.height) * multiplier);
+            dim = {x:document.data.x, y:document.data.y, width: Tx2 - document.data.x, height: Ty2 - document.data.y, depth: Td,  bottom:document.data.elevation};
+            break
+        default: 
+            dim=document.data
+    }
+    const b = new boundary({x:dim.x, y:dim.y, z:dim.bottom ? dim.bottom : 0}, {x: dim.x + dim.width, y: dim.y + dim.height, z: dim.depth ? dim.bottom + dim.depth : 0})
+    return b
 }

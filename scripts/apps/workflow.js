@@ -1,6 +1,5 @@
 import {dangerZone } from '../danger-zone.js';
-import {dangerZoneType} from './zone-type.js';
-import {dangerZoneDimensions} from './dimensions.js';
+import {dangerZoneDimensions, point, locationToBoundary} from './dimensions.js';
 import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn} from '../index.js';
 
 export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
@@ -12,7 +11,8 @@ export const WORKFLOWSTATES = {
     GETZONEDATA: 3,
     GETZONEELIGIBLETOKENS: 4,
     ESTABLISHTARGETBOUNDARY: 5,
-    GETZONETARGETS: 6,
+    HIGHLIGHTTARGETBOUNDARY: 6,
+    GETZONETARGETS: 7,
     GENERATEFLAVOR: 10,
     GENERATEFLUIDCANVAS: 15,
     GENERATEFOREGROUNDEFFECT: 20,
@@ -31,11 +31,6 @@ export const WORKFLOWSTATES = {
     COMPLETE: 99
 }
 
-function getRandomFromArray(array){
-    let i = (Math.random() * array.length) | 0
-    return array.splice(i, 1)[0]
-}
-
 export class workflow {
 
     constructor(zone) {
@@ -46,25 +41,15 @@ export class workflow {
         this.likelihoodResult = 100,
         this.promises = [],
         this.scene = game.scenes.get(zone.scene.sceneId),
-        this.targetBoundary = {
-            end: {
-                x: 0,
-                y: 0,
-                z: 0
-            },
-            start: {
-                x: 0,
-                y: 0,
-                z: 0
-            }
-        },
+        this.targetBoundary,
         this.targets = [];
         this.twinLocation = {},
         this.userSelectedLocation = {},
         this.zone = zone,
+        this.zoneBoundary,
         this.zoneEligibleTokens = [], 
         this.zoneTokens = [], 
-        this.zoneType = dangerZoneType.getDangerZoneType(zone.type)
+        this.zoneType = zone.danger
     };
 
     get flags() {
@@ -78,6 +63,10 @@ export class workflow {
     get sceneTokens() {
         return this.scene.tokens
     };
+
+    get selectedPoint() {
+        return new point(this.userSelectedLocation)
+    }
 
     log(message, data){
         dangerZone.log(false,`${message}... `, {workflow: this, data:data});
@@ -115,7 +104,7 @@ export class workflow {
                 }  
             
             case WORKFLOWSTATES.GETZONEDATA:
-                this.getZoneData();
+                await this.getZoneData();
                 this.log('Zone tokens got ', {});
                 return this.next(WORKFLOWSTATES.GETZONEELIGIBLETOKENS)
 
@@ -125,8 +114,12 @@ export class workflow {
                 return this.next(WORKFLOWSTATES.ESTABLISHTARGETBOUNDARY)
 
             case WORKFLOWSTATES.ESTABLISHTARGETBOUNDARY:
-                let boundaryData = await this.establishTargetBoundary();
-                this.log('Zone target boundary and eligible targets established', boundaryData);
+                await this.establishTargetBoundary();
+                this.log('Zone target boundary and eligible targets established', {});
+                return this.next(WORKFLOWSTATES.HIGHLIGHTTARGETBOUNDARY)
+
+            case WORKFLOWSTATES.HIGHLIGHTTARGETBOUNDARY:
+                this.promises.push(this.highlightTargetBoundary())
                 return this.next(WORKFLOWSTATES.GETZONETARGETS)
 
             case WORKFLOWSTATES.GETZONETARGETS:
@@ -226,7 +219,7 @@ export class workflow {
                 return this.log('Zone workflow complete', {})
         }
     }
-
+    
     /*prompts the user to select the zone location point (top left grid location) and captures the location*/
     async promptSelectZArea() {
         new Dialog({
@@ -248,7 +241,7 @@ export class workflow {
     async promptSelectXYArea(){
         let currentLayer = canvas.activeLayer;
         canvas.activateLayer('grid');
-        dangerZoneDimensions.addHighlightZone(this.zone.id, this.scene.id, '_wf');
+        await dangerZoneDimensions.addHighlightZone(this.zone.id, this.scene.id, '_wf');
 
         let x = new Promise(function(resolve, reject){
             ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
@@ -274,8 +267,9 @@ export class workflow {
         }
     }
 
-    getZoneData(){
-        return this.zoneTokens = this.zone.zoneTokens();
+    async getZoneData(){
+        this.zoneBoundary = await this.zone.scene.boundary();
+        return this.zoneTokens = this.zoneBoundary.tokensIn(this.sceneTokens);
     }
 
     getZoneEligibleTokens(){
@@ -286,35 +280,42 @@ export class workflow {
         if(Object.keys(this.userSelectedLocation).length){
             return this.getChosenLocationBoundary();
         }
-        return await this.getRandomLocationBoundary()
+        await this.getRandomLocationBoundary()
+    }
+
+    async highlightTargetBoundary(){
+        if(this.targetBoundary && game.user.isGM && game.settings.get(dangerZone.ID, 'display-danger-boundary')){
+            this.targetBoundary.highlight(this.id, 16711719)
+            await wait(5000)
+            this.targetBoundary.destroyHighlight(this.id);
+        }
     }
 
     getChosenLocationBoundary(){
-        let boundary = this.zone.scene.locationToBoundary(this.userSelectedLocation.x, this.userSelectedLocation.y, this.userSelectedLocation.z, this.zoneType.dimensions.units);
-        mergeObject(this.targetBoundary, boundary, {insertKeys: false, enforceTypes: true});
-        this.eligibleTargets = this.zone.scene.tokensInBoundaryInZone(this.zoneEligibleTokens, this.targetBoundary);
-        return boundary
+        this.targetBoundary = locationToBoundary(this.selectedPoint, this.zoneType.dimensions.units, {excludes: this.zoneBoundary.excludes});
+        this.eligibleTargets = this.targetBoundary.tokensIn(this.zoneEligibleTokens);
     }
 
     async getRandomLocationBoundary() {
-        let max = 1, i=0, testBoundary = [];
+        let max = 1, i=0;
+        const testBoundary = await this.zone.scene.randomDangerBoundary();
         if(this.zone.options.runUntilTokenFound && this.zoneEligibleTokens.length){
             max = 1000;
         }
         do {
             i++;
-            testBoundary = await this.zone.scene.randomArea();
-            if(!testBoundary){return this.next(WORKFLOWSTATES.CANCEL)}
-            this.eligibleTargets = this.zone.scene.tokensInBoundaryInZone(this.zoneEligibleTokens, testBoundary);
+            const b = testBoundary.next()
+            if(!b || b.done){return this.next(WORKFLOWSTATES.CANCEL)}
+            this.targetBoundary = b.value;
+            this.eligibleTargets = this.targetBoundary.tokensIn(this.zoneEligibleTokens);
         }
         while(this.eligibleTargets.length === 0 && i < max);
-        mergeObject(this.targetBoundary, testBoundary, {insertKeys: false, enforceTypes: true});
         return {attempts: i, max: max}
     }
 
     getZoneTargets(){
         if(this.eligibleTargets.length > 1 && !this.zone.options.allInArea){
-           return this.targets = getRandomFromArray(this.eligibleTargets)
+           return this.targets.push(this.eligibleTargets[Math.floor(Math.random() * this.eligibleTargets.length)])
         }
         return this.targets = this.eligibleTargets
     }
@@ -322,13 +323,15 @@ export class workflow {
     async gmChatDetails() {
         if(game.user.isGM && game.settings.get(dangerZone.ID, 'chat-details-to-gm')) {   
             let content = "Danger: " + this.zoneType.name + " w" + this.zoneType.dimensions.units.w + " h" + this.zoneType.dimensions.units.h  + " d" + this.zoneType.dimensions.units.d +
-                "<br>Target boundary start: x" + this.targetBoundary.start.x + " y" + this.targetBoundary.start.y + " z" + this.targetBoundary.start.z +
-                "<br>Target boundary end: x" + this.targetBoundary.end.x + " y" + this.targetBoundary.end.y + " z" + this.targetBoundary.end.z +
-                "<br>Likelihood result: " + this.likelihoodResult +
                 "<br>Zone: bleed " + this.zone.options.bleed + ", hit all " + this.zone.options.allInArea + ", always hits " + this.zone.options.runUntilTokenFound + ", likelihood " + this.zone.likelihood +
-                "<br>Targets: " + this.targets.map(t => t.data.name) +
+                "<br>Likelihood result: " + this.likelihoodResult;
+            if(this.targetBoundary?.A){
+                content += "<br>Eligible zone tokens: " + this.zoneEligibleTokens.map(t => t.data.name) +
+                "<br>Target boundary start: x" + this.targetBoundary.A.x + " y" + this.targetBoundary.A.y + " z" + this.targetBoundary.A.z +
+                "<br>Target boundary end: x" + this.targetBoundary.B.x + " y" + this.targetBoundary.B.y + " z" + this.targetBoundary.B.z +
                 "<br>Eligible targets: " + this.eligibleTargets.map(t => t.data.name) +
-                "<br>Eligible zone tokens: " + this.zoneEligibleTokens.map(t => t.data.name)
+                "<br>Hit targets: " + this.targets.map(t => t.data.name)
+            } 
             ChatMessage.create({
                 content: content,
                 whisper: [game.user.id]
@@ -362,31 +365,41 @@ export class workflow {
     async createEffectTile(twinTile) {
         const effect = this.zoneTypeOptions.lastingEffect;
         const tiles = [];
+        const boundary = twinTile ? this.twinLocation : this.targetBoundary
 
-        let boundary; 
-        if(twinTile){
-            boundary = this.twinLocation
-        } else {
-            boundary = this.targetBoundary
-        }
-
-        let whc = this.zone.scene.widthHeightCenterFromLocation(boundary.start.x, boundary.start.y, boundary.start.z, this.zoneType.dimensions.units)
 
         let newTile = {
             flags: {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.zone.trigger, type: this.zone.type}}},
             hidden: false,
             img: effect.file,
             locked: false,
-            height: whc.h * effect.scale,
-            overhead: whc.bottom > 0 ? true : false,
+            height: boundary.height * effect.scale,
+            overhead: boundary.bottom > 0 ? true : false,
             rotation: 0,
             scale: effect.scale,
-            width: whc.w * effect.scale,
+            width: boundary.width * effect.scale,
             video: {autoplay: true, loop: effect.loop, volume: 0},
-            x: boundary.start.x - ((effect.scale - 1) *  (whc.w/2)),
-            y: boundary.start.y - ((effect.scale - 1) *  (whc.h/2)),
-            z: whc.bottom
+            x: boundary.A.x - ((effect.scale - 1) *  (boundary.width/2)),
+            y: boundary.A.y - ((effect.scale - 1) *  (boundary.height/2)),
+            z: boundary.bottom
         };
+
+        if(betterRoofsOn && boundary.bottom){
+            newTile.flags['betterroofs'] = {
+                brMode: 3
+            }
+        }
+
+        if(levelsOn && boundary.bottom){
+            newTile.flags['levels'] = {
+                "rangeTop": boundary.top,
+                "rangeBottom": boundary.bottom,
+                "showIfAbove": false,
+                "showAboveRange": null,
+                "isBasement": false,
+                "noFogHide": false
+            }
+        }
 
         if(monksActiveTilesOn){
             const flag = this.flags?.["monks-active-tiles"];
@@ -419,17 +432,11 @@ export class workflow {
                 //teleport
                 if(flag.teleport?.add){
                     if(isObjectEmpty(this.twinLocation)){
-                        this.twinLocation = await this.zone.scene.randomArea();
+                        const rBoundary = await this.zone.scene.randomDangerBoundary();
+                        this.twinLocation = rBoundary.next().value
                     };
-
-                    let boundaryTwin; 
-                    if(twinTile){
-                        boundaryTwin = this.targetBoundary;
-                    } else {
-                        boundaryTwin = this.twinLocation
-                    }
-
-                    let whcTwin = this.zone.scene.widthHeightCenterFromLocation(boundaryTwin.start.x, boundaryTwin.start.y, boundaryTwin.start.z, this.zoneType.dimensions.units)
+                    const boundaryTwin = twinTile ? this.targetBoundary : this.twinLocation;
+                    
                     newTile.flags['monks-active-tiles'].actions.push(
                         {
                             "action": "teleport",
@@ -437,34 +444,18 @@ export class workflow {
                                 "animatepan": flag.teleport.animatepan,
                                 "avoidtokens": flag.teleport.avoidtokens,
                                 "deletesource": flag.teleport.deletesource,
-                                "location": whcTwin.c
+                                "location": boundaryTwin.center
                             },
                             "id": foundry.utils.randomID(16)
                         }
                     )
+                    
                     if(flag.teleport.twin && !twinTile && sequencerOn){
                         this.promises.push(this.foregroundEffect(true));
                         this.promises.push(this.backgroundEffect(true));
                         return await this.createEffectTile(newTile);
                     } 
                 }
-            }
-        }
-
-        if(betterRoofsOn && whc.bottom){
-            newTile.flags['betterroofs'] = {
-                brMode: 3
-            }
-        }
-
-        if(levelsOn && whc.bottom){
-            newTile.flags['levels'] = {
-                "rangeTop": whc.top,
-                "rangeBottom": whc.bottom,
-                "showIfAbove": false,
-                "showAboveRange": null,
-                "isBasement": false,
-                "noFogHide": false
             }
         }
 
@@ -485,14 +476,7 @@ export class workflow {
     }
 
     async foregroundEffect(twin = false){
-        let location; 
-        if(twin){
-            location = this.twinLocation.start
-        }else{
-            location =this.targetBoundary.start
-        }
-        const whc = this.zone.scene.widthHeightCenterFromLocation(location.x, location.y, location.z,this.zoneType.dimensions.units)
-        //const rotation = Math.floor(Math.random() * 90) - 45;
+        const boundary = twin ? this.twinLocation : this.targetBoundary;
         if(this.zoneTypeOptions.foregroundEffect?.file) {
             let s = new Sequence()
                 if(this.zoneTypeOptions.foregroundEffect.delay){
@@ -501,10 +485,10 @@ export class workflow {
                 
                 s = s.effect()
                     .file(this.zoneTypeOptions.foregroundEffect.file)
-                    .atLocation(whc.c)
+                    .atLocation(boundary.center)
                     .scale(this.zoneTypeOptions.foregroundEffect.scale)
                     .randomizeMirrorX()
-                    .zIndex(whc.top)
+                    .zIndex(boundary.top)
                     if(this.zoneTypeOptions.foregroundEffect.duration){
                         s = s.duration(this.zoneTypeOptions.foregroundEffect.duration)
                     }
@@ -521,14 +505,7 @@ export class workflow {
     }
 
     async backgroundEffect(twin = false){
-        let location; 
-        if(twin){
-            location = this.twinLocation.start
-        }else{
-            location =this.targetBoundary.start
-        }
-        const whc = this.zone.scene.widthHeightCenterFromLocation(location.x, location.y, location.z, this.zoneType.dimensions.units)
-        
+        const boundary = twin ? this.twinLocation : this.targetBoundary;       
         if(this.zoneTypeOptions.backgroundEffect?.file) {
             let s = new Sequence()
                 if(this.zoneTypeOptions.backgroundEffect.delay){
@@ -537,9 +514,9 @@ export class workflow {
                 
                 s = s.effect()
                     .file(this.zoneTypeOptions.backgroundEffect.file)
-                    .atLocation(whc.c)
+                    .atLocation(boundary.center)
                     .scale(this.zoneTypeOptions.backgroundEffect.scale)
-                    .zIndex(whc.bottom)
+                    .zIndex(boundary.bottom)
                     .randomRotation()
                     
                     if(this.zoneTypeOptions.backgroundEffect.duration){
@@ -627,12 +604,12 @@ export class workflow {
 
     async createLight() {
         if(this.zoneTypeOptions.ambientLight?.dim || this.zoneTypeOptions.ambientLight?.bright) {
-            let whc = this.zone.scene.widthHeightCenterFromLocation(this.targetBoundary.start.x, this.targetBoundary.start.y, this.targetBoundary.start.z, this.zoneType.dimensions.units)
+            let c = this.targetBoundary.center
 
             const light = {
                 t: "l",
-                x: this.targetBoundary.start.x + (whc.w/2),
-                y: this.targetBoundary.start.y + (whc.h/2),
+                x: c.x,
+                y: c.y,
                 rotation: this.zoneTypeOptions.ambientLight.rotation,
                 dim: this.zoneTypeOptions.ambientLight.dim,
                 bright: this.zoneTypeOptions.ambientLight.bright,
@@ -648,10 +625,10 @@ export class workflow {
                 flags: {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.zone.trigger, type: this.zone.type}}}
             }
 
-            if(levelsOn && (whc.bottom || whc.top)){
+            if(levelsOn && (this.targetBoundary.bottom || this.targetBoundary.top)){
                 light.flags['levels'] = {
-                    "rangeTop": whc.top,
-                    "rangeBottom": whc.bottom
+                    "rangeTop": this.targetBoundary.top,
+                    "rangeBottom": this.targetBoundary.bottom
                 }
             }
             await this.scene.createEmbeddedDocuments("AmbientLight",[light]);
@@ -664,40 +641,42 @@ export class workflow {
     async fluidCanvas(){
         const flag = this.flags?.fluidCanvas;
         if(flag?.type){
-            await wait(flag.delay);
+            if(flag.delay){await wait(flag.delay)}
             const users = game.users.map(u => u.id);
             switch (flag.type){
                 case 'black':
-                   await FluidCanvas.black(users);
+                   await KFC.executeAsGM("black",users);
                    await wait(flag.duration);
-                   await FluidCanvas.black(users);
+                   await KFC.executeAsGM("black",users);
                    break;
                 case 'blur':
-                    await FluidCanvas.blur(users, flag.intensity);
+                    await KFC.executeAsGM("blur",users, flag.intensity);
                     await wait(flag.duration);
-                    await FluidCanvas.blur(users);
+                    await KFC.executeAsGM("blur",users);
                     break;
                 case 'drug':
-                    await FluidCanvas.drugged(users, 1, flag.intensity, flag.duration, flag.iteration);
+                    await KFC.executeAsGM("drug",users, flag.intensity, flag.duration, flag.iteration);
+                    await wait(flag.duration);
+                    await KFC.executeAsGM("drug",users);
                     break;
                 case 'earthquake':
-                    await FluidCanvas.earthquake(flag.intensity, flag.duration, flag.iteration);
+                    await KFC.executeForEveryone("earthquake", flag.intensity, flag.duration, flag.iteration);
                     break;
                 case 'heartbeat':
-                    await FluidCanvas.heartBeat(flag.intensity, flag.duration, flag.iteration);
+                    await KFC.executeForEveryone("heartbeat", flag.intensity, flag.duration, flag.iteration);
                     break;
                 case 'negative':
-                    await FluidCanvas.negative(users);
+                    await KFC.executeAsGM("negative",(users));
                     await wait(flag.duration);
-                    await FluidCanvas.negative(users);
+                    await KFC.executeAsGM("negative",(users));
                     break;
                 case 'sepia':
-                    await FluidCanvas.sepia(users);
+                    await KFC.executeAsGM("sepia",(users));
                     await wait(flag.duration);
-                    await FluidCanvas.sepia(users);
+                    await KFC.executeAsGM("sepia",(users));
                     break;
                 case 'spin':
-                    await FluidCanvas.spin(flag.intensity, flag.duration, flag.iteration);
+                    await KFC.executeForEveryone("spin",flag.intensity, flag.duration, flag.iteration);
                     break;
             }
         }
@@ -726,10 +705,8 @@ export class workflow {
 
     async spawnWarpgate() {
         const flag = this.flags?.warpgate;
-        if(flag?.actor){        
-            const whc = this.zone.scene.widthHeightCenterFromLocation(this.targetBoundary.start.x, this.targetBoundary.start.y, this.targetBoundary.start.z, this.zoneType.dimensions.units)
-                   
-            let options = {}, callbacks = {}, updates = {token: {elevation: whc.bottom}}, actor = '';
+        if(flag?.actor){                           
+            let options = {}, callbacks = {}, updates = {token: {elevation: this.targetBoundary.bottom}}, actor = '';
             if(flag.duplicates > 1){options= {"duplicates": flag.duplicates}}
             if(flag.isRolltable){
                 let table = game.tables.getName(flag.actor);
@@ -744,7 +721,7 @@ export class workflow {
                 if(flag.delay > 0){
                     await warpgate.wait(flag.delay);
                 }
-                await warpgate.spawnAt(whc.c, token, updates, callbacks, options);
+                await warpgate.spawnAt(this.targetBoundary.center, token, updates, callbacks, options);
             }
             this.log('Warpgate spawned! ', {"actor": actor, "warpgate-data": flag});
             return {warpgate: {"actor": actor, "data": flag}}

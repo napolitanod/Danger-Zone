@@ -37,10 +37,10 @@ export class api {
      * @param {string} sceneId - the scene id
      * @param {string} identifier - an identifier that user provides that differentiates this highlight layer from other highlight layers created for this zone
      */
-    static _addHighlightZone(zoneName, sceneId, identifier){
+    static async _addHighlightZone(zoneName, sceneId, identifier){
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
         if(zn){
-            dangerZoneDimensions.addHighlightZone(zn.id, sceneId, identifier);
+            await dangerZoneDimensions.addHighlightZone(zn.id, sceneId, identifier);
         }
     }
 
