@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
-import {dangerZoneDimensions} from './dimensions.js';
+import {boundary, point} from './dimensions.js';
 import {DANGERZONETRIGGERS} from './trigger-handler.js';
 import {TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONELIGHTREPLACE, actorOps} from './constants.js';
 
@@ -86,7 +86,7 @@ export class DangerZoneForm extends FormApplication {
         resolve(selection);
         });
     }).then((selection)=>{
-      this.pickerStart = selection;
+      this.pickerStart = new point(selection);
       let y = new Promise(function(resolve, reject){
         ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-zone-end"));
         canvas.app.stage.once('pointerdown', event => {
@@ -94,7 +94,7 @@ export class DangerZoneForm extends FormApplication {
           resolve(selection);
           });
       }).then((selection)=>{
-        this.pickerEnd = selection;
+        this.pickerEnd = new point(selection);
         currentLayer.activate();
         this.maximizeForms();
         this.pickToForm();
@@ -113,14 +113,14 @@ export class DangerZoneForm extends FormApplication {
   }
 
   pickToForm(){
-    let pick = dangerZoneDimensions.conformBoundary(this.pickerStart.x, this.pickerStart.y, 0, this.pickerEnd.x, this.pickerEnd.y, 0);
+    const pick = new boundary(this.pickerStart, this.pickerEnd);
     let size = game.scenes.get(this.sceneId).dimensions.size;
-    pick.end.x = pick.end.x + size;
-    pick.end.y = pick.end.y + size;
-    $(this.form).find("input[name='scene.start.x']").val(pick.start.x);
-    $(this.form).find("input[name='scene.start.y']").val(pick.start.y);
-    $(this.form).find("input[name='scene.end.x']").val(pick.end.x);
-    $(this.form).find("input[name='scene.end.y']").val(pick.end.y);
+    pick.B.x = pick.B.x + size;
+    pick.B.y = pick.B.y + size;
+    $(this.form).find("input[name='scene.start.x']").val(pick.A.x);
+    $(this.form).find("input[name='scene.start.y']").val(pick.A.y);
+    $(this.form).find("input[name='scene.end.x']").val(pick.B.x);
+    $(this.form).find("input[name='scene.end.y']").val(pick.B.y);
   
     dangerZone.log(false, 'User zone selection recorded', {pick: {start: this.pickerStart, end: this.pickerEnd}, final: pick});
   }

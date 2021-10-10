@@ -27,6 +27,15 @@ Hooks.once('init', async function() {
         restricted: true
     });
 
+	game.settings.register(modulename, "display-danger-boundary", {
+		name: game.i18n.localize("DANGERZONE.setting.display-danger-boundary.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.display-danger-boundary.description"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
+
 	game.settings.register(modulename, "scene-enabled-default", {
 		name: game.i18n.localize("DANGERZONE.setting.scene-enabled-default.label"),
 		hint: game.i18n.localize("DANGERZONE.setting.scene-enabled-default.description"),

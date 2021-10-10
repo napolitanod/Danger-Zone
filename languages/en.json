@@ -13,6 +13,7 @@
         "view": "View",
         "yes": "Ok",
         "alerts": {
+            "danger-depth-exceeds-zone": "The danger's depth may not exceed the zone's depth nor can a danger have a depth > 0 when a zone's depth is infinite (equal to 0).",
             "input-z": "Elevation",
             "no-trigger-if-not-on-combat-scene": "Danger Zones do not trigger while you are not active on the current combat scene.",
             "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
@@ -112,6 +113,8 @@
 		    "chat-details-to-gm.description": "Will send a private chat message to GM that includes details on the danger zone on trigger, such as target location, eligible tokens, and targeted tokens.",
             "danger-zone-types-config.name": "Dangers",
             "danger-zone-types-config.label": "Configure Dangers",
+            "display-danger-boundary.label": "Highlight Danger Target Area",
+            "display-danger-boundary.description": "Temporarily highlights the area targeted by a danger when the zone is triggered (GM's session only).",
             "scene-control-button-display.label": "Display Clear Lasting Effects Button",
             "scene-control-button-display.description": "Toggles the display of the Clear Danger Zone Lasting Effects button within the scene control buttons tiles grouping",
             "scene-control-light-button-display.label": "Display Clear Ambient Light Button",
