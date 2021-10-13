@@ -69,7 +69,7 @@ export class workflow {
     }
 
     log(message, data){
-        dangerZone.log(false,`${message}... `, {workflow: this, data:data});
+        dangerZone.log(false,`${message} ${this.zone.title}... `, {workflow: this, data:data});
     }
 
     async next(nextState){
@@ -119,7 +119,8 @@ export class workflow {
                 return this.next(WORKFLOWSTATES.HIGHLIGHTTARGETBOUNDARY)
 
             case WORKFLOWSTATES.HIGHLIGHTTARGETBOUNDARY:
-                this.promises.push(this.highlightTargetBoundary())
+               // this.promises.push(this.highlightTargetBoundary())
+                this.highlightTargetBoundary()
                 return this.next(WORKFLOWSTATES.GETZONETARGETS)
 
             case WORKFLOWSTATES.GETZONETARGETS:
@@ -203,7 +204,7 @@ export class workflow {
                 return this.log('Zone workflow cancelled', {});
 
             case WORKFLOWSTATES.AWAITPROMISES: 
-                Promise.all(this.promises)
+                return await Promise.all(this.promises)
                     .then((results) => {
                         this.log('Zone workflow promises returned ', results)
                         return this.next(WORKFLOWSTATES.COMPLETE) 
@@ -212,7 +213,6 @@ export class workflow {
                         this.log('Zone workflow promise errors ', e);
                         return this.next(WORKFLOWSTATES.CANCEL) 
                     });
-                break;
 
             case WORKFLOWSTATES.COMPLETE: 
                 this.active = false
@@ -340,7 +340,7 @@ export class workflow {
     }
 
     async deleteLastingEffects() {
-        let tileIds;
+        let tileIds=[];
         switch (this.zone.replace) {
             case 'Z':
                 tileIds=this.scene.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.zone.id).map(t => t.id);
@@ -357,8 +357,10 @@ export class workflow {
             default:
                 return this.log('Zone does not clear lasting effects', {});
         }
-        await wait(this.zoneTypeOptions.lastingEffect.delay);
-		await canvas.scene.deleteEmbeddedDocuments("Tile", tileIds);
+        if(tileIds.length){
+            await wait(this.zoneTypeOptions.lastingEffect.delay);
+            await canvas.scene.deleteEmbeddedDocuments("Tile", tileIds);
+        }
         return this.log('Lasting effects cleared', {tiles: tileIds})
     }
 

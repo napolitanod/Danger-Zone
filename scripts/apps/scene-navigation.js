@@ -1,7 +1,8 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {dangerZoneDimensions} from './dimensions.js';
-import {triggerManager, DANGERZONETRIGGERS} from './trigger-handler.js';
+import {triggerManager} from './trigger-handler.js';
+import {DANGERZONETRIGGERS} from './constants.js';
 import {DangerZoneForm} from './zone-form.js';
 
 export function addTriggersToSceneNavigation(app, html, options) {

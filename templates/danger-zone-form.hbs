@@ -107,9 +107,15 @@
                     <span>{{localize 'DANGERZONE.edit-form.trigger.label'}}</span>
                 </h3>
                 <div class="form-fields">
-                    <select name="trigger" value="{{zone.trigger}}">
+                    <select id="dz-trigger-value" name="trigger" value="{{zone.trigger}}" data-action="trigger-select">
                         {{selectOptions triggerOps selected=zone.trigger localize=true}}
                     </select>
+                </div>
+                <label id="dz-initiative-label" class="initiative-label {{#if hideInit}}hidden{{/if}}">
+                    <span>{{localize 'DANGERZONE.edit-form.initiative-count.label'}}</span>
+                </label>
+                <div id="dz-initiative" class="initiative {{#if hideInit}}hidden{{/if}}">
+                    <input type="Number" name="initiative" step="1" value="{{zone.initiative}}" placeholder="{{localize 'DANGERZONE.edit-form.initiative-count.label'}}" required>
                 </div>
             </div>
             <div class="form-group flexrow">

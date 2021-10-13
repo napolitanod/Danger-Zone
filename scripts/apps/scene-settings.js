@@ -1,7 +1,7 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {dangerZoneDimensions} from './dimensions.js';
-import {DANGERZONETRIGGERS} from './trigger-handler.js';
+import {DANGERZONETRIGGERS} from './constants.js';
 import {DangerZoneForm} from './zone-form.js';
 export function initializeScene(app, html, options) {
     if(!app.object?.data?.gridType){return dangerZone.log(false,'No Danger Zone Scene List When Gridless ', {app, html, options})};
