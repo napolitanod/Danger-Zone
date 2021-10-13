@@ -162,7 +162,8 @@ export class dangerZone {
     let zones = this.getAllZonesFromScene(sceneId);
     if(!zones.size){return false}
     for (let [k,zn] of zones) {
-      if(zn.trigger===trigger && zn.random && zn.type && zn.scene?.sceneId && zn.enabled){
+      const trig = (zn.trigger === 'initiative-start' || zn.trigger === 'initiative-end') ? (zn.trigger + '-' + (zn.initiative ? zn.initiative.toString() : '0')) : zn.trigger;
+      if(trig===trigger && zn.random && zn.type && zn.scene?.sceneId && zn.enabled){
         let min = max + 1;
         max += zn.weight;
         keptZones.push({zone: zn, min: min, max: max});
@@ -212,6 +213,7 @@ export class zone {
     this.actor = '',
     this.enabled = game.settings.get('danger-zone', 'scene-enabled-default'),
     this.flavor = '',
+    this.initiative = 0,
     this.lightReplace = 'N',
     this.likelihood = 100,
     this.options = {

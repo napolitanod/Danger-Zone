@@ -1,7 +1,7 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {boundary, point} from './dimensions.js';
-import {DANGERZONETRIGGERS} from './trigger-handler.js';
+import {DANGERZONETRIGGERS} from './constants.js';
 import {TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONELIGHTREPLACE, actorOps} from './constants.js';
 
 export class DangerZoneForm extends FormApplication {
@@ -44,9 +44,29 @@ export class DangerZoneForm extends FormApplication {
     }
   }
 
+  async _handleChange(event) {
+    const action = $(event.currentTarget).data().action;
+    switch (action) {
+      case 'trigger-select': {
+        const initLabel = document.getElementById(`dz-initiative-label`);
+        const init = document.getElementById(`dz-initiative`);
+        const val = document.getElementById(`dz-trigger-value`).value
+        if(val === 'initiative-start' || val === 'initiative-end'){
+          initLabel.classList.remove('hidden')
+          init.classList.remove('hidden')
+        } else {
+          initLabel.classList.add('hidden')
+          init.classList.add('hidden')
+        }
+        break;
+      }
+    }
+  }
+
   activateListeners(html) {
     super.activateListeners(html);
     html.on('click', "[data-action]", this._handleButtonClick.bind(this));
+    html.on('change', "[data-action]", this._handleChange.bind(this));
   }
 
   getData(options){
@@ -58,9 +78,12 @@ export class DangerZoneForm extends FormApplication {
       instance = dangerZone.getZoneFromScene(zoneId, this.sceneId);
     }
 
+    const hideInit = (instance.trigger === 'initiative-start' || instance.trigger === 'initiative-end') ? false : true
+
     return {
       "zone": instance,
       actorOps: actorOps(),
+      hideInit: hideInit,
       replaceOps: DANGERZONEREPLACE,
       lightReplaceOps: DANGERZONELIGHTREPLACE,
       tokenDispositionOps: TOKENDISPOSITION,

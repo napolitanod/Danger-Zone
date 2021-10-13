@@ -157,7 +157,14 @@ form.danger-zone-type-form .main-danger {
     text-overflow: ellipsis;
     padding: 0px 6px 0px 0px;
 }
-.danger-zone-details .trigger {flex: 0 0 15%;}
+.danger-zone-details .trigger {
+    flex: 0 0 15%;
+    white-space: nowrap;
+    overflow-x: hidden; 
+    flex-wrap: nowrap;
+    text-overflow: ellipsis;
+    padding: 0px 6px 0px 0px;
+}
 .danger-zone-details .random {flex: 0 0 10%; text-align: center;}
 
 form.danger-zone-record .form-group .form-fields {
@@ -191,14 +198,17 @@ form.danger-zone-record .form-group {
     flex: 0 0 7%;
 }
 
-.danger-zone-record .weight, .danger-zone-record .weight-label {
+.danger-zone-record .weight, .danger-zone-record .initiative, .danger-zone-record .initiative-label, .danger-zone-record .weight-label {
     float: right;
     flex: 0 0 15%; 
 } 
 
 .danger-zone-record .weight-label,
-.danger-zone-record .custom
-{margin-right: 15px;}
+.danger-zone-record .initiative-label
+{
+    margin-left: 15px;
+    margin-right: 15px;
+}
 
 form.danger-zone-record .form-fields .boundary-z{
     flex: 0 0 15.5%; 

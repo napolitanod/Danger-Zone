@@ -1,25 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
 import {workflow} from './workflow.js';
-
-export const DANGERZONETRIGGERS = {
-    "manual":  "DANGERZONE.trigger-types.manual.label",
-    "combat-start":  "DANGERZONE.trigger-types.combat-start.label",
-    "combat-end":  "DANGERZONE.trigger-types.combat-end.label",
-    "round-start":  "DANGERZONE.trigger-types.round-start.label",
-    "round-end":  "DANGERZONE.trigger-types.round-end.label",
-    "turn-start":  "DANGERZONE.trigger-types.turn-start.label",
-    "turn-end":  "DANGERZONE.trigger-types.turn-end.label"
-} 
-
-export const DANGERZONETRIGGERSORT = {
-    "manual":  6,
-    "combat-start":  5,
-    "combat-end":  0,
-    "round-start":  1,
-    "round-end":  2,
-    "turn-start":  3,
-    "turn-end":  4
-} 
+import {DANGERZONETRIGGERSORT} from './constants.js';
 
 export class triggerManager {
 
@@ -28,12 +9,33 @@ export class triggerManager {
         this.combatStart = false,
         this.data = data,
         this.hook = (hook === undefined) ? '' : hook,
+        this.randomTriggers = new Set(),
         this.randomZones = [],
         this.roundStart = false, 
         this.sceneZones = (sceneZones === undefined) ? null : sceneZones,
         this.turnChange = false,
         this.sceneId = sceneId,
         this.zones = []
+    }
+
+    get combatant(){
+        return this.data?.combatant ? this.data.combatant : undefined
+    }
+
+    get previousCombatant(){
+        return this.data?.previous?.combatantId ? this.data.combatants.get(this.data.previous.combatantId) : undefined
+    }
+
+    get currentInitiative(){
+        return this.combatant?.data?.initiative ? Math.floor(this.combatant.data.initiative) : undefined
+    }
+
+    get previousInitiative(){
+        return this.previousCombatant?.data?.initiative ? Math.floor(this.previousCombatant.data.initiative) : undefined
+    }
+
+    get singleCombatant(){
+        return this.combatant.id === this.previousCombatant.id
     }
 
     log(message, data){
@@ -89,10 +91,38 @@ export class triggerManager {
         this.setCombatFlags();
         for (const [id, zn] of this.sceneZones) { 
             if(this.combatTriggers.indexOf(zn.trigger) !== -1){
+                if(zn.trigger==='initiative-start' || zn.trigger==='initiative-end' ){
+                    let escape = true
+                    const zi = zn.initiative ? zn.initiative : 0
+                    if(
+                        zn.trigger==='initiative-start' && 
+                            (
+                                    (zi < this.previousInitiative && zi >= this.currentInitiative)
+                                ||
+                                    (zi >= this.currentInitiative && this.roundStart)
+                                ||
+                                    (zi < this.previousInitiative && this.roundStart && !this.combatStart)
+                            )
+                        ){escape = false
+                    }
+                    else if(
+                        zn.trigger==='initiative-end' &&
+                            (
+                                    (zi <= this.previousInitiative && zi > this.currentInitiative)
+                                ||
+                                    (zi > this.currentInitiative && this.roundStart)
+                                ||
+                                    (zi <= this.previousInitiative && this.roundStart && !this.combatStart)
+                            )
+                        ){escape = false
+                    }
+                    if(escape){continue}
+                }
                 this.stageCombatZones(zn);
             }
         }
         await this.reconcileRandomZones();
+        this.zones.sort((a, b) => { return a.initiative < b.initiative ? -1 : (a.initiative > b.initiative ? 1 : 0)});
         this.zones.sort((a, b) => { return DANGERZONETRIGGERSORT[a.trigger] < DANGERZONETRIGGERSORT[b.trigger] ? -1 : (DANGERZONETRIGGERSORT[a.trigger] > DANGERZONETRIGGERSORT[b.trigger] ? 1 : 0)});
         this.next();
     }
@@ -115,10 +145,21 @@ export class triggerManager {
         if(this.hook==='deleteCombat'){
             this.addCombatTrigger('combat-end')
         }
+        if(this.turnChange){
+            if(this.currentInitiative && this.previousInitiative){
+                this.addCombatTrigger('initiative-start')
+                this.addCombatTrigger('initiative-end')
+            }
+        }
     }
 
     addCombatTrigger(trigger){
         this.combatTriggers.push(trigger);
+    }
+
+    addZoneTrigger(trigger, initiative){
+        const trig = (trigger === 'initiative-start' || trigger === 'initiative-end') ? trigger + '-' + initiative.toString() : trigger
+        this.randomTriggers.add(trig)
     }
     
     stageCombatZones(zone) {
@@ -126,13 +167,14 @@ export class triggerManager {
             this.zones.push(zone)
         } else {
             this.randomZones.push(zone)
+            this.addZoneTrigger(zone.trigger, zone.initiative ? zone.initiative : 0)
         }
     }
 
     async reconcileRandomZones() {
         if(this.randomZones.length) {
-            for (let i = 0; i < this.combatTriggers.length; i++){
-                let zone = await dangerZone.getRandomZoneFromScene(this.sceneId, this.combatTriggers[i])
+            for (let trig of this.randomTriggers){
+                const zone = await dangerZone.getRandomZoneFromScene(this.sceneId, trig)
                 if(zone){this.zones.push(zone)}
             }
         } 
@@ -156,15 +198,15 @@ export class triggerManager {
     }
 
     static async findCombatTriggers(combat, hook){
-        if(game.user.isGM && combat.scene && combat.started) {
+        if(game.user.isGM && combat.scene && combat.started && !(combat.current.round === 1 && combat.current.turn === 0 && combat.combatants.find(c => c.initiative === null))) {
             const sceneZones = dangerZone.getCombatZonesFromScene(combat.scene.id);
             if(sceneZones.size){
                 const scene = game.scenes.get(combat.scene.id);
                 if(!scene?.data?.gridType){return dangerZone.log(false,'No Combat Triggers When Gridless ', {combat, hook})}
 
                 const tm = new triggerManager(combat.scene.id, combat, sceneZones, hook);
-                await tm.combatTrigger();
                 tm.log(`Initiating combat trigger handler...`, {combat, hook});
+                await tm.combatTrigger();
             } 
             return
         }

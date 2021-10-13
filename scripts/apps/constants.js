@@ -20,6 +20,30 @@ export const DANGERZONELIGHTREPLACE = {
     "A": "DANGERZONE.light.replace-types.A.label"
 }
 
+export const DANGERZONETRIGGERS = {
+    "manual":  "DANGERZONE.trigger-types.manual.label",
+    "combat-start":  "DANGERZONE.trigger-types.combat-start.label",
+    "combat-end":  "DANGERZONE.trigger-types.combat-end.label",
+    "initiative-start":  "DANGERZONE.trigger-types.initiative-start.label",
+    "initiative-end":  "DANGERZONE.trigger-types.initiative-end.label",
+    "round-start":  "DANGERZONE.trigger-types.round-start.label",
+    "round-end":  "DANGERZONE.trigger-types.round-end.label",
+    "turn-start":  "DANGERZONE.trigger-types.turn-start.label",
+    "turn-end":  "DANGERZONE.trigger-types.turn-end.label"
+} 
+
+export const DANGERZONETRIGGERSORT = {
+    "manual":  8,
+    "combat-start":  7,
+    "combat-end":  0,
+    "initiative-start":  2,
+    "initiative-end":  5,
+    "round-start":  3,
+    "round-end":  4,
+    "turn-start":  1,
+    "turn-end":  6
+} 
+
 export function actorOps(){
     return game.actors.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
 }

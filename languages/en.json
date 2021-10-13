@@ -41,6 +41,7 @@
                 "y.label": "y"
             },
             "enabled.label": "Active",
+            "initiative-count.label": "Count",
             "flavor.label": "Flavor",
             "flavor.description": "Flavor will output to chat message when zone triggers.",
             "light.replace.label": "Replace Ambient Light",
@@ -138,6 +139,8 @@
             "manual.label": "Manual",
             "combat-start.label": "Combat Start",
             "combat-end.label": "Combat End",
+            "initiative-start.label":  "Initiative Count (Win Ties)",
+            "initiative-end.label":  "Initiative Count (Lose Ties)",
             "round-start.label": "Round Start",
             "round-end.label": "Round End",
             "turn-start.label": "Turn Start",
