@@ -253,8 +253,7 @@ export class workflow {
                             }
                         }
                     },
-                default: 'submit'//,
-                //close: () => resolve(null)
+                default: 'submit'
                 }, {width: 75}).render(true);
         });
     }

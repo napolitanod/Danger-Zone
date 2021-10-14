@@ -61,6 +61,7 @@
             "replace.description": "Choose what to do with existing lasting effects when this zone triggers.",
             "runUntilTokenFound.label": "Always Hits a Token",
             "runUntilTokenFound.description": "The danger will target an area of the zone where at least one token is present, if able.",
+            "single-run.description": "This section executes at most once, after the first likelihood success, and regardless of the loop count for this zone",
             "title.label": "Title",
             "token-targeting.label": "Token Targeting",
             "token-disposition.label": "Disposition",
