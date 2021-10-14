@@ -15,10 +15,12 @@
         "alerts": {
             "danger-depth-exceeds-zone": "The danger's depth may not exceed the zone's depth nor can a danger have a depth > 0 when a zone's depth is infinite (equal to 0).",
             "input-z": "Elevation",
+            "enter-z": "Enter the danger's elevation",
             "no-trigger-if-not-on-combat-scene": "Danger Zones do not trigger while you are not active on the current combat scene.",
             "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
             "select-zone-end": "Select an end location for this zone. Selected area will snap to grid and represent the lower right corner of this zone.",
-            "select-target": "Select a location in the zone. Selected area will snap to grid and represent the top left corner of the danger's target."
+            "select-target": "Select a location in the zone. Selected area will snap to grid and represent the top left corner of the danger's target.",
+            "user-selection-exited": "You have exited from danger location selection prematurely. Zone trigger execution stopped."
         },
         "controls": {
             "clearAmbientLight.label": "Clear Danger Zone Ambient Lighting",
@@ -48,6 +50,8 @@
             "light.replace.description": "Choose what to do with existing ambient light when this zone triggers.",
             "likelihood.label": "Likelihood",
             "likelihood.description": "The likelihood that a danger will generate on trigger.",
+            "loop.label": "Loop Count",
+            "loop.description": "Number of danger executions after trigger. Each loop will have likelihood assessed separately.",
             "name": "Configure Zone",
             "placeTemplate.label": "Choose Location",
             "placeTemplate.description": "On trigger, prompts you to select the scene location to target with the danger (otherwise location is randomly selected from within the bounds of the zone and bleed). If location is fully outside the zone, danger effects will generate but location tokens will not be targeted. ",
