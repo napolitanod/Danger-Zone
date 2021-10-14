@@ -63,9 +63,9 @@ export class api {
      * @param {string} sceneId - the scene id
      * @param {boolean} restrictToActive - optional boolean that can be used to restrict the zone trigger only if the zone is active
      */
-    static async _triggerZone(zoneName, sceneId, restrictToActive = false){
+    static async _triggerZone(zoneName, sceneId, options = {}){
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        await triggerManager.apiDirectTrigger(zn, sceneId, restrictToActive);
+        await triggerManager.apiDirectTrigger(zn, sceneId, options);
     }
 
     /**

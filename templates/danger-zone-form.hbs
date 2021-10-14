@@ -136,6 +136,16 @@
             </div>
             <div class="form-group">
                 <label>
+                    <span>{{localize 'DANGERZONE.edit-form.loop.label'}}</span>
+                </label>
+                <div class="form-fields">
+                    <input type="range" name="loop" value="{{zone.loop}}" min="1" max="20" step="1"/>
+                    <span class="range-value">{{zone.loop}}</span>
+                </div>
+                <p class="notes">{{localize 'DANGERZONE.edit-form.loop.description'}}</p>
+            </div>
+            <div class="form-group">
+                <label>
                     <span>{{localize 'DANGERZONE.edit-form.likelihood.label'}}</span>
                 </label>
                 <div class="form-fields">
@@ -198,6 +208,7 @@
                 <p class="notes">{{localize 'DANGERZONE.edit-form.runUntilTokenFound.description'}}</p>
             </div>
             <hr>
+            <p class="notes">{{localize 'DANGERZONE.edit-form.single-run.description'}}</p>
             <div class="form-group">
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.replace.label'}}</span>

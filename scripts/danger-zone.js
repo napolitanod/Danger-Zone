@@ -216,6 +216,7 @@ export class zone {
     this.initiative = 0,
     this.lightReplace = 'N',
     this.likelihood = 100,
+    this.loop = 1,
     this.options = {
       allInArea: false,
       bleed: true,

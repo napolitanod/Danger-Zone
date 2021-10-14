@@ -33,18 +33,19 @@ export const WORKFLOWSTATES = {
 
 export class workflow {
 
-    constructor(zone) {
+    constructor(zone, options = {}) {
         this.active = true,
         this.currentState = WORKFLOWSTATES.INIT,
         this.eligibleTargets = [],
         this.id = foundry.utils.randomID(16),
         this.likelihoodResult = 100,
+        this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
         this.promises = [],
         this.scene = game.scenes.get(zone.scene.sceneId),
         this.targetBoundary,
         this.targets = [];
         this.twinLocation = {},
-        this.userSelectedLocation = {},
+        this.userSelectedLocation = options.location ? options.location : {},
         this.zone = zone,
         this.zoneBoundary,
         this.zoneEligibleTokens = [], 
@@ -75,6 +76,7 @@ export class workflow {
     async next(nextState){
         if(!this.active){return this}
         await this._next(nextState);
+        if(!this.active){return this}
     }
 
     async _next(state){
@@ -90,8 +92,13 @@ export class workflow {
                 } else {return this.next(WORKFLOWSTATES.EXECUTELIKELIHOOD)}
 
             case WORKFLOWSTATES.AWAITLOCATION:
+                this.log('Prompt location', {});
                 await this.promptSelectZArea();
-                break;
+                if(!('x' in this.userSelectedLocation ) || !('y' in this.userSelectedLocation) || !('z' in this.userSelectedLocation)){
+                    ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
+                    return this.next(WORKFLOWSTATES.CANCEL)
+                }
+                return this.next(WORKFLOWSTATES.EXECUTELIKELIHOOD);
 
             case WORKFLOWSTATES.EXECUTELIKELIHOOD:
                 await this.happens();
@@ -130,7 +137,7 @@ export class workflow {
                 return this.next(WORKFLOWSTATES.GENERATEFLAVOR)
 
             case WORKFLOWSTATES.GENERATEFLAVOR:
-                this.flavor();
+                if(!this.previouslyExecuted){this.flavor();}
                 return this.next(WORKFLOWSTATES.GENERATEFLUIDCANVAS)
 
             case WORKFLOWSTATES.GENERATEFLUIDCANVAS:
@@ -160,7 +167,7 @@ export class workflow {
                 return this.next(WORKFLOWSTATES.CLEARLASTINGEFFECTS)
 
             case WORKFLOWSTATES.CLEARLASTINGEFFECTS:
-                await this.deleteLastingEffects();//hard stop here, pausing those operations that wait for lasting effect delay
+                if(!this.previouslyExecuted){await this.deleteLastingEffects();}//hard stop here, pausing those operations that wait for lasting effect delay
                 return this.next(WORKFLOWSTATES.GENERATELASTINGEFFECT)
 
             case WORKFLOWSTATES.GENERATELASTINGEFFECT:
@@ -176,7 +183,7 @@ export class workflow {
                 return this.next(WORKFLOWSTATES.CLEARLIGHT) 
 
             case WORKFLOWSTATES.CLEARLIGHT:
-                await this.deleteLight();//hard stop here
+                if(!this.previouslyExecuted){await this.deleteLight();}//hard stop here
                 return this.next(WORKFLOWSTATES.GENERATELIGHT)
 
             case WORKFLOWSTATES.GENERATELIGHT:
@@ -201,7 +208,8 @@ export class workflow {
 
             case WORKFLOWSTATES.CANCEL: 
                 this.active = false
-                return this.log('Zone workflow cancelled', {});
+                this.log('Zone workflow cancelled', {});
+                return this
 
             case WORKFLOWSTATES.AWAITPROMISES: 
                 return await Promise.all(this.promises)
@@ -216,26 +224,38 @@ export class workflow {
 
             case WORKFLOWSTATES.COMPLETE: 
                 this.active = false
+                this.previouslyExecuted = true;
                 return this.log('Zone workflow complete', {})
         }
     }
     
     /*prompts the user to select the zone location point (top left grid location) and captures the location*/
     async promptSelectZArea() {
-        new Dialog({
-            title: game.i18n.localize("DANGERZONE.alerts.input-z"),
-            content: `<p>${game.i18n.localize("DANGERZONE.alerts.input-z")}</p><center><input type="number" id="zInput" min="0" steps="1" value="0"></center><br>`,
-            buttons: {
-                submit: {
-                    label: game.i18n.localize("DANGERZONE.yes"),
-                    icon: '<i class="fas fa-check"></i>',
-                    callback: (html) => {
-                        this.userSelectedLocation.z = parseInt(html.find("#zInput")[0].value);
-                        this.promptSelectXYArea();
+        return new Promise((resolve, reject) => {
+            new Dialog({
+                title: game.i18n.localize("DANGERZONE.alerts.input-z"),
+                content: `<p>${game.i18n.localize("DANGERZONE.alerts.enter-z")}</p><center><input type="number" id="zInput" min="0" steps="1" value="0"></center><br>`,
+                buttons: {
+                    submit: {
+                        label: game.i18n.localize("DANGERZONE.yes"),
+                        icon: '<i class="fas fa-check"></i>',
+                        callback: async (html) => {
+                            this.userSelectedLocation.z = parseInt(html.find("#zInput")[0].value);
+                            await this.promptSelectXYArea();
+                            resolve(true)
+                            }
+                        },
+                    cancel:  {
+                        label: game.i18n.localize("DANGERZONE.cancel"),
+                        icon: '<i class="fas fa-times"></i>',
+                        callback: () => {
+                            resolve(null)
+                            }
                         }
-                    }
-                }
-            }, {width: 75}).render(true);
+                    },
+                default: 'submit'
+                }, {width: 75}).render(true);
+        });
     }
 
     async promptSelectXYArea(){
@@ -243,7 +263,7 @@ export class workflow {
         canvas.activateLayer('grid');
         await dangerZoneDimensions.addHighlightZone(this.zone.id, this.scene.id, '_wf');
 
-        let x = new Promise(function(resolve, reject){
+        return new Promise((resolve, reject)=>{
             ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
             canvas.app.stage.once('pointerdown', event => {
                 let selected = event.data.getLocalPosition(canvas.app.stage);
@@ -254,7 +274,6 @@ export class workflow {
                 this.userSelectedLocation.y = selected.y;
                 dangerZoneDimensions.destroyHighlightZone(this.zone.id, '_wf');    
                 currentLayer.activate();
-                this.next(WORKFLOWSTATES.EXECUTELIKELIHOOD);
         });  
     }
  

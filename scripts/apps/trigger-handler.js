@@ -9,6 +9,7 @@ export class triggerManager {
         this.combatStart = false,
         this.data = data,
         this.hook = (hook === undefined) ? '' : hook,
+        this.priorTrigger,
         this.randomTriggers = new Set(),
         this.randomZones = [],
         this.roundStart = false, 
@@ -45,22 +46,30 @@ export class triggerManager {
     async next(){
         if(canvas.scene.id !== this.sceneId){ 
            if(game.user.isGM){
-                ui.notifications?.warning(game.i18n.localize("DANGERZONE.alerts.no-trigger-if-not-on-combat-scene"));
+                ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.no-trigger-if-not-on-combat-scene"));
                 return
            }
         }
         if (this.zones.length){
-            return await this._next(this.zones.pop());
+            const zn = this.zones.pop();
+            const length = zn.loop ? zn.loop : 1
+            for(let i=0; i<length; i++){
+                const finalLoop = (i === length-1) ? true : false
+                const previouslyExecuted = (i ? this.priorTrigger?.previouslyExecuted : false);
+                this.log(`Trigger manager ${zn.title} loop ${i+1} of ${length}...`, {});
+                await this._next(zn, finalLoop, previouslyExecuted);
+            }
+            
         } else {
             this.log(`Trigger manager finished...`, {});
             return
         }
     }
 
-    async _next(zone){
-        const flow = new workflow(zone);
-        await flow.next(); 
-        await this.next();
+    async _next(zone, finalLoop = true, previousExec = false){
+        const flow = new workflow(zone, {previouslyExecuted: previousExec, location: this.data?.options?.location});
+        this.priorTrigger = await flow.next(); 
+        if(finalLoop){await this.next()}
     }
 
     async trigger() {
@@ -186,14 +195,17 @@ export class triggerManager {
         return await tm.trigger();
     }
 
-    static async apiDirectTrigger(zn, sceneId, restrictToActive){
-        const tm = new triggerManager(sceneId, {zone: 'direct', scene: sceneId});
+    static async apiDirectTrigger(zn, sceneId, options = {}){
+        if(options === true || options === false){
+            options = {activeOnly: options}
+        }
+        const tm = new triggerManager(sceneId, {zone: 'direct', scene: sceneId, options: options});
         tm.zones.push(zn);
-        if(zn.enabled || !restrictToActive){
-            dangerZone.log(false,'API trigger ready ', {zone: zn, trigger: tm, restrictToActive: restrictToActive});
+        if(zn.enabled || !options.activeOnly){
+            dangerZone.log(false,'API trigger ready ', {zone: zn, trigger: tm, options: options});
             return await tm.next();
         }
-        dangerZone.log(false,'API trigger bypassed scene disabled ', {zone: zn, trigger: tm, restrictToActive: restrictToActive});
+        dangerZone.log(false,'API trigger bypassed scene disabled ', {zone: zn, trigger: tm, options: options});
         return tm
     }
 
