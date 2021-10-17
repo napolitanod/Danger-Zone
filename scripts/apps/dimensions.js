@@ -74,7 +74,9 @@ export class dangerZoneDimensions {
     async randomDangerBoundary() {
         const {w,h,d} = this.danger.dimensions.units;
         const b = this.zone.options.bleed ? await this.boundaryBleed() : await this.boundaryConstrained();
-        const grids = b.randomBoundary({range:{w: w, h: h, d: d}});
+        const options = {range:{w: w, h: h, d: d}}
+        this.zone.stretch(options);
+        const grids = b.randomBoundary(options);
         dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, boundary: b, dangerUnits: [w,h,d], zone: this.zone})
         return grids
     }
@@ -122,6 +124,8 @@ export class boundary{
         },
         this.excludes = options.excludes ? options.excludes : new Set(),
         this.gridIndex = new Set();
+        if('bottom' in options){this.A.z = options.bottom}
+        if('top' in options){this.B.z = options.top}
         this._toTopLeft();
         if(options.exclude){this._exclude(options.exclude)}
         this._setGridIndex();
@@ -195,6 +199,11 @@ export class boundary{
         const w = options.range?.w ? options.range?.w : 0
         const h = options.range?.h ? options.range?.h : 0
         const d = options.range?.d ? options.range?.d : 0
+
+        const ops = {excludes: this.excludes}
+        if('bottom' in options){ops.bottom = options.bottom}
+        if('top' in options){ops.top = options.top}
+
         if(all.length < 1 || dim.d < 0){
             if(dim.d<0 && game.user.isGM){
                 ui.notifications?.error(game.i18n.localize("DANGERZONE.alerts.danger-depth-exceeds-zone"));
@@ -208,7 +217,7 @@ export class boundary{
             const [x1,y1] = canvas.grid.grid.getPixelsFromGridPosition(posY, posX);
             const [x2,y2] = canvas.grid.grid.shiftPosition(x1, y1, w, h)
             const z1 = posZ + Math.floor(Math.random() * dim.d);
-            yield new boundary({x:x1, y:y1, z:z1}, {x:x2, y:y2, z:z1 + zAdj}, {excludes: this.excludes})
+            yield new boundary({x:x1, y:y1, z:z1}, {x:x2, y:y2, z:z1 + zAdj}, ops)
         }
 
     }

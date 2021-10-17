@@ -1,3 +1,8 @@
+export const TRIGGERDISPLAYOPTIONS = {
+    "S": "DANGERZONE.trigger-display-options.scene.label",
+    "H":"DANGERZONE.trigger-display-options.hotbar.label"
+}
+
 export const TOKENDISPOSITION = {
     "0": "DANGERZONE.token-disposition.neutral.label",
     "1": "DANGERZONE.token-disposition.friendly.label",
@@ -43,6 +48,14 @@ export const DANGERZONETRIGGERSORT = {
     "turn-start":  1,
     "turn-end":  6
 } 
+
+export const STRETCH = {
+    "": "",
+    "B": "DANGERZONE.stretch.bottom.label",
+    "G": "DANGERZONE.stretch.ground.label",
+    "S": "DANGERZONE.stretch.sky.label",
+    "T": "DANGERZONE.stretch.top.label"
+}
 
 export function actorOps(){
     return game.actors.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})

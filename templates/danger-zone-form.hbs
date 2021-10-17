@@ -35,6 +35,7 @@
                 <h3>
                     <i class="fas fa-ruler"></i>&nbsp;
                     <span>{{localize 'DANGERZONE.edit-form.boundary.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.boundary.description'}}"><i class="fas fa-info-circle"></i></span>
                 </h3>
             </div>
             <div class="form-group">
@@ -89,7 +90,6 @@
                         <input type="Number" name="scene.end.z" step="1" value={{zone.scene.end.z}} required>
                     </div>
                 </div>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.boundary.description'}}</p>
             </div>
             <div class="form-group flexrow">
                 <div class="checkbox-value">
@@ -97,8 +97,17 @@
                 </div>
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.bleed.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.bleed.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.bleed.description'}}</p>
+                <label>
+                    <span>{{localize 'DANGERZONE.edit-form.stretch.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.stretch.description'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <select name="options.stretch" value="{{zone.options.stretch}}">
+                        {{selectOptions stretchOps selected=zone.options.stretch localize=true}}
+                    </select>
+                </div>
             </div>
             <hr>
             <div class="form-group">
@@ -122,8 +131,9 @@
                 <div class="flexrow">
                     <input class="random" type="checkbox" name="random" {{checked zone.random}} />
                     <label>
-                        <i class="fas fa-radiation"></i>
+                        <i class="fas fa-radiation-alt"></i>
                         <span>&nbsp;&nbsp;{{localize 'DANGERZONE.edit-form.random.label'}}</span>
+                        <span class="toolt" title="{{localize 'DANGERZONE.edit-form.random.description'}}"><i class="fas fa-info-circle"></i></span>
                     </label>
                     <label class="weight-label">
                         <span>{{localize 'DANGERZONE.edit-form.weight.label'}}</span>
@@ -132,27 +142,26 @@
                         <input type="Number" name="weight" min="1" step="1" value={{zone.weight}} required>
                     </div>
                 </div>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.random.description'}}</p>
             </div>
             <div class="form-group">
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.loop.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.loop.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>
                 <div class="form-fields">
                     <input type="range" name="loop" value="{{zone.loop}}" min="1" max="20" step="1"/>
                     <span class="range-value">{{zone.loop}}</span>
                 </div>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.loop.description'}}</p>
             </div>
             <div class="form-group">
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.likelihood.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.likelihood.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>
                 <div class="form-fields">
                     <input type="range" name="likelihood" value="{{zone.likelihood}}" min="1" max="100" step="1"/>
                     <span class="range-value">{{zone.likelihood}}</span>
                 </div>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.likelihood.description'}}</p>
             </div>
             <div class="form-group flexrow">
                 <div class="checkbox-value">
@@ -160,8 +169,8 @@
                 </div>
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.placeTemplate.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.placeTemplate.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.placeTemplate.description'}}</p>
             </div>
             <hr>
             <h3>
@@ -195,50 +204,52 @@
                 </div>
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.allInArea.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.allInArea.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.allInArea.description'}}</p>
-            </div>
-            <div class="form-group flexrow">
                 <div class="checkbox-value">
                     <input type="checkbox" name="options.runUntilTokenFound" {{checked zone.options.runUntilTokenFound}} />
                 </div>
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.runUntilTokenFound.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.runUntilTokenFound.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.runUntilTokenFound.description'}}</p>
             </div>
             <hr>
-            <p class="notes">{{localize 'DANGERZONE.edit-form.single-run.description'}}</p>
+            <h3>
+                <i class="fas fa-cog"></i>&nbsp;
+                <span>{{localize 'DANGERZONE.edit-form.other.label'}}</span>
+                <span class="toolt" title="{{localize 'DANGERZONE.edit-form.single-run.description'}}"><i class="fas fa-info-circle"></i></span>
+            </h3>
             <div class="form-group">
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.replace.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.replace.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>
                 <div class="form-fields">
                     <select name="replace" value="{{zone.replace}}">
                         {{selectOptions replaceOps selected=zone.replace localize=true}}
                     </select>
                 </div>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.replace.description'}}</p>
             </div>
             <div class="form-group">
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.light.replace.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.light.replace.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>
                 <div class="form-fields">
                     <select name="lightReplace" value="{{zone.lightReplace}}">
                         {{selectOptions lightReplaceOps selected=zone.lightReplace localize=true}}
                     </select>
                 </div>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.light.replace.description'}}</p>
             </div>
             <div class="form-group flexrow">
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.flavor.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.flavor.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>
                  <div class="form-fields">
                     <input type="text" name="flavor" value="{{zone.flavor}}">
                 </div>
-                <p class="notes">{{localize 'DANGERZONE.edit-form.flavor.description'}}</p>
             </div>
             <div class="form-group flexrow">
                 <div class="checkbox-value">

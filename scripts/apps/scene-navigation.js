@@ -24,7 +24,7 @@ export function addTriggersToSceneNavigation(app, html, options) {
                         active = ' active '
                     } 
                     if(zn.enabled && zn.trigger === 'manual' && zn.random && !randomSet) {
-                        let btn = $('<div>').addClass(`danger-zone-scene-trigger-button .random`).append($('<i class="fas fa-radiation"></i>')).data("data-id", {zone: 'random', scene: zn.scene.sceneId}).prop('title', game.i18n.localize("DANGERZONE.scene.random-trigger.label"))
+                        let btn = $('<div>').addClass(`danger-zone-scene-trigger-button .random`).append($('<i class="fas fa-radiation-alt"></i>')).data("data-id", {zone: 'random', scene: zn.scene.sceneId}).prop('title', game.i18n.localize("DANGERZONE.scene.random-trigger.label"))
                         btn.click(_handleTriggerClick);
                         triggerList.prepend(btn);
                         randomSet = 1; 

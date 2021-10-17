@@ -61,7 +61,10 @@ export class api {
      * triggers the given zone on the given scene
      * @param {string} zoneName - the zone's title
      * @param {string} sceneId - the scene id
-     * @param {boolean} restrictToActive - optional boolean that can be used to restrict the zone trigger only if the zone is active
+     * @param {object} options - object with options - 
+     *                          {activeOnly: , location: }
+     *                          activeOnly {boolean} to only trigger if zone is active; 
+     *                          location {object} {x:,y:,z:} bypasses zone targeting. Provide x,y pixel and z elevation for danger to target
      */
     static async _triggerZone(zoneName, sceneId, options = {}){
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);

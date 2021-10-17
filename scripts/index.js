@@ -1,15 +1,17 @@
 import {dangerZone} from './danger-zone.js';
+import {TRIGGERDISPLAYOPTIONS} from './apps/constants.js';
 import {initializeScene} from './apps/scene-settings.js';
 import {DangerZoneTypesForm} from './apps/zone-type-list-form.js'
 import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
+import {addTriggersToHotbar} from './apps/hotbar.js';
 import {triggerManager}  from './apps/trigger-handler.js';
 import {api} from "./apps/api.js";
 
 /**
  * global variables
  */
-export var taggerOn = false, sequencerOn = false, warpgateOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
-
+export var taggerOn = false, sequencerOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
+export var dzMActive = false; 
 /**
  * retains the most recent search term while in session for the danger zone type list form
  * @param {string} inSearch - most recent term
@@ -18,6 +20,9 @@ export var taggerOn = false, sequencerOn = false, warpgateOn = false, monksActiv
 Hooks.once('init', async function() {  
     
 	let modulename = "danger-zone";
+    const debouncedReload = foundry.utils.debounce(() => {
+        window.location.reload();
+      }, 100);
 
 	game.settings.registerMenu(modulename, "danger-zone-types-config", {
         name: game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.name"),
@@ -45,6 +50,17 @@ Hooks.once('init', async function() {
 		type: Boolean,
 	});
 
+	game.settings.register(modulename, "scene-trigger-button-display", {
+		name: game.i18n.localize("DANGERZONE.setting.scene-trigger-button-display.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.scene-trigger-button-display.description"),
+		scope: "world",
+		config: true,
+		default: 'S',
+        type: String,
+        choices: TRIGGERDISPLAYOPTIONS,
+        onChange: debouncedReload
+	});
+
 	game.settings.register(modulename, "scene-control-button-display", {
 		name: game.i18n.localize("DANGERZONE.setting.scene-control-button-display.label"),
 		hint: game.i18n.localize("DANGERZONE.setting.scene-control-button-display.description"),
@@ -52,6 +68,7 @@ Hooks.once('init', async function() {
 		config: true,
 		default: true,
 		type: Boolean,
+        onChange: debouncedReload,
 	});
 
 	game.settings.register(modulename, "scene-control-light-button-display", {
@@ -61,6 +78,7 @@ Hooks.once('init', async function() {
 		config: true,
 		default: false,
 		type: Boolean,
+        onChange: debouncedReload,
 	});
 
 	game.settings.register(modulename, "types-button-display", {
@@ -70,6 +88,7 @@ Hooks.once('init', async function() {
 		config: true,
 		default: true,
 		type: Boolean,
+        onChange: debouncedReload,
 	});
 
 	game.settings.register(modulename, "chat-details-to-gm", {
@@ -171,7 +190,14 @@ Hooks.on('preUpdateScene', (scene, change, options, userId) => {
  * Hook for the rendering of the scene list at top of canvas display. Adds zone trigger buttons to scene navigation bar on canvas
  */
 Hooks.on('renderSceneNavigation', async(app, html, options) => {
-	addTriggersToSceneNavigation(app, html, options);
+	switch(game.settings.get('danger-zone', 'scene-trigger-button-display')){
+		case "S":
+			addTriggersToSceneNavigation(app, html, options);
+			break
+		case "H":
+			addTriggersToHotbar();
+			break
+	}
 });
 
 
@@ -200,6 +226,7 @@ function setModsAvailable () {
 	if (game.modules.get("betterroofs")?.active){betterRoofsOn = true} ;
 	if (game.modules.get("levels")?.active){levelsOn = true} ;
 	if (game.modules.get("monks-active-tiles")?.active){monksActiveTilesOn = true} ;
+	if (game.modules.get("monks-scene-navigation")?.active){monksSceneOn = true}
 	if (game.modules.get("token-says")?.active){tokenSaysOn = true} ;
 	if (game.modules.get("warpgate")?.active){warpgateOn = true} ;
 	if (game.modules.get("kandashis-fluid-canvas")?.active){fluidCanvasOn = true} ;
@@ -270,3 +297,6 @@ export function addQuickZonesLaunch(app, html) {
 	}
 }
 
+export function toggleMasterButtonActive(){
+    dzMActive ? dzMActive = false : dzMActive = true
+}
