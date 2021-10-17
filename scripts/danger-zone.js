@@ -222,6 +222,7 @@ export class zone {
       bleed: true,
       placeTemplate:false,
       runUntilTokenFound: false,
+      stretch: '',
       deleteAfter: {turns: 0, rounds: 0, seconds: 0}
     },
     this.random = false,
@@ -279,6 +280,24 @@ export class zone {
   async toggleZoneActive() {
     if(this.enabled){this.enabled = false} else {this.enabled = true}
     return await this._setFlag();
+  }
+
+  stretch(options){
+    switch(this.options.stretch){
+      case "B":
+          options.bottom = this.scene.start.z
+          break;
+      case "G":
+          options.bottom = 0
+          break;
+      case "S":
+          options.top = 99999
+          break;
+      case "T":
+          options.top = this.scene.end.z
+          break;
+    }
+    return options
   }
 
   zoneEligibleTokens(tokens){

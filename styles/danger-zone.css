@@ -16,10 +16,23 @@ form.danger-zone-types .content{
     float: right;
 }
 
+form.danger-zone-record .toolt {
+    color: #9e9e9e;
+    vertical-align: super;
+    font-size: 10px;
+}
+
 form.danger-zone-record .hidden, 
 form.danger-zone-type-form .hidden, 
 #danger-zone-type-search-clear.hidden {
     display: none !important;
+}
+
+.danger-zone-scene-trigger-button.hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.75s ease;
+    position: absolute;
 }
 
 .danger-zone-scene-header, 
@@ -211,19 +224,70 @@ form.danger-zone-record .form-group {
 }
 
 form.danger-zone-record .form-fields .boundary-z{
-    flex: 0 0 15.5%; 
+    flex: 0 0 14%; 
 }
 
 form.danger-zone-record .form-fields .boundary-bottom-label {
-    flex: 0 0 37.5%; 
+    flex: 0 0 39%; 
     text-align: right;
 }
 
 form.danger-zone-record .form-fields .boundary-top-label {
-    flex: 0 0 30%; 
+    flex: 0 0 31%; 
     text-align: right;
 }
 
+/*hotbar*/
+.danger-zone-hotbar-trigger {
+    position: absolute;
+    right: -50px;
+    bottom: 2px;
+    list-style: none;
+    border-width: 0px;
+    background-color: transparent;
+    float: left;
+    pointer-events: auto;
+    display:flex;
+    flex-direction: column-reverse;
+    flex-wrap: wrap;
+}
+
+.danger-zone-sidebar-trigger {
+    position: absolute;
+    right: 350px;
+    bottom: 2px;
+    list-style: none;
+    border-width: 0px;
+    background-color: transparent;
+    float: left;
+    pointer-events: auto;
+    display:flex;
+    flex-direction: column-reverse;
+    flex-wrap: wrap;
+}
+
+.danger-zone-hotbar-trigger > .danger-zone-scene-trigger-button, 
+.danger-zone-sidebar-trigger > .danger-zone-scene-trigger-button
+ {
+    margin: 4px 0px 0px 0px;
+    align-self: center;
+}
+
+.danger-zone-scene-trigger-master {
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px #000;
+    color: #FFF;
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
+    cursor: pointer;
+    font-size: 34px;
+    padding-top: 3px;
+    margin-top: 4px;
+    text-align: center;
+    bottom: -7px;
+}
 
 /*scene navigation*/
 .danger-zone-scene-trigger {
@@ -244,7 +308,7 @@ form.danger-zone-record .form-fields .boundary-top-label {
     background-position: center;
     background-size: 28px 28px;
     background-color: rgba(0, 0, 0, 0.5);
-    box-shadow: 0 0 10px #000;;
+    box-shadow: 0 0 10px #000;
     color: #FFF;
     width: 34px;
     height: 34px;
@@ -258,11 +322,19 @@ form.danger-zone-record .form-fields .boundary-top-label {
     text-align: center;
 }
 
-.danger-zone-scene-trigger-button:hover {
+.danger-zone-scene-trigger-button:hover, .danger-zone-scene-trigger-master:hover, .danger-zone-scene-trigger-master.active {
     color: #FFF;
     border: 1px solid red;
     border-bottom: 1px solid #ff6400;
     box-shadow: 0 0 10px #ff6400;
+}
+
+.danger-zone-hotbar-trigger:hover li.hidden, 
+.danger-zone-sidebar-trigger:hover li.hidden, 
+.danger-zone-scene-trigger-master.active ~ li.hidden {
+    visibility: visible;
+    opacity: 1;
+    position: relative;
 }
 
 .danger-zone-scene-trigger-button.active{

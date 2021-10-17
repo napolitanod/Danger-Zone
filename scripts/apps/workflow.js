@@ -311,7 +311,9 @@ export class workflow {
     }
 
     getChosenLocationBoundary(){
-        this.targetBoundary = locationToBoundary(this.selectedPoint, this.zoneType.dimensions.units, {excludes: this.zoneBoundary.excludes});
+        const options = {excludes: this.zoneBoundary.excludes}
+        this.zone.stretch(options);
+        this.targetBoundary = locationToBoundary(this.selectedPoint, this.zoneType.dimensions.units, options);
         this.eligibleTargets = this.targetBoundary.tokensIn(this.zoneEligibleTokens);
     }
 
