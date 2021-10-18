@@ -56,7 +56,9 @@ See [Triggers](../../wiki/Triggers) for more info.
 
 ### Danger Zone Trigger Buttons
 <img src="https://user-images.githubusercontent.com/22696153/132107140-2fb0f79d-ab56-425f-8733-c01677602ad5.png" height="70px">
-When a scene is activated, if you are a GM and viewing that scene, you will see an array of buttons located to the right of that scene in the scene top navigation. Each button is a zone in that scene and displays the icon for the danger held within. The buttons function as follows:
+When a scene is activated, if you are a GM and viewing that activated scene, you will see an array of buttons located to the right of that scene in the scene top navigation. Note, you may override this display location within the module configuration settings and instead choose to display the triggers adjacent to the macro bar.
+
+Each button is a zone in that scene and displays the icon for the danger held within. The buttons function as follows:
 
 #### Manually triggered zones
 * Zones that are active are listed individually here except for those which have the 'Randomize' enabled. 
