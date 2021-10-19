@@ -20,10 +20,10 @@ export const WORKFLOWSTATES = {
     GENERATEBACKGROUNDEFFECT: 22,
     CLEARLASTINGEFFECTS: 30,
     GENERATELASTINGEFFECT: 31,
-    GENERATEACTIVEEFFECT: 32,
-    GENERATEMACRO: 33,
-    CLEARLIGHT: 34,
-    GENERATELIGHT: 35,
+    CLEARLIGHT: 32,
+    GENERATELIGHT: 33,
+    GENERATEACTIVEEFFECT: 34,
+    GENERATEMACRO: 35,
     TOKENSAYS: 50,
     WARPGATE: 51,
     AWAITPROMISES: 95,
@@ -172,22 +172,22 @@ export class workflow {
 
             case WORKFLOWSTATES.GENERATELASTINGEFFECT:
                 await this.lastingEffect();//hard stop here, pausing those operations that wait for lasting effect delay
-                return this.next(WORKFLOWSTATES.GENERATEACTIVEEFFECT)
-
-            case WORKFLOWSTATES.GENERATEACTIVEEFFECT:
-                this.promises.push(this.activeEffect());
-                return this.next(WORKFLOWSTATES.GENERATEMACRO)  
-
-            case WORKFLOWSTATES.GENERATEMACRO:
-                this.promises.push(this.macro());
-                return this.next(WORKFLOWSTATES.CLEARLIGHT) 
+                return this.next(WORKFLOWSTATES.CLEARLIGHT)
 
             case WORKFLOWSTATES.CLEARLIGHT:
                 if(!this.previouslyExecuted){await this.deleteLight();}//hard stop here
                 return this.next(WORKFLOWSTATES.GENERATELIGHT)
 
             case WORKFLOWSTATES.GENERATELIGHT:
-                this.promises.push(this.createLight());
+                await this.createLight();
+                return this.next(WORKFLOWSTATES.GENERATEACTIVEEFFECT) 
+                
+            case WORKFLOWSTATES.GENERATEACTIVEEFFECT:
+                this.promises.push(this.activeEffect());
+                return this.next(WORKFLOWSTATES.GENERATEMACRO)  
+
+            case WORKFLOWSTATES.GENERATEMACRO:
+                this.promises.push(this.macro());
                 return this.next(WORKFLOWSTATES.TOKENSAYS) 
 
             case WORKFLOWSTATES.TOKENSAYS:
@@ -638,7 +638,7 @@ export class workflow {
                 bright: this.zoneTypeOptions.ambientLight.bright,
                 angle: this.zoneTypeOptions.ambientLight.angle,
                 tintColor: this.zoneTypeOptions.ambientLight.tintColor,
-                tintAlpha: this.zoneTypeOptions.ambientLight.tintAlpha,
+                tintAlpha: Math.pow(this.zoneTypeOptions.ambientLight.tintAlpha, 2).toNearest(0.01),
                 lightAnimation: {
                     speed: this.zoneTypeOptions.ambientLight.lightAnimation.speed,
                     intensity: this.zoneTypeOptions.ambientLight.lightAnimation.intensity,
