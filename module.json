@@ -25,8 +25,8 @@
         "styles/danger-zone.css"
     ],
     "title": "Danger Zone",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "url": "https://github.com/napolitanod/Danger-Zone",
     "manifest": "https://raw.githubusercontent.com/napolitanod/Danger-Zone/master/module.json",
-    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/0.5.1/module.zip"
+    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/0.5.2/module.zip"
 }
