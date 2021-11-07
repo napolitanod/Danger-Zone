@@ -22,8 +22,9 @@ export const WORKFLOWSTATES = {
     GENERATELASTINGEFFECT: 31,
     CLEARLIGHT: 32,
     GENERATELIGHT: 33,
-    GENERATEACTIVEEFFECT: 34,
-    GENERATEMACRO: 35,
+    GENERATETOKENEFFECT: 34,
+    GENERATEACTIVEEFFECT: 35,
+    GENERATEMACRO: 40,
     TOKENSAYS: 50,
     WARPGATE: 51,
     AWAITPROMISES: 95,
@@ -180,8 +181,12 @@ export class workflow {
 
             case WORKFLOWSTATES.GENERATELIGHT:
                 await this.createLight();
-                return this.next(WORKFLOWSTATES.GENERATEACTIVEEFFECT) 
+                return this.next(WORKFLOWSTATES.GENERATETOKENEFFECT) 
                 
+            case WORKFLOWSTATES.GENERATETOKENEFFECT:
+                this.promises.push(this.tokenEffect());
+                return this.next(WORKFLOWSTATES.GENERATEACTIVEEFFECT)  
+
             case WORKFLOWSTATES.GENERATEACTIVEEFFECT:
                 this.promises.push(this.activeEffect());
                 return this.next(WORKFLOWSTATES.GENERATEMACRO)  
@@ -574,6 +579,31 @@ export class workflow {
         }
         this.log('Zone audio effect skipped', {});
         return {audio: false}
+    }
+
+    async tokenEffect(){
+        if(this.zoneTypeOptions.tokenEffect?.file) {
+            for (let i = 0; i < this.targets.length; i++) { 
+
+                let s = new Sequence()
+                if(this.zoneTypeOptions.tokenEffect.delay){
+                   s = s.wait(this.zoneTypeOptions.tokenEffect.delay)
+                }
+                s = s.effect()
+                    .file(this.zoneTypeOptions.tokenEffect.file)
+                    .attachTo(this.targets[i])
+                    .scale(this.zoneTypeOptions.tokenEffect.scale)
+                if(this.zoneTypeOptions.tokenEffect.duration){
+                   s = s.duration(this.zoneTypeOptions.tokenEffect.duration)
+                    .fadeOut(500)
+                } else {
+                    s=s.persist()
+                }
+                s.play()
+            }
+            return this.log('Zone token effect generated', {});
+        } 
+        return this.log('Zone token effect skipped', {});
     }
 
     async activeEffect() {
