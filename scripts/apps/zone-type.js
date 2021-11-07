@@ -54,6 +54,12 @@ export class dangerZoneType {
           scale: 1.0,
           loop: true
         },
+        tokenEffect: {
+          delay: 0,
+          duration: 0,
+          file: '',
+          scale: 1.0
+        },
         macro: ''
       }
     }

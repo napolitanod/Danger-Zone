@@ -388,6 +388,35 @@
                 </div>
                 <p class="notes">{{localize 'DANGERZONE.type-form.monks-active-tiles.notes'}}</p>
             </div>
+            <div  class="form-group {{#if sequencerOnNot}}hidden{{/if}}">
+                <h3 class="form-header">
+                    <i class="fas fa-male"></i>
+                    <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.tokenEffect.label'}}</span>
+                </h3>
+                <div class="flexrow">
+                    <label class="tokenEffect-file-label">
+                        <span>{{localize "DANGERZONE.type-form.tokenEffect.file.label"}}</span>
+                    </label>
+                    <div class="tokenEffect-file">
+                        <div class="file-picker-wrapper">
+                            {{filePicker target="options.tokenEffect.file" type="imagevideo"}}
+                            <input type="text" name="options.tokenEffect.file" value="{{zone.options.tokenEffect.file}}">
+                        </div>
+                    </div>
+                    <label class="tokenEffect-scale-label">{{localize "DANGERZONE.type-form.tokenEffect.scale.label"}}</label>
+                    <div class="tokenEffect-scale">
+                        <input type="number" name="options.tokenEffect.scale" value="{{zone.options.tokenEffect.scale}}" min="0.01" max="50" step="0.01" required>
+                    </div>
+                    <label class="tokenEffect-delay-label">{{localize "DANGERZONE.type-form.tokenEffect.delay.label"}}</label>
+                    <div class="tokenEffect-delay">
+                        <input type="number" name="options.tokenEffect.delay" min="0" step="1" value={{zone.options.tokenEffect.delay}} required>
+                    </div>
+                    <label class="tokenEffect-duration-label">{{localize "DANGERZONE.type-form.tokenEffect.duration.label"}}</label>
+                    <div class="tokenEffect-duration">
+                        <input type="number" name="options.tokenEffect.duration" min="0" step="1" value={{zone.options.tokenEffect.duration}} required>
+                    </div>
+                </div>
+            </div>
             <div class="form-group dz-token-says {{#if tokenSaysOnNot}}hidden{{/if}}">
                 <h3 class="form-header">
                     <i class="fas fa-comment"></i>

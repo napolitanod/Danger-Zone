@@ -278,6 +278,14 @@
                 "says.label": "Token Says",
                 "source.label": "Source"
             },
+            "tokenEffect":{
+                "delay.label": "Delay (ms)",
+                "label": "Token Effect (Sequencer)",
+                "file.label": "File",
+                "file.find": "Browse for Effect",
+                "scale.label": "Scale",
+                "duration.label": "Duration (ms)"
+            },
             "warpgate": {
                 "actor.label": "Name",
                 "duplicates.label": "Duplicates",

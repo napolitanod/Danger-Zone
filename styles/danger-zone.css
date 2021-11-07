@@ -376,6 +376,9 @@ form.danger-zone-record .form-fields .boundary-top-label {
 .danger-zone-type-form .foregroundEffect-mustache  {
     flex: 0 0 50%;
 }
+.danger-zone-type-form .tokenEffect-file  {
+    flex: 0 0 40%;
+}
 
 .danger-zone-type-form .monks-active-tiles-macro-input,
 .danger-zone-type-form .monks-active-tiles-args-input {
@@ -390,6 +393,7 @@ form.danger-zone-record .form-fields .boundary-top-label {
 .danger-zone-type-form .light-animation-label,
 .danger-zone-type-form .light-color-label,
 .danger-zone-type-form .light-color-value,
+.danger-zone-type-form .tokenEffect-delay-label, 
 .danger-zone-type-form .audio-delay-label, .danger-zone-type-form .tile-delay-label {
     flex: 0 0 9%;
 }
@@ -405,6 +409,7 @@ form.danger-zone-record .form-fields .boundary-top-label {
 
 .danger-zone-type-form .fluid-canvas-duration-label,
 .danger-zone-type-form .foregroundEffect-duration-label, 
+.danger-zone-type-form .tokenEffect-duration-label, 
 .danger-zone-type-form .backgroundEffect-duration-label, 
 .danger-zone-type-form .foregroundEffect-delay-label, 
 .danger-zone-type-form .backgroundEffect-delay-label,
@@ -428,6 +433,7 @@ form.danger-zone-record .form-fields .boundary-top-label {
     width: 20%;
 }
 .danger-zone-type-form .foregroundEffect-delay-label, 
+.danger-zone-type-form .tokenEffect-delay-label, 
 .danger-zone-type-form .backgroundEffect-delay-label {
     float: right;
     margin-top: 6px;
@@ -454,11 +460,13 @@ form.danger-zone-record .form-fields .boundary-top-label {
 
 
 .danger-zone-type-form .foregroundEffect-scale, 
+.danger-zone-type-form .tokenEffect-scale, 
 .danger-zone-type-form .backgroundEffect-scale,  
 .danger-zone-type-form .light-scale,  
 .danger-zone-type-form .tile-scale, 
 .danger-zone-type-form .audio-file-label, 
 .danger-zone-type-form .foregroundEffect-file-label, 
+.danger-zone-type-form .tokenEffect-file-label, 
 .danger-zone-type-form .backgroundEffect-file-label, 
 .danger-zone-type-form .foregroundEffect-mustache-label, 
 .danger-zone-type-form .backgroundEffect-mustache-label, 
@@ -470,6 +478,7 @@ form.danger-zone-record .form-fields .boundary-top-label {
 
 .danger-zone-type-form .audio-file,
 .danger-zone-type-form .foregroundEffect-file,
+.danger-zone-type-form .tokenEffect-file,
 .danger-zone-type-form .backgroundEffect-file,
 .danger-zone-type-form .tile-file  {
     margin-right: 10px;
@@ -478,16 +487,19 @@ form.danger-zone-record .form-fields .boundary-top-label {
 .danger-zone-type-form .light-intensity-label,
 .danger-zone-type-form .light-animation-intensity-label,
 .danger-zone-type-form .foregroundEffect-duration,
+.danger-zone-type-form .tokenEffect-duration,
 .danger-zone-type-form .light-rotation,
 .danger-zone-type-form .light-emission,
 .danger-zone-type-form .backgroundEffect-duration,
 .danger-zone-type-form .foregroundEffect-delay,
+.danger-zone-type-form .tokenEffect-delay,
 .danger-zone-type-form .backgroundEffect-delay,
 .danger-zone-type-form .monks-active-tiles-delay,
 .danger-zone-type-form .dz-monks-active-tiles .after-label {
     flex: 0 0 8%;
 }
 .danger-zone-type-form .foregroundEffect-scale,
+.danger-zone-type-form .tokenEffect-scale,
 .danger-zone-type-form .backgroundEffect-scale,
 .danger-zone-type-form .tile-scale,  
 .danger-zone-type-form .tile-scale  {
