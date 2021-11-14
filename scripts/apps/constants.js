@@ -27,6 +27,8 @@ export const DANGERZONELIGHTREPLACE = {
 
 export const DANGERZONETRIGGERS = {
     "manual":  "DANGERZONE.trigger-types.manual.label",
+    "aura":  "DANGERZONE.trigger-types.aura.label",
+    "move":  "DANGERZONE.trigger-types.move.label",
     "combat-start":  "DANGERZONE.trigger-types.combat-start.label",
     "combat-end":  "DANGERZONE.trigger-types.combat-end.label",
     "initiative-start":  "DANGERZONE.trigger-types.initiative-start.label",
@@ -39,6 +41,8 @@ export const DANGERZONETRIGGERS = {
 
 export const DANGERZONETRIGGERSORT = {
     "manual":  8,
+    "aura": 21,
+    "move": 20,
     "combat-start":  7,
     "combat-end":  0,
     "initiative-start":  2,

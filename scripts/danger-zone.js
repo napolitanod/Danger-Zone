@@ -1,6 +1,7 @@
 import {dangerZoneDimensions} from './apps/dimensions.js';
 import {DangerZoneTypesForm} from './apps/zone-type-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
+import {triggerManager} from './apps/trigger-handler.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -117,6 +118,17 @@ export class dangerZone {
    * @param {string} sceneId  the scene id
    * @returns 
    */
+   static sceneHasZone(sceneId){
+    const flags = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE); 
+    if(flags){return true}
+    return false 
+  }
+
+  /**
+   * Returns all zones on a given scene
+   * @param {string} sceneId  the scene id
+   * @returns 
+   */
   static getAllZonesFromScene(sceneId){
     const flags = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE); 
     if(!flags){return new Map}
@@ -132,11 +144,25 @@ export class dangerZone {
     let mp = new Map
     let zones = this.getAllZonesFromScene(sceneId); 
     for (let [k,zn] of zones) {
-      if(zn.trigger !== "manual" && zn.enabled && zn.type){mp.set(k, zn)}
+      if(zn.trigger !== "manual" && zn.trigger !== "aura" && zn.enabled && zn.type){mp.set(k, zn)}
+    }
+    return mp
+  }  
+   
+  /**
+  * Returns all zones on a given scene that are enabled and that are triggered by movement
+  * @param {string} sceneId  the scene id
+  * @returns 
+  */
+   static getMovementZonesFromScene(sceneId) {
+    let mp = new Map
+    let zones = this.getAllZonesFromScene(sceneId); 
+    for (let [k,zn] of zones) {
+      if(zn.enabled && (zn.trigger === "move" || zn.trigger === "aura")){mp.set(k, zn)}
     }
     return mp
   }
-  
+
   /**
    * Returns all zones on a given scene that are either manual and enabled or triggered in an automated fashion
    * @param {string} sceneId  the scene id
@@ -157,13 +183,13 @@ export class dangerZone {
    * @param {*} trigger 
    * @returns 
    */
-  static async getRandomZoneFromScene(sceneId, trigger) {
+  static async getRandomZoneFromScene(sceneId, trigger, eligibaleZones = []) {
     let keptZones = [], max = 0;
     let zones = this.getAllZonesFromScene(sceneId);
     if(!zones.size){return false}
     for (let [k,zn] of zones) {
       const trig = (zn.trigger === 'initiative-start' || zn.trigger === 'initiative-end') ? (zn.trigger + '-' + (zn.initiative ? zn.initiative.toString() : '0')) : zn.trigger;
-      if(trig===trigger && zn.random && zn.type && zn.scene?.sceneId && zn.enabled){
+      if(trig===trigger && zn.random && zn.type && zn.scene?.sceneId && zn.enabled && (!eligibaleZones.length || eligibaleZones.find(z => z.id === zn.id))){
         let min = max + 1;
         max += zn.weight;
         keptZones.push({zone: zn, min: min, max: max});
@@ -197,6 +223,7 @@ export class dangerZone {
     }
     return b ? flag : b
   }
+
 }
 
 /**

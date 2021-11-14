@@ -81,6 +81,23 @@ export class dangerZoneDimensions {
         return grids
     }
 
+    static tokenMovement(token, update){
+        const endXPixel = update.x ? update.x : token.data.x;
+		const endYPixel = update.y ? update.y : token.data.y;
+		const [startY, startX] = canvas.grid.grid.getGridPositionFromPixels(token.data.x, token.data.y);
+		const [endY, endX] = canvas.grid.grid.getGridPositionFromPixels(endXPixel, endYPixel);
+		const endDepth = update.elevation ? update.elevation : token.data.elevation;
+		return {
+			startPos: {x: token.data.x, y: token.data.y, z: token.data.elevation},
+			endPos: {x: endXPixel, y: endYPixel, z: endDepth},
+			moveYGrids: Math.abs(startY - endY),
+			moveXGrids: Math.abs(startX - endX),
+			moveYPixels: Math.abs(token.data.y - endYPixel),
+			moveXPixels: Math.abs(token.data.x - endXPixel),
+			moveDepth: Math.abs(token.data.elevation - endDepth)
+		}
+    }
+
     static async addHighlightZone(zoneId, sceneId, nameModifier = ''){
         const zn = dangerZone.getZoneFromScene(zoneId, sceneId).scene;
         await zn.addHighlightZone(nameModifier)

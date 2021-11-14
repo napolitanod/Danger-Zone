@@ -156,7 +156,9 @@
             "hotbar.label": "Hotbar Adjacent"
         },
         "trigger-types": {
+            "aura.label": "Aura",
             "manual.label": "Manual",
+            "move.label": "Movement",
             "combat-start.label": "Combat Start",
             "combat-end.label": "Combat End",
             "initiative-start.label":  "Initiative Count (Win Ties)",
