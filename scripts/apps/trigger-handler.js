@@ -1,4 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
+import {dangerZoneDimensions} from './dimensions.js'
 import {workflow} from './workflow.js';
 import {DANGERZONETRIGGERSORT} from './constants.js';
 
@@ -67,7 +68,13 @@ export class triggerManager {
     }
 
     async _next(zone, finalLoop = true, previousExec = false){
-        const flow = new workflow(zone, {previouslyExecuted: previousExec, location: this.data?.options?.location});
+        const options = {previouslyExecuted: previousExec}
+        if(zone.trigger !== 'move'){
+            if(this.data?.options?.location){options['location'] = this.data.options.location}
+            if(this.data?.options?.targets){options['targets'] = this.data.options.targets}
+        }
+
+        const flow = new workflow(zone, this, options);
         this.priorTrigger = await flow.next(); 
         if(finalLoop){await this.next()}
     }
@@ -94,6 +101,15 @@ export class triggerManager {
         }
     
         return this
+    }
+
+    async movementTrigger(){
+        for(let i = 0; i < this.sceneZones.length; i++) { 
+            this.stageZones(this.sceneZones[i]);
+        }
+        await this.reconcileRandomZones();
+        this.zones.sort((a, b) => { return DANGERZONETRIGGERSORT[a.trigger] < DANGERZONETRIGGERSORT[b.trigger] ? -1 : (DANGERZONETRIGGERSORT[a.trigger] > DANGERZONETRIGGERSORT[b.trigger] ? 1 : 0)});
+        this.next();
     }
 
     async combatTrigger(){
@@ -127,7 +143,7 @@ export class triggerManager {
                     }
                     if(escape){continue}
                 }
-                this.stageCombatZones(zn);
+                this.stageZones(zn);
             }
         }
         await this.reconcileRandomZones();
@@ -171,7 +187,7 @@ export class triggerManager {
         this.randomTriggers.add(trig)
     }
     
-    stageCombatZones(zone) {
+    stageZones(zone) {
         if(!zone.random){
             this.zones.push(zone)
         } else {
@@ -183,7 +199,7 @@ export class triggerManager {
     async reconcileRandomZones() {
         if(this.randomZones.length) {
             for (let trig of this.randomTriggers){
-                const zone = await dangerZone.getRandomZoneFromScene(this.sceneId, trig)
+                const zone = await dangerZone.getRandomZoneFromScene(this.sceneId, trig, this.randomZones)
                 if(zone){this.zones.push(zone)}
             }
         } 
@@ -221,6 +237,30 @@ export class triggerManager {
                 await tm.combatTrigger();
             } 
             return
+        }
+    }
+
+    static async findMovementTriggers(token, update){
+        const sceneId = token.parent.id;
+        const scene = game.scenes.get(sceneId);
+        if(!scene?.data?.gridType){return dangerZone.log(false,'No Movement Triggers When Gridless ', {token: token, update:update})}
+
+        const sceneZones = dangerZone.getMovementZonesFromScene(sceneId);
+        const zones = []
+        const move = dangerZoneDimensions.tokenMovement(token, update);
+
+        for (let [k,zn] of sceneZones) {
+            const zoneBoundary = await zn.scene.boundary();
+            const zoneTokens = zoneBoundary.tokensIn([token]);
+            if(zoneTokens.length){
+                zones.push(zn)
+            }
+        }
+
+        if(zones.length){
+            const tm = new triggerManager(sceneId, {provokingMove: move, update: update, options: {targets: [token], location:move.endPos}}, zones, "updateToken");
+            tm.log(`Initiating move trigger handler...`, {token: token, update:update, move: move});
+            await tm.movementTrigger()
         }
     }
 }

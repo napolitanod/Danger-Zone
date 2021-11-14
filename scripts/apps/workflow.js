@@ -34,7 +34,7 @@ export const WORKFLOWSTATES = {
 
 export class workflow {
 
-    constructor(zone, options = {}) {
+    constructor(zone, trigger, options = {}) {
         this.active = true,
         this.currentState = WORKFLOWSTATES.INIT,
         this.eligibleTargets = [],
@@ -45,8 +45,10 @@ export class workflow {
         this.scene = game.scenes.get(zone.scene.sceneId),
         this.targetBoundary,
         this.targets = [];
+        this.trigger = trigger,
         this.twinLocation = {},
         this.userSelectedLocation = options.location ? options.location : {},
+        this.userSelectedTargets = options.targets ? options.targets : [],
         this.zone = zone,
         this.zoneBoundary,
         this.zoneEligibleTokens = [], 
@@ -117,7 +119,7 @@ export class workflow {
                 return this.next(WORKFLOWSTATES.GETZONEELIGIBLETOKENS)
 
             case WORKFLOWSTATES.GETZONEELIGIBLETOKENS:
-                this.getZoneEligibleTokens();
+                this.getZoneEligibleTokens()
                 this.log('Zone eligible tokens got ', {});
                 return this.next(WORKFLOWSTATES.ESTABLISHTARGETBOUNDARY)
 
@@ -340,8 +342,13 @@ export class workflow {
     }
 
     getZoneTargets(){
-        if(this.eligibleTargets.length > 1 && !this.zone.options.allInArea){
-           return this.targets.push(this.eligibleTargets[Math.floor(Math.random() * this.eligibleTargets.length)])
+        if(!this.zone.options.allInArea){
+            if(this.userSelectedTargets.length){
+                return this.targets = this.userSelectedTargets
+            }
+            if(this.eligibleTargets.length > 1){
+                return this.targets.push(this.eligibleTargets[Math.floor(Math.random() * this.eligibleTargets.length)])
+            }
         }
         return this.targets = this.eligibleTargets
     }
