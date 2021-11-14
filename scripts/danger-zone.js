@@ -144,7 +144,7 @@ export class dangerZone {
     let mp = new Map
     let zones = this.getAllZonesFromScene(sceneId); 
     for (let [k,zn] of zones) {
-      if(zn.trigger !== "manual" && zn.trigger !== "aura" && zn.enabled && zn.type){mp.set(k, zn)}
+      if(zn.trigger !== "manual" && zn.trigger !== "aura" && zn.trigger !== "move" && zn.enabled && zn.type){mp.set(k, zn)}
     }
     return mp
   }  

@@ -231,7 +231,7 @@ Hooks.on('updateCombat', async(combat, round, options, id) => {
 });
 
 Hooks.on("updateToken", async (token, update, options, userId) => {
-    if ("x" in update || "y" in update || "elevation" in update) {
+    if (game.user.isGM && ("x" in update || "y" in update || "elevation" in update)) {
 		if (dangerZone.sceneHasZone(token.parent?.id)) {triggerManager.findMovementTriggers(token, update)};
     }
 });
