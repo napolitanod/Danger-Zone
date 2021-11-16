@@ -131,6 +131,14 @@
                         <input type="number" name="options.lastingEffect.delay" min="0" step="1" value={{zone.options.lastingEffect.delay}}>
                     </div>
                 </div>
+                <div class="flexrow additional-row {{#if taggerOnNot}}hidden{{/if}}">
+                    <label class="tile-tag-label">
+                        <span>{{localize "DANGERZONE.type-form.tile.tag.label"}}</span>
+                    </label>
+                    <div class="tile-tag">
+                        <input type="text" name="options.lastingEffect.tag" placeholder="{{localize "DANGERZONE.type-form.tile.tag.description"}}"  value="{{zone.options.lastingEffect.tag}}">
+                    </div>
+                </div>
             </div>
             <div  class="form-group ambient-light">
                 <h3 class="form-header">
@@ -195,6 +203,14 @@
                         <span class="range-value">{{zone.options.ambientLight.lightAnimation.speed}}</span>
                     </div>
                 </div>
+                <div class="flexrow additional-row {{#if taggerOnNot}}hidden{{/if}}">
+                    <label class="light-tag-label">
+                        <span>{{localize "DANGERZONE.type-form.light.tag.label"}}</span>
+                    </label>
+                    <div class="light-tag">
+                        <input type="text" name="options.ambientLight.tag" placeholder="{{localize "DANGERZONE.type-form.light.tag.description"}}"  value="{{zone.options.ambientLight.tag}}">
+                    </div>
+                </div>
             </div>
             <div  class="form-group {{#if sequencerOnNot}}hidden{{/if}}">
                 <h3 class="form-header">
@@ -223,15 +239,25 @@
                     </div>
                     <label class="foregroundEffect-duration-label">{{localize "DANGERZONE.type-form.foregroundEffect.duration.label"}}</label>
                     <div class="foregroundEffect-duration">
-                        <input type="number" name="options.foregroundEffect.duration" min="0" step="1" value={{zone.options.foregroundEffect.duration}} required>
+                        <input type="number" name="options.foregroundEffect.duration" step="1" value={{zone.options.foregroundEffect.duration}} required>
                     </div>
                 </div>
                 <div class="flexrow">
-                    <label class="foregroundEffect-mustache-label">
+                    <label class="foregroundEffect-sourceEnabled-label">
+                        <span>{{localize 'DANGERZONE.type-form.foregroundEffect.source.enabled.label'}}</span>
                     </label>
-                    <div class="foregroundEffect-mustache">
+                    <div class="foregroundEffect-sourceEnabled">
+                        <input type="checkbox" name="options.foregroundEffect.source.enabled" data-dtype="Boolean" {{checked zone.options.foregroundEffect.source.enabled}}>
                     </div>
-                    <div>&nbsp;</div>
+                    <label class="foregroundEffect-sourceName-label">
+                        <span>{{localize "DANGERZONE.type-form.foregroundEffect.source.name.label"}}</span>
+                    </label>
+                    <div class="foregroundEffect-sourceName">
+                        <input type="text" name="options.foregroundEffect.source.name" placeholder="{{localize "DANGERZONE.type-form.foregroundEffect.source.name.description"}}"  value="{{zone.options.foregroundEffect.source.name}}">
+                    </div>
+                    <div>
+                        &nbsp;
+                    </div>
                     <label class="foregroundEffect-delay-label">{{localize "DANGERZONE.type-form.foregroundEffect.delay.label"}}</label>
                     <div class="foregroundEffect-delay">
                         <input type="number" name="options.foregroundEffect.delay" min="0" step="1" value={{zone.options.foregroundEffect.delay}} required>
@@ -269,11 +295,13 @@
                     </div>
                 </div>
                 <div class="flexrow">
-                    <label class="backgroundEffect-mustache-label">
-                    </label>
-                    <div class="backgroundEffect-mustache">
-                    </div>
                     <div>&nbsp;</div>
+                    <label class="backgroundEffect-rotate-label">
+                        <span>{{localize 'DANGERZONE.type-form.backgroundEffect.rotate.label'}}</span>
+                    </label>
+                    <div class="backgroundEffect-rotate">
+                        <input type="checkbox" name="options.backgroundEffect.rotate" data-dtype="Boolean" {{checked zone.options.backgroundEffect.rotate}}>
+                    </div>
                     <label class="backgroundEffect-delay-label">{{localize "DANGERZONE.type-form.backgroundEffect.delay.label"}}</label>
                     <div class="backgroundEffect-delay">
                         <input type="number" name="options.backgroundEffect.delay" min="0" step="1" value={{zone.options.backgroundEffect.delay}} required>

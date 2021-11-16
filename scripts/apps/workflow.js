@@ -1,6 +1,6 @@
 import {dangerZone } from '../danger-zone.js';
-import {dangerZoneDimensions, point, locationToBoundary} from './dimensions.js';
-import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn} from '../index.js';
+import {dangerZoneDimensions, point, locationToBoundary, documentBoundary, getTagEntities} from './dimensions.js';
+import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn} from '../index.js';
 
 export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -436,6 +436,12 @@ export class workflow {
             }
         }
 
+        if(taggerOn && this.zoneTypeOptions.lastingEffect.tag){
+            newTile.flags['tagger'] = {
+                "tags": [this.zoneTypeOptions.lastingEffect.tag]
+            }
+        }
+
         if(monksActiveTilesOn){
             const flag = this.flags?.["monks-active-tiles"];
             if(flag?.macro?.macroid || flag?.teleport) {
@@ -511,37 +517,72 @@ export class workflow {
     }
 
     async foregroundEffect(twin = false){
-        const boundary = twin ? this.twinLocation : this.targetBoundary;
         if(this.zoneTypeOptions.foregroundEffect?.file) {
+            const boundary = twin ? this.twinLocation : this.targetBoundary;
             let s = new Sequence()
-                if(this.zoneTypeOptions.foregroundEffect.delay){
-                   s = s.wait(this.zoneTypeOptions.foregroundEffect.delay)
+            if(this.zoneTypeOptions.foregroundEffect.delay){
+                s = s.wait(this.zoneTypeOptions.foregroundEffect.delay)
+            }
+            if(this.zoneTypeOptions.foregroundEffect.source?.enabled && this.zoneTypeOptions.foregroundEffect.source?.name ){
+                const tagged = await getTagEntities(this.zoneTypeOptions.foregroundEffect.source.name, this.scene);
+                if(tagged && tagged.length){
+                    for(let i=0; i<tagged.length; i++){
+                        const document = tagged[i]
+                        const documentName = document.documentName ? document.documentName : document.document.documentName;
+                        const source = documentBoundary(documentName, document, {retain:true});
+                        s = this._foregroundSequence(boundary, s, source);
+                    }
                 }
-                
-                s = s.effect()
-                    .file(this.zoneTypeOptions.foregroundEffect.file)
-                    .atLocation(boundary.center)
-                    .scale(this.zoneTypeOptions.foregroundEffect.scale)
-                    .randomizeMirrorX()
-                    .zIndex(boundary.top)
-                    if(this.zoneTypeOptions.foregroundEffect.duration){
-                        s = s.duration(this.zoneTypeOptions.foregroundEffect.duration)
-                    }
-
-                    if(this.zoneTypeOptions.foregroundEffect.repeat){
-                        s = s.repeats(this.zoneTypeOptions.foregroundEffect.repeat)
-                    }
-
-                s.play()
-
+            } else {
+                s = this._foregroundSequence(boundary, s);
+            }
+            s.play()
             return this.log('Zone foreground effect generated', {});
         } 
         return this.log('Zone foreground effect skipped', {});
     }
 
-    async backgroundEffect(twin = false){
-        const boundary = twin ? this.twinLocation : this.targetBoundary;       
+    _foregroundSequence(boundary, s, source = {}){
+        const jb2a = this.zoneTypeOptions.foregroundEffect.file.indexOf('jb2a')===-1 ? false : true
+        s = s.effect()
+            .file(this.zoneTypeOptions.foregroundEffect.file)
+            .zIndex(boundary.top)
+            
+            if(jb2a){
+                s=s.JB2A()
+            }
+
+            if(source.center){
+                s = s.atLocation(source.center)
+                    .reachTowards(boundary.center)
+                    if(!jb2a){
+                        s=s.gridSize(this.zoneTypeOptions.foregroundEffect.scale * 200)
+                        .startPoint(this.zoneTypeOptions.foregroundEffect.scale * 200)
+                        .endPoint(this.zoneTypeOptions.foregroundEffect.scale * 200)
+                    }
+                    if(this.zoneTypeOptions.foregroundEffect.duration){
+                        s = s.waitUntilFinished(this.zoneTypeOptions.foregroundEffect.duration)
+                    }
+            } else {
+                s = s.atLocation(boundary.center)
+                .scale(this.zoneTypeOptions.foregroundEffect.scale)
+                .randomizeMirrorX()
+                if(this.zoneTypeOptions.foregroundEffect.duration && this.zoneTypeOptions.foregroundEffect.duration>0){
+                    s = s.duration(this.zoneTypeOptions.foregroundEffect.duration)
+                }
+            }
+
+            if(this.zoneTypeOptions.foregroundEffect.repeat){
+                s = s.repeats(this.zoneTypeOptions.foregroundEffect.repeat)
+            }
+
+        return s
+    }
+
+    async backgroundEffect(twin = false){ 
         if(this.zoneTypeOptions.backgroundEffect?.file) {
+            const boundary = twin ? this.twinLocation : this.targetBoundary;      
+            const jb2a = this.zoneTypeOptions.foregroundEffect.file.indexOf('jb2a')===-1 ? false : true
             let s = new Sequence()
                 if(this.zoneTypeOptions.backgroundEffect.delay){
                     s = s.wait(this.zoneTypeOptions.backgroundEffect.delay)
@@ -552,14 +593,21 @@ export class workflow {
                     .atLocation(boundary.center)
                     .scale(this.zoneTypeOptions.backgroundEffect.scale)
                     .zIndex(boundary.bottom)
-                    .randomRotation()
                     
+                    if(this.zoneTypeOptions.backgroundEffect.rotate){
+                        s = s.randomRotation()
+                    }
+
                     if(this.zoneTypeOptions.backgroundEffect.duration){
                         s = s.duration(this.zoneTypeOptions.backgroundEffect.duration)
                     }
 
                     if(this.zoneTypeOptions.backgroundEffect.repeat){
                         s = s.repeats(this.zoneTypeOptions.backgroundEffect.repeat)
+                    }
+
+                    if(jb2a){
+                        s=s.JB2A()
                     }
 
                 s.play()
@@ -590,6 +638,7 @@ export class workflow {
 
     async tokenEffect(){
         if(this.zoneTypeOptions.tokenEffect?.file) {
+            const jb2a = this.zoneTypeOptions.foregroundEffect.file.indexOf('jb2a')===-1 ? false : true
             for (let i = 0; i < this.targets.length; i++) { 
 
                 let s = new Sequence()
@@ -605,6 +654,9 @@ export class workflow {
                     .fadeOut(500)
                 } else {
                     s=s.persist()
+                }
+                if(jb2a){
+                    s=s.JB2A()
                 }
                 s.play()
             }
@@ -689,6 +741,11 @@ export class workflow {
                 light.flags['levels'] = {
                     "rangeTop": this.targetBoundary.top,
                     "rangeBottom": this.targetBoundary.bottom
+                }
+            }
+            if(taggerOn && this.zoneTypeOptions.ambientLight.tag){
+                light.flags['tagger'] = {
+                    "tags": [this.zoneTypeOptions.ambientLight.tag]
                 }
             }
             await this.scene.createEmbeddedDocuments("AmbientLight",[light]);

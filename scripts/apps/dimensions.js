@@ -117,13 +117,7 @@ export class dangerZoneDimensions {
     }
 
     async _excludedTagged(){
-        const tag = game.settings.get(dangerZone.ID, 'zone-exclusion-tag');
-        const d = this.scene.getEmbeddedCollection("Drawing").filter(d => d.data.text === tag);
-        if(taggerOn){
-            const t = await Tagger.getByTag(tag, {caseInsensitive: false, matchAll: false, sceneId: this.sceneId })
-            return d.concat(t)
-        }
-        return d
+        return getTagEntities(game.settings.get(dangerZone.ID, 'zone-exclusion-tag'), this.scene)
     }
 }
 
@@ -143,7 +137,7 @@ export class boundary{
         this.gridIndex = new Set();
         if('bottom' in options){this.A.z = options.bottom}
         if('top' in options){this.B.z = options.top}
-        this._toTopLeft();
+        if(!('retain' in options)) this._toTopLeft();
         if(options.exclude){this._exclude(options.exclude)}
         this._setGridIndex();
     }
@@ -344,7 +338,7 @@ export function locationToBoundary(point, units, options={}){
     return new boundary(point,{x:x1, y:y1, z:(point.z + units.d)},options)
 }
 
-export function documentBoundary(documentName, document){
+export function documentBoundary(documentName, document, options = {}){
     let dim;
     switch(documentName){
         case "Wall":
@@ -365,6 +359,15 @@ export function documentBoundary(documentName, document){
         default: 
             dim=document.data
     }
-    const b = new boundary({x:dim.x, y:dim.y, z:dim.bottom ? dim.bottom : 0}, {x: dim.x + dim.width, y: dim.y + dim.height, z: dim.depth ? dim.bottom + dim.depth : 0})
+    const b = new boundary({x:dim.x, y:dim.y, z:dim.bottom ? dim.bottom : 0}, {x: dim.x + dim.width, y: dim.y + dim.height, z: dim.depth ? dim.bottom + dim.depth : 0}, options)
     return b
+}
+
+export async function getTagEntities(tag, scene){
+    const d = scene.getEmbeddedCollection("Drawing").filter(d => d.data.text === tag);
+    if(taggerOn){
+        const t = await Tagger.getByTag(tag, {caseInsensitive: false, matchAll: false, sceneId: scene.id })
+        return d.concat(t)
+    }
+    return d
 }
