@@ -371,15 +371,19 @@ form.danger-zone-record .form-fields .boundary-top-label {
 .danger-zone-type-form .backgroundEffect-file, 
 .danger-zone-type-form .foregroundEffect-file, 
 .danger-zone-type-form .tile-file,
-.danger-zone-type-form .warpgate-actor-input,
-.danger-zone-type-form .backgroundEffect-mustache, 
+.danger-zone-type-form .tile-tag,
+.danger-zone-type-form .light-tag,
+.danger-zone-type-form .warpgate-actor-input, 
 .danger-zone-type-form .foregroundEffect-mustache  {
     flex: 0 0 50%;
 }
+
+
 .danger-zone-type-form .tokenEffect-file  {
     flex: 0 0 40%;
 }
 
+.danger-zone-type-form .backgroundEffect-mustache,
 .danger-zone-type-form .monks-active-tiles-macro-input,
 .danger-zone-type-form .monks-active-tiles-args-input {
     flex: 0 0 33%;
@@ -390,6 +394,7 @@ form.danger-zone-record .form-fields .boundary-top-label {
     flex: 0 0 100%;
 }
 
+.danger-zone-type-form .foregroundEffect-sourceName-label,
 .danger-zone-type-form .light-animation-label,
 .danger-zone-type-form .light-color-label,
 .danger-zone-type-form .light-color-value,
@@ -403,6 +408,8 @@ form.danger-zone-record .form-fields .boundary-top-label {
     flex: 0 0 16%;
 }
 
+.danger-zone-type-form .foregroundEffect-sourceEnabled-label,
+.danger-zone-type-form .backgroundEffect-rotate-label,
 .danger-zone-type-form .dim-light-label {
     flex: 0 0 14%;
 }
@@ -426,6 +433,7 @@ form.danger-zone-record .form-fields .boundary-top-label {
 .danger-zone-type-form .light-intensity > input {
     width: 70%;
 }
+
 .danger-zone-type-form .light-animation-intensity > .range-value,
 .danger-zone-type-form .light-speed > .range-value,
 .danger-zone-type-form .light-intensity > .range-value {
@@ -446,6 +454,10 @@ form.danger-zone-record .form-fields .boundary-top-label {
 .danger-zone-type-form .audio-delay {
     flex: 0 0 55px;
     margin-right: 8px;
+}
+
+.danger-zone-type-form .foregroundEffect-sourceName{
+    flex: 0 0 21%;
 }
 
 .danger-zone-type-form .light-animation-type,
@@ -469,8 +481,9 @@ form.danger-zone-record .form-fields .boundary-top-label {
 .danger-zone-type-form .tokenEffect-file-label, 
 .danger-zone-type-form .backgroundEffect-file-label, 
 .danger-zone-type-form .foregroundEffect-mustache-label, 
-.danger-zone-type-form .backgroundEffect-mustache-label, 
 .danger-zone-type-form .tile-file-label,
+.danger-zone-type-form .tile-tag-label,
+.danger-zone-type-form .light-tag-label,
 .danger-zone-type-form .light-speed-label,
 .danger-zone-type-form .light-emission-label {
     flex: 0 0 6%;
@@ -517,6 +530,8 @@ form.danger-zone-type-form .dz-token-says .flexrow select {
     flex: 0 0 36%;
 }
 
+.danger-zone-type-form .foregroundEffect-sourceEnabled,
+.danger-zone-type-form .backgroundEffect-rotate,
 .danger-zone-type-form .monks-active-tiles-teleport-input,
 .danger-zone-type-form .warpgate-isRolltable-checkbox {
     flex: 0 0 3%;
@@ -540,6 +555,7 @@ form.danger-zone-type-form .dz-token-says .flexrow select {
     flex: 0 0 15%;
 }
 
+form.danger-zone-type-form .foregroundEffect-sourceName-label,
 form.danger-zone-type-form .ambient-light .buffer,
 form.danger-zone-type-form .dimensions .buffer,
 form.danger-zone-type-form .dz-fluid-canvas .buffer,

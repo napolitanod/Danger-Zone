@@ -6,7 +6,7 @@ export class dangerZoneType {
         units: {
           w: 1, 
           h: 1,
-          d: 1
+          d: 0
         }
       },
       this.icon = '',
@@ -24,6 +24,7 @@ export class dangerZoneType {
               type: ""
           },
           rotation: 0,
+          tag: "",
           tintColor: "",
           tintAlpha: 0.5
         },
@@ -37,6 +38,7 @@ export class dangerZoneType {
           file: '',
           scale: 1.0,
           repeat: 0,
+          rotate: false,
           duration: 30
         },
         effect: {},
@@ -45,6 +47,10 @@ export class dangerZoneType {
           delay: 0,
           file: '',
           scale: 1.0,
+          source: {
+            enabled: false,
+            name: ''
+          },
           repeat: 0,
           duration: 0
         },
@@ -52,7 +58,8 @@ export class dangerZoneType {
           delay: 0,
           file: '',
           scale: 1.0,
-          loop: true
+          loop: true,
+          tag: ''
         },
         tokenEffect: {
           delay: 0,

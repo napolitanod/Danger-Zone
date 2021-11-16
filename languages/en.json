@@ -195,6 +195,7 @@
                 "file.find": "Browse for Effect",
                 "file.label": "File",
                 "mustache.label": "Stache",
+                "rotate.label": "Random Rotation",
                 "scale.label": "Scale",
                 "repeat.label": "Repeats",
                 "duration.label": "Duration (ms)"
@@ -217,6 +218,11 @@
                 "file.find": "Browse for Effect",
                 "mustache.label": "Stache",
                 "scale.label": "Scale",
+                "source": {
+                    "enabled.label": "Source to Target",
+                    "name.label": "Source Tag",
+                    "name.description": "Text (drawing) or Tagger tag"
+                },
                 "repeat.label": "Repeats",
                 "duration.label": "Duration (ms)"
             },
@@ -232,7 +238,9 @@
                 "intensity.label": "Intensity",
                 "label": "Ambient Local Light",
                 "rotation.label": "Rotation",
-                "speed.label": "Speed"
+                "speed.label": "Speed",
+                "tag.label": "Tag",
+                "tag.description": "Tagger tag"
             },
             "macro.label": "Macro",
             "macro.notes": "The macro in this world that will run when the danger zone triggers.",
@@ -266,7 +274,9 @@
                 "file.find": "Browse for Effect",
                 "label": "Lasting Zone Effect",
                 "loop.label": "Loop",
-                "scale.label": "Scale"
+                "scale.label": "Scale",
+                "tag.label": "Tag",
+                "tag.description": "Tagger tag"
             },
             "token-says": {
                 "compendium.label": "Compendium",
