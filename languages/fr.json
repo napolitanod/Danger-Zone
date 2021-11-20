@@ -1,0 +1,328 @@
+{				
+	"DANGERZONE": {			
+		"add": "Ajouter",		
+		"cancel": "Annuler",		
+		"degrees": "Degrés",		
+		"delete": "Supprimer",		
+		"edit": "Editer",		
+		"grids": "Grilles",		
+		"gridUnits": "Unités de grille",		
+		"location-picker": "Sélectionnez les dimensions de la zone",
+        "ms": "ms",		
+		"none": "Aucun",		
+		"save": "Sauvegarde",
+        "sec": "sec",		
+		"view": "Vue",		
+		"yes": "Ok",		
+		"alerts": {		
+			"danger-depth-exceeds-zone": "La profondeur du danger ne peut pas dépasser la profondeur de la zone et un danger ne peut pas avoir une profondeur > 0 lorsque la profondeur d'une zone est infinie (égale à 0).",	
+			"input-z": "Elevation",	
+			"enter-z": "Entrez l'altitude du danger",	
+			"no-trigger-if-not-on-combat-scene": "Les zones de danger ne se déclenchent pas tant que vous n'êtes pas actif sur la scène de combat actuelle.",	
+			"select-zone-start": "Sélectionnez un emplacement de départ pour cette zone. La zone sélectionnée s'alignera sur la grille et représentera le coin supérieur gauche de cette zone.",	
+			"select-zone-end": "Sélectionnez un emplacement de fin pour cette zone. La zone sélectionnée s'alignera sur la grille et représentera le coin inférieur droit de cette zone.",	
+			"select-target": "Sélectionnez un emplacement dans la zone. La zone sélectionnée s'alignera sur la grille et représentera le coin supérieur gauche de la cible du danger.",	
+			"user-selection-exited": "Vous avez quitté prématurément la sélection de l'emplacement dangereux. L'exécution du déclencheur de zone s'est arrêtée."	
+		},		
+		"controls": {		
+			"clearAmbientLight.label": "Effacer l'éclairage ambiant de la zone de danger",	
+			"clearEffectsTile.label": "Effacer les effets durables de la zone de danger"	
+		},		
+		"edit-form": {		
+			"actor.label": "Acteur",	
+			"allInArea.label": "Cibler tous les jetons en danger",	
+			"allInArea.description": "Si plus d'un jeton se trouve dans une zone cible, ils seront tous ciblés. Sinon, un seul jeton aléatoire est ciblé.",	
+			"bleed.label": "Saigner",	
+			"bleed.description": "Si défini, la limite du danger (basée sur sa largeur, sa hauteur et sa profondeur) peut dépasser partiellement la limite de cette zone. Les effets de danger s'étendront jusqu'au saignement, mais les jetons qui ne se trouvent pas dans la limite de la zone ne seront pas ciblés dans le saignement. Cela garantit que chaque grille de la zone a une chance égale d'être ciblée au hasard. Si elle n'est pas définie, les unités plus proches du centre de la zone auront une plus grande probabilité d'être ciblée. ", 	
+			"boundary": {	
+				"bottom.label": "Bas",
+				"end.label": "fin:",
+				"label": "Dimensions",
+				"description": "Les dimensions de cette zone englobent les grilles qui s'étendent entre les positions de début et de fin données et les élévations entre le bas donné et jusqu'au sommet, mais sans inclure. Si les chiffres du bas et du haut sont les mêmes, alors la zone est considéré comme ayant une profondeur infinie.", 
+				"start.label": "Démarrer:",
+				"top.label": "Haut",
+				"x.label": "x",
+				"y.label": "y"
+			},	
+			"enabled.label": "Actif",	
+			"initiative-count.label": "Compter",	
+			"flavor.label": "Saveur",	
+			"flavor.description": "Ce texte sera affiché dans un message de discussion lorsque cette zone se déclenchera.",	
+			"light.replace.label": "Éclairage ambiant",	
+			"light.replace.description": "Choisissez quoi faire avec la lumière ambiante existante lorsque cette zone se déclenche.",	
+			"likelihood.label": "Probabilité",	
+			"likelihood.description": "Définir la probabilité que les effets d'un danger s'exécutent sur le déclencheur de zone.",	
+			"loop.label": "Nombre de boucles",	
+			"loop.description": "Définir le nombre d'exécutions de danger lorsque cette zone est déclenchée. Chaque boucle aura la probabilité évaluée séparément lors de son exécution.",	
+			"nom": "Configurer la zone",	
+			"other.label": "Autres paramètres",	
+			"placeTemplate.label": "Choisissez l'emplacement",	
+			"placeTemplate.description": "Sur le déclencheur, vous serez invité à sélectionner l'emplacement de la scène à cibler avec le danger (sinon l'emplacement est sélectionné au hasard dans les limites de la zone et du saignement). Si l'emplacement que vous sélectionnez est entièrement hors de la zone, les effets de danger vont se générer mais les jetons hors de la zone ne seront pas ciblés. ", 	
+			"random.label": "Randomiser",	
+			"random.description": "Toutes les zones de cette scène qui partagent le même déclencheur sont regroupées et une seule est déclenchée au hasard. Attribuez une pondération pour contrôler la fréquence à laquelle l'une se déclenche par rapport aux autres.",	
+			"replace.label": "Effets durables",	
+			"replace.description": "Choisissez quoi faire avec les effets durables existants lorsque cette zone se déclenche.",	
+			"runUntilTokenFound.label": " Frappe toujours un jeton ",	
+			"runUntilTokenFound.description": "Le danger ciblera une zone de la zone où au moins un jeton est présent, si possible.",	
+			"single-run.description": "Cette section s'exécute au plus une fois, après la première probabilité de succès, et quel que soit le nombre de boucles pour cette zone",	
+			"stretch.description": "Ajuste la zone d'effet du danger de sorte que l'emplacement de l'étirement reste fixe tandis que le haut et le bas de la zone restreignent toujours la cible initiale possible. 'Sol' utilise 0 comme fond final et 'Sky' utilise 99999 comme haut final. Exemple : Soit « montée par le bas » dans une zone avec bas=2, haut=10 et profondeur de danger=3, et une cible initiale de bas=5/haut=8.L'étirement gardera la cible supérieure = 8 mais laissera tomber le bas à 2, ce qui équivaut au bas de la zone.",	
+			"stretch.label": "S'étirer ",	
+			"title.label": "Titre",	
+			"token-targeting.label": "Ciblage par jeton",	
+			"token-disposition.label": "Disposition",	
+			"trigger.label": "Déclencheur",	
+			"type.label": "Danger",	
+			"types.add": "Voir les dangers",	
+			"weight.label": "Poids"	
+		},		
+		"export":{		
+			"title": "Exporter les dangers"	
+		},		
+		"import":{		
+			"title": "Importer les dangers",	
+			"noFile": "Vous n'avez pas téléchargé de fichier de données !",	
+			"complete": "Importation terminée",	
+			"success": "importé avec succès",	
+			"error": "échec de l'importation en raison de données invalides",	
+			"skiped": "ignoré car l'identifiant est un doublon d'un danger existant.",	
+			"short-title": "Importer"	
+		},		
+		"light.replace-types": {		
+			"A.label": "Effacer tout l'éclairage ambiant",	
+			"N.label": "Conserver tout l'éclairage ambiant",	
+			"R.label": "Effacer les lumières qui partagent ce déclencheur",	
+			"T.label": "Effacer les lumières qui partagent ce danger",	
+			"Z.label": "Effacer les lumières qui partagent cette zone"	
+		},		
+		"record": {		
+			"title.label": "Titre",	
+			"likelihood.label": "Probabilité",	
+			"likelihood.description": "Probabilité",	
+			"isActive.label": "Actif" 	
+		},		
+		"replace-types": {		
+			"A.label": "Effacer tous les effets durables",	
+			"N.label": "Conserver tous les effets durables",	
+			"R.label": "Effacer les effets qui partagent ce déclencheur",	
+			"T.label": "Effacer les effets qui partagent ce danger",	
+			"Z.label": "Effacer les effets qui partagent cette zone"	
+		},		
+		"scene": {		
+			"add-danger-zone": "Ajouter une zone de danger",	
+			"delete-danger-zone": "Supprimer la zone de danger",	
+			"description": "Ajouter des effets de zone de danger à cette scène (cela entraînera un rafraîchissement du formulaire, alors enregistrez tout changement de scène avant de continuer).",	
+			"edit-danger-zone": "Modifier la zone de danger",	
+			"label": "Zone de danger",	
+			"random": "Aléatoire",	
+			"random-trigger.label": "Déclencheur manuel aléatoire",	
+			"title": "Titre",	
+			"trigger": "Déclencheur",	
+			"type": "Danger"	
+		},		
+		"setting": {		
+			"chat-details-to-gm.label": "Détails de la zone de discussion au MJ sur le déclencheur",	
+			"chat-details-to-gm.description": "Enverra un message de discussion privé au MJ qui comprend des détails sur la zone de danger sur le déclencheur, tels que l'emplacement cible, les jetons éligibles et les jetons ciblés.",	
+			"danger-zone-types-config.name": "Dangers",	
+			"danger-zone-types-config.label": "Configurer les dangers",	
+			"display-danger-boundary.label": "Surligner la zone cible de danger",	
+			"display-danger-boundary.description": "Surligne temporairement la zone ciblée par un danger lorsque la zone est déclenchée (session MJ uniquement).",	
+			"scene-control-button-display.label": "Afficher le bouton Effacer les effets durables",	
+			"scene-control-button-display.description": " Bascule l'affichage du bouton Effacer les effets durables de la zone de danger dans le groupe de tuiles des boutons de contrôle de scène ",	
+			"scene-control-light-button-display.label": "Afficher le bouton de lumière ambiante claire",	
+			"scene-control-light-button-display.description": " Bascule l'affichage du bouton Effacer l'éclairage ambiant dans le groupe de contrôle d'éclairage des boutons de commande de scène ",	
+			"scene-trigger-button-display.label": "Emplacement d'affichage du déclencheur de zone",	
+			"scene-trigger-button-display.description": "Définir l'emplacement où les déclencheurs de zone s'afficheront. Les déclencheurs ne s'affichent que pour le MJ lors de la visualisation de la scène active.",	
+			"types-button-display.label": "Afficher le bouton Dangers",	
+			"types-button-display.description": "Bascule l'affichage du bouton Dangers en bas de la barre latérale des scènes",	
+			"scene-enabled-default.label": "Nouvelle zone active par défaut",	
+			"scene-enabled-default.description": "Sélectionnez si les nouvelles zones de danger sont actives par défaut ou non lorsque vous les créez pour la première fois.",	
+			"token-depth-multiplier.label": "Multiplicateur de profondeur de jeton",	
+			"token-depth-multiplier.description": "Pour les besoins du ciblage de la profondeur de zone, définissez un multiplicateur qui calcule la hauteur d'un jeton par rapport à la distance de la scène, l'échelle du jeton et le nombre de carrés de grille que ce jeton occupe, Un jeton dans un seul carré de grille avec une échelle de 1,0, une distance de scène de 5 et un multiplicateur de 1,2 aura une hauteur de 6 (1 * 1,0 * 5 * 1,2).", 	
+			"zone-exclusion-tag.label": "Bloquer la balise(Tag) de zone",	
+			"zone-exclusion-tag.description": "Entrez la balise(Tag) que vous utiliserez pour indiquer qu'un mur, une lumière, une tuile, un jeton ou un dessin empêche la grille occupée d'être incluse dans la zone. Notez que le module 'Tagger' est requis ou, pour les dessins, l'utiliser comme étiquette de texte fonctionne également." 	
+		},		
+		"stretch": {		
+			"bottom.label": "Monter par le bas",	
+			"ground.label": "S'élever du sol",	
+			"sky.label": "Descendez du ciel",	
+			"top.label": "Descendez du haut"	
+		},		
+		"token-disposition": {		
+			"all.label": "Tout",	
+			"friendly.label": "Amicale",	
+			"hostile.label": "Hostile",	
+			"neutral.label": "Neutre"	
+		},		
+		"trigger-display-options": {		
+			"scene.label": "Navigation de scène en ligne",	
+			"hotbar.label": "bar d'accès adjacente"	
+		},		
+		"trigger-types": {		
+			"aura.label": "Aura",	
+			"manual.label": "Manuel",	
+			"move.label": "Mouvement",	
+			"combat-start.label": "Début du combat",	
+			"combat-end.label": "Fin du combat",	
+			"initiative-start.label": "Nombre d'initiatives (Gagner des égalités)",	
+			"initiative-end.label": "Nombre d'initiatives (égalités perdues)",	
+			"round-start.label": "Début du round",	
+			"round-end.label": "Fin du round",	
+			"turn-start.label": "Début du tour",	
+			"turn-end.label": "Fin du tour"	
+		},		
+		"type-form": {		
+			"active-effect":{	
+				"clear": "Effacer l'effet actif",
+				"confirm": "Voulez-vous vraiment effacer les données de l'effet actif ?",
+				"label": "Effet Actif",
+				"notes": "L'effet actif sera transféré à chaque cible en danger",
+				"edit.title": "Modifier l'effet actif",
+				"delete.title": "Supprimer l'effet actif",
+				"cleared.info": "Les données d'effet actif ont été supprimées de ce danger."
+			},	
+			"animation.label": "Animation",	
+			"area-x.label": "Largeur",	
+			"area-y.label": "Hauteur",	
+			"area-z.label": "Profondeur",	
+			"audio":{	
+				"label": "Audio",
+				"file.label": "Fichier",
+				"file.find": "Rechercher un fichier audio",
+				"delay.label": "Délai",
+				"volume.label": "Volume"
+			},	
+			"backgroundEffect":{	
+				"delay.label": "Délai",
+				"label": "Effet secondaire/d'impact",
+				"file.find": "Rechercher un effet",
+				"file.label": "Fichier",
+				"mustache.label": "Moustaches",
+				"rotate.label": "Rotation aléatoire",
+				"scale.label": "Echelle",
+				"repeat.label": "Répétitions",
+				"duration.label": "Durée"
+			},	
+			"dimensions.label": "Dimensions",	
+			"dimensions.notes": "Pour la profondeur, spécifiez la différence d'unités de grille entre les élévations du haut et du bas. Une profondeur de 0 correspondra par défaut à la profondeur de la zone.",	
+			"fluidCanvas": {	
+				"delay.label":"Délai",
+				"duration.label":"Durée",
+				"intensity.label":"Intensité",
+				"iteration.label":"Itération",
+				"label":"Kandashi's Fluid Canvas",
+				"type.label":"Type",
+				"notes": "Invoque les effets Fluid Canvas au début de l'effet de danger."
+			},	
+			"foregroundEffect":{	
+				"delay.label": "Délai",
+				"label": "Effet primaire/environnement",
+				"file.label": "Fichier",
+				"file.find": "Rechercher un effet",
+				"mustache.label": "Moustache",
+				"scale.label": "Echelle",
+				"source": {
+				"enabled.label": "Source vers cible",
+				"name.label": "Source de la balise(Tag)",
+				"name.description": "Texte (Dessin) ou Tagguer la balise(Tag)"
+			},	
+			"repeat.label": "Répétitions",	
+			"duration.label": "Durée"	
+			},	
+			"icon.label": "Icône",	
+			"icon.find": "Rechercher l'icône",	
+			"light":{	
+				"animationIntensity.label": "Intensité",
+				"animation.label": "Animation",
+				"brightLight.label": "Rayon de lumière brillante",
+				"color.label": "Couleur",
+				"dimLight.label": "Rayon de faible luminosité",
+				"emission.label": "Angle",
+				"intensity.label": "Intensité",
+				"label": "Lumière locale ambiante",
+				"rotation.label": "Rotation",
+				"speed.label": "Vitesse",
+				"tag.label": "Balise(Tag)",
+				"tag.description": "Tagguer la balise(Tag)"
+			},	
+			"macro.label": "Macro",	
+			"macro.notes": "La macro dans ce monde qui s'exécutera lorsque la zone de danger se déclenchera.",	
+			"monks-active-tiles":{	
+				"label": "Monk's Active Tiles",
+				"macro": {
+				"after.label": "Après",
+				"args.label": "Args",
+				"label": "Exécuter la macro",
+				"macro.label": "Macro"
+			},	
+			"notes": "Ces déclencheurs seront ajoutés à la tuile créée par l'effet durable.",	
+			"teleport":{	
+				"after.label": "Après",
+				"evid.label": "Éviter les autres à destination",
+				"label": "Téléporter",
+				"pan.label": "Afficher le panoramique",
+				"source.label": "Supprimer la source",
+				"twin.label": "Jumeau (Portail)",
+				"add.label": "Téléporter"
+			}	
+			},	
+			"name.label": "Nom",	
+			"tab" :{	
+				"modules.title": "Intégration de modules",
+				"main.title": "Configuration de base"
+			},	
+			"tile":{	
+				"delay.label": "Délai",
+				"effect.label": "Fichier",
+				"file.find": "Rechercher un effet",
+				"label": "Effet de zone durable",
+				"loop.label": "Boucle",
+				"scale.label": "Echelle",
+				"tag.label": "Balise(Tag)",
+				"tag.description": "Tagguer la balise(Tag)"
+			},	
+			"token-says": {	
+				"compendium.label": "Compendium",
+				"label": "Le jeton dit ",
+				"notes": "Trigger Token Says fonctionnalité sur les cibles dangereuses pour une liste de lecture ou une source rolltable donnée. La saisie d'une donnée dans le champ 'Token Says' dira toujours cette chose ou jouera la piste de cette liste de lecture, sinon les données source sont aléatoires. ",
+				"rule-type.label": "Type",
+				"rule-type-option": {
+				"playlist": "Liste de lecture audio",
+				"roll-table": "Rollable Table"
+			},	
+			"says.label": "Le jeton dit ",	
+			"source.label": "Source"	
+			},	
+			"tokenEffect":{	
+				"delay.label": "Délai",
+				"label": "Effet de jeton (Sequencer)",
+				"file.label": "Fichier",
+				"file.find": "Rechercher un effet",
+				"scale.label": "Echelle",
+				"duration.label": "Durée"
+			},	
+			"warpgate": {	
+				"actor.label": "Nom",
+				"duplicates.label": "Doublons",
+				"delay.label": "Délais",
+				"isRolltable.label": "est Rolltable",
+				"label": "Warp Gate",
+				"notes": "Reproduire des créatures en utilisant le nom de l'acteur ou, si 'Est Rolltable' est coché, la reproduction sera un acteur aléatoire correspondant au nom tiré de la 'rolltable' spécifiée dans ce monde."
+			}	
+		},		
+		"types-form": {		
+			"header.name": "Dangers",	
+			"search.placeholder": "Entrez du texte pour filtrer les dangers",	
+			"search.clear": "Effacer la recherche",	
+			"export.title": "Exporter les dangers",	
+			"import.title": "Importer les dangers",	
+			"type.name.label": "Nom"	
+		},		
+		"zone-active-effect-form": {		
+			"form-name": "Danger Actif Effet"	
+		},		
+		"zone-type-form": {		
+			"form-name": "Danger",	
+			"name": "Nom"	
+		}		
+	}			
+}		
