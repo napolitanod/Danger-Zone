@@ -9,7 +9,7 @@
                 <input type="text" value="{{zone.id}}" name="id">
             </div>
             <div class="form-group main-danger">
-                <div class="flexrow one-line">
+                <div class="flexrow one-line dz-sect">
                     <label>
                         <span>{{localize 'DANGERZONE.type-form.name.label'}}</span>
                     </label>
@@ -17,7 +17,7 @@
                         <input type="text" name="name" value="{{zone.name}}" maxlength="75" required>
                     </div>
                 </div>
-                <div class="flexrow one-line additional-row">
+                <div class="flexrow one-line dz-sect">
                     <label>
                         <span>{{localize 'DANGERZONE.type-form.icon.label'}}</span>
                     </label>
@@ -26,43 +26,44 @@
                         <input type="text" name="icon" value="{{zone.icon}}" required>
                     </div>
                 </div>
-                <div class="flexrow one-line additional-row">
+                <div class="flexrow one-line dz-sect">
                     <label>
                         <span>{{localize 'DANGERZONE.type-form.dimensions.label'}}</span>
                     </label>
                     <div class="dimensions flexrow">
-                        <label class="area-x-label">
+                        <label class="dz-left-f">
                             <span>{{localize "DANGERZONE.type-form.area-x.label"}}</span>
                         </label>
-                        <div class="config-value form-fields">
+                        <div class="dz-num">
                             <input type="number" name="dimensions.units.w" min="1" step="1"  placeholder="{{localize "DANGERZONE.grids"}}" value={{zone.dimensions.units.w}} required>
                         </div>
-                        <label class="area-y-label buffer">
+                        <label class="dz-mid">
                             <span>{{localize "DANGERZONE.type-form.area-y.label"}}</span>
                         </label>
-                        <div class="config-value form-fields">
+                        <div class="dz-num">
                             <input type="number" name="dimensions.units.h" min="1" step="1" placeholder="{{localize "DANGERZONE.grids"}}" value={{zone.dimensions.units.h}} required>
                         </div>
-                        <label class="area-z-label buffer">
+                        <label class="dz-mid">
                             <span>{{localize "DANGERZONE.type-form.area-z.label"}}</span>
                         </label>
-                        <div class="config-value form-fields">
+                        <div class="dz-num">
                             <input type="number" name="dimensions.units.d" min="0" step="1" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{zone.dimensions.units.d}} required>
                         </div>
+                        <div class="dz-spacer-50">&nbsp;</div>
                     </div>
                 </div>
-                <div class="flexrow one-line additional-row">
-                    <label>
+                <div class="flexrow one-line dz-sect">
+                    <label class="dz-left">
                         <span>{{localize 'DANGERZONE.type-form.macro.label'}}</span>
                     </label>
-                    <div class="config-value form-fields">
+                    <div class="dz-sel-med">
                         <select name="options.macro" value="{{zone.options.macro}}"> 
                             <option value=""></option>  
                             {{selectOptions macroOps selected=zone.options.macro localize=false}}
                         </select>     
                     </div>
                 </div>
-                <div class="flexrow one-line additional-row">
+                <div class="flexrow one-line">
                     <label style="display: inline-block;">
                         <span>{{localize 'DANGERZONE.type-form.active-effect.label'}}</span>
                     </label>
@@ -80,23 +81,23 @@
                     <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.audio.label'}}</span>
                 </h3>
                 <div class="flexrow">
-                    <label class="audio-file-label">
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.audio.file.label"}}</span>
                     </label>
-                    <div class="audio-file">
+                    <div class="dz-input-lg">
                         <div class="file-picker-wrapper">
                             {{filePicker target="options.audio.file" type="audio"}}
                             <input type="text" name="options.audio.file" value="{{zone.options.audio.file}}">
                         </div>
                     </div>
-                    <label class="audio-delay-label">{{localize "DANGERZONE.type-form.audio.delay.label"}}</label>
-                    <div class="audio-delay">
-                        <input type="number" name="options.audio.delay" min="0" step="1" value={{zone.options.audio.delay}}>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.audio.delay.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.audio.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.audio.delay}}>
                     </div>
-                    <label>
+                    <label class="dz-mid">
                         <i class="volume-icon fas fa-volume-down"></i>
                     </label>
-                    <div class="audio-volume">
+                    <div class="dz-range-all">
                         <input type="range" title="{{localize "DANGERZONE.type-form.audio.volume.label"}}" name="options.audio.volume" value="{{zone.options.audio.volume}}" min="0" max="1" step="0.05">
                     </div>
                 </div>
@@ -106,38 +107,39 @@
                     <i class="fas fa-cube"></i>
                     <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.tile.label'}}</span>
                 </h3>
-                <div class="flexrow">
-                    <label class="tile-file-label">
+                <div class="flexrow dz-sect">
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.tile.effect.label"}}</span>
                     </label>
-                    <div class="tile-file">
+                    <div class="dz-input-lg">
                         <div class="file-picker-wrapper">
                             {{filePicker target="options.lastingEffect.file" type="imagevideo"}}
                             <input type="text" name="options.lastingEffect.file" value="{{zone.options.lastingEffect.file}}">
                         </div>
                     </div>
-                    <label class="tile-scale-label">{{localize "DANGERZONE.type-form.tile.scale.label"}}</label>
-                    <div class="tile-scale">
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.tile.scale.label"}}</label>
+                    <div class="dz-num">
                         <input type="number" name="options.lastingEffect.scale" value="{{zone.options.lastingEffect.scale}}" min="0.01" max="50" step="0.01">
                     </div>
-                    <label>
+                    <label class="dz-mid">
                         <span>{{localize 'DANGERZONE.type-form.tile.loop.label'}}</span>
                     </label>
-                    <div class="tile-loop">
+                    <div class="dz-checkbox">
                         <input type="checkbox" name="options.lastingEffect.loop" data-dtype="Boolean" {{checked zone.options.lastingEffect.loop}}>
                     </div>
-                    <label class="tile-delay-label">{{localize "DANGERZONE.type-form.tile.delay.label"}}</label>
-                    <div class="tile-delay">
-                        <input type="number" name="options.lastingEffect.delay" min="0" step="1" value={{zone.options.lastingEffect.delay}}>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.tile.delay.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.lastingEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.lastingEffect.delay}}>
                     </div>
                 </div>
-                <div class="flexrow additional-row {{#if taggerOnNot}}hidden{{/if}}">
-                    <label class="tile-tag-label">
+                <div class="flexrow {{#if taggerOnNot}}hidden{{/if}}">
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.tile.tag.label"}}</span>
                     </label>
-                    <div class="tile-tag">
+                    <div class="dz-input-lg">
                         <input type="text" name="options.lastingEffect.tag" placeholder="{{localize "DANGERZONE.type-form.tile.tag.description"}}"  value="{{zone.options.lastingEffect.tag}}">
                     </div>
+                    <div class="dz-spacer-50">&nbsp;</div>
                 </div>
             </div>
             <div  class="form-group ambient-light">
@@ -145,71 +147,74 @@
                     <i class="fas fa-lightbulb"></i>
                     <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.light.label'}}</span>
                 </h3>
-                <div class="flexrow additional-row">
-                    <label class="dim-light-label">
+                <div class="flexrow dz-sect">
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.light.dimLight.label"}}</span>
                     </label>
-                    <div class="dim-light">
+                    <div class="dz-num">
                         <input type="number" name="options.ambientLight.dim" min="0.00" step="0.01" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{zone.options.ambientLight.dim}}>
                     </div>
-                    <label class="bright-light-label buffer">
+                    <label class="dz-mid">
                         <span>{{localize "DANGERZONE.type-form.light.brightLight.label"}}</span>
                     </label>
-                    <div class="bright-light">
+                    <div class="dz-num">
                         <input type="number" name="options.ambientLight.bright" min="0.00" step="0.01" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{zone.options.ambientLight.bright}}>
                     </div>
-                    <label class="light-emission-label buffer">
+                    <label class="dz-mid">
                         <span>{{localize 'DANGERZONE.type-form.light.emission.label'}}</span>
                     </label>
-                    <div class="light-emission">
+                    <div class="dz-ms">
                         <input type="number" name="options.ambientLight.angle" placeholder="{{localize "DANGERZONE.degrees"}}"  value={{zone.options.ambientLight.angle}} min="0" max="360" step="1">
                     </div>
-                    <label class="light-rotation buffer">{{localize "DANGERZONE.type-form.light.rotation.label"}}</label>
-                    <div class="light-rotation">
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.light.rotation.label"}}</label>
+                    <div class="dz-ms">
                         <input type="number" name="options.ambientLight.rotation" placeholder="{{localize "DANGERZONE.degrees"}}"  value={{zone.options.ambientLight.rotation}} min="0" max="360" step="0">
                     </div> 
+                    <div class="dz-spacer-20">&nbsp;</div>
                 </div>
-                <div class="flexrow additional-row">   
-                    <label class="light-color-label">{{ localize "DANGERZONE.type-form.light.color.label" }}</label>
-                    <div class="light-color-value">   
+                <div class="flexrow dz-sect">   
+                    <label class="dz-left-f">{{ localize "DANGERZONE.type-form.light.color.label" }}</label>
+                    <div class="dz-input-xs">   
                         <input type="text" name="options.ambientLight.tintColor" value="{{zone.options.ambientLight.tintColor}}">
                     </div>
-                    <div class="light-color">
+                    <div class="dz-ms">
                         <input class="light-color-picker" type="color" value="{{zone.options.ambientLight.tintColor}}" data-edit="options.ambientLight.tintColor">
                     </div>
-                    <label class="light-intensity-label buffer">{{localize "DANGERZONE.type-form.light.intensity.label"}}</label>
-                    <div class="light-intensity">
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.light.intensity.label"}}</label>
+                    <div class="dz-range">
                         <input type="range" name="options.ambientLight.tintAlpha" value="{{zone.options.ambientLight.tintAlpha}}" min="0.0" max="1.0" step="0.05">
                         <span class="range-value">{{zone.options.ambientLight.tintAlpha}}</span>
                     </div>
+                    <div class="dz-spacer-30">&nbsp;</div>
                 </div>
-                <div class="flexrow additional-row">
-                    <label class="light-animation-label">
+                <div class="flexrow dz-sect">
+                    <label class="dz-left-f">
                         <span>{{localize 'DANGERZONE.type-form.light.animation.label'}}</span>
                     </label>
-                    <div class="light-animation-type">
+                    <div class="dz-sel-sm">
                         <select name="options.ambientLight.lightAnimation.type" value={{zone.options.ambientLight.lightAnimation.type}}>
                             {{selectOptions lightAnimations selected=zone.options.ambientLight.lightAnimation.type localize=true}}
                         </select>
                     </div>
-                    <label class="light-animation-intensity-label buffer">{{localize "DANGERZONE.type-form.light.animationIntensity.label"}}</label>
-                    <div class="light-animation-intensity">
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.light.animationIntensity.label"}}</label>
+                    <div class="dz-range">
                         <input type="range" name="options.ambientLight.lightAnimation.intensity" value="{{zone.options.ambientLight.lightAnimation.intensity}}" min="1" max="10" step="1">
                         <span class="range-value">{{zone.options.ambientLight.lightAnimation.intensity}}</span>
                     </div>
-                    <label class="light-speed-label buffer">{{localize "DANGERZONE.type-form.light.speed.label"}}</label>
-                    <div class="light-speed">
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.light.speed.label"}}</label>
+                    <div class="dz-range">
                         <input type="range" name="options.ambientLight.lightAnimation.speed" value="{{zone.options.ambientLight.lightAnimation.speed}}" min="1" max="10" step="1">
                         <span class="range-value">{{zone.options.ambientLight.lightAnimation.speed}}</span>
                     </div>
                 </div>
-                <div class="flexrow additional-row {{#if taggerOnNot}}hidden{{/if}}">
-                    <label class="light-tag-label">
+                <div class="flexrow {{#if taggerOnNot}}hidden{{/if}}">
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.light.tag.label"}}</span>
                     </label>
-                    <div class="light-tag">
+                    <div class="dz-input-lg">
                         <input type="text" name="options.ambientLight.tag" placeholder="{{localize "DANGERZONE.type-form.light.tag.description"}}"  value="{{zone.options.ambientLight.tag}}">
                     </div>
+                    <div class="dz-spacer-50">&nbsp;</div>
                 </div>
             </div>
             <div  class="form-group {{#if sequencerOnNot}}hidden{{/if}}">
@@ -217,50 +222,50 @@
                     <i class="fas fa-fire"></i>
                     <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.foregroundEffect.label'}}</span>
                 </h3>
-                <div class="flexrow">
-                    <label class="foregroundEffect-file-label">
+                <div class="flexrow dz-sect">
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.foregroundEffect.file.label"}}</span>
                     </label>
-                    <div class="foregroundEffect-file">
+                    <div class="dz-input-lg">
                         <div class="file-picker-wrapper">
                             {{filePicker target="options.foregroundEffect.file" type="imagevideo"}}
                             <input type="text" name="options.foregroundEffect.file" value="{{zone.options.foregroundEffect.file}}">
                         </div>
                     </div>
-                    <label class="foregroundEffect-scale-label">{{localize "DANGERZONE.type-form.foregroundEffect.scale.label"}}</label>
-                    <div class="foregroundEffect-scale">
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.foregroundEffect.scale.label"}}</label>
+                    <div class="dz-num">
                         <input type="number" name="options.foregroundEffect.scale" value="{{zone.options.foregroundEffect.scale}}" min="0.01" max="50" step="0.01" required>
                     </div>
-                    <label>
+                    <label class="dz-mid"> 
                         <span>{{localize 'DANGERZONE.type-form.foregroundEffect.repeat.label'}}</span>
                     </label>
-                    <div class="forgroundEffect-repeat">
+                    <div class="dz-num">
                         <input type="number" name="options.foregroundEffect.repeat" value={{zone.options.foregroundEffect.repeat}} min="0" max="10" steps="1" required>
                     </div>
-                    <label class="foregroundEffect-duration-label">{{localize "DANGERZONE.type-form.foregroundEffect.duration.label"}}</label>
-                    <div class="foregroundEffect-duration">
-                        <input type="number" name="options.foregroundEffect.duration" step="1" value={{zone.options.foregroundEffect.duration}} required>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.foregroundEffect.duration.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.foregroundEffect.duration" placeholder="{{localize "DANGERZONE.ms"}}" step="1" value={{zone.options.foregroundEffect.duration}} required>
                     </div>
                 </div>
                 <div class="flexrow">
-                    <label class="foregroundEffect-sourceEnabled-label">
-                        <span>{{localize 'DANGERZONE.type-form.foregroundEffect.source.enabled.label'}}</span>
-                    </label>
-                    <div class="foregroundEffect-sourceEnabled">
+                    <div class="dz-checkbox">
                         <input type="checkbox" name="options.foregroundEffect.source.enabled" data-dtype="Boolean" {{checked zone.options.foregroundEffect.source.enabled}}>
                     </div>
-                    <label class="foregroundEffect-sourceName-label">
+                    <label class="dz-mid-r">
+                        <span>{{localize 'DANGERZONE.type-form.foregroundEffect.source.enabled.label'}}</span>
+                    </label>
+                    <label class="dz-mid">
                         <span>{{localize "DANGERZONE.type-form.foregroundEffect.source.name.label"}}</span>
                     </label>
-                    <div class="foregroundEffect-sourceName">
+                    <div class="dz-input-ms">
                         <input type="text" name="options.foregroundEffect.source.name" placeholder="{{localize "DANGERZONE.type-form.foregroundEffect.source.name.description"}}"  value="{{zone.options.foregroundEffect.source.name}}">
                     </div>
-                    <div>
+                    <div class="dz-spacer-20">
                         &nbsp;
                     </div>
-                    <label class="foregroundEffect-delay-label">{{localize "DANGERZONE.type-form.foregroundEffect.delay.label"}}</label>
-                    <div class="foregroundEffect-delay">
-                        <input type="number" name="options.foregroundEffect.delay" min="0" step="1" value={{zone.options.foregroundEffect.delay}} required>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.foregroundEffect.delay.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.foregroundEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.foregroundEffect.delay}} required>
                     </div>
                 </div>
             </div>
@@ -269,88 +274,88 @@
                     <i class="fas fa-wind"></i>
                     <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.backgroundEffect.label'}}</span>
                 </h3>
-                <div class="flexrow">
-                    <label class="backgroundEffect-file-label">
+                <div class="flexrow dz-sect">
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.backgroundEffect.file.label"}}</span>
                     </label>
-                    <div class="backgroundEffect-file">
+                    <div class="dz-input-lg">
                         <div class="file-picker-wrapper">
                             {{filePicker target="options.backgroundEffect.file" type="imagevideo"}}
                             <input type="text" name="options.backgroundEffect.file" value="{{zone.options.backgroundEffect.file}}">
                         </div>
                     </div>
-                    <label class="backgroundEffect-scale-label">{{localize "DANGERZONE.type-form.backgroundEffect.scale.label"}}</label>
-                    <div class="backgroundEffect-scale">
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.backgroundEffect.scale.label"}}</label>
+                    <div class="dz-num">
                         <input type="number" name="options.backgroundEffect.scale" value="{{zone.options.backgroundEffect.scale}}" min="0.01" max="50" step="0.01">
                     </div>
-                    <label>
+                    <label class="dz-mid">
                         <span>{{localize 'DANGERZONE.type-form.backgroundEffect.repeat.label'}}</span>
                     </label>
-                    <div class="backgroundEffect-repeat">
+                    <div class="dz-num">
                         <input type="number" name="options.backgroundEffect.repeat" value={{ zone.options.backgroundEffect.repeat}} min="0" max="10" step="1">
                     </div>
-                    <label class="backgroundEffect-duration-label">{{localize "DANGERZONE.type-form.backgroundEffect.duration.label"}}</label>
-                    <div class="backgroundEffect-duration">
-                        <input type="number" name="options.backgroundEffect.duration" min="0" step="1" value={{zone.options.backgroundEffect.duration}}>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.backgroundEffect.duration.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.backgroundEffect.duration" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.backgroundEffect.duration}}>
                     </div>
                 </div>
                 <div class="flexrow">
-                    <div>&nbsp;</div>
-                    <label class="backgroundEffect-rotate-label">
+                    <div class="dz-spacer-50">&nbsp;</div>
+                    <label class="dz-mid">
                         <span>{{localize 'DANGERZONE.type-form.backgroundEffect.rotate.label'}}</span>
                     </label>
-                    <div class="backgroundEffect-rotate">
+                    <div class="dz-checkbox">
                         <input type="checkbox" name="options.backgroundEffect.rotate" data-dtype="Boolean" {{checked zone.options.backgroundEffect.rotate}}>
                     </div>
-                    <label class="backgroundEffect-delay-label">{{localize "DANGERZONE.type-form.backgroundEffect.delay.label"}}</label>
-                    <div class="backgroundEffect-delay">
-                        <input type="number" name="options.backgroundEffect.delay" min="0" step="1" value={{zone.options.backgroundEffect.delay}} required>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.backgroundEffect.delay.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.backgroundEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.backgroundEffect.delay}} required>
                     </div>
                 </div>
             </div>
         </div>
         <div class="tab" data-tab="modules" data-group="primary-tabs">
-            <div class="form-group dz-fluid-canvas {{#if fluidCanvasOnNot}}hidden{{/if}}">
+            <div class="form-group {{#if fluidCanvasOnNot}}hidden{{/if}}">
                 <h3 class="form-header">
                     <i class="fas fa-wind"></i>
                     <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.fluidCanvas.label'}}</span>
                 </h3>
                 <div class="flexrow">
-                    <label>
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.fluidCanvas.type.label"}}</span>
                     </label>
-                    <div class="fluid-canvas-type-input">
+                    <div class="dz-sel-sm">
                         <select name="options.flags.fluidCanvas.type" value="{{zone.options.flags.fluidCanvas.type}}"> 
                             <option value=""></option>  
                             {{selectOptions fluidCanvasOps selected=zone.options.flags.fluidCanvas.type localize=false}}
                         </select>   
                     </div>
-                    <label class="fluid-canvas-delay-label buffer">
+                    <label class="dz-mid">
                         <span>{{localize 'DANGERZONE.type-form.fluidCanvas.delay.label'}}</span>
                     </label>
-                    <div class="fluid-canvas-delay-input">
-                        <input type="number" min="0" step="1"  name="options.flags.fluidCanvas.delay" value={{zone.options.flags.fluidCanvas.delay}}>
+                    <div class="dz-ms">
+                        <input type="number" min="0" step="1"  name="options.flags.fluidCanvas.delay" placeholder="{{localize "DANGERZONE.ms"}}" value={{zone.options.flags.fluidCanvas.delay}}>
                     </div>
-                    <label class="fluid-canvas-intensity-label buffer">
+                    <label class="dz-mid">
                         <span>{{localize 'DANGERZONE.type-form.fluidCanvas.intensity.label'}}</span>
                     </label>
-                    <div class="fluid-canvas-intensity-input">
+                    <div class="dz-num">
                         <input type="number" min="0" step="1"  name="options.flags.fluidCanvas.intensity" value={{zone.options.flags.fluidCanvas.intensity}}>
                     </div>
-                    <label class="buffer">{{localize "DANGERZONE.type-form.fluidCanvas.iteration.label"}}</label>
-                    <div class="fluid-canvas-iteration">
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.fluidCanvas.iteration.label"}}</label>
+                    <div class="dz-num">
                         <input type="number" name="options.flags.fluidCanvas.iteration" min="0" step="1" value={{zone.options.flags.fluidCanvas.iteration}}>
                     </div>
-                    <label class="fluid-canvas-duration-label buffer">
+                    <label class="dz-mid">
                         <span>{{localize "DANGERZONE.type-form.fluidCanvas.duration.label"}}</span>
                     </label>
-                    <div class="fluid-canvas-duration">
-                        <input type="number" name="options.flags.fluidCanvas.duration" min="0" step="1" value={{zone.options.flags.fluidCanvas.duration}}>
+                    <div class="dz-ms">
+                        <input type="number" name="options.flags.fluidCanvas.duration" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.flags.fluidCanvas.duration}}>
                     </div>
                 </div>
                 <p class="notes">{{localize 'DANGERZONE.type-form.fluidCanvas.notes'}}</p>
             </div>
-            <div class="form-group dz-monks-active-tiles {{#if monksActiveTilesOnNot}}hidden{{/if}}">
+            <div class="form-group {{#if monksActiveTilesOnNot}}hidden{{/if}}">
                 <h3 class="form-header">
                     <i class="fas fa-running"></i>
                     <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.monks-active-tiles.label'}}</span>
@@ -359,58 +364,58 @@
                     <span>{{localize "DANGERZONE.type-form.monks-active-tiles.macro.label"}}</span>
                 </h4>
                 <div class="flexrow">
-                    <label>
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.monks-active-tiles.macro.macro.label"}}</span>
                     </label>
-                    <div class="monks-active-tiles-macro-input">
+                    <div class="dz-sel-ms">
                         <select name="options.flags.monks-active-tiles.macro.macroid" value="{{zone.options.flags.monks-active-tiles.macro.macroid}}"> 
                             <option value=""></option>  
                             {{selectOptions macroOps selected=zone.options.flags.monks-active-tiles.macro.macroid localize=false}}
                         </select>
                     </div>
-                    <label class="buffer">
+                    <label class="dz-mid">
                         <span>{{localize "DANGERZONE.type-form.monks-active-tiles.macro.args.label"}}</span>
                     </label>
-                    <div class="monks-active-tiles-args-input">
+                    <div class="dz-input">
                         <input type="text" name="options.flags.monks-active-tiles.macro.args" value="{{zone.options.flags.monks-active-tiles.macro.args}}">
                     </div>
-                    <label class="buffer after-label">{{localize "DANGERZONE.type-form.monks-active-tiles.macro.after.label"}}</label>
-                    <div class="monks-active-tiles-delay">
-                        <input type="number" name="options.flags.monks-active-tiles.macro.after" min="0" value={{zone.options.flags.monks-active-tiles.macro.after.delay}}>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.monks-active-tiles.macro.after.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.flags.monks-active-tiles.macro.after" placeholder="{{localize "DANGERZONE.sec"}}" min="0" value={{zone.options.flags.monks-active-tiles.macro.after.delay}}>
                     </div>
                 </div>
                 <h4>
                     <span>{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.label"}}</span>
                 </h4>
                 <div class="flexrow">
-                    <div class="monks-active-tiles-teleport-input">
+                    <div class="dz-checkbox">
                         <input type="checkbox" name="options.flags.monks-active-tiles.teleport.add" {{checked zone.options.flags.monks-active-tiles.teleport.add}}>
                     </div>
-                    <label>
+                    <label class="dz-mid-r">
                         <span>{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.add.label"}}</span>
                     </label>
-                    <div class="monks-active-tiles-teleport-input">
+                    <div class="dz-checkbox">
                         <input type="checkbox" name="options.flags.monks-active-tiles.teleport.twin" {{checked zone.options.flags.monks-active-tiles.teleport.twin}}>
                     </div>
-                    <label>
+                    <label class="dz-mid-r">
                         <span>{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.twin.label"}}</span>
                     </label>
-                    <div class="monks-active-tiles-teleport-input">
+                    <div class="dz-checkbox">
                         <input type="checkbox" name="options.flags.monks-active-tiles.teleport.source" {{checked zone.options.flags.monks-active-tiles.teleport.source}}>
                     </div>
-                    <label>
+                    <label class="dz-mid-r">
                         <span>{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.source.label"}}</span>
                     </label>
-                    <div class="monks-active-tiles-teleport-input">
+                    <div class="dz-checkbox">
                         <input type="checkbox" name="options.flags.monks-active-tiles.teleport.pan" {{checked zone.options.flags.monks-active-tiles.teleport.pan}}>
                     </div>
-                    <label>
+                    <label class="dz-mid-r">
                         <span>{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.pan.label"}}</span>
                     </label>
-                    <div class="monks-active-tiles-teleport-input">
+                    <div class="dz-checkbox">
                         <input type="checkbox" name="options.flags.monks-active-tiles.teleport.avoid" {{checked zone.options.flags.monks-active-tiles.teleport.avoid}}>
                     </div>
-                    <label class="monks-active-tiles-teleport-avoid">
+                    <label class="dz-mid-r">
                         <span>{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.avoid.label"}}</span>
                     </label>
                 </div>
@@ -422,92 +427,94 @@
                     <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.tokenEffect.label'}}</span>
                 </h3>
                 <div class="flexrow">
-                    <label class="tokenEffect-file-label">
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.tokenEffect.file.label"}}</span>
                     </label>
-                    <div class="tokenEffect-file">
+                    <div class="dz-input">
                         <div class="file-picker-wrapper">
                             {{filePicker target="options.tokenEffect.file" type="imagevideo"}}
                             <input type="text" name="options.tokenEffect.file" value="{{zone.options.tokenEffect.file}}">
                         </div>
                     </div>
-                    <label class="tokenEffect-scale-label">{{localize "DANGERZONE.type-form.tokenEffect.scale.label"}}</label>
-                    <div class="tokenEffect-scale">
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.tokenEffect.scale.label"}}</label>
+                    <div class="dz-num">
                         <input type="number" name="options.tokenEffect.scale" value="{{zone.options.tokenEffect.scale}}" min="0.01" max="50" step="0.01" required>
                     </div>
-                    <label class="tokenEffect-delay-label">{{localize "DANGERZONE.type-form.tokenEffect.delay.label"}}</label>
-                    <div class="tokenEffect-delay">
-                        <input type="number" name="options.tokenEffect.delay" min="0" step="1" value={{zone.options.tokenEffect.delay}} required>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.tokenEffect.delay.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.tokenEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.tokenEffect.delay}} required>
                     </div>
-                    <label class="tokenEffect-duration-label">{{localize "DANGERZONE.type-form.tokenEffect.duration.label"}}</label>
-                    <div class="tokenEffect-duration">
-                        <input type="number" name="options.tokenEffect.duration" min="0" step="1" value={{zone.options.tokenEffect.duration}} required>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.tokenEffect.duration.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.tokenEffect.duration" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.tokenEffect.duration}} required>
                     </div>
                 </div>
             </div>
-            <div class="form-group dz-token-says {{#if tokenSaysOnNot}}hidden{{/if}}">
+            <div class="form-group {{#if tokenSaysOnNot}}hidden{{/if}}">
                 <h3 class="form-header">
                     <i class="fas fa-comment"></i>
                     <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.token-says.label'}}</span>
                 </h3>
-                <div class="flexrow">
-                    <label>
+                <div class="flexrow dz-sect">
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.token-says.rule-type.label"}}</span>
                     </label>
-                    <select name="options.flags.tokenSays.fileType" value="{{zone.options.flags.tokenSays.fileType}}">  
-                        <option value=""></option>  
-                        {{selectOptions tokenSaysOps selected=zone.options.flags.tokenSays.fileType localize=true}}
-                    </select>
-                    <label class="buffer">
+                    <div class="dz-sel-med">
+                        <select name="options.flags.tokenSays.fileType" value="{{zone.options.flags.tokenSays.fileType}}">  
+                            <option value=""></option>  
+                            {{selectOptions tokenSaysOps selected=zone.options.flags.tokenSays.fileType localize=true}}
+                        </select>
+                    </div>
+                    <label class="dz-mid">
                         <span>{{localize "DANGERZONE.type-form.token-says.compendium.label"}}</span>
                     </label>
-                    <div>
+                    <div class="dz-input">
                         <input type="text" name="options.flags.tokenSays.compendiumName" value="{{zone.options.flags.tokenSays.compendiumName}}">
                     </div>
                 </div>
                 <div class="flexrow">
-                    <label>
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.token-says.source.label"}}</span>
                     </label>
-                    <div >
+                    <div class="dz-input">
                         <input type="text" name="options.flags.tokenSays.fileName" value="{{zone.options.flags.tokenSays.fileName}}">
                     </div>
-                    <label class="buffer">
+                    <label class="dz-mid">
                         <span>{{localize "DANGERZONE.type-form.token-says.says.label"}}</span>
                     </label>
-                    <div>
+                    <div class="dz-input">
                         <input type="text" name="options.flags.tokenSays.fileTitle" value="{{zone.options.flags.tokenSays.fileTitle}}">
                     </div>
                 </div>
                 <p class="notes">{{localize 'DANGERZONE.type-form.token-says.notes'}}</p>
             </div>
-            <div class="form-group dz-warpgate {{#if warpgateOnNot}}hidden{{/if}}">
+            <div class="form-group {{#if warpgateOnNot}}hidden{{/if}}">
                 <h3 class="form-header">
                     <i class="fas fa-circle-notch"></i>
                     <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.warpgate.label'}}</span>
                 </h3>
                 <div class="flexrow">
-                    <label>
+                    <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.warpgate.actor.label"}}</span>
                     </label>
-                    <div class="warpgate-actor-input">
+                    <div class="dz-input">
                         <input type="text" name="options.flags.warpgate.actor" value="{{zone.options.flags.warpgate.actor}}">
                     </div>
-                    <label class="warpgate-isRolltable-label buffer">
+                    <label class="dz-mid">
                         <span>{{localize 'DANGERZONE.type-form.warpgate.isRolltable.label'}}</span>
                     </label>
-                    <div class="warpgate-isRolltable-checkbox">
+                    <div class="dz-checkbox">
                         <input type="checkbox" name="options.flags.warpgate.isRolltable" {{checked zone.options.flags.warpgate.isRolltable}}>
                     </div>
-                    <label class="warpgate-duplicates-label buffer">
+                    <label class="dz-mid">
                         <span>{{localize "DANGERZONE.type-form.warpgate.duplicates.label"}}</span>
                     </label>
-                    <div class="warpgate-duplicates">
+                    <div class="dz-ms">
                         <input type="number" name="options.flags.warpgate.duplicates" min="1" max="20" step="1" value={{zone.options.flags.warpgate.duplicates}}>
                     </div>
-                    <label class="buffer">{{localize "DANGERZONE.type-form.warpgate.delay.label"}}</label>
-                    <div class="warpgate-delay">
-                        <input type="number" name="options.flags.warpgate.delay" min="0" value={{zone.options.flags.warpgate.delay}}>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.warpgate.delay.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.flags.warpgate.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" value={{zone.options.flags.warpgate.delay}}>
                     </div>
                 </div>
                 <p class="notes">{{localize 'DANGERZONE.type-form.warpgate.notes'}}</p>

@@ -99,23 +99,23 @@
                     <span>{{localize 'DANGERZONE.edit-form.bleed.label'}}</span>
                     <span class="toolt" title="{{localize 'DANGERZONE.edit-form.bleed.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>
-                <label>
+                <label class="stretch-label">
                     <span>{{localize 'DANGERZONE.edit-form.stretch.label'}}</span>
                     <span class="toolt" title="{{localize 'DANGERZONE.edit-form.stretch.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>
-                <div class="form-fields">
+                <div class="stretch">
                     <select name="options.stretch" value="{{zone.options.stretch}}">
                         {{selectOptions stretchOps selected=zone.options.stretch localize=true}}
                     </select>
                 </div>
             </div>
             <hr>
-            <div class="form-group">
+            <div class="form-group flexrow">
                 <h3>
                     <i class="fas fa-play"></i>&nbsp;
                     <span>{{localize 'DANGERZONE.edit-form.trigger.label'}}</span>
                 </h3>
-                <div class="form-fields">
+                <div class="trigger-select">
                     <select id="dz-trigger-value" name="trigger" value="{{zone.trigger}}" data-action="trigger-select">
                         {{selectOptions triggerOps selected=zone.trigger localize=true}}
                     </select>
@@ -130,7 +130,7 @@
             <div class="form-group flexrow">
                 <div class="flexrow">
                     <input class="random" type="checkbox" name="random" {{checked zone.random}} />
-                    <label>
+                    <label class="random-label">
                         <i class="fas fa-radiation-alt"></i>
                         <span>&nbsp;&nbsp;{{localize 'DANGERZONE.edit-form.random.label'}}</span>
                         <span class="toolt" title="{{localize 'DANGERZONE.edit-form.random.description'}}"><i class="fas fa-info-circle"></i></span>
@@ -220,7 +220,7 @@
                 <span>{{localize 'DANGERZONE.edit-form.other.label'}}</span>
                 <span class="toolt" title="{{localize 'DANGERZONE.edit-form.single-run.description'}}"><i class="fas fa-info-circle"></i></span>
             </h3>
-            <div class="form-group">
+            <div class="form-group flexrow">
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.replace.label'}}</span>
                     <span class="toolt" title="{{localize 'DANGERZONE.edit-form.replace.description'}}"><i class="fas fa-info-circle"></i></span>
@@ -231,7 +231,7 @@
                     </select>
                 </div>
             </div>
-            <div class="form-group">
+            <div class="form-group flexrow">
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.light.replace.label'}}</span>
                     <span class="toolt" title="{{localize 'DANGERZONE.edit-form.light.replace.description'}}"><i class="fas fa-info-circle"></i></span>

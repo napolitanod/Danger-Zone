@@ -8,8 +8,10 @@
         "grids": "Grids",
         "gridUnits": "Grid Units",
         "location-picker": "Select the zone dimensions",
+        "ms": "ms",
         "none": "None",
         "save": "Save",
+        "sec": "sec",
         "view": "View",
         "yes": "Ok",
         "alerts": {
@@ -186,11 +188,11 @@
                 "label": "Audio",
                 "file.label": "File",
                 "file.find": "Browse for Audio File",
-                "delay.label": "Delay (ms)",
+                "delay.label": "Delay",
                 "volume.label": "Volume"
             },
             "backgroundEffect":{
-                "delay.label": "Delay (ms)",
+                "delay.label": "Delay",
                 "label": "Secondary/Impact Effect",
                 "file.find": "Browse for Effect",
                 "file.label": "File",
@@ -198,13 +200,13 @@
                 "rotate.label": "Random Rotation",
                 "scale.label": "Scale",
                 "repeat.label": "Repeats",
-                "duration.label": "Duration (ms)"
+                "duration.label": "Duration"
             },
             "dimensions.label": "Dimensions",
             "dimensions.notes": "For depth, specify the difference in grid units between the top and bottom elevations. A depth of 0 will default to the zone's depth.",
             "fluidCanvas": {
-                "delay.label":"Delay (ms)",
-                "duration.label":"Duration (ms)",
+                "delay.label":"Delay",
+                "duration.label":"Duration",
                 "intensity.label":"Intensity",
                 "iteration.label":"Iteration",
                 "label":"Kandashi's Fluid Canvas",
@@ -212,7 +214,7 @@
                 "notes": "Invokes Fluid Canvas effects at the start of the danger effect."
             },
             "foregroundEffect":{
-                "delay.label": "Delay (ms)",
+                "delay.label": "Delay",
                 "label": "Primary/Environmental Effect",
                 "file.label": "File",
                 "file.find": "Browse for Effect",
@@ -224,7 +226,7 @@
                     "name.description": "Text (drawing) or Tagger tag"
                 },
                 "repeat.label": "Repeats",
-                "duration.label": "Duration (ms)"
+                "duration.label": "Duration"
             },
             "icon.label": "Icon",
             "icon.find": "Browse for Icon",
@@ -247,15 +249,15 @@
             "monks-active-tiles":{
                 "label": "Monk's Active Tiles",
                 "macro": {
-                    "after.label": "After (s)",
+                    "after.label": "After",
                     "args.label": "Args",
                     "label": "Run Macro",
                     "macro.label": "Macro"
                 },
                 "notes": "These triggers will be added to the tile that is created by the lasting effect.",
                 "teleport":{
-                    "after.label": "After (sec)",
-                    "avoid.label": "Avoid Others At Destination",
+                    "after.label": "After",
+                    "avoid.label": "Avoid Others At Dest.",
                     "label": "Teleport",
                     "pan.label": "Show Pan",
                     "source.label": "Delete Source",
@@ -269,7 +271,7 @@
                 "main.title": "Core Configuration"
             },
             "tile":{
-                "delay.label": "Delay (ms)",
+                "delay.label": "Delay",
                 "effect.label": "File",
                 "file.find": "Browse for Effect",
                 "label": "Lasting Zone Effect",
@@ -291,12 +293,12 @@
                 "source.label": "Source"
             },
             "tokenEffect":{
-                "delay.label": "Delay (ms)",
+                "delay.label": "Delay",
                 "label": "Token Effect (Sequencer)",
                 "file.label": "File",
                 "file.find": "Browse for Effect",
                 "scale.label": "Scale",
-                "duration.label": "Duration (ms)"
+                "duration.label": "Duration"
             },
             "warpgate": {
                 "actor.label": "Name",
