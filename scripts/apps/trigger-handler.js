@@ -70,7 +70,7 @@ export class triggerManager {
     async _next(zone, finalLoop = true, previousExec = false){
         const options = {previouslyExecuted: previousExec}
         if(zone.trigger !== 'move'){
-            if(this.data?.options?.location){options['location'] = this.data.options.location}
+            if(this.data?.options?.location && zone.trigger !== 'aura'){options['location'] = this.data.options.location}
             if(this.data?.options?.targets){options['targets'] = this.data.options.targets}
         }
 

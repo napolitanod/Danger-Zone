@@ -2,7 +2,7 @@ import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {boundary, point} from './dimensions.js';
 import {DANGERZONETRIGGERS} from './constants.js';
-import {TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONELIGHTREPLACE, STRETCH, actorOps} from './constants.js';
+import {TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, STRETCH, actorOps} from './constants.js';
 
 export class DangerZoneForm extends FormApplication {
   constructor(app, zoneId, sceneId, ...args) {
@@ -89,7 +89,8 @@ export class DangerZoneForm extends FormApplication {
       stretchOps: STRETCH,
       tokenDispositionOps: TOKENDISPOSITION,
       triggerOps: DANGERZONETRIGGERS,
-      zoneTypeOps: dangerZoneType.dangerZoneTypeList
+      zoneTypeOps: dangerZoneType.dangerZoneTypeList,
+      wallReplaceOps: DANGERZONEWALLREPLACE
     } 
   }
   

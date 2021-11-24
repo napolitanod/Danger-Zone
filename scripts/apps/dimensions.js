@@ -63,7 +63,7 @@ export class dangerZoneDimensions {
         const {w,h,d} = this.danger.dimensions.units;
         const b = await this.boundary();
         const dim = b.dimensions;
-        return locationToBoundary(b.A, {d: dim.d - (d ? d : dim.d ? dim.d : 0), h:dim.h - (h-1), w:dim.w - (w-1)}, {excludes: b.excludes})
+        return locationToBoundary(b.A, {d: Math.abs(dim.d - (d ? d : dim.d ? dim.d : 0)), h: Math.abs(dim.h - (h-1)), w: Math.abs(dim.w - (w-1))}, {excludes: b.excludes})
     }
 
     async grids(){
@@ -77,7 +77,7 @@ export class dangerZoneDimensions {
         const options = {range:{w: w, h: h, d: d}}
         this.zone.stretch(options);
         const grids = b.randomBoundary(options);
-        dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, boundary: b, dangerUnits: [w,h,d], zone: this.zone})
+        dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, boundary: b, dangerUnits: [w,h,d], zone: this.zone, options: options})
         return grids
     }
 
@@ -143,15 +143,15 @@ export class boundary{
     }
 
     get width(){
-        return this.B.x - this.A.x
+        return Math.abs(this.B.x - this.A.x)
     }
 
     get height(){
-        return this.B.y - this.A.y
+        return Math.abs(this.B.y - this.A.y)
     }
 
     get depth(){
-        return this.B.z - this.A.z
+        return Math.abs(this.B.z - this.A.z)
     }
 
     get bottom(){
@@ -221,7 +221,7 @@ export class boundary{
             }
             return dangerZone.log(false,'Invalid zone settings ', {boundary: this})
         }
-        const zAdj = dim.d ? d ? d : dim.d-1 : 0
+        const zAdj = dim.d ? d ? d : dim.d-1 : 0 
 
         while(true){
             const [posY, posX, posZ] = all[Math.floor(Math.random() * all.length)]
@@ -335,6 +335,7 @@ export function rayIntersectsGrid([yPos,xPos], r){
 
 export function locationToBoundary(point, units, options={}){
     let [x1,y1] = canvas.grid.grid.shiftPosition(point.x, point.y, units.w, units.h)
+    dangerZone.log(false,'Location to boundary...', {point: point, units: units, options: options});
     return new boundary(point,{x:x1, y:y1, z:(point.z + units.d)},options)
 }
 

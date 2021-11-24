@@ -1,7 +1,6 @@
 import {dangerZoneDimensions} from './apps/dimensions.js';
 import {DangerZoneTypesForm} from './apps/zone-type-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
-import {triggerManager} from './apps/trigger-handler.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -197,8 +196,8 @@ export class dangerZone {
     }
 
     if(!keptZones){return dangerZone.log(false,'Random Zone Get Failed ', {sceneZones: zones, eligibleZones: keptZones, range: {min: 1, max:max}});}
-    const maybe = new Roll(`1d${max}`);
-    const randomResult = await maybe.roll().result;
+    const maybe = await new Roll(`1d${max}`).roll();
+    const randomResult = maybe.result;
 
     for (let i = 0; i < keptZones.length; i++) {
       let zn = keptZones[i];
@@ -259,6 +258,7 @@ export class zone {
     this.tokenDisposition = '',
     this.trigger = 'manual',
     this.type = '',
+    this.wallReplace = 'N',
     this.weight = 1
   }
 

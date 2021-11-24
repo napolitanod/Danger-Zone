@@ -1,6 +1,6 @@
 import {dangerZone } from '../danger-zone.js';
 import {dangerZoneDimensions, point, locationToBoundary, documentBoundary, getTagEntities} from './dimensions.js';
-import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn} from '../index.js';
+import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn} from '../index.js';
 
 export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -20,10 +20,12 @@ export const WORKFLOWSTATES = {
     GENERATEBACKGROUNDEFFECT: 22,
     CLEARLASTINGEFFECTS: 30,
     GENERATELASTINGEFFECT: 31,
-    CLEARLIGHT: 32,
-    GENERATELIGHT: 33,
-    GENERATETOKENEFFECT: 34,
-    GENERATEACTIVEEFFECT: 35,
+    CLEARWALLS: 32,
+    GENERATEWALLS: 33,
+    CLEARLIGHT: 34,
+    GENERATELIGHT: 35,
+    GENERATETOKENEFFECT: 36,
+    GENERATEACTIVEEFFECT: 37,
     GENERATEMACRO: 40,
     TOKENSAYS: 50,
     WARPGATE: 51,
@@ -175,7 +177,15 @@ export class workflow {
 
             case WORKFLOWSTATES.GENERATELASTINGEFFECT:
                 await this.lastingEffect();//hard stop here, pausing those operations that wait for lasting effect delay
-                return this.next(WORKFLOWSTATES.CLEARLIGHT)
+                return this.next(WORKFLOWSTATES.CLEARWALLS)
+
+            case WORKFLOWSTATES.CLEARWALLS:
+                if(!this.previouslyExecuted){await this.deleteWalls();}//hard stop here
+                return this.next(WORKFLOWSTATES.GENERATEWALLS)
+
+            case WORKFLOWSTATES.GENERATEWALLS:
+                await this.createWalls();
+                return this.next(WORKFLOWSTATES.CLEARLIGHT) 
 
             case WORKFLOWSTATES.CLEARLIGHT:
                 if(!this.previouslyExecuted){await this.deleteLight();}//hard stop here
@@ -287,8 +297,8 @@ export class workflow {
     /*Checks random d100 result against the zone's likelihood and outputs a true or false for whether likelihood is met*/
     async happens() {
         if(this.zone.likelihood < 100){
-            const maybe = new Roll(`1d100`);
-            this.likelihoodResult = await maybe.roll().result;
+            const maybe = await new Roll(`1d100`).roll();
+            this.likelihoodResult = maybe.result;
             if (this.likelihoodResult > this.zone.likelihood){this.active = false}
         }
     }
@@ -327,15 +337,17 @@ export class workflow {
     async getRandomLocationBoundary() {
         let max = 1, i=0;
         const testBoundary = await this.zone.scene.randomDangerBoundary();
-        if(this.zone.options.runUntilTokenFound && this.zoneEligibleTokens.length){
-            max = 1000;
+        const targetPool = this.userSelectedTargets.length ? this.userSelectedTargets : this.zoneEligibleTokens;
+        this.log('Test Boundary Got...', {'testBoundary': testBoundary});
+        if((this.userSelectedTargets.length || this.zone.options.runUntilTokenFound) && targetPool.length){
+            max = 10000;
         }
         do {
             i++;
             const b = testBoundary.next()
             if(!b || b.done){return this.next(WORKFLOWSTATES.CANCEL)}
             this.targetBoundary = b.value;
-            this.eligibleTargets = this.targetBoundary.tokensIn(this.zoneEligibleTokens);
+            this.eligibleTargets = this.targetBoundary.tokensIn(targetPool);
         }
         while(this.eligibleTargets.length === 0 && i < max);
         return {attempts: i, max: max}
@@ -532,6 +544,8 @@ export class workflow {
                         const source = documentBoundary(documentName, document, {retain:true});
                         s = this._foregroundSequence(boundary, s, source);
                     }
+                } else {
+                    return this.log('Zone foreground effect skipped - no source', {});
                 }
             } else {
                 s = this._foregroundSequence(boundary, s);
@@ -692,6 +706,69 @@ export class workflow {
         return {macro: false}
     }
 
+    async deleteWalls() {
+        let ids;
+        switch (this.zone.wallReplace) {
+            case 'Z':
+                ids=this.scene.walls.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.zone.id).map(t => t.id);
+                break;
+            case 'T':
+                ids=this.scene.walls.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.zone.type).map(t => t.id);
+                break;
+            case 'R':
+                ids=this.scene.walls.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.trigger === this.zone.trigger).map(t => t.id);
+                break;
+            case 'A':
+                ids=this.scene.walls.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]).map(t => t.id);
+                break;
+            default:
+                return this.log('Zone does not clear walls', {});
+        }
+		await canvas.scene.deleteEmbeddedDocuments("Wall", ids);
+        return this.log('Walls cleared', {walls: ids})
+    }
+
+    async createWalls() {
+        if(this.zoneTypeOptions.wall?.top || this.zoneTypeOptions.wall?.right || this.zoneTypeOptions.wall?.bottom || this.zoneTypeOptions.wall?.left) {
+            const walls = [];
+            if(this.zoneTypeOptions.wall?.top && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData(this.targetBoundary.A, {x: this.targetBoundary.B.x, y: this.targetBoundary.A.y}))}
+            if(this.zoneTypeOptions.wall?.right && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData({x: this.targetBoundary.B.x, y: this.targetBoundary.A.y}, this.targetBoundary.B))}
+            if(this.zoneTypeOptions.wall?.bottom && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData(this.targetBoundary.B, {x: this.targetBoundary.A.x, y: this.targetBoundary.B.y}))}
+            if(this.zoneTypeOptions.wall?.left && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData({x: this.targetBoundary.A.x, y: this.targetBoundary.B.y}, this.targetBoundary.A))}
+            if(walls.length){await this.scene.createEmbeddedDocuments("Wall",walls)}
+            return this.log('Zone walls generated', {wall: walls});
+        }
+        return this.log('Zone walls not generated', {});
+    }
+
+    _wallData(start, end){
+        const obj = {
+            c:[start.x, start.y, end.x, end.y],
+            dir: this.zoneTypeOptions.wall.dir,
+            door: this.zoneTypeOptions.wall.door,
+            ds: 0,
+            move: this.zoneTypeOptions.wall.move,
+            sense: this.zoneTypeOptions.wall.sense,
+            sound: this.zoneTypeOptions.wall.sound,
+            flags: {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.zone.trigger, type: this.zone.type}}}
+        }
+
+        if(wallHeightOn && (this.targetBoundary.bottom || this.targetBoundary.top)){
+            obj.flags['wallHeight'] = {
+                "wallHeightTop": this.targetBoundary.top-1,
+                "wallHeightBottom": this.targetBoundary.bottom
+            }
+        }
+
+        if(taggerOn && this.zoneTypeOptions.wall.tag){
+            obj.flags['tagger'] = {
+                "tags": [this.zoneTypeOptions.wall.tag]
+            }
+        }
+        
+        return obj;
+    }
+
     async deleteLight() {
         let lightIds;
         switch (this.zone.lightReplace) {
@@ -825,6 +902,7 @@ export class workflow {
         if(flag?.actor){                           
             let options = {}, callbacks = {}, updates = {token: {elevation: this.targetBoundary.bottom}}, actor = '';
             if(flag.duplicates > 1){options= {"duplicates": flag.duplicates}}
+            if(flag.tag){updates.token['flags'] = {"tagger":{"tags": [flag.tag]}}}
             if(flag.isRolltable){
                 let table = game.tables.getName(flag.actor);
                 if(!table){return dangerZone.log(false,'Warpgate Rolltable Not Found ', {"warpgate-data": flag})}

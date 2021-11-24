@@ -2,6 +2,7 @@ import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {DangerZoneTypeActiveEffectForm} from "./active-effect-form.js"
 import {sequencerOn,tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, taggerOn} from '../index.js';
+import {moveTypes, senseTypes, dirTypes, doorTypes} from './constants.js';
 
 export class DangerZoneTypeForm extends FormApplication {
   constructor(zoneTypeId, ...args) {
@@ -145,7 +146,11 @@ export class DangerZoneTypeForm extends FormApplication {
       sequencerOnNot: !sequencerOn,
       warpgateOnNot: !warpgateOn, 
       fluidCanvasOnNot: !fluidCanvasOn, 
-      taggerOnNot: !taggerOn
+      taggerOnNot: !taggerOn,
+      moveTypes: moveTypes(),
+      senseTypes: senseTypes(),
+      dirTypes: dirTypes(),
+      doorTypes: doorTypes()
     } 
     return dataToSend
   }

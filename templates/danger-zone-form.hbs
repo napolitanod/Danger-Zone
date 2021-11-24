@@ -244,6 +244,17 @@
             </div>
             <div class="form-group flexrow">
                 <label>
+                    <span>{{localize 'DANGERZONE.edit-form.wall.replace.label'}}</span>
+                    <span class="toolt" title="{{localize 'DANGERZONE.edit-form.wall.replace.description'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <select name="wallReplace" value="{{zone.wallReplace}}">
+                        {{selectOptions wallReplaceOps selected=zone.wallReplace localize=true}}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group flexrow">
+                <label>
                     <span>{{localize 'DANGERZONE.edit-form.flavor.label'}}</span>
                     <span class="toolt" title="{{localize 'DANGERZONE.edit-form.flavor.description'}}"><i class="fas fa-info-circle"></i></span>
                 </label>

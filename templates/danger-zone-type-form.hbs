@@ -1,6 +1,7 @@
 <form class="flexcol danger-zone-type-form" autocomplete="off">
     <nav class="sheet-tabs tabs" data-group="primary-tabs">
         <a class="item active" data-tab="main"><i class="fas fa-radiation"></i>&nbsp;{{localize 'DANGERZONE.type-form.tab.main.title'}}</a>
+        <a class="item" data-tab="effects"><i class="fas fa-play"></i>&nbsp;{{localize 'DANGERZONE.type-form.tab.effects.title'}}</a>
         <a class="item" data-tab="modules"><i class="fas fa-cube"></i>&nbsp;{{localize 'DANGERZONE.type-form.tab.modules.title'}}</a>
     </nav>
     <section class="content" id="danger-zone-type-form" data-id="{{zone.id}}" >
@@ -217,6 +218,80 @@
                     <div class="dz-spacer-50">&nbsp;</div>
                 </div>
             </div>
+            <div  class="form-group wall">
+                <h3 class="form-header">
+                    <i class="fas fa-university"></i>
+                    <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.wall.label'}}</span>
+                </h3>
+                <div class="flexrow">
+                    <div class="dz-checkbox">
+                        <input type="checkbox" name="options.wall.top" {{checked zone.options.wall.top}}>
+                    </div>
+                    <label class="dz-mid-r">
+                        <span>{{localize "DANGERZONE.type-form.wall.top.label"}}</span>
+                    </label>
+                    <div class="dz-checkbox">
+                        <input type="checkbox" name="options.wall.right" {{checked zone.options.wall.right}}>
+                    </div>
+                    <label class="dz-mid-r">
+                        <span>{{localize "DANGERZONE.type-form.wall.right.label"}}</span>
+                    </label>
+                    <div class="dz-checkbox">
+                        <input type="checkbox" name="options.wall.bottom" {{checked zone.options.wall.bottom}}>
+                    </div>
+                    <label class="dz-mid-r">
+                        <span>{{localize "DANGERZONE.type-form.wall.bottom.label"}}</span>
+                    </label>
+                    <div class="dz-checkbox">
+                        <input type="checkbox" name="options.wall.left" {{checked zone.options.wall.left}}>
+                    </div>
+                    <label class="dz-mid-r">
+                        <span>{{localize "DANGERZONE.type-form.wall.left.label"}}</span>
+                    </label>
+                    <div class="dz-checkbox">
+                        <input type="checkbox" name="options.wall.random" {{checked zone.options.wall.random}}>
+                    </div>
+                    <label class="dz-mid-r">
+                        <span>{{localize "DANGERZONE.type-form.wall.random.label"}}</span>
+                        <span class="toolt" title="{{localize 'DANGERZONE.type-form.wall.random.description'}}"><i class="fas fa-info-circle"></i></span>
+                    </label>
+                </div>
+                <h4>
+                    <span>{{localize "DANGERZONE.type-form.wall.restrictions.label"}}</span>
+                </h4>
+                <div class="flexrow dz-sect">
+                    <label class="dz-left-f">{{localize "DANGERZONE.type-form.wall.movement.label"}}</label>
+                    <select class="dz-sel-sm" name="options.wall.move" data-dtype="Number">
+                        {{selectOptions moveTypes selected=zone.options.wall.move }}
+                    </select>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.wall.sight.label"}}</label>
+                    <select class="dz-sel-sm" name="options.wall.sense" data-dtype="Number">
+                        {{selectOptions senseTypes selected=zone.options.wall.sense }}
+                    </select>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.wall.sound.label"}}</label>
+                    <select class="dz-sel-sm" name="options.wall.sound" data-dtype="Number">
+                        {{selectOptions senseTypes selected=zone.options.wall.sound }}
+                    </select>
+                </div>
+                <div class="flexrow">
+                    <label class="dz-left-f">{{localize "DANGERZONE.type-form.wall.direction.label"}}</label>
+                    <select class="dz-sel-sm" name="options.wall.dir" data-dtype="Number">
+                        {{selectOptions dirTypes selected=zone.options.wall.dir }}
+                    </select>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.wall.door.label"}}</label>
+                    <select class="dz-sel-sm" name="options.wall.door" data-dtype="Number">
+                        {{selectOptions doorTypes selected=zone.options.wall.door }}
+                    </select>
+                     <label class="dz-mid">
+                        <span>{{localize "DANGERZONE.type-form.wall.tag.label"}}</span>
+                    </label>
+                    <div class="dz-input-sm">
+                        <input type="text" name="options.wall.tag" placeholder="{{localize "DANGERZONE.type-form.wall.tag.description"}}"  value="{{zone.options.wall.tag}}">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab {{#if sequencerOnNot}}hidden{{/if}}" data-tab="effects" data-group="primary-tabs">
             <div  class="form-group {{#if sequencerOnNot}}hidden{{/if}}">
                 <h3 class="form-header">
                     <i class="fas fa-fire"></i>
@@ -310,6 +385,35 @@
                     <label class="dz-mid">{{localize "DANGERZONE.type-form.backgroundEffect.delay.label"}}</label>
                     <div class="dz-ms">
                         <input type="number" name="options.backgroundEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.backgroundEffect.delay}} required>
+                    </div>
+                </div>
+            </div>
+            <div  class="form-group {{#if sequencerOnNot}}hidden{{/if}}">
+                <h3 class="form-header">
+                    <i class="fas fa-male"></i>
+                    <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.tokenEffect.label'}}</span>
+                </h3>
+                <div class="flexrow">
+                    <label class="dz-left-f">
+                        <span>{{localize "DANGERZONE.type-form.tokenEffect.file.label"}}</span>
+                    </label>
+                    <div class="dz-input">
+                        <div class="file-picker-wrapper">
+                            {{filePicker target="options.tokenEffect.file" type="imagevideo"}}
+                            <input type="text" name="options.tokenEffect.file" value="{{zone.options.tokenEffect.file}}">
+                        </div>
+                    </div>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.tokenEffect.scale.label"}}</label>
+                    <div class="dz-num">
+                        <input type="number" name="options.tokenEffect.scale" value="{{zone.options.tokenEffect.scale}}" min="0.01" max="50" step="0.01" required>
+                    </div>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.tokenEffect.delay.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.tokenEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.tokenEffect.delay}} required>
+                    </div>
+                    <label class="dz-mid">{{localize "DANGERZONE.type-form.tokenEffect.duration.label"}}</label>
+                    <div class="dz-ms">
+                        <input type="number" name="options.tokenEffect.duration" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.tokenEffect.duration}} required>
                     </div>
                 </div>
             </div>
@@ -421,35 +525,6 @@
                 </div>
                 <p class="notes">{{localize 'DANGERZONE.type-form.monks-active-tiles.notes'}}</p>
             </div>
-            <div  class="form-group {{#if sequencerOnNot}}hidden{{/if}}">
-                <h3 class="form-header">
-                    <i class="fas fa-male"></i>
-                    <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.tokenEffect.label'}}</span>
-                </h3>
-                <div class="flexrow">
-                    <label class="dz-left-f">
-                        <span>{{localize "DANGERZONE.type-form.tokenEffect.file.label"}}</span>
-                    </label>
-                    <div class="dz-input">
-                        <div class="file-picker-wrapper">
-                            {{filePicker target="options.tokenEffect.file" type="imagevideo"}}
-                            <input type="text" name="options.tokenEffect.file" value="{{zone.options.tokenEffect.file}}">
-                        </div>
-                    </div>
-                    <label class="dz-mid">{{localize "DANGERZONE.type-form.tokenEffect.scale.label"}}</label>
-                    <div class="dz-num">
-                        <input type="number" name="options.tokenEffect.scale" value="{{zone.options.tokenEffect.scale}}" min="0.01" max="50" step="0.01" required>
-                    </div>
-                    <label class="dz-mid">{{localize "DANGERZONE.type-form.tokenEffect.delay.label"}}</label>
-                    <div class="dz-ms">
-                        <input type="number" name="options.tokenEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.tokenEffect.delay}} required>
-                    </div>
-                    <label class="dz-mid">{{localize "DANGERZONE.type-form.tokenEffect.duration.label"}}</label>
-                    <div class="dz-ms">
-                        <input type="number" name="options.tokenEffect.duration" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{zone.options.tokenEffect.duration}} required>
-                    </div>
-                </div>
-            </div>
             <div class="form-group {{#if tokenSaysOnNot}}hidden{{/if}}">
                 <h3 class="form-header">
                     <i class="fas fa-comment"></i>
@@ -493,7 +568,7 @@
                     <i class="fas fa-circle-notch"></i>
                     <span>&nbsp;&nbsp;{{localize 'DANGERZONE.type-form.warpgate.label'}}</span>
                 </h3>
-                <div class="flexrow">
+                <div class="flexrow dz-sect">
                     <label class="dz-left-f">
                         <span>{{localize "DANGERZONE.type-form.warpgate.actor.label"}}</span>
                     </label>
@@ -516,6 +591,15 @@
                     <div class="dz-ms">
                         <input type="number" name="options.flags.warpgate.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" value={{zone.options.flags.warpgate.delay}}>
                     </div>
+                </div>
+                <div class="flexrow {{#if taggerOnNot}}hidden{{/if}}">
+                    <label class="dz-left-f">
+                        <span>{{localize "DANGERZONE.type-form.warpgate.tag.label"}}</span>
+                    </label>
+                    <div class="dz-input-lg">
+                        <input type="text" name="options.flags.warpgate.tag" placeholder="{{localize "DANGERZONE.type-form.warpgate.tag.description"}}"  value="{{zone.options.ambientLight.tag}}">
+                    </div>
+                    <div class="dz-spacer-50">&nbsp;</div>
                 </div>
                 <p class="notes">{{localize 'DANGERZONE.type-form.warpgate.notes'}}</p>
             </div>

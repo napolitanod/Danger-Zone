@@ -67,6 +67,19 @@ export class dangerZoneType {
           file: '',
           scale: 1.0
         },
+        wall: {
+          bottom:false,
+          dir: 0,
+          door: 0,
+          left: false,
+          move: 1,
+          random: false,
+          right: false,
+          sense: 1,
+          sound: 1,
+          tag: '',
+          top: false
+        },
         macro: ''
       }
     }

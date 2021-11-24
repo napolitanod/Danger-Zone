@@ -10,7 +10,7 @@ import {api} from "./apps/api.js";
 /**
  * global variables
  */
-export var taggerOn = false, sequencerOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
+export var daeOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
 export var dzMActive = false; 
 /**
  * retains the most recent search term while in session for the danger zone type list form
@@ -74,6 +74,16 @@ Hooks.once('init', async function() {
 	game.settings.register(modulename, "scene-control-light-button-display", {
 		name: game.i18n.localize("DANGERZONE.setting.scene-control-light-button-display.label"),
 		hint: game.i18n.localize("DANGERZONE.setting.scene-control-light-button-display.description"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+        onChange: debouncedReload,
+	});
+
+	game.settings.register(modulename, "scene-control-wall-button-display", {
+		name: game.i18n.localize("DANGERZONE.setting.scene-control-wall-button-display.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.scene-control-wall-button-display.description"),
 		scope: "world",
 		config: true,
 		default: false,
@@ -167,6 +177,7 @@ Hooks.once('devModeReady', ({registerPackageDebugFlag}) => {
 Hooks.on("getSceneControlButtons", (controls, b, c) => {
 	insertTileEffectsClearButton(controls, b, c);
 	insertAmbientLightClearButton(controls, b, c);
+	insertWallClearButton(controls, b, c);
 });
 
 /**
@@ -241,6 +252,7 @@ Hooks.on("updateToken", async (token, update, options, userId) => {
  */
 function setModsAvailable () {
 	if (game.modules.get("betterroofs")?.active){betterRoofsOn = true} ;
+	if (game.modules.get("dae")?.active){daeOn = true} ;
 	if (game.modules.get("levels")?.active){levelsOn = true} ;
 	if (game.modules.get("monks-active-tiles")?.active){monksActiveTilesOn = true} ;
 	if (game.modules.get("monks-scene-navigation")?.active){monksSceneOn = true}
@@ -249,6 +261,7 @@ function setModsAvailable () {
 	if (game.modules.get("kandashis-fluid-canvas")?.active){fluidCanvasOn = true} ;
 	if (game.modules.get("sequencer")?.active){sequencerOn = true} ;
 	if (game.modules.get("tagger")?.active){taggerOn = true} ;
+	if (game.modules.get("wall-height")?.active){wallHeightOn = true} ;
 }
 
 /**
@@ -296,6 +309,32 @@ function insertTileEffectsClearButton (controls, b, c) {
 				onClick: async () => {
 					let lightIds=canvas.scene.lights.filter(t => t.data.flags[dangerZone.ID]).map(t => t.id);
 					await canvas.scene.deleteEmbeddedDocuments("AmbientLight", lightIds);
+				},
+				button: true
+			});
+		}
+	}
+}
+
+/**
+ * adds the wall clear button to the controls on the canvas
+ * @param {object} controls 
+ * @param {*} b 
+ * @param {*} c 
+ */
+function insertWallClearButton (controls, b, c) {
+	if(game.user.isGM && game.settings.get('danger-zone', 'scene-control-wall-button-display') === true){
+		const lightingButton = controls.find(b => b.name == "walls")
+
+		if (lightingButton) {
+			lightingButton.tools.push({
+				name: "danger-zone-wall-effects-clear",
+				title:  game.i18n.localize("DANGERZONE.controls.clearWall.label"),
+				icon: "fas fa-radiation",
+				visible: game.user.isGM,
+				onClick: async () => {
+					let lightIds=canvas.scene.walls.filter(t => t.data.flags[dangerZone.ID]).map(t => t.id);
+					await canvas.scene.deleteEmbeddedDocuments("Wall", lightIds);
 				},
 				button: true
 			});
