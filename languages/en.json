@@ -26,7 +26,8 @@
         },
         "controls": {
             "clearAmbientLight.label": "Clear Danger Zone Ambient Lighting",
-            "clearEffectsTile.label": "Clear Danger Zone Lasting Effects"
+            "clearEffectsTile.label": "Clear Danger Zone Lasting Effects",
+            "clearWalls.label": "Clear Danger Zone Walls"
         },
         "edit-form": {
             "actor.label": "Actor",
@@ -49,7 +50,7 @@
             "flavor.label": "Flavor",
             "flavor.description": "This text will output to a chat message when this zone triggers.",
             "light.replace.label": "Ambient Lighting",
-            "light.replace.description": "Choose what to do with existing ambient light when this zone triggers.",
+            "light.replace.description": "Choose what to do with existing Danger Zone created ambient light when this zone triggers.",
             "likelihood.label": "Likelihood",
             "likelihood.description": "Set the likelihood that a danger's effects will execute on zone trigger.",
             "loop.label": "Loop Count",
@@ -61,7 +62,7 @@
             "random.label": "Randomize",
             "random.description": "All zones in this scene that share the same trigger are grouped and only one is triggered at random. Assign a weight to control how often one triggers in relation to the others.",
             "replace.label": "Lasting Effects",
-            "replace.description": "Choose what to do with existing lasting effects when this zone triggers.",
+            "replace.description": "Choose what to do with existing Danger Zone created lasting effects when this zone triggers.",
             "runUntilTokenFound.label": "Always Hits a Token",
             "runUntilTokenFound.description": "The danger will target an area of the zone where at least one token is present, if able.",
             "single-run.description": "This section executes at most once, after the first likelihood success, and regardless of the loop count for this zone",
@@ -73,6 +74,8 @@
             "trigger.label": "Trigger",
             "type.label": "Danger",
             "types.add": "View dangers",
+            "wall.replace.label": "Walls",
+            "wall.replace.description": "Choose what to do with existing Danger Zone created walls when this zone triggers.",
             "weight.label": "Weight"
         },
         "export":{
@@ -130,6 +133,8 @@
             "scene-control-button-display.description": "Toggles the display of the Clear Danger Zone Lasting Effects button within the scene control buttons tiles grouping",
             "scene-control-light-button-display.label": "Display Clear Ambient Light Button",
             "scene-control-light-button-display.description": "Toggles the display of the Clear Ambient Light button within the scene control buttons lighting control grouping",
+            "scene-control-wall-button-display.label": "Display Clear Wall Button",
+            "scene-control-wall-button-display.description": "Toggles the display of the Clear Wall button within the scene control buttons walls control grouping",
             "scene-trigger-button-display.label": "Zone Trigger Display Location",
 		    "scene-trigger-button-display.description": "Set the location where the zone triggers will display. Triggers only display for the GM when viewing the active scene.",
             "types-button-display.label": "Display Dangers Button",
@@ -267,6 +272,7 @@
             },
             "name.label": "Name",
             "tab" :{
+                "effects.title": "Effects",
                 "modules.title": "Module Integration",
                 "main.title": "Core Configuration"
             },
@@ -294,11 +300,28 @@
             },
             "tokenEffect":{
                 "delay.label": "Delay",
-                "label": "Token Effect (Sequencer)",
+                "label": "Token Effect",
                 "file.label": "File",
                 "file.find": "Browse for Effect",
                 "scale.label": "Scale",
                 "duration.label": "Duration"
+            },
+            "wall":{
+                "bottom.label": "Bottom",
+                "direction.label": "Direction",
+                "door.label": "Door",
+                "label": "Walls",
+                "left.label": "Left",
+                "restrictions.label": "Restrictions",
+                "movement.label": "Movement",
+                "random.description": "From amongst the walls selected (top, right, bottom, left), will randomize whether or not each are actually built in the danger.",
+                "random.label": "Randomize",
+                "right.label": "Right",
+                "sound.label": "Sound",
+                "sight.label": "Sight",
+                "tag.label": "Tag",
+                "tag.description": "Tagger tag",
+                "top.label": "Top"
             },
             "warpgate": {
                 "actor.label": "Name",
@@ -306,7 +329,9 @@
                 "delay.label": "Delay",
                 "isRolltable.label": "Is Rolltable",
                 "label": "Warp Gate",
-                "notes": "Spawn creatures using the actor name or, if 'Is Rolltable' is checked, spawn will be random actor matching name pulled from the specified rolltable in this world."
+                "notes": "Spawn creatures using the actor name or, if 'Is Rolltable' is checked, spawn will be random actor matching name pulled from the specified rolltable in this world.",
+                "tag.label": "Tag",
+                "tag.description": "Tagger tag"
             }
         },
         "types-form": {
@@ -316,6 +341,13 @@
             "export.title": "Export Dangers",
             "import.title": "Import Dangers",
             "type.name.label": "Name"
+        },
+        "wall.replace-types": {
+            "A.label": "Clear all walls",
+            "N.label": "Retain all walls",
+            "R.label": "Clear walls that share this trigger",
+            "T.label": "Clear walls that share this danger",
+            "Z.label": "Clear walls that share this zone"
         },
         "zone-active-effect-form": {
             "form-name": "Danger Active Effect"

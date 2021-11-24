@@ -1,3 +1,5 @@
+import {daeOn} from '../index.js';
+
 export const TRIGGERDISPLAYOPTIONS = {
     "S": "DANGERZONE.trigger-display-options.scene.label",
     "H":"DANGERZONE.trigger-display-options.hotbar.label"
@@ -23,6 +25,14 @@ export const DANGERZONELIGHTREPLACE = {
     "T": "DANGERZONE.light.replace-types.T.label",
     "Z": "DANGERZONE.light.replace-types.Z.label",
     "A": "DANGERZONE.light.replace-types.A.label"
+}
+
+export const DANGERZONEWALLREPLACE = {
+    "N": "DANGERZONE.wall.replace-types.N.label", 
+    "R": "DANGERZONE.wall.replace-types.R.label",
+    "T": "DANGERZONE.wall.replace-types.T.label",
+    "Z": "DANGERZONE.wall.replace-types.Z.label",
+    "A": "DANGERZONE.wall.replace-types.A.label"
 }
 
 export const DANGERZONETRIGGERS = {
@@ -61,6 +71,40 @@ export const STRETCH = {
     "T": "DANGERZONE.stretch.top.label"
 }
 
+export const DAEDuration = daeOn ? DAE.daeSpecialDurations() : {}
+
 export function actorOps(){
     return game.actors.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
+}
+
+export function moveTypes(){
+    return Object.keys(CONST.WALL_MOVEMENT_TYPES).reduce((obj, key) => {
+        let k = CONST.WALL_MOVEMENT_TYPES[key];
+        obj[k] = key.titleCase();
+        return obj;
+    }, {})
+}
+
+export function senseTypes(){
+   return Object.keys(CONST.WALL_SENSE_TYPES).reduce((obj, key) => {
+        let k = CONST.WALL_SENSE_TYPES[key];
+        obj[k] = key.titleCase();
+        return obj;
+    }, {})
+}
+
+export function dirTypes(){ 
+    return Object.keys(CONST.WALL_DIRECTIONS).reduce((obj, key) => {
+        let k = CONST.WALL_DIRECTIONS[key];
+        obj[k] = key.titleCase();
+        return obj;
+    }, {})
+}
+
+export function doorTypes(){
+    return Object.keys(CONST.WALL_DOOR_TYPES).reduce((obj, key) => {
+        let k = CONST.WALL_DOOR_TYPES[key];
+        obj[k] = key.titleCase();
+        return obj;
+    }, {})
 }
