@@ -42,10 +42,9 @@ Add dangers by going to Foundry's 'Configure Settings' > 'Module Settings', loca
 
 ### 2. Add Zone to Scene
 The zone is the lava field. Within the zone's boundary the dangers are generated. 
+<img src="https://user-images.githubusercontent.com/22696153/143790897-34d5c14c-9d02-48f7-b87c-d649e8a2903b.JPG"  height="200px">
 
-<img src="https://user-images.githubusercontent.com/22696153/131511349-1c85213c-46cf-4a2a-87db-345989b10603.png"  height="400">
-
-Access the Danger Zone section from within scene configuration in order to create new zones. See [Zones](../../wiki/Zones) for more info.
+Access the Danger Zone section from within scene configuration form's header or by right clicking on the scene in the navigation or within the side menu and selecting 'Configure Zones' from the context menu. This will present the form where you can create new zones or edit existing ones. See [Zones](../../wiki/Zones) for more info.
 
 ### 3. Trigger Zone
 The trigger causes the lava bubble to erupt from the lava field. A trigger can be invoked either manually or as part of a Foundary event.
