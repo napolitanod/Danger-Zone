@@ -1,5 +1,11 @@
 import {daeOn} from '../index.js';
 
+export const SCENEFORMICONDISPLAYOPTIONS = {
+    'B': 'DANGERZONE.setting.scene-header.display.iconLabel', 
+    'I': 'DANGERZONE.setting.scene-header.display.iconOnly', 
+    'N': 'DANGERZONE.setting.scene-header.display.none'
+};
+
 export const TRIGGERDISPLAYOPTIONS = {
     "S": "DANGERZONE.trigger-display-options.scene.label",
     "H":"DANGERZONE.trigger-display-options.hotbar.label"

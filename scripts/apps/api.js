@@ -1,5 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
-import {dangerZoneDimensions} from './dimensions.js';
+import {boundary, dangerZoneDimensions} from './dimensions.js';
 import {triggerManager} from './trigger-handler.js';
 
 export class api {
@@ -18,7 +18,8 @@ export class api {
             triggerZone : api._triggerZone,
             toggleZone: api._toggleZone,
             enableZone: api._enableZone,
-            disableZone: api._disableZone
+            disableZone: api._disableZone,
+            tokensInBoundary: api._tokensInBoundary
         }
 
         game.modules.get(dangerZone.ID).api = {
@@ -27,7 +28,8 @@ export class api {
             triggerZone: api._triggerZone,
             toggleZone: api._toggleZone,
             enableZone: api._enableZone,
-            disableZone: api._disableZone
+            disableZone: api._disableZone,
+            tokensInBoundary: api._tokensInBoundary
         }
     }
 
@@ -103,6 +105,11 @@ export class api {
         if(zn.enabled){
            await zn.toggleZoneActive();
         }
+    }
+
+    static _tokensInBoundary(A,B){
+        const b = new boundary(A,B);
+        return b.tokensIn(canvas.scene.tokens);
     }
     
 }
