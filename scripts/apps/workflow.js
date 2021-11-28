@@ -557,23 +557,16 @@ export class workflow {
     }
 
     _foregroundSequence(boundary, s, source = {}){
-        const jb2a = this.zoneTypeOptions.foregroundEffect.file.indexOf('jb2a')===-1 ? false : true
         s = s.effect()
             .file(this.zoneTypeOptions.foregroundEffect.file)
             .zIndex(boundary.top)
-            
-            if(jb2a){
-                s=s.JB2A()
-            }
 
             if(source.center){
                 s = s.atLocation(source.center)
                     .reachTowards(boundary.center)
-                    if(!jb2a){
-                        s=s.gridSize(this.zoneTypeOptions.foregroundEffect.scale * 200)
-                        .startPoint(this.zoneTypeOptions.foregroundEffect.scale * 200)
-                        .endPoint(this.zoneTypeOptions.foregroundEffect.scale * 200)
-                    }
+                    .gridSize(this.zoneTypeOptions.foregroundEffect.scale * 200)
+                    .startPoint(this.zoneTypeOptions.foregroundEffect.scale * 200)
+                    .endPoint(this.zoneTypeOptions.foregroundEffect.scale * 200)
                     if(this.zoneTypeOptions.foregroundEffect.duration){
                         s = s.waitUntilFinished(this.zoneTypeOptions.foregroundEffect.duration)
                     }
@@ -596,7 +589,6 @@ export class workflow {
     async backgroundEffect(twin = false){ 
         if(this.zoneTypeOptions.backgroundEffect?.file) {
             const boundary = twin ? this.twinLocation : this.targetBoundary;      
-            const jb2a = this.zoneTypeOptions.foregroundEffect.file.indexOf('jb2a')===-1 ? false : true
             let s = new Sequence()
                 if(this.zoneTypeOptions.backgroundEffect.delay){
                     s = s.wait(this.zoneTypeOptions.backgroundEffect.delay)
@@ -618,10 +610,6 @@ export class workflow {
 
                     if(this.zoneTypeOptions.backgroundEffect.repeat){
                         s = s.repeats(this.zoneTypeOptions.backgroundEffect.repeat)
-                    }
-
-                    if(jb2a){
-                        s=s.JB2A()
                     }
 
                 s.play()
@@ -652,7 +640,6 @@ export class workflow {
 
     async tokenEffect(){
         if(this.zoneTypeOptions.tokenEffect?.file) {
-            const jb2a = this.zoneTypeOptions.foregroundEffect.file.indexOf('jb2a')===-1 ? false : true
             for (let i = 0; i < this.targets.length; i++) { 
 
                 let s = new Sequence()
@@ -668,9 +655,6 @@ export class workflow {
                     .fadeOut(500)
                 } else {
                     s=s.persist()
-                }
-                if(jb2a){
-                    s=s.JB2A()
                 }
                 s.play()
             }

@@ -71,6 +71,7 @@ export class DangerZoneForm extends FormApplication {
 
   getData(options){
     let zoneId = this.zoneId, instance;
+    let scene = game.scenes.get(this.sceneId);
 
     if(!zoneId){
       instance = new zone(this.sceneId);
@@ -90,13 +91,15 @@ export class DangerZoneForm extends FormApplication {
       tokenDispositionOps: TOKENDISPOSITION,
       triggerOps: DANGERZONETRIGGERS,
       zoneTypeOps: dangerZoneType.dangerZoneTypeList,
-      wallReplaceOps: DANGERZONEWALLREPLACE
+      wallReplaceOps: DANGERZONEWALLREPLACE,
+      sceneInactive: scene?.data?.active ? false : true
     } 
   }
   
   async _updateObject(event, formData) {
     const expandedData = foundry.utils.expandObject(formData); 
     await dangerZone.updateSceneZone(expandedData.zoneId, expandedData);
+    this.parent.render(true)
   }
 
   async promptSelectZoneBoundary() {
@@ -130,9 +133,11 @@ export class DangerZoneForm extends FormApplication {
   async minimizeForms(){
     if (!this._minimized){await this.minimize()}
     if (!this.parent?._minimized){await this.parent?.minimize()}
+    if (this.parent?.parent && !this.parent.parent._minimized){await this.parent.parent.minimize()}
   }
 
   async maximizeForms(){
+    if (this.parent?.parent && !this.parent.parent._maximized){await this.parent.parent.maximize()}
     if (!this.parent?._maximized){await this.parent?.maximize()}
     if (!this._maximized){await this.maximize()}  
   }

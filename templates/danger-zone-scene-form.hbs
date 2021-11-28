@@ -1,0 +1,35 @@
+<form class="danger-zone-scene" autocomplete="off">
+    <section class="content">
+        <div class="danger-zone-scene-header flexrow">
+            <div class="danger-zone-details flexrow">
+                <div class="title">{{localize 'DANGERZONE.scene.title'}}</div>
+                <div class="type">{{localize 'DANGERZONE.scene.type'}}</div>
+                <div class="trigger">{{localize 'DANGERZONE.scene.trigger'}}</div>
+                <div class="random">{{localize 'DANGERZONE.scene.random'}}</div>
+            </div>
+            <div class="danger-zone-controls flexrow" data-id="{{this.sceneId}}">
+                <a class="danger-zone-add" title="{{localize 'DANGERZONE.add-danger-zone'}}" data-action="add">
+                    <i class="fas fa-plus"></i> {{localize 'DANGERZONE.add'}}
+                </a>
+            </div>
+        </div>
+        <ol class="danger-zone-scene-list flexrow">
+            {{#each dangerZones }}
+            <li class="scene-config flexrow" data-id="{{this.id}}" data-container="types" draggable="true">
+                <div class="danger-zone-details flexrow">
+                    <img src="{{this.icon}}">
+                    <div class="title">{{this.title}}</div>
+                    <div class="type">{{this.typeDisplay}}</div>
+                    <div class="trigger">{{this.trigger}}</div>
+                    <div class="random">{{#if this.random}}<i class="fas fa-radiation"></i>{{/if}}</div>
+                </div>
+                <div class="danger-zone-controls flexrow">
+                    <a class="danger-zone-edit" title="{{localize 'DANGERZONE.edit-danger-zone'}}" data-action="edit"><i class="fas fa-edit"></i></a>&nbsp;&nbsp;&nbsp;
+                    <a class="danger-zone-delete" title="{{localize 'DANGERZONE.delete-danger-zone'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                </div>
+            </li>
+            {{/each}}
+        </ol>
+        <p class="notes">{{localize 'DANGERZONE.scene.description'}}</p>
+    </section>
+</form>

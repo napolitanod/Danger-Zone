@@ -1,11 +1,12 @@
 import {dangerZone} from './danger-zone.js';
-import {TRIGGERDISPLAYOPTIONS} from './apps/constants.js';
-import {initializeScene} from './apps/scene-settings.js';
+import {TRIGGERDISPLAYOPTIONS, SCENEFORMICONDISPLAYOPTIONS} from './apps/constants.js';
 import {DangerZoneTypesForm} from './apps/zone-type-list-form.js'
 import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
 import {triggerManager}  from './apps/trigger-handler.js';
 import {api} from "./apps/api.js";
+import {DangerZoneScene} from "./apps/scene-form.js";
+import {DangerZoneSceneForm} from './apps/scene-zone-list-form.js';
 
 /**
  * global variables
@@ -48,6 +49,16 @@ Hooks.once('init', async function() {
 		config: true,
 		default: true,
 		type: Boolean,
+	});
+
+    game.settings.register(modulename, 'scene-header', {
+		name: game.i18n.localize('DANGERZONE.setting.scene-header.display.label'),
+		hint: game.i18n.localize('DANGERZONE.setting.scene-header.display.description'),
+		scope: 'world',
+		config: true,
+		default: 'B',
+		type: String,
+		choices: SCENEFORMICONDISPLAYOPTIONS
 	});
 
 	game.settings.register(modulename, "scene-trigger-button-display", {
@@ -162,6 +173,48 @@ Hooks.once('ready', async function() {
  */
 Hooks.once('setup', async function() {
     api.register();
+
+	Hooks.on('getSceneDirectoryEntryContext', function (app, html, data) {
+		if (game.user.isGM) {
+		  html.push(
+			{
+			  name: game.i18n.localize('DANGERZONE.zones'),
+			  icon: '<i class="fas fa-radiation"></i>',
+			  condition: (li) => {
+				return game.user.isGM
+			  },
+			  callback: (li) => {
+				let scene = game.scenes.get(li.data('entityId'));
+				if(scene){
+					new DangerZoneSceneForm('', scene.id).render(true);
+				}
+			  },
+			},
+		  );
+		}
+	  });
+
+	  Hooks.on('getSceneNavigationContext', function (app, html) {
+		if (game.user.isGM) {
+		  html.push(
+			{
+			  name: game.i18n.localize('DANGERZONE.zones'),
+			  icon: '<i class="fas fa-radiation"></i>',
+			  condition: (li) => {
+				return game.user.isGM
+			  },
+			  callback: (li) => {
+				let scene = game.scenes.get(li.data('sceneId'));
+				if(scene){
+					new DangerZoneSceneForm( '', scene.id).render(true);
+				}
+			  },
+			},
+		  );
+		}
+	  });
+	
+	
  });
 
 /**
@@ -184,7 +237,7 @@ Hooks.on("getSceneControlButtons", (controls, b, c) => {
  * Hook for rendering the scene form. Adds zone list and CRUD to scene form
  */
 Hooks.on('renderSceneConfig', async (app, html, options) => {
-	initializeScene(app, html, options);
+    DangerZoneScene._init(app, html, options);
 });
 
 /**
@@ -356,3 +409,6 @@ export function addQuickZonesLaunch(app, html) {
 export function toggleMasterButtonActive(){
     dzMActive ? dzMActive = false : dzMActive = true
 }
+
+
+

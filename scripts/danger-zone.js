@@ -18,6 +18,7 @@ export class dangerZone {
  
   static TEMPLATES = {
     DANGERZONECONFIG: `modules/${this.ID}/templates/danger-zone-form.hbs`,
+    DANGERZONESCENE: `modules/${this.ID}/templates/danger-zone-scene-form.hbs`,
     DANGERZONETYPESCONFIG: `modules/${this.ID}/templates/danger-zone-types.hbs`,
     DANGERZONETYPE: `modules/${this.ID}/templates/danger-zone-type-form.hbs`,
     DANGERZONEACTIVEEFFECT: `modules/${this.ID}/templates/active-effect-form.hbs`

@@ -40,7 +40,7 @@
             </div>
             <div class="form-group">
                 <div class="form-fields flexrow">
-                    <button type="button" data-action="location-picker" title="{{localize 'DANGERZONE.location-picker'}}" class="location-picker">
+                    <button type="button" {{#if sceneInactive}}disabled{{/if}} data-action="location-picker" title="{{localize 'DANGERZONE.location-picker'}}" class="location-picker">
                         <i class="fas fa-crosshairs fa-sm"></i>
                     </button>
                     <label class="boundary-start-label">
