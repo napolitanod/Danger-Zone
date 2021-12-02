@@ -113,6 +113,8 @@
         },
         "scene": {
             "add-danger-zone": "Add danger zone",
+            "clear": "Delete Zone",
+            "confirm": "Are you sure you want to delete this zone?",
             "delete-danger-zone": "Delete danger zone",
             "description": "Add danger zone effects to this scene (this will cause the scene form to refresh so save any scene changes before proceeding).",
             "edit-danger-zone": "Edit danger zone",
@@ -346,6 +348,8 @@
             }
         },
         "types-form": {
+            "clear": "Delete Danger",
+            "confirm": "Are you sure you want to delete this danger?",
             "header.name": "Dangers",
             "search.placeholder": "Enter text to filter dangers",
             "search.clear": "Clear Search",

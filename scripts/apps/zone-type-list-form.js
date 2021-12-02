@@ -43,8 +43,27 @@ export class DangerZoneTypesForm extends FormApplication {
         break;
       }
       case 'delete': {
-        await dangerZoneType.deleteZoneType(zoneTypeId);
-        this.refresh();
+        new Dialog({
+          title: game.i18n.localize("DANGERZONE.types-form.clear"),
+          content: game.i18n.localize("DANGERZONE.types-form.confirm"),
+          buttons: {
+            yes: {
+              icon: '<i class="fas fa-check"></i>',
+              label: game.i18n.localize("DANGERZONE.yes"),
+              callback: async () => {
+                await dangerZoneType.deleteZoneType(zoneTypeId);
+                this.refresh();
+              }
+            },
+            no: {
+              icon: '<i class="fas fa-times"></i>',
+              label: game.i18n.localize("DANGERZONE.cancel")
+            }
+          },
+          default: "no"
+        }, {
+          width: 400
+        }).render(true);
         break;
       }
       default:

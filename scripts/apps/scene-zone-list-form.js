@@ -41,14 +41,31 @@ export class DangerZoneSceneForm extends FormApplication {
           break;
       }
       case 'edit': {
-        const ids = $(event.currentTarget).parent().data("data-id");
         new DangerZoneForm(this, zoneId, this.sceneId).render(true);
         break;
       }
       case 'delete': {
-        const ids = $(event.currentTarget).parent().data("data-id");
-        await dangerZone.deleteZoneFromScene(zoneId, this.sceneId)
-        this.refresh();
+        new Dialog({
+          title: game.i18n.localize("DANGERZONE.types-form.clear"),
+          content: game.i18n.localize("DANGERZONE.types-form.confirm"),
+          buttons: {
+            yes: {
+              icon: '<i class="fas fa-check"></i>',
+              label: game.i18n.localize("DANGERZONE.yes"),
+              callback: async () => {
+                await dangerZone.deleteZoneFromScene(zoneId, this.sceneId)
+                this.refresh();
+              }
+            },
+            no: {
+              icon: '<i class="fas fa-times"></i>',
+              label: game.i18n.localize("DANGERZONE.cancel")
+            }
+          },
+          default: "no"
+        }, {
+          width: 400
+        }).render(true);
         break;
       }
       default:
