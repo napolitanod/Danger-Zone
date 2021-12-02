@@ -99,7 +99,7 @@ export class DangerZoneForm extends FormApplication {
   async _updateObject(event, formData) {
     const expandedData = foundry.utils.expandObject(formData); 
     await dangerZone.updateSceneZone(expandedData.zoneId, expandedData);
-    this.parent.render(true)
+    if(this.parent){this.parent.render(true)}
   }
 
   async promptSelectZoneBoundary() {
