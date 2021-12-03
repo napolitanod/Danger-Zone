@@ -17,8 +17,8 @@
             "path": "languages/fr.json"
         }    
     ],
-    "minimumCoreVersion": "0.8.6",
-    "compatibleCoreVersion": "0.8.9",
+    "minimumCoreVersion": "9.0",
+    "compatibleCoreVersion": "9.244",
     "name": "danger-zone",
     "esmodules": [
         "scripts/index.js",
