@@ -309,8 +309,8 @@ form.danger-zone-record .form-fields .boundary-top-label {
 /*hotbar*/
 .danger-zone-hotbar-trigger {
     position: absolute;
-    right: -50px;
-    bottom: 2px;
+    left: 780px;
+    bottom: 12px;
     list-style: none;
     border-width: 0px;
     background-color: transparent;

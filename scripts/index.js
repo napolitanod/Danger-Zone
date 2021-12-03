@@ -267,7 +267,7 @@ Hooks.on('renderSceneNavigation', async(app, html, options) => {
 /**
 * Hook for the rendering of the hotbar, such as toggling it. 
 */
-Hooks.on('renderHotbar', async(app, html, options) => {
+Hooks.on('renderSceneControls', async(app, html, options) => {
    switch(game.settings.get('danger-zone', 'scene-trigger-button-display')){
 	   case "H":
 		   addTriggersToHotbar();

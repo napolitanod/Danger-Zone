@@ -245,7 +245,7 @@ export class boundary{
                 case "Wall":
                     for(const [yPos,xPos] of grids){
                         if(this.excludes.has(yPos + '_' + xPos)){continue}
-                        if(rayIntersectsGrid([yPos,xPos], document.toRay())){this.excludes.add(yPos + '_' + xPos)}
+                        if(rayIntersectsGrid([yPos,xPos], document.object.toRay())){this.excludes.add(yPos + '_' + xPos)}
                     }
                     break
                 case "AmbientLight":
@@ -343,11 +343,11 @@ export function documentBoundary(documentName, document, options = {}){
     let dim;
     switch(documentName){
         case "Wall":
-            dim=document.bounds;
+            dim=document.object.bounds;
             break
         case "AmbientLight":
-            const dm = (document.radius*2)-1
-            dim={x:document.bounds.x, y:document.bounds.y, width: dm, height: dm} 
+            const dm = (document.object.radius*2)-1
+            dim={x:document.object.bounds.x, y:document.object.bounds.y, width: dm, height: dm} 
             break
         case "Token":
             const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
