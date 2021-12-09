@@ -1,7 +1,8 @@
 export class DangerZoneTypeActiveEffectForm extends ActiveEffectConfig {
-  constructor(app, ...args) {
+  constructor(app, eventParent, ...args) {
     super(...args);
-    this.parent = app
+    this.parent = app,
+    this.eventParent = eventParent
     }
 
     static get defaultOptions(){
@@ -50,5 +51,6 @@ export class DangerZoneTypeActiveEffectForm extends ActiveEffectConfig {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.effect = expandedData;
+      this.eventParent.addClass('active');
     }
 }

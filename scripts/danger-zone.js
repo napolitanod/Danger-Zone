@@ -20,8 +20,20 @@ export class dangerZone {
     DANGERZONECONFIG: `modules/${this.ID}/templates/danger-zone-form.hbs`,
     DANGERZONESCENE: `modules/${this.ID}/templates/danger-zone-scene-form.hbs`,
     DANGERZONETYPESCONFIG: `modules/${this.ID}/templates/danger-zone-types.hbs`,
-    DANGERZONETYPE: `modules/${this.ID}/templates/danger-zone-type-form.hbs`,
-    DANGERZONEACTIVEEFFECT: `modules/${this.ID}/templates/active-effect-form.hbs`
+    DANGERZONETYPE: `modules/${this.ID}/templates/danger-form.hbs`,
+    DANGERZONEACTIVEEFFECT: `modules/${this.ID}/templates/active-effect-form.hbs`,
+    DANGERZONEDANGERAUDIO: `modules/${this.ID}/templates/danger-form-audio.hbs`,
+    DANGERZONEDANGERBACKGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-background-effect.hbs`,
+    DANGERZONEDANGERFLUIDCANVAS: `modules/${this.ID}/templates/danger-form-fluid-canvas.hbs`,
+    DANGERZONEDANGERFOREGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-foreground-effect.hbs`,
+    DANGERZONEDANGERLASTINGEFFECT: `modules/${this.ID}/templates/danger-form-lasting-effect.hbs`,
+    DANGERZONEDANGERLIGHT: `modules/${this.ID}/templates/danger-form-light.hbs`,
+    DANGERZONEDANGERTOKENRESPONSE: `modules/${this.ID}/templates/danger-form-token-response.hbs`,
+    DANGERZONEDANGERTOKENSAYS: `modules/${this.ID}/templates/danger-form-token-says.hbs`,
+    DANGERZONEDANGERTOKENEFFECT: `modules/${this.ID}/templates/danger-form-token-effect.hbs`,
+    DANGERZONEDANGERTOKENMOVE: `modules/${this.ID}/templates/danger-form-token-move.hbs`,
+    DANGERZONEDANGERWALL: `modules/${this.ID}/templates/danger-form-wall.hbs`,
+    DANGERZONEDANGERWARPGATE: `modules/${this.ID}/templates/danger-form-warpgate.hbs`
   }
 
   static initialize() {

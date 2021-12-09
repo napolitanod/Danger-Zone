@@ -77,6 +77,43 @@ export const STRETCH = {
     "T": "DANGERZONE.stretch.top.label"
 }
 
+export const HORIZONTALMOVEMENT = {
+    "": "",
+    "D": "DANGERZONE.type-form.tokenMove.horizontal-directions.left.label",
+    "U": "DANGERZONE.type-form.tokenMove.horizontal-directions.right.label",
+    "R": "DANGERZONE.type-form.tokenMove.horizontal-directions.random.label"
+}
+
+export const VERTICALMOVEMENT = {
+    "": "",
+    "D": "DANGERZONE.type-form.tokenMove.vertical-directions.down.label",
+    "U": "DANGERZONE.type-form.tokenMove.vertical-directions.up.label",
+    "R": "DANGERZONE.type-form.tokenMove.vertical-directions.random.label"
+}
+
+export const FLUIDCANVASTYPES = {
+    "black": "DANGERZONE.type-form.fluidCanvas.types.black",
+    "blur": "DANGERZONE.type-form.fluidCanvas.types.blur",
+    "drug": "DANGERZONE.type-form.fluidCanvas.types.drug",
+    "earthquake": "DANGERZONE.type-form.fluidCanvas.types.earthquake",
+    "heartbeat": "DANGERZONE.type-form.fluidCanvas.types.heartbeat",
+    "negative": "DANGERZONE.type-form.fluidCanvas.types.negative",
+    "sepia": "DANGERZONE.type-form.fluidCanvas.types.sepia",
+    "spin": "DANGERZONE.type-form.fluidCanvas.types.spin"
+}
+
+
+export const TOKENSAYSTYPES = {
+    "audio":  "DANGERZONE.type-form.tokenSays.rule-type-option.playlist",
+    "rollTable":  "DANGERZONE.type-form.tokenSays.rule-type-option.roll-table"
+}
+
+export const DAMAGEONSAVE = {
+    "N": "DANGERZONE.type-form.tokenResponse.damage.save.options.none",
+    "H":"DANGERZONE.type-form.tokenResponse.damage.save.options.half",
+    "F": "DANGERZONE.type-form.tokenResponse.damage.save.options.full"
+}
+
 export const DAEDuration = daeOn ? DAE.daeSpecialDurations() : {}
 
 export function actorOps(){
@@ -113,4 +150,38 @@ export function doorTypes(){
         obj[k] = key.titleCase();
         return obj;
     }, {})
+}
+
+export function animationTypes() {
+    const animationTypes = {"": game.i18n.localize("DANGERZONE.none")};
+    for ( let [k, v] of Object.entries(CONFIG.Canvas.lightAnimations) ) {
+      animationTypes[k] = v.label;
+    }
+    return animationTypes;
+}
+
+export function determineMacroList() {
+  let list = {};
+  for (let macro of game.macros.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
+    list[macro.id] = macro.name;
+  }
+  return list;
+}
+
+export function saveTypes() {
+    switch(game.world.data.system){
+        case "dnd5e":
+            return game.dnd5e.config.abilities
+        default:
+            return {}
+    }
+}
+
+export function damageTypes() {
+    switch(game.world.data.system){
+        case "dnd5e":
+            return Object.assign(game.dnd5e.config.damageTypes, game.dnd5e.config.healingTypes)
+        default:
+            return {}
+    }
 }

@@ -1,6 +1,7 @@
 import {dangerZone } from '../danger-zone.js';
 import {dangerZoneDimensions, point, locationToBoundary, documentBoundary, getTagEntities} from './dimensions.js';
-import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn} from '../index.js';
+import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
+import {saveTypes} from './constants.js';
 
 export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -13,6 +14,7 @@ export const WORKFLOWSTATES = {
     ESTABLISHTARGETBOUNDARY: 5,
     HIGHLIGHTTARGETBOUNDARY: 6,
     GETZONETARGETS: 7,
+    MAKESAVES: 9,
     GENERATEFLAVOR: 10,
     GENERATEFLUIDCANVAS: 15,
     GENERATEFOREGROUNDEFFECT: 20,
@@ -20,15 +22,17 @@ export const WORKFLOWSTATES = {
     GENERATEBACKGROUNDEFFECT: 22,
     CLEARLASTINGEFFECTS: 30,
     GENERATELASTINGEFFECT: 31,
-    CLEARWALLS: 32,
-    GENERATEWALLS: 33,
-    CLEARLIGHT: 34,
-    GENERATELIGHT: 35,
-    GENERATETOKENEFFECT: 36,
-    GENERATEACTIVEEFFECT: 37,
-    GENERATEMACRO: 40,
-    TOKENSAYS: 50,
-    WARPGATE: 51,
+    CLEARWALLS: 33,
+    GENERATETOKENMOVE: 35,
+    GENERATETOKENEFFECT: 37,
+    DAMAGETOKEN: 40,
+    GENERATEWALLS: 54,
+    CLEARLIGHT: 55,
+    GENERATELIGHT: 56,
+    GENERATEACTIVEEFFECT: 68,
+    GENERATEMACRO: 70,
+    TOKENSAYS: 80,
+    WARPGATE: 81,
     AWAITPROMISES: 95,
     CANCEL: 98,
     COMPLETE: 99
@@ -40,6 +44,7 @@ export class workflow {
         this.active = true,
         this.currentState = WORKFLOWSTATES.INIT,
         this.eligibleTargets = [],
+        this.failedSaves = [],
         this.id = foundry.utils.randomID(16),
         this.likelihoodResult = 100,
         this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
@@ -139,8 +144,14 @@ export class workflow {
                 await this.getZoneTargets();
                 this.log('Zone targets got', {});
                 this.gmChatDetails();
-                return this.next(WORKFLOWSTATES.GENERATEFLAVOR)
+                return this.next(WORKFLOWSTATES.MAKESAVES)
 
+            case WORKFLOWSTATES.MAKESAVES:
+                if(Object.keys(saveTypes()).length){
+                    await this.makeTokenSaves();
+                }
+                return this.next(WORKFLOWSTATES.GENERATEFLAVOR)
+                
             case WORKFLOWSTATES.GENERATEFLAVOR:
                 if(!this.previouslyExecuted){this.flavor();}
                 return this.next(WORKFLOWSTATES.GENERATEFLUIDCANVAS)
@@ -181,8 +192,22 @@ export class workflow {
 
             case WORKFLOWSTATES.CLEARWALLS:
                 if(!this.previouslyExecuted){await this.deleteWalls();}//hard stop here
-                return this.next(WORKFLOWSTATES.GENERATEWALLS)
+                return this.next(WORKFLOWSTATES.GENERATETOKENMOVE)
 
+            case WORKFLOWSTATES.GENERATETOKENMOVE:
+                await this.tokenMove();
+                return this.next(WORKFLOWSTATES.GENERATETOKENEFFECT)
+
+            case WORKFLOWSTATES.GENERATETOKENEFFECT:
+                this.promises.push(this.tokenEffect());
+                return this.next(WORKFLOWSTATES.DAMAGETOKEN) 
+
+            case WORKFLOWSTATES.DAMAGETOKEN:
+                if(midiQolOn){
+                    await this.damageTokens();
+                }
+                return this.next(WORKFLOWSTATES.GENERATEWALLS)
+                
             case WORKFLOWSTATES.GENERATEWALLS:
                 await this.createWalls();
                 return this.next(WORKFLOWSTATES.CLEARLIGHT) 
@@ -193,12 +218,8 @@ export class workflow {
 
             case WORKFLOWSTATES.GENERATELIGHT:
                 await this.createLight();
-                return this.next(WORKFLOWSTATES.GENERATETOKENEFFECT) 
-                
-            case WORKFLOWSTATES.GENERATETOKENEFFECT:
-                this.promises.push(this.tokenEffect());
-                return this.next(WORKFLOWSTATES.GENERATEACTIVEEFFECT)  
-
+                return this.next(WORKFLOWSTATES.GENERATEACTIVEEFFECT) 
+                 
             case WORKFLOWSTATES.GENERATEACTIVEEFFECT:
                 this.promises.push(this.activeEffect());
                 return this.next(WORKFLOWSTATES.GENERATEMACRO)  
@@ -363,6 +384,20 @@ export class workflow {
             }
         }
         return this.targets = this.eligibleTargets
+    }
+
+    async makeTokenSaves(){
+        const save = this.zoneTypeOptions.flags.tokenResponse?.save
+        if(save && save.enable && this.targets.length){
+            for(let token of this.targets){ 
+                if(token.actor){  
+                    let res = await token.actor.rollAbilitySave(save.type) 
+                    if(!res || res.total < save.diff) {this.failedSaves.push(token)} 
+                } 
+            }
+            return this.log('Zone token saves generated', {});
+        }
+        return this.log('Zone token save skipped', {});
     }
 
     async gmChatDetails() {
@@ -663,6 +698,26 @@ export class workflow {
         return this.log('Zone token effect skipped', {});
     }
 
+    async damageTokens(){
+        const damage = this.zoneTypeOptions.flags.tokenResponse?.damage
+        if(damage && damage.enable && this.targets.length){
+            let damageRoll = await new Roll(damage.amount).roll();
+            let full = damage.save==='F' ? this.targets : this.failedSaves;
+            if(full.length){
+                await new MidiQOL.DamageOnlyWorkflow(null, null, damageRoll.total, damage.type, full, damageRoll, {flavor: 'Danger Zone Full Damage Roll<br>' + damage.flavor}) 
+            }
+            if(damage.save === 'H'){
+                let half = this.targets.filter(t => this.failedSaves.map(t => t.id).indexOf(t.id)===-1 )
+                if(half.length){
+                    let hf = Math.floor(damageRoll.total/2);
+                    let halfDamage = await new Roll(`${hf}`).roll();
+                    await new MidiQOL.DamageOnlyWorkflow(null, null, halfDamage.total, damage.type, half, halfDamage, {flavor: 'Danger Zone Half Damage Roll<br>' + damage.flavor}) 
+                }
+            }
+        }
+        return this.log('Zone token damage skipped', {});
+    }
+
     async activeEffect() {
         if(Object.keys(this.zoneTypeOptions.effect).length && this.targets.length) {
             for (let i = 0; i < this.targets.length; i++) { 
@@ -860,10 +915,38 @@ export class workflow {
         }
     }
 
+    async tokenMove() {
+        const move = this.zoneTypeOptions.tokenMove;
+        if(this.targets.length && (move?.v?.dir || move?.hz?.dir)) {
+            const updates = [];
+            for (let i = 0; i < this.targets.length; i++) { 
+                let token = this.scene.tokens.get(this.targets[i].id);
+                if(!token){continue;}
+                let amtV = 0, amtH = 0;
+                if(move.v?.dir){
+                    let adjV = 1;
+                    if(move.v.dir === "U" || (move.v.dir === "R" && Math.round(Math.random()))){adjV=-1}
+                    amtV = ((move.v.min + Math.floor(Math.random() * (move.v.max - move.v.min + 1))) * adjV)
+                }
+                if(move.hz?.dir){
+                    let adjH = 1;
+                    if(move.hz.dir === "L" || (move.hz.dir === "R" && Math.round(Math.random()))) {adjH=-1}
+                    amtH = ((move.hz.min + Math.floor(Math.random() * (move.hz.max - move.hz.min + 1))) * adjH)
+                }
+                let [x, y] = canvas.grid.grid.shiftPosition(token.data.x, token.data.y, amtH, amtV)
+                updates.push({"_id": token.id,"x": x,"y": y});
+            }
+            await this.scene.updateEmbeddedDocuments("Token",updates);
+            return this.log('Token Move generated', {options: updates});
+        }
+        return this.log('Token Move skipped', {});
+    }
+
     async tokenSays() {
         const flag = this.flags?.tokenSays;
         if(this.targets.length && flag?.fileType && (flag?.fileName || flag?.fileType)) {
             const options = {
+                likelihood: flag.likelihood ? flag.likelihood : 100,
                 type: flag.fileType,
                 source: flag.fileName,
                 compendium: flag.compendiumName,

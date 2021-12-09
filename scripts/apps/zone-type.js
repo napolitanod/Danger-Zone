@@ -67,6 +67,11 @@ export class dangerZoneType {
           file: '',
           scale: 1.0
         },
+        tokenMove: {
+          delay: 0,
+          hz: {dir:'', max:0, min:0},
+          v: {dir:'', max:0, min:0}
+        },
         wall: {
           bottom:false,
           dir: 0,
