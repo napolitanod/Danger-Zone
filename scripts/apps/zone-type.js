@@ -49,7 +49,8 @@ export class dangerZoneType {
           scale: 1.0,
           source: {
             enabled: false,
-            name: ''
+            name: '',
+            swap: false
           },
           repeat: 0,
           duration: 0
@@ -62,21 +63,30 @@ export class dangerZoneType {
           tag: ''
         },
         tokenEffect: {
+          below: 0,
           delay: 0,
           duration: 0,
           file: '',
           scale: 1.0
+        },
+        tokenMove: {
+          delay: 0,
+          e: {max:0, min:0},
+          hz: {dir:'', max:0, min:0},
+          source:'',
+          v: {dir:'', max:0, min:0}
         },
         wall: {
           bottom:false,
           dir: 0,
           door: 0,
           left: false,
-          move: 1,
+          light: 20,
+          move: 20,
           random: false,
           right: false,
-          sense: 1,
-          sound: 1,
+          sense: 20,
+          sound: 20,
           tag: '',
           top: false
         },

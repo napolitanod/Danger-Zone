@@ -11,7 +11,7 @@ import {DangerZoneSceneForm} from './apps/scene-zone-list-form.js';
 /**
  * global variables
  */
-export var daeOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
+export var midiQolOn = false, daeOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
 export var dzMActive = false; 
 /**
  * retains the most recent search term while in session for the danger zone type list form
@@ -307,6 +307,7 @@ function setModsAvailable () {
 	if (game.modules.get("betterroofs")?.active){betterRoofsOn = true} ;
 	if (game.modules.get("dae")?.active){daeOn = true} ;
 	if (game.modules.get("levels")?.active){levelsOn = true} ;
+	if (game.modules.get("midi-qol")?.active){midiQolOn = true} ;
 	if (game.modules.get("monks-active-tiles")?.active){monksActiveTilesOn = true} ;
 	if (game.modules.get("monks-scene-navigation")?.active){monksSceneOn = true}
 	if (game.modules.get("token-says")?.active){tokenSaysOn = true} ;

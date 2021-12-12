@@ -1,0 +1,27 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.audio.description"}}</p>
+        <div class="form-group">
+            <label for="file">{{localize "DANGERZONE.type-form.audio.file.label"}}</label>
+            <div class="form-fields">
+                {{filePicker target="file" type="audio"}}
+                <input type="text" required  name="file" class="image" placeholder="{{localize "DANGERZONE.type-form.audio.file.placeholder"}}" value="{{file}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.audio.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="volume">{{localize "DANGERZONE.type-form.audio.volume.label"}}&nbsp;&nbsp;<i class="volume-icon fas fa-volume-down"></i></label>
+            <div class="form-fields">
+                <input type="range" title="{{localize "DANGERZONE.type-form.audio.volume.label"}}" name="volume" value="{{volume}}" min="0" max="1" step="0.05">
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>

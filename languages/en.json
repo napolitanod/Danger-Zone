@@ -2,14 +2,17 @@
     "DANGERZONE": {
         "add": "Add",
         "cancel": "Cancel",
-        "degrees": "Degrees",
+        "copy": "Copy",
+        "degrees": "(Degrees)",
         "delete": "Delete",
+        "distance": "(Distance)",
         "edit": "Edit",
-        "grids": "Grids",
-        "gridUnits": "Grid Units",
+        "grids": "(Grids)",
+        "gridUnits": "units",
         "location-picker": "Select the zone dimensions",
         "ms": "ms",
         "none": "None",
+        "ratio": "(Ratio)",
         "save": "Save",
         "sec": "sec",
         "view": "View",
@@ -23,12 +26,20 @@
             "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
             "select-zone-end": "Select an end location for this zone. Selected area will snap to grid and represent the lower right corner of this zone.",
             "select-target": "Select a location in the zone. Selected area will snap to grid and represent the top left corner of the danger's target.",
-            "user-selection-exited": "You have exited from danger location selection prematurely. Zone trigger execution stopped."
+            "user-selection-exited": "You have exited from danger location selection prematurely. Zone trigger execution stopped.",
+            "zone-copied": "The zone was copied successfully! Please review the zone dimensions.",
+            "zone-copy-fail": "Oops, there was an issue copying the zone."
         },
         "controls": {
             "clearAmbientLight.label": "Clear Danger Zone Ambient Lighting",
             "clearEffectsTile.label": "Clear Danger Zone Lasting Effects",
             "clearWalls.label": "Clear Danger Zone Walls"
+        },
+        "copy-zone":{
+            "label": "Copy Zone from Scene",
+            "scene": "Copy From",
+            "target": "Copy To",
+            "zone": "Zone"
         },
         "edit-form": {
             "actor.label": "Actor",
@@ -67,6 +78,18 @@
             "runUntilTokenFound.label": "Always Hits a Token",
             "runUntilTokenFound.description": "The danger will target an area of the zone where at least one token is present, if able.",
             "single-run.description": "This section executes at most once, after the first likelihood success, and regardless of the loop count for this zone",
+            "source":{
+                "actor.label": "Source Actor",
+                "description": "Define a source for the zone. The source may influence when and if a zone triggers and danger effects can be defined in relation to the source.",
+                "label": "Source",
+                "trigger.description": "Have source actor determine if zone triggers.\n    * Has no influence on zones triggered manually or by API.\nFor combat triggers where 'Only source can trigger zone', the source must be in the scope as a combatant.\n    Turn: the combatant equating to turn.\n    Other: must be a combatant in combat.",
+                "trigger.label": "Trigger Influence",
+                "triggers":{
+                    "any": "Zone triggers regardless of source.",
+                    "scene": "Zone only triggers if source on scene.",
+                    "source": "Only source can trigger zone."
+                }
+            },
             "stretch.description": "Adjusts the danger's area of effect so that the stretch location remains fixed while the zone's top and bottom still constrict the possible initial target. 'Ground' uses 0 as the final bottom and 'Sky' uses 99999 as the final top. Example: Given 'rising from bottom' in a zone with bottom=2, top=10, and danger depth=3, and an initial target of bottom=5/top=8. The stretch will keep the top target = 8 but drop the bottom to 2, which equals the bottom of the zone.",
             "stretch.label": "Stretch",
             "title.label": "Title",
@@ -115,6 +138,7 @@
             "add-danger-zone": "Add danger zone",
             "clear": "Delete Zone",
             "confirm": "Are you sure you want to delete this zone?",
+            "copy-danger-zone": "Copy a zone from another scene. The dimensions will be defaulted to this scene's width and height.",
             "delete-danger-zone": "Delete danger zone",
             "description": "Add danger zone effects to this scene (this will cause the scene form to refresh so save any scene changes before proceeding).",
             "edit-danger-zone": "Edit danger zone",
@@ -159,6 +183,16 @@
             "zone-exclusion-tag.label": "Block Zone Tag",
             "zone-exclusion-tag.description": "Enter the tag that you will use to indicate that a wall, light, tile, token or drawing blocks the occupied grid from being included in the zone. Note that the 'Tagger' module is required or, for drawings, using this as the Text Label also works."
         },
+        "source":{
+            "danger.description": "The source is an actor defined within the zone form.\nDefine how this danger part should be applied in relation to the targets and the source.",
+            "label": "Source",
+            "treatment":{
+                "none": "No special treatment",
+                "ignore": "Do not apply to source (if targeted)",
+                "also": "Apply also to source",
+                "only": "Apply to source instead of targets"
+            }
+        },
         "stretch": {
             "bottom.label": "Rise From Bottom",
             "ground.label": "Rise From Ground",
@@ -190,75 +224,95 @@
         },
         "type-form": {
             "active-effect":{
-                "clear": "Clear active effect",
-                "confirm": "Are you sure you want to clear the active effect data?",
+                "description": "Adds an active effect to targeted tokens.",
                 "label": "Active Effect",
                 "notes": "Active effect will be transferred to each danger target.",
                 "edit.title": "Edit Active Effect",
-                "delete.title": "Delete Active Effect",
-                "cleared.info": "Active effect data has been deleted from this danger."
+                "delete.title": "Delete Active Effect"
             },
             "animation.label": "Animation",
             "area-x.label": "Width",
             "area-y.label": "Height",
             "area-z.label": "Depth",
             "audio":{
+                "description": "Plays a sound when the danger triggers.",
                 "label": "Audio",
-                "file.label": "File",
+                "file.label": "Audio Source",
+                "file.placeholder": "path/audio.mp3",
                 "file.find": "Browse for Audio File",
-                "delay.label": "Delay",
-                "volume.label": "Volume"
+                "delay.label": "Delay Start",
+                "volume.label": "Sound Volume"
             },
             "backgroundEffect":{
-                "delay.label": "Delay",
-                "label": "Secondary/Impact Effect",
+                "delay.label": "Delay Start",
+                "description": "Generate a temporary effect that plays beneath the target area, such as an explosion or impact animation.",
+                "label": "Secondary Effect",
                 "file.find": "Browse for Effect",
-                "file.label": "File",
+                "file.label": "Image or Video",
+                "file.placeholder": "path/image.webm",
                 "mustache.label": "Stache",
                 "rotate.label": "Random Rotation",
                 "scale.label": "Scale",
-                "repeat.label": "Repeats",
+                "repeat.label": "Number of Repeats",
                 "duration.label": "Duration"
             },
+            "clear": "Clear",
+            "cleared.info": "has been deleted from this danger.",
+            "confirm": "Are you sure you want to delete this danger's",
             "dimensions.label": "Dimensions",
-            "dimensions.notes": "For depth, specify the difference in grid units between the top and bottom elevations. A depth of 0 will default to the zone's depth.",
+            "dimensions.description": "Width and height dimensions are measured in scene grids.\nIf the width or height = 0 then that dimension will default to the zone's dimension.\nFor depth, specify the difference in grid units between the top and bottom elevations.\nA depth of 0 will default to the zone's depth.",
             "fluidCanvas": {
-                "delay.label":"Delay",
+                "delay.label":"Delay Start",
+                "description": "Invoke canvas wide effects at the start of the danger effect using Kandashi's Fluid Canvas module.",
                 "duration.label":"Duration",
                 "intensity.label":"Intensity",
-                "iteration.label":"Iteration",
-                "label":"Kandashi's Fluid Canvas",
-                "type.label":"Type",
-                "notes": "Invokes Fluid Canvas effects at the start of the danger effect."
+                "iteration.label":"Number of Repeats",
+                "label":"Canvas",
+                "type.label":"Effect Type",
+                "types":{
+                    "black":"Black",
+                    "blur":"Blur",
+                    "drug":"Drug",
+                    "earthquake":"Earthquake",
+                    "heartbeat":"Heart Beat",
+                    "negative":"Negative",
+                    "sepia":"Sepia",
+                    "spin":"Spin"
+                }
             },
             "foregroundEffect":{
-                "delay.label": "Delay",
-                "label": "Primary/Environmental Effect",
-                "file.label": "File",
+                "delay.label": "Delay Start",
+                "description": "Generate a temporary effect that plays above the target area, such as a lightning bolt or falling rocks animation.",
+                "label": "Primary Effect",
+                "file.label": "Image or Video",
+                "file.placeholder": "path/image.webm",
                 "file.find": "Browse for Effect",
                 "mustache.label": "Stache",
                 "scale.label": "Scale",
                 "source": {
                     "enabled.label": "Source to Target",
                     "name.label": "Source Tag",
-                    "name.description": "Text (drawing) or Tagger tag"
+                    "name.description": "Tagger tag",
+                    "swap.description": "Plays the effect so that it appears to come from target and towards the source.",
+                    "swap.label": "Reverse Flow"
                 },
-                "repeat.label": "Repeats",
+                "repeat.label": "Number of Repeats",
                 "duration.label": "Duration"
             },
             "icon.label": "Icon",
             "icon.find": "Browse for Icon",
             "light":{
-                "animationIntensity.label": "Intensity",
-                "animation.label": "Animation",
+                "animationIntensity.label": "Animation Intensity",
+                "animation.label": "Light Animation Type",
                 "brightLight.label": "Bright Light Radius",
-                "color.label": "Color",
+                "color.label": "Light Color",
+                "description": "Add ambient lighting to the targeted area.",
                 "dimLight.label": "Dim Light Radius",
-                "emission.label": "Angle",
-                "intensity.label": "Intensity",
+                "emission.label": "Emission Angle",
+                "intensity.label": "Light Intensity",
                 "label": "Ambient Local Light",
-                "rotation.label": "Rotation",
-                "speed.label": "Speed",
+                "rotation.label": "Rotation Angle",
+                "speed.label": "Animation Speed",
                 "tag.label": "Tag",
                 "tag.description": "Tagger tag"
             },
@@ -267,20 +321,18 @@
             "monks-active-tiles":{
                 "label": "Monk's Active Tiles",
                 "macro": {
-                    "after.label": "After",
-                    "args.label": "Args",
-                    "label": "Run Macro",
-                    "macro.label": "Macro"
+                    "args.label": "Macro Args",
+                    "description": "Embed a macro into the tile that executes when a token enters the space.",
+                    "label": "Run Macro"
                 },
-                "notes": "These triggers will be added to the tile that is created by the lasting effect.",
+                "notes": "Adds triggers to the lasting effect tile by integrating with Monk's Active Tiles.",
                 "teleport":{
-                    "after.label": "After",
-                    "avoid.label": "Avoid Others At Dest.",
-                    "label": "Teleport",
-                    "pan.label": "Show Pan",
-                    "source.label": "Delete Source",
-                    "twin.label": "Twin (Portal)",
-                    "add.label": "Teleport"
+                    "avoid.label": "Avoid Destination Tokens",
+                    "description": "Tile will teleport tokens to another random destination in the zone. If 'Twin' is selected then a second tile will be created and the two will teleport between each other.",
+                    "label": "Add Token Teleportion",
+                    "pan.label": "Pan Screen On Teleport",
+                    "source.label": "Delete Source Token",
+                    "twin.label": "Twin Tiles (i.e. Portal)"
                 }
             },
             "name.label": "Name",
@@ -290,59 +342,152 @@
                 "main.title": "Core Configuration"
             },
             "tile":{
-                "delay.label": "Delay",
-                "effect.label": "File",
-                "file.find": "Browse for Effect",
-                "label": "Lasting Zone Effect",
-                "loop.label": "Loop",
-                "scale.label": "Scale",
-                "tag.label": "Tag",
+                "delay.label": "Delay Start",
+                "description": "Create a tile with an embedded video or image in the target area.",
+                "effect.description": "This field is required in order for the tile to generate. To generate a blank tile, use a transparent image.",
+                "effect.label": "Tile Image or Video",
+                "file.placeholder": "path/image.png",
+                "file.find": "Browse for Image or Video",
+                "label": "Lasting Effect",
+                "loop.label": "Loop Video",
+                "scale.label": "Effect Scale",
+                "tab": {
+                    "main.title": "Tile",
+                    "monks.title": "Monk's Active"
+                },
+                "tag.label": "Tile Tag",
                 "tag.description": "Tagger tag"
             },
-            "token-says": {
+            "tokenSays": {
+                "compendium.description": "Identify the compendium that holds the 'Source' playlist or rollable table. If 'Compendium' is left blank, then Token Says will use the default compendium or the world source following Token Says settings.",
                 "compendium.label": "Compendium",
+                "compendium.placeholder": "compendium name",
+                "delay.label":"Delay Start",
+                "description": "Cause danger targets to say something in text or audibly using Token Says module.",
                 "label": "Token Says",
-                "notes": "Trigger Token Says functionality on danger targets for a given playlist or rolltable source. Entering a data into 'Token Says' field will always say that thing or play that playlist's track, otherwise the source data is randomized.",
+                "likelihood.label": "Likelihood",
                 "rule-type.label": "Type",
                 "rule-type-option": {
                     "playlist": "Audio Playlist",
                     "roll-table": "Rollable Table"
                 },
-                "says.label": "Token Says",
-                "source.label": "Source"
+                "says":{
+                    "description": "If populated, token will always say this thing. Leave blank in order to randomize saying using the 'Source' instead.",
+                    "label": "Saying",
+                    "placeholder": "quote or audio track name"
+                },
+                "source.label": "Source",
+                "source.placeholder": "playlist or rollable table name"
             },
             "tokenEffect":{
-                "delay.label": "Delay",
+                "below.label": "Display Below Token",
+                "delay.label": "Delay Start",
+                "description": "Create an effect that plays upon the targeted token and, if made permanent, moves with the token.",
                 "label": "Token Effect",
-                "file.label": "File",
+                "file.label": "Image or Video",
+                "file.placeholder": "path/image.webm",
                 "file.find": "Browse for Effect",
                 "scale.label": "Scale",
                 "duration.label": "Duration"
+            },  
+            "tokenMove":{
+                "delay.label": "Delay Start",
+                "elevation.label": "Elevation Movement",
+                "elevation-distance.label": "Movement Distance",
+                "elevation-distance-max.label": "Maximum",
+                "elevation-distance-min.label": "Minimum",
+                "elevation-type.label": "Movement Type",
+                "elevation-types": {
+                    "relative.label": "Relative to Token Elevation",
+                    "set.label": "Set to Elevation"
+                    },
+                "horizontal.label": "Horizontal Movement",
+                "horizontal-distance.label": "Movement Distance",
+                "horizontal-distance-max.label": "Maximum",
+                "horizontal-distance-min.label": "Minimum",
+                "horizontal-direction.label": "Movement Direction",
+                "horizontal-directions": {
+                    "left.label": "Left",
+                    "right.label": "Right",
+                    "random.label": "Random"
+                    },
+                "label": "Move Tokens",
+                "vertical.label": "Vertical Movement",
+                "vertical-distance.label": "Movement Distance",
+                "vertical-distance-max.label": "Maximum",
+                "vertical-distance-min.label": "Minimum",
+                "vertical-direction.label": "Movement Direction",
+                "vertical-directions": {
+                    "down.label": "Down",
+                    "up.label": "Up",
+                    "random.label": "Random"
+                    },
+                "description": "Move targeted tokens."
+            },
+            "tokenResponse": {
+                "damage": {
+                    "amount.description": "e.g. 1d6+1",
+                    "amount.label": "Damage Roll or Amount",
+                    "amount.title": "Include parameters for variable roll:\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",
+                    "description": "Apply damage to each targeted token.",
+                    "enable.label": "Activate Damage",
+                    "flavor.label": "Flavor (Chat Card)",
+                    "flavor.description": "Outputs the message to chat for each token damaged as part of the damage card.\nInclude parameters for variable text:\n@alias for token name list\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",
+                    "save.label": "If Save Success",
+                    "save.options": {
+                        "none": "No Damage",
+                        "half": "Half Damage",
+                        "full": "Full Damage"
+                    },
+                    "type.label": "Damage Type"
+                },
+                "description": "Interact with targeted tokens by invoking system-specific events, such as those that perform a saving throw or apply damage.",
+                "label": "Token Interaction",
+                "save": {
+                    "diff.label": "Saving Throw DC",
+                    "description": "Invoke a saving throw for each targeted token and define how this affects other danger parts.",
+                    "enable.label": "Activate Saving Throw",
+                    "result":{
+                        "success": "Generate on success only",
+                        "fail": "Generate on fail only",
+                        "both": "Generate on success or fail"
+                    },
+                    "success.description": "Choose how a save success or failure affects other danger parts",
+                    "success.label": "Based on Save Result",
+                    "type.label": "Saving Throw Type"
+                },
+                "tab": {
+                    "save.title": "Saving Throw",
+                    "damage.title": "Token Damage"
+                }
             },
             "wall":{
-                "bottom.label": "Bottom",
-                "direction.label": "Direction",
-                "door.label": "Door",
+                "bottom.label": "Wall on Bottom",
+                "description": "Add walls or doors around the perimeter of the targeted area.",
+                "direction.label": "Wall Direction",
+                "door.label": "Is Door?",
                 "label": "Walls",
-                "left.label": "Left",
-                "restrictions.label": "Restrictions",
-                "movement.label": "Movement",
+                "left.label": "Wall on Left",
+                "light.label": "Light Restriction",
+                "movement.label": "Movement Restriction",
                 "random.description": "From amongst the walls selected (top, right, bottom, left), will randomize whether or not each are actually built in the danger.",
-                "random.label": "Randomize",
-                "right.label": "Right",
-                "sound.label": "Sound",
-                "sight.label": "Sight",
+                "random.label": "Randomize Walls Placed",
+                "right.label": "Wall on Right",
+                "sound.label": "Sound Restriction",
+                "sight.label": "Sight Restriction",
                 "tag.label": "Tag",
                 "tag.description": "Tagger tag",
-                "top.label": "Top"
+                "top.label": "Wall on Top"
             },
             "warpgate": {
+                "description": "Spawn new tokens to the target area using the Warp Gate module.",
+                "actor.description": "Spawn creatures using the actor name or, if 'Is Rollable Table' is checked, spawn will be a random actor matching the name rolled from the specified rollable table in this world.",
                 "actor.label": "Name",
-                "duplicates.label": "Duplicates",
-                "delay.label": "Delay",
-                "isRolltable.label": "Is Rolltable",
-                "label": "Warp Gate",
-                "notes": "Spawn creatures using the actor name or, if 'Is Rolltable' is checked, spawn will be random actor matching name pulled from the specified rolltable in this world.",
+                "actor.placeholder": "actor or rollable table name",
+                "duplicates.label": "Number to Spawn",
+                "delay.label": "Delay Start",
+                "isRolltable.label": "Is Rollable Table",
+                "label": "Token Spawn",
                 "tag.label": "Tag",
                 "tag.description": "Tagger tag"
             }
@@ -351,7 +496,7 @@
             "clear": "Delete Danger",
             "confirm": "Are you sure you want to delete this danger?",
             "header.name": "Dangers",
-            "search.placeholder": "Enter text to filter dangers",
+            "search.placeholder": "enter text to filter dangers",
             "search.clear": "Clear Search",
             "export.title": "Export Dangers",
             "import.title": "Import Dangers",

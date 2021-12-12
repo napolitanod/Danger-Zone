@@ -1,0 +1,41 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.warpgate.description"}}</p>
+        <div class="form-group">
+            <label for="actor">{{localize "DANGERZONE.type-form.warpgate.actor.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.actor.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="text" required name="actor" placeholder="{{localize "DANGERZONE.type-form.warpgate.actor.placeholder"}}" value="{{actor}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="isRolltable">{{localize "DANGERZONE.type-form.warpgate.isRolltable.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="isRolltable" {{checked isRolltable}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="duplicates">{{localize "DANGERZONE.type-form.warpgate.duplicates.label"}}</label>
+            <div class="form-fields">
+                <input type="range" data-dtype="number" name="duplicates" value="{{#if duplicates}}{{duplicates}}{{/if}}{{#unless duplicates}}1{{/unless}}" min="1" max="20" step="1">
+                <span class="range-value">{{#if duplicates}}{{duplicates}}{{/if}}{{#unless duplicates}}1{{/unless}}</span>    
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.warpgate.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
+            </div>
+        </div>
+        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
+            <label for="tag">{{localize "DANGERZONE.type-form.warpgate.tag.label"}}</label>
+            <div class="form-fields">
+                <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.warpgate.tag.description"}}"  value="{{tag}}">
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>
