@@ -45,6 +45,12 @@ export class dangerZoneDimensions {
         return dangerZone.getZoneFromScene(this.zoneId, this.sceneId);
     }
 
+    _subDimensions(w,h){
+		const [startY, startX] = canvas.grid.grid.getGridPositionFromPixels(this.start.x, this.start.y);
+		const [endY, endX] = canvas.grid.grid.getGridPositionFromPixels(this.end.x, this.end.y);
+        return [w ? w : endX-startX, h ? h : endY-startY]
+    }
+
     async boundary(){
         const ex = await this._excludedTagged();
         return new boundary(this.start, this.end, {exclude: ex})
@@ -52,7 +58,7 @@ export class dangerZoneDimensions {
 
     async boundaryBleed(){
         const {w,h,d} = this.danger.dimensions.units; 
-        const b = await this.boundary(); 
+        const b = await this.boundary();
         const dim = b.dimensions;
         const [x,y] = canvas.grid.grid.getPixelsFromGridPosition(dim.y -(Math.min(dim.y, (h-1))), dim.x - (Math.min(dim.x, (w-1))));
         const p = new point({x: x, y: y, z: dim.z - (d ? d-1 : 0)})
@@ -60,7 +66,8 @@ export class dangerZoneDimensions {
     }
 
     async boundaryConstrained(){
-        const {w,h,d} = this.danger.dimensions.units;
+        let {w,h,d} = this.danger.dimensions.units;
+        [w, h] = this._subDimensions(w,h);
         const b = await this.boundary();
         const dim = b.dimensions;
         return locationToBoundary(b.A, {d: Math.abs(dim.d - (d ? d : dim.d ? dim.d : 0)), h: Math.abs(dim.h - (h-1)), w: Math.abs(dim.w - (w-1))}, {excludes: b.excludes})
@@ -72,7 +79,8 @@ export class dangerZoneDimensions {
     }
 
     async randomDangerBoundary() {
-        const {w,h,d} = this.danger.dimensions.units;
+        let {w,h,d} = this.danger.dimensions.units;
+        [w, h] = this._subDimensions(w,h);
         const b = this.zone.options.bleed ? await this.boundaryBleed() : await this.boundaryConstrained();
         const options = {range:{w: w, h: h, d: d}}
         this.zone.stretch(options);

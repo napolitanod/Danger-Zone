@@ -190,7 +190,7 @@
 			},	
 			"backgroundEffect":{	
 				"delay.label": "Délai",
-				"label": "Effet secondaire/d'impact",
+				"label": "Effet secondaire/ d'impact",
 				"file.find": "Rechercher un effet",
 				"file.label": "Fichier",
 				"mustache.label": "Moustaches",
@@ -212,7 +212,7 @@
 			},	
 			"foregroundEffect":{	
 				"delay.label": "Délai",
-				"label": "Effet primaire/environnement",
+				"label": "Effet primaire/ environnement",
 				"file.label": "Fichier",
 				"file.find": "Rechercher un effet",
 				"mustache.label": "Moustache",
@@ -291,7 +291,7 @@
 			},	
 			"tokenEffect":{	
 				"delay.label": "Délai",
-				"label": "Effet de jeton (Sequencer)",
+				"label": "Effet de jeton",
 				"file.label": "Fichier",
 				"file.find": "Rechercher un effet",
 				"scale.label": "Echelle",

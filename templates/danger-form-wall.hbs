@@ -27,7 +27,7 @@
         </div>
         <div class="form-group">
             <label for="random">{{localize "DANGERZONE.type-form.wall.random.label"}}
-                <span class="toolt" title="{{localize 'DANGERZONE.type-form.wall.random.description'}}"><i class="fas fa-info-circle"></i></span>
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.wall.random.description'}}"><i class="fas fa-info-circle"></i></span>
             </label>
             <div class="form-fields">
                 <input type="checkbox" data-dtype="Boolean" name="random" {{checked data.random}}>
@@ -38,6 +38,14 @@
             <div class="form-fields">
                 <select name="move" value="{{data.move}}" data-dtype="Number"> 
                     {{selectOptions moveTypes selected=data.move }}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="light">{{localize "DANGERZONE.type-form.wall.light.label"}}</label>
+            <div class="form-fields">
+                <select name="light" value="{{data.light}}" data-dtype="Number"> 
+                    {{selectOptions senseTypes selected=data.light }}
                 </select>   
             </div>
         </div>

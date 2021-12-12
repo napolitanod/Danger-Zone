@@ -33,7 +33,8 @@ export class dangerZone {
     DANGERZONEDANGERTOKENEFFECT: `modules/${this.ID}/templates/danger-form-token-effect.hbs`,
     DANGERZONEDANGERTOKENMOVE: `modules/${this.ID}/templates/danger-form-token-move.hbs`,
     DANGERZONEDANGERWALL: `modules/${this.ID}/templates/danger-form-wall.hbs`,
-    DANGERZONEDANGERWARPGATE: `modules/${this.ID}/templates/danger-form-warpgate.hbs`
+    DANGERZONEDANGERWARPGATE: `modules/${this.ID}/templates/danger-form-warpgate.hbs`,
+    DANGERZONEZONECOPY: `modules/${this.ID}/templates/danger-zone-scene-zone-copy.hbs`
   }
 
   static initialize() {
@@ -90,7 +91,21 @@ export class dangerZone {
     const instance = new zone(sceneId);
     await scene.setFlag(this.ID, this.FLAGS.SCENEZONE, {[instance.id]: instance});
     return instance
-  }  
+  } 
+
+  static async copyZone(sourceSceneId, sourceZoneId, targetSceneId){
+    const source = deepClone(dangerZone.getZoneFromScene(sourceZoneId,sourceSceneId));
+    delete source['id']; delete source['scene'];
+    const zn = new zone(targetSceneId);
+    await zn.update(source); 
+    const updt = dangerZone.getZoneFromScene(zn.id,targetSceneId)
+    if(updt){
+      ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.zone-copied"));
+    } else {
+      ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.zone-copy-fail"));
+    }
+    return updt    
+  }
 
   /**
    * performs an update attempt on the zone. If zone isn't found, creates a new one.
@@ -145,6 +160,18 @@ export class dangerZone {
     const flags = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE); 
     if(!flags){return new Map}
     return new Map(Object.entries(flags).map(([k,v]) => [k, this._toClass(v)])) 
+  }
+
+  static getZoneList(sceneId){
+    const list = {};
+    if(!sceneId){return list}
+    const flags = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE); 
+    for (var f in flags) {
+      if(flags[f].title){
+        list[f]=flags[f].title;
+      }
+    }
+    return list;
   }
 
   /**
@@ -267,6 +294,10 @@ export class zone {
     this.random = false,
     this.replace = 'N',
     this.scene = new dangerZoneDimensions(sceneId, this.id),
+    this.source = {
+      actor: '',
+      trigger: ''
+    },
     this.title = '',
     this.tokenDisposition = '',
     this.trigger = 'manual',
@@ -277,6 +308,14 @@ export class zone {
 
   get danger(){
     return dangerZoneType.getDangerZoneType(this.type)
+  }
+
+  get sourceOnScene(){
+    return this.scene.scene.tokens.find(t => t.actor?.id === this.source.actor) ? true : false
+  }
+
+  get sources(){
+    return this.scene.scene.tokens.filter(t => t.actor?.id === this.source.actor) 
   }
 
   /**
@@ -320,6 +359,28 @@ export class zone {
   async toggleZoneActive() {
     if(this.enabled){this.enabled = false} else {this.enabled = true}
     return await this._setFlag();
+  }
+
+  sourceTrigger(actorIds){
+    dangerZone.log(false,'Determining Source Trigger ', {zone: this, triggerActors: actorIds});
+    if(this.source.trigger && this.source.actor){
+        return (this.source.trigger === 'C' ? this.sourceOnScene : actorIds.includes(this.source.actor));
+    }
+    return true
+  }
+
+  sourceTreatment(treatment, tokens){
+    if(!this.source.actor){return tokens}
+    switch(treatment){
+      case "I":
+        return tokens.filter(t => t.actor?.id !== this.source.actor)
+      case "S":
+        return this.sources.concat(tokens.filter(t => t.actor?.id !== this.source.actor))
+      case "O":
+        return this.sources
+      default:
+        return tokens
+    }
   }
 
   stretch(options){

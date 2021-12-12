@@ -1,4 +1,5 @@
 import {dangerZone} from "../danger-zone.js";
+import {SOURCETREATMENT} from "./constants.js";
 export class DangerZoneDangerFormTokenEffect extends FormApplication {
   constructor(app, eventParent, data, ...args) {
     super(...args);
@@ -21,7 +22,10 @@ export class DangerZoneDangerFormTokenEffect extends FormApplication {
       }
 
     getData(options) {
-      return this.data
+      return {
+        data: this.data,
+        sourceOps: SOURCETREATMENT
+      }
     }
 
     activateListeners(html) {

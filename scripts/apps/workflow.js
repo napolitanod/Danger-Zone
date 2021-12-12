@@ -1,7 +1,7 @@
 import {dangerZone } from '../danger-zone.js';
 import {dangerZoneDimensions, point, locationToBoundary, documentBoundary, getTagEntities} from './dimensions.js';
 import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
-import {saveTypes} from './constants.js';
+import {saveTypes, damageTypes} from './constants.js';
 
 export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -44,14 +44,16 @@ export class workflow {
         this.active = true,
         this.currentState = WORKFLOWSTATES.INIT,
         this.eligibleTargets = [],
-        this.failedSaves = [],
         this.id = foundry.utils.randomID(16),
         this.likelihoodResult = 100,
         this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
         this.promises = [],
+        this.saveFailed = [],
+        this.saveSucceeded = [],
         this.scene = game.scenes.get(zone.scene.sceneId),
         this.targetBoundary,
         this.targets = [];
+        this.tokenMovement = [],
         this.trigger = trigger,
         this.twinLocation = {},
         this.userSelectedLocation = options.location ? options.location : {},
@@ -388,14 +390,17 @@ export class workflow {
 
     async makeTokenSaves(){
         const save = this.zoneTypeOptions.flags.tokenResponse?.save
-        if(save && save.enable && this.targets.length){
-            for(let token of this.targets){ 
-                if(token.actor){  
-                    let res = await token.actor.rollAbilitySave(save.type) 
-                    if(!res || res.total < save.diff) {this.failedSaves.push(token)} 
-                } 
+        if(save && save.enable){
+            const tg = this.zone.sourceTreatment(save.source, this.targets);
+            if(tg.length){
+                for(let token of tg){ 
+                    if(token.actor){  
+                        let res = await token.actor.rollAbilitySave(save.type); 
+                        if(!res || res.total < save.diff) {this.saveFailed.push(token)} else {this.saveSucceeded.push(token)}
+                    } 
+                }
+                return this.log('Zone token saves generated', {});
             }
-            return this.log('Zone token saves generated', {});
         }
         return this.log('Zone token save skipped', {});
     }
@@ -564,99 +569,101 @@ export class workflow {
     }
 
     async foregroundEffect(twin = false){
-        if(this.zoneTypeOptions.foregroundEffect?.file) {
-            const boundary = twin ? this.twinLocation : this.targetBoundary;
-            let s = new Sequence()
-            if(this.zoneTypeOptions.foregroundEffect.delay){
-                s = s.wait(this.zoneTypeOptions.foregroundEffect.delay)
-            }
-            if(this.zoneTypeOptions.foregroundEffect.source?.enabled && this.zoneTypeOptions.foregroundEffect.source?.name ){
-                const tagged = await getTagEntities(this.zoneTypeOptions.foregroundEffect.source.name, this.scene);
-                if(tagged && tagged.length){
-                    for(let i=0; i<tagged.length; i++){
-                        const document = tagged[i]
-                        const documentName = document.documentName ? document.documentName : document.document.documentName;
-                        const source = documentBoundary(documentName, document, {retain:true});
-                        s = this._foregroundSequence(boundary, s, source);
+        const fe = this.zoneTypeOptions.foregroundEffect;
+        if(fe?.file) {
+            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.fe;
+            if(!sv || (sv > 1 ? this.saveFailed.length : this.saveSucceeded.length)){
+                const boundary = twin ? this.twinLocation : this.targetBoundary;
+                let s = new Sequence()
+                if(fe.delay){s = s.wait(fe.delay)}
+                if(fe.source?.enabled && fe.source?.name){
+                    const tagged = await getTagEntities(fe.source.name, this.scene);
+                    if(tagged && tagged.length){
+                        for(let i=0; i<tagged.length; i++){
+                            const document = tagged[i]
+                            const documentName = document.documentName ? document.documentName : document.document.documentName;
+                            const source = documentBoundary(documentName, document, {retain:true});
+                            s = fe.source.swap ? this._foregroundSequence(source, s, boundary) : this._foregroundSequence(boundary, s, source);
+                        }
+                    } else {
+                        return this.log('Zone foreground effect skipped - no source', {});
                     }
                 } else {
-                    return this.log('Zone foreground effect skipped - no source', {});
+                    s = this._foregroundSequence(boundary, s);
                 }
-            } else {
-                s = this._foregroundSequence(boundary, s);
+                s.play()
+                return this.log('Zone foreground effect generated', {});
             }
-            s.play()
-            return this.log('Zone foreground effect generated', {});
         } 
         return this.log('Zone foreground effect skipped', {});
     }
 
     _foregroundSequence(boundary, s, source = {}){
+        const fe = this.zoneTypeOptions.foregroundEffect;
         s = s.effect()
-            .file(this.zoneTypeOptions.foregroundEffect.file)
+            .file(fe.file)
             .zIndex(boundary.top)
-
             if(source.center){
                 s = s.atLocation(source.center)
                     .reachTowards(boundary.center)
-                    .gridSize(this.zoneTypeOptions.foregroundEffect.scale * 200)
-                    .startPoint(this.zoneTypeOptions.foregroundEffect.scale * 200)
-                    .endPoint(this.zoneTypeOptions.foregroundEffect.scale * 200)
-                    if(this.zoneTypeOptions.foregroundEffect.duration){
-                        s = s.waitUntilFinished(this.zoneTypeOptions.foregroundEffect.duration)
+                    .gridSize(fe.scale * 200)
+                    .startPoint(fe.scale * 200)
+                    .endPoint(fe.scale * 200)
+                    if(fe.duration){
+                        s = s.waitUntilFinished(fe.duration)
                     }
             } else {
                 s = s.atLocation(boundary.center)
-                .scale(this.zoneTypeOptions.foregroundEffect.scale)
+                .scale(fe.scale)
                 .randomizeMirrorX()
-                if(this.zoneTypeOptions.foregroundEffect.duration && this.zoneTypeOptions.foregroundEffect.duration>0){
-                    s = s.duration(this.zoneTypeOptions.foregroundEffect.duration)
+                if(fe.duration && fe.duration>0){
+                    s = s.duration(fe.duration)
                 }
             }
-
-            if(this.zoneTypeOptions.foregroundEffect.repeat){
-                s = s.repeats(this.zoneTypeOptions.foregroundEffect.repeat)
+            if(fe.repeat){
+                s = s.repeats(fe.repeat)
             }
-
         return s
     }
 
     async backgroundEffect(twin = false){ 
-        if(this.zoneTypeOptions.backgroundEffect?.file) {
-            const boundary = twin ? this.twinLocation : this.targetBoundary;      
-            let s = new Sequence()
-                if(this.zoneTypeOptions.backgroundEffect.delay){
-                    s = s.wait(this.zoneTypeOptions.backgroundEffect.delay)
-                }
-                
-                s = s.effect()
-                    .file(this.zoneTypeOptions.backgroundEffect.file)
-                    .atLocation(boundary.center)
-                    .scale(this.zoneTypeOptions.backgroundEffect.scale)
-                    .zIndex(boundary.bottom)
-                    
-                    if(this.zoneTypeOptions.backgroundEffect.rotate){
-                        s = s.randomRotation()
+        const be = this.zoneTypeOptions.backgroundEffect;
+        if(be && be.file) {
+            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.be;
+            if(!sv || (sv > 1 ? this.saveFailed.length : this.saveSucceeded.length)){
+                const boundary = twin ? this.twinLocation : this.targetBoundary;      
+                let s = new Sequence()
+                    if(be.delay){
+                        s = s.wait(be.delay)
                     }
-
-                    if(this.zoneTypeOptions.backgroundEffect.duration){
-                        s = s.duration(this.zoneTypeOptions.backgroundEffect.duration)
-                    }
-
-                    if(this.zoneTypeOptions.backgroundEffect.repeat){
-                        s = s.repeats(this.zoneTypeOptions.backgroundEffect.repeat)
-                    }
-
-                s.play()
-            return this.log('Zone background effect generated', {});
+                    s = s.effect()
+                        .file(be.file)
+                        .atLocation(boundary.center)
+                        .scale(be.scale)
+                        .zIndex(boundary.bottom)
+                        if(be.rotate){
+                            s = s.randomRotation()
+                        }
+                        if(be.duration){
+                            s = s.duration(be.duration)
+                        }
+                        if(be.repeat){
+                            s = s.repeats(be.repeat)
+                        }
+                    s.play()
+                return this.log('Zone background effect generated', {});
+            }
         } 
         return this.log('Zone background effect skipped', {});
     }
 
     async lastingEffect(){
         if(this.zoneTypeOptions.lastingEffect?.file) {//the delay is handled during the clear operation
-            let tile = await this.createEffectTile();
-            return this.log('Zone lasting effect generated', {tile: tile});
+            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.le;
+            if(!sv || (sv > 1 ? this.saveFailed.length : this.saveSucceeded.length)){
+                let tile = await this.createEffectTile();
+                return this.log('Zone lasting effect generated', {tile: tile});
+            }
         } 
         return this.log('Zone lasting effect skipped', {});
     }
@@ -674,19 +681,25 @@ export class workflow {
     }
 
     async tokenEffect(){
-        if(this.zoneTypeOptions.tokenEffect?.file) {
-            for (let i = 0; i < this.targets.length; i++) { 
-
+        const te = this.zoneTypeOptions.tokenEffect;
+        if(te && te.file) {
+            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.te;
+            let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
+            tg = this.zone.sourceTreatment(te.source, tg);
+            for (let i = 0; i < tg.length; i++) { 
                 let s = new Sequence()
-                if(this.zoneTypeOptions.tokenEffect.delay){
-                   s = s.wait(this.zoneTypeOptions.tokenEffect.delay)
+                if(te.delay){
+                   s = s.wait(te.delay)
                 }
                 s = s.effect()
-                    .file(this.zoneTypeOptions.tokenEffect.file)
-                    .attachTo(this.targets[i])
-                    .scale(this.zoneTypeOptions.tokenEffect.scale)
-                if(this.zoneTypeOptions.tokenEffect.duration){
-                   s = s.duration(this.zoneTypeOptions.tokenEffect.duration)
+                    .file(te.file)
+                    .attachTo(tg[i])
+                    .scale(te.scale)
+                if(te.below){
+                    s.belowTokens()
+                }
+                if(te.duration){
+                   s = s.duration(te.duration)
                     .fadeOut(500)
                 } else {
                     s=s.persist()
@@ -700,28 +713,57 @@ export class workflow {
 
     async damageTokens(){
         const damage = this.zoneTypeOptions.flags.tokenResponse?.damage
-        if(damage && damage.enable && this.targets.length){
-            let damageRoll = await new Roll(damage.amount).roll();
-            let full = damage.save==='F' ? this.targets : this.failedSaves;
-            if(full.length){
-                await new MidiQOL.DamageOnlyWorkflow(null, null, damageRoll.total, damage.type, full, damageRoll, {flavor: 'Danger Zone Full Damage Roll<br>' + damage.flavor}) 
-            }
-            if(damage.save === 'H'){
-                let half = this.targets.filter(t => this.failedSaves.map(t => t.id).indexOf(t.id)===-1 )
-                if(half.length){
-                    let hf = Math.floor(damageRoll.total/2);
-                    let halfDamage = await new Roll(`${hf}`).roll();
-                    await new MidiQOL.DamageOnlyWorkflow(null, null, halfDamage.total, damage.type, half, halfDamage, {flavor: 'Danger Zone Half Damage Roll<br>' + damage.flavor}) 
+        if(damage && damage.enable && damage.amount){
+            const targets = this.zone.sourceTreatment(damage.source, this.targets);
+            if(damage.amount.indexOf('@')===-1 && damage.flavor.indexOf('@elevation')===-1 && damage.flavor.indexOf('@moved')===-1){
+                const damageRoll = await new Roll(damage.amount).roll();
+                if(!this.zoneTypeOptions.flags.tokenResponse.save?.enable || damage.save==='F'){
+                    await this._determineDamage(false, damageRoll, damage.type, targets, damage.flavor)
+                } 
+                else { 
+                    if(this.saveFailed.length){await this._determineDamage(false, damageRoll, damage.type, this.saveFailed, damage.flavor)}
+                    if(damage.save === 'H' && this.saveSucceeded.length){await this._determineDamage(true, damageRoll, damage.type, this.saveSucceeded, damage.flavor)}
+                }
+            } else {
+                for(let i = 0; i < targets.length; i++){
+                    const tg = targets[i];
+                    if(damage.save ==='N' && this.saveSucceeded.find(t => t.id === tg.id)){continue;}
+                    const isHalf = (damage.save === 'H' && this.saveSucceeded.find(t => t.id === tg.id)) ? true : false;
+                    const mvMods = this.tokenMovement.find(t => t.tokenId === tg.id);
+                    const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.v ? mvMods.v : 0), (mvMods?.v ? mvMods.v : 0));
+                    let dice = damage.amount.replace(/@elevation/i,e).replace(/@moved/i,mv);
+                    const damageRoll = await new Roll(dice).roll();     
+                    let flavor = damage.flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
+                    await this._determineDamage(isHalf, damageRoll, damage.type, [tg], flavor)
                 }
             }
+            return this.log('Zone token damage applied', {});
         }
         return this.log('Zone token damage skipped', {});
     }
 
+    async _determineDamage(isHalf, damageRoll, type, tokens, flavorAdd){
+        let roll; const types = damageTypes();
+        let flavor = `<label>${isHalf ? 'Half ': ''}${types[type]} damage on ${damageRoll?.formula} roll result of ${damageRoll.result}.</label><br>${flavorAdd.replace(/@alias/i, tokens.map(t => t.name).join(', '))}`;
+        if(isHalf){
+            let hf = Math.floor(damageRoll.total/2);
+            roll = await new Roll(`${hf}`).roll();
+        } else {roll = damageRoll}
+        await this._damageApply(tokens, roll, type, flavor)
+    }
+
+    async _damageApply(tokens, damage, type, flavor){
+        if(!damage?.total) {return}
+        this.log('Zone token Midi Damage Workflow started', {tokens: tokens, damage: damage, type: type, flavor: flavor});
+        await new MidiQOL.DamageOnlyWorkflow(null, null, damage.total, type, tokens, damage, {flavor: flavor}) 
+    }
+
     async activeEffect() {
         if(Object.keys(this.zoneTypeOptions.effect).length && this.targets.length) {
-            for (let i = 0; i < this.targets.length; i++) { 
-                await this.targets[i].actor.createEmbeddedDocuments("ActiveEffect", [this.zoneTypeOptions.effect]);
+            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.ae;
+            const tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
+            for (let i = 0; i < tg.length; i++) { 
+                await tg[i].actor.createEmbeddedDocuments("ActiveEffect", [this.zoneTypeOptions.effect]);
             }
             this.log('Zone active effect generated', {});
             return {activeEffect: this.zoneTypeOptions.effect}
@@ -769,13 +811,16 @@ export class workflow {
 
     async createWalls() {
         if(this.zoneTypeOptions.wall?.top || this.zoneTypeOptions.wall?.right || this.zoneTypeOptions.wall?.bottom || this.zoneTypeOptions.wall?.left) {
-            const walls = [];
-            if(this.zoneTypeOptions.wall?.top && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData(this.targetBoundary.A, {x: this.targetBoundary.B.x, y: this.targetBoundary.A.y}))}
-            if(this.zoneTypeOptions.wall?.right && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData({x: this.targetBoundary.B.x, y: this.targetBoundary.A.y}, this.targetBoundary.B))}
-            if(this.zoneTypeOptions.wall?.bottom && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData(this.targetBoundary.B, {x: this.targetBoundary.A.x, y: this.targetBoundary.B.y}))}
-            if(this.zoneTypeOptions.wall?.left && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData({x: this.targetBoundary.A.x, y: this.targetBoundary.B.y}, this.targetBoundary.A))}
-            if(walls.length){await this.scene.createEmbeddedDocuments("Wall",walls)}
-            return this.log('Zone walls generated', {wall: walls});
+            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.wall;
+            if(!sv || (sv > 1 ? this.saveFailed.length : this.saveSucceeded.length)){
+                const walls = [];
+                if(this.zoneTypeOptions.wall?.top && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData(this.targetBoundary.A, {x: this.targetBoundary.B.x, y: this.targetBoundary.A.y}))}
+                if(this.zoneTypeOptions.wall?.right && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData({x: this.targetBoundary.B.x, y: this.targetBoundary.A.y}, this.targetBoundary.B))}
+                if(this.zoneTypeOptions.wall?.bottom && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData(this.targetBoundary.B, {x: this.targetBoundary.A.x, y: this.targetBoundary.B.y}))}
+                if(this.zoneTypeOptions.wall?.left && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData({x: this.targetBoundary.A.x, y: this.targetBoundary.B.y}, this.targetBoundary.A))}
+                if(walls.length){await this.scene.createEmbeddedDocuments("Wall",walls)}
+                return this.log('Zone walls generated', {wall: walls});
+            }
         }
         return this.log('Zone walls not generated', {});
     }
@@ -786,6 +831,7 @@ export class workflow {
             dir: this.zoneTypeOptions.wall.dir,
             door: this.zoneTypeOptions.wall.door,
             ds: 0,
+            light: this.zoneTypeOptions.wall.light,
             move: this.zoneTypeOptions.wall.move,
             sense: this.zoneTypeOptions.wall.sense,
             sound: this.zoneTypeOptions.wall.sound,
@@ -835,21 +881,32 @@ export class workflow {
             let c = this.targetBoundary.center
 
             const light = {
-                t: "l",
+                config: {
+                    alpha: Math.pow(this.zoneTypeOptions.ambientLight.tintAlpha, 2).toNearest(0.01),
+                    angle: this.zoneTypeOptions.ambientLight.angle,
+                    animation: {
+                        reverse: false,
+                        speed: this.zoneTypeOptions.ambientLight.lightAnimation.speed,
+                        intensity: this.zoneTypeOptions.ambientLight.lightAnimation.intensity,
+                        type: this.zoneTypeOptions.ambientLight.lightAnimation.type
+                    },
+                    bright: this.zoneTypeOptions.ambientLight.bright,
+                    color: this.zoneTypeOptions.ambientLight.tintColor,
+                    coloration: 1,
+                    contrast: 0,
+                    darkness: {min:0, max:1},
+                    dim: this.zoneTypeOptions.ambientLight.dim,
+                    gradual: true,
+                    luminosity: 0.5,
+                    saturation: 0,
+                    shadows: 0
+                },               
+                hidden: false,
+                rotation: this.zoneTypeOptions.ambientLight.rotation,
+                vision: false,
+                walls: true,
                 x: c.x,
                 y: c.y,
-                rotation: this.zoneTypeOptions.ambientLight.rotation,
-                dim: this.zoneTypeOptions.ambientLight.dim,
-                bright: this.zoneTypeOptions.ambientLight.bright,
-                angle: this.zoneTypeOptions.ambientLight.angle,
-                tintColor: this.zoneTypeOptions.ambientLight.tintColor,
-                tintAlpha: Math.pow(this.zoneTypeOptions.ambientLight.tintAlpha, 2).toNearest(0.01),
-                lightAnimation: {
-                    speed: this.zoneTypeOptions.ambientLight.lightAnimation.speed,
-                    intensity: this.zoneTypeOptions.ambientLight.lightAnimation.intensity,
-                    type: this.zoneTypeOptions.ambientLight.lightAnimation.type
-                },
-                hidden: false,
                 flags: {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.zone.trigger, type: this.zone.type}}}
             }
 
@@ -917,12 +974,18 @@ export class workflow {
 
     async tokenMove() {
         const move = this.zoneTypeOptions.tokenMove;
-        if(this.targets.length && (move?.v?.dir || move?.hz?.dir)) {
+        if(move && this.targets.length && (move.v?.dir || move.hz?.dir || move.e?.type)) {
+            if(move.delay > 0){
+                await wait(move.delay);
+            }
+            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.tm;
+            let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
+            tg = this.zone.sourceTreatment(move.source, tg);
             const updates = [];
-            for (let i = 0; i < this.targets.length; i++) { 
-                let token = this.scene.tokens.get(this.targets[i].id);
+            for (let i = 0; i < tg.length; i++) { 
+                let token = this.scene.tokens.get(tg[i].id);
                 if(!token){continue;}
-                let amtV = 0, amtH = 0;
+                let amtV = 0, amtH = 0, e = token.data.elevation;
                 if(move.v?.dir){
                     let adjV = 1;
                     if(move.v.dir === "U" || (move.v.dir === "R" && Math.round(Math.random()))){adjV=-1}
@@ -933,8 +996,13 @@ export class workflow {
                     if(move.hz.dir === "L" || (move.hz.dir === "R" && Math.round(Math.random()))) {adjH=-1}
                     amtH = ((move.hz.min + Math.floor(Math.random() * (move.hz.max - move.hz.min + 1))) * adjH)
                 }
+                if(move.e?.type){
+                    let amtE = (move.e.min + Math.floor(Math.random() * (move.e.max - move.e.min + 1)))
+                    e = move.e.type === 'S' ? amtE : e + amtE;
+                }
                 let [x, y] = canvas.grid.grid.shiftPosition(token.data.x, token.data.y, amtH, amtV)
-                updates.push({"_id": token.id,"x": x,"y": y});
+                updates.push({"_id": token.id,"x": x,"y": y, "elevation": e});
+                this.tokenMovement.push({tokenId: token.id, hz: Math.abs(amtH), v: Math.abs(amtV), e: Math.abs(e - token.data.elevation)})
             }
             await this.scene.updateEmbeddedDocuments("Token",updates);
             return this.log('Token Move generated', {options: updates});
@@ -944,21 +1012,29 @@ export class workflow {
 
     async tokenSays() {
         const flag = this.flags?.tokenSays;
-        if(this.targets.length && flag?.fileType && (flag?.fileName || flag?.fileType)) {
-            const options = {
-                likelihood: flag.likelihood ? flag.likelihood : 100,
-                type: flag.fileType,
-                source: flag.fileName,
-                compendium: flag.compendiumName,
-                quote: flag.fileTitle
+        if(flag){
+            if(this.targets.length && flag.fileType && (flag.fileName || flag.fileType)) {
+                if(flag.delay > 0){
+                    await wait(flag.delay);
+                }
+                const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.ts;
+                let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
+                tg = this.zone.sourceTreatment(flag.source, tg);
+                const options = {
+                    likelihood: flag.likelihood ? flag.likelihood : 100,
+                    type: flag.fileType,
+                    source: flag.fileName,
+                    compendium: flag.compendiumName,
+                    quote: flag.fileTitle
+                }
+                let actor = '';
+                for (let i = 0; i < tg.length; i++) { 
+                    let token = tg[i].id;
+                    await tokenSays.saysDirect(token, actor, this.scene.id, options);
+                }
+                this.log('Token Says generated', {options: options});
+                return {'token-says': options}
             }
-            let actor = '';
-            for (let i = 0; i < this.targets.length; i++) { 
-                let token = this.targets[i].id;
-                await tokenSays.saysDirect(token, actor, this.scene.id, options);
-            }
-            this.log('Token Says generated', {options: options});
-            return {'token-says': options}
         }
         this.log('Token Says skipped', {});
         return {'token-says': false}

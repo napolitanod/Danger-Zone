@@ -1,6 +1,6 @@
 import {dangerZone} from "../danger-zone.js";
-import {midiQolOn} from '../index.js';
-import {saveTypes, damageTypes, DAMAGEONSAVE} from "./constants.js";
+import {midiQolOn, sequencerOn, tokenSaysOn} from '../index.js';
+import {saveTypes, damageTypes, DAMAGEONSAVE, SAVERESULT, SOURCETREATMENT} from "./constants.js";
 export class DangerZoneDangerFormTokenResponse extends FormApplication {
   constructor(app, eventParent, data, ...args) {
     super(...args);
@@ -32,7 +32,11 @@ export class DangerZoneDangerFormTokenResponse extends FormApplication {
         damageOps: damageTypes(),
         damageOnSaveOps: DAMAGEONSAVE,
         saveOps: saveTypes(),
-        midiQolOnNot: !midiQolOn 
+        saveResultOps: SAVERESULT,
+        sourceOps: SOURCETREATMENT,
+        tokenSaysOnNot: !tokenSaysOn, 
+        sequencerOnNot: !sequencerOn,
+        midiQolOnNot: !midiQolOn
       }
     }
 

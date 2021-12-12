@@ -69,6 +69,13 @@ export const DANGERZONETRIGGERSORT = {
     "turn-end":  6
 } 
 
+export const SOURCETREATMENT = {
+    "": "DANGERZONE.source.treatment.none",
+    "I": "DANGERZONE.source.treatment.ignore",
+    "S": "DANGERZONE.source.treatment.also",
+    "O": "DANGERZONE.source.treatment.only"
+}
+
 export const STRETCH = {
     "": "",
     "B": "DANGERZONE.stretch.bottom.label",
@@ -91,6 +98,12 @@ export const VERTICALMOVEMENT = {
     "R": "DANGERZONE.type-form.tokenMove.vertical-directions.random.label"
 }
 
+export const ELEVATIONMOVEMENT = {
+    "": "",
+    "D": "DANGERZONE.type-form.tokenMove.elevation-types.relative.label",
+    "U": "DANGERZONE.type-form.tokenMove.elevation-types.set.label"
+}
+
 export const FLUIDCANVASTYPES = {
     "black": "DANGERZONE.type-form.fluidCanvas.types.black",
     "blur": "DANGERZONE.type-form.fluidCanvas.types.blur",
@@ -102,6 +115,11 @@ export const FLUIDCANVASTYPES = {
     "spin": "DANGERZONE.type-form.fluidCanvas.types.spin"
 }
 
+export const SOURCETRIGGERS = {
+    "": "DANGERZONE.edit-form.source.triggers.any",
+    "C": "DANGERZONE.edit-form.source.triggers.scene",
+    "S": "DANGERZONE.edit-form.source.triggers.source"
+}
 
 export const TOKENSAYSTYPES = {
     "audio":  "DANGERZONE.type-form.tokenSays.rule-type-option.playlist",
@@ -114,10 +132,20 @@ export const DAMAGEONSAVE = {
     "F": "DANGERZONE.type-form.tokenResponse.damage.save.options.full"
 }
 
+export const SAVERESULT = {
+    0: "DANGERZONE.type-form.tokenResponse.save.result.both",
+    2: "DANGERZONE.type-form.tokenResponse.save.result.fail",
+    1: "DANGERZONE.type-form.tokenResponse.save.result.success"
+}
+
 export const DAEDuration = daeOn ? DAE.daeSpecialDurations() : {}
 
 export function actorOps(){
     return game.actors.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
+}
+
+export function sceneOps(){
+    return game.scenes.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
 }
 
 export function moveTypes(){

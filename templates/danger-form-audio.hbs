@@ -5,13 +5,13 @@
             <label for="file">{{localize "DANGERZONE.type-form.audio.file.label"}}</label>
             <div class="form-fields">
                 {{filePicker target="file" type="audio"}}
-                <input type="text" name="file" class="image" placeholder="{{localize "DANGERZONE.type-form.audio.file.placeholder"}}" value="{{file}}">
+                <input type="text" required  name="file" class="image" placeholder="{{localize "DANGERZONE.type-form.audio.file.placeholder"}}" value="{{file}}">
             </div>
         </div>
         <div class="form-group">
             <label for="delay">{{localize "DANGERZONE.type-form.audio.delay.label"}}</label>
             <div class="form-fields">
-                <input type="number" data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
+                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
             </div>
         </div>
         <div class="form-group">

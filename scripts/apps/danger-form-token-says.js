@@ -1,5 +1,5 @@
 import {dangerZone} from "../danger-zone.js";
-import {TOKENSAYSTYPES} from "./constants.js";
+import {TOKENSAYSTYPES, SOURCETREATMENT} from "./constants.js";
 export class DangerZoneDangerFormTokenSays extends FormApplication {
   constructor(app, eventParent, data, ...args) {
     super(...args);
@@ -25,6 +25,7 @@ export class DangerZoneDangerFormTokenSays extends FormApplication {
       return {
         data: this.data,
         tokenSaysOps: TOKENSAYSTYPES,
+        sourceOps: SOURCETREATMENT
       }
     }
 

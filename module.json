@@ -18,7 +18,7 @@
         }    
     ],
     "minimumCoreVersion": "9.0",
-    "compatibleCoreVersion": "9.244",
+    "compatibleCoreVersion": "9.235",
     "name": "danger-zone",
     "esmodules": [
         "scripts/index.js",

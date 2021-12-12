@@ -2,11 +2,13 @@
     "DANGERZONE": {
         "add": "Add",
         "cancel": "Cancel",
+        "copy": "Copy",
         "degrees": "(Degrees)",
         "delete": "Delete",
+        "distance": "(Distance)",
         "edit": "Edit",
         "grids": "(Grids)",
-        "gridUnits": "grid units",
+        "gridUnits": "units",
         "location-picker": "Select the zone dimensions",
         "ms": "ms",
         "none": "None",
@@ -24,12 +26,20 @@
             "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
             "select-zone-end": "Select an end location for this zone. Selected area will snap to grid and represent the lower right corner of this zone.",
             "select-target": "Select a location in the zone. Selected area will snap to grid and represent the top left corner of the danger's target.",
-            "user-selection-exited": "You have exited from danger location selection prematurely. Zone trigger execution stopped."
+            "user-selection-exited": "You have exited from danger location selection prematurely. Zone trigger execution stopped.",
+            "zone-copied": "The zone was copied successfully! Please review the zone dimensions.",
+            "zone-copy-fail": "Oops, there was an issue copying the zone."
         },
         "controls": {
             "clearAmbientLight.label": "Clear Danger Zone Ambient Lighting",
             "clearEffectsTile.label": "Clear Danger Zone Lasting Effects",
             "clearWalls.label": "Clear Danger Zone Walls"
+        },
+        "copy-zone":{
+            "label": "Copy Zone from Scene",
+            "scene": "Copy From",
+            "target": "Copy To",
+            "zone": "Zone"
         },
         "edit-form": {
             "actor.label": "Actor",
@@ -68,6 +78,18 @@
             "runUntilTokenFound.label": "Always Hits a Token",
             "runUntilTokenFound.description": "The danger will target an area of the zone where at least one token is present, if able.",
             "single-run.description": "This section executes at most once, after the first likelihood success, and regardless of the loop count for this zone",
+            "source":{
+                "actor.label": "Source Actor",
+                "description": "Define a source for the zone. The source may influence when and if a zone triggers and danger effects can be defined in relation to the source.",
+                "label": "Source",
+                "trigger.description": "Have source actor determine if zone triggers.\n    * Has no influence on zones triggered manually or by API.\nFor combat triggers where 'Only source can trigger zone', the source must be in the scope as a combatant.\n    Turn: the combatant equating to turn.\n    Other: must be a combatant in combat.",
+                "trigger.label": "Trigger Influence",
+                "triggers":{
+                    "any": "Zone triggers regardless of source.",
+                    "scene": "Zone only triggers if source on scene.",
+                    "source": "Only source can trigger zone."
+                }
+            },
             "stretch.description": "Adjusts the danger's area of effect so that the stretch location remains fixed while the zone's top and bottom still constrict the possible initial target. 'Ground' uses 0 as the final bottom and 'Sky' uses 99999 as the final top. Example: Given 'rising from bottom' in a zone with bottom=2, top=10, and danger depth=3, and an initial target of bottom=5/top=8. The stretch will keep the top target = 8 but drop the bottom to 2, which equals the bottom of the zone.",
             "stretch.label": "Stretch",
             "title.label": "Title",
@@ -116,6 +138,7 @@
             "add-danger-zone": "Add danger zone",
             "clear": "Delete Zone",
             "confirm": "Are you sure you want to delete this zone?",
+            "copy-danger-zone": "Copy a zone from another scene. The dimensions will be defaulted to this scene's width and height.",
             "delete-danger-zone": "Delete danger zone",
             "description": "Add danger zone effects to this scene (this will cause the scene form to refresh so save any scene changes before proceeding).",
             "edit-danger-zone": "Edit danger zone",
@@ -159,6 +182,16 @@
 		    "token-depth-multiplier.description": "For purposes of zone depth targeting, set a multiplier that calculates how tall a token is in relation to the scene distance, the token's scale, and the number of grid squares that that token takes up. A token in a single grid square with a scale of 1.0, a scene distance of 5, and a multiplier of 1.2 will have a tallness of 6 (1 * 1.0 * 5 * 1.2).",
             "zone-exclusion-tag.label": "Block Zone Tag",
             "zone-exclusion-tag.description": "Enter the tag that you will use to indicate that a wall, light, tile, token or drawing blocks the occupied grid from being included in the zone. Note that the 'Tagger' module is required or, for drawings, using this as the Text Label also works."
+        },
+        "source":{
+            "danger.description": "The source is an actor defined within the zone form.\nDefine how this danger part should be applied in relation to the targets and the source.",
+            "label": "Source",
+            "treatment":{
+                "none": "No special treatment",
+                "ignore": "Do not apply to source (if targeted)",
+                "also": "Apply also to source",
+                "only": "Apply to source instead of targets"
+            }
         },
         "stretch": {
             "bottom.label": "Rise From Bottom",
@@ -227,7 +260,7 @@
             "cleared.info": "has been deleted from this danger.",
             "confirm": "Are you sure you want to delete this danger's",
             "dimensions.label": "Dimensions",
-            "dimensions.notes": "For depth, specify the difference in grid units between the top and bottom elevations. A depth of 0 will default to the zone's depth.",
+            "dimensions.description": "Width and height dimensions are measured in scene grids.\nIf the width or height = 0 then that dimension will default to the zone's dimension.\nFor depth, specify the difference in grid units between the top and bottom elevations.\nA depth of 0 will default to the zone's depth.",
             "fluidCanvas": {
                 "delay.label":"Delay Start",
                 "description": "Invoke canvas wide effects at the start of the danger effect using Kandashi's Fluid Canvas module.",
@@ -259,7 +292,9 @@
                 "source": {
                     "enabled.label": "Source to Target",
                     "name.label": "Source Tag",
-                    "name.description": "Tagger tag"
+                    "name.description": "Tagger tag",
+                    "swap.description": "Plays the effect so that it appears to come from target and towards the source.",
+                    "swap.label": "Reverse Flow"
                 },
                 "repeat.label": "Number of Repeats",
                 "duration.label": "Duration"
@@ -327,6 +362,7 @@
                 "compendium.description": "Identify the compendium that holds the 'Source' playlist or rollable table. If 'Compendium' is left blank, then Token Says will use the default compendium or the world source following Token Says settings.",
                 "compendium.label": "Compendium",
                 "compendium.placeholder": "compendium name",
+                "delay.label":"Delay Start",
                 "description": "Cause danger targets to say something in text or audibly using Token Says module.",
                 "label": "Token Says",
                 "likelihood.label": "Likelihood",
@@ -344,6 +380,7 @@
                 "source.placeholder": "playlist or rollable table name"
             },
             "tokenEffect":{
+                "below.label": "Display Below Token",
                 "delay.label": "Delay Start",
                 "description": "Create an effect that plays upon the targeted token and, if made permanent, moves with the token.",
                 "label": "Token Effect",
@@ -355,6 +392,15 @@
             },  
             "tokenMove":{
                 "delay.label": "Delay Start",
+                "elevation.label": "Elevation Movement",
+                "elevation-distance.label": "Movement Distance",
+                "elevation-distance-max.label": "Maximum",
+                "elevation-distance-min.label": "Minimum",
+                "elevation-type.label": "Movement Type",
+                "elevation-types": {
+                    "relative.label": "Relative to Token Elevation",
+                    "set.label": "Set to Elevation"
+                    },
                 "horizontal.label": "Horizontal Movement",
                 "horizontal-distance.label": "Movement Distance",
                 "horizontal-distance-max.label": "Maximum",
@@ -382,10 +428,11 @@
                 "damage": {
                     "amount.description": "e.g. 1d6+1",
                     "amount.label": "Damage Roll or Amount",
+                    "amount.title": "Include parameters for variable roll:\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",
                     "description": "Apply damage to each targeted token.",
                     "enable.label": "Activate Damage",
                     "flavor.label": "Flavor (Chat Card)",
-                    "flavor.description": "Outputs the message to chat for each token damaged as part of the damage card.",
+                    "flavor.description": "Outputs the message to chat for each token damaged as part of the damage card.\nInclude parameters for variable text:\n@alias for token name list\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",
                     "save.label": "If Save Success",
                     "save.options": {
                         "none": "No Damage",
@@ -400,6 +447,13 @@
                     "diff.label": "Saving Throw DC",
                     "description": "Invoke a saving throw for each targeted token and define how this affects other danger parts.",
                     "enable.label": "Activate Saving Throw",
+                    "result":{
+                        "success": "Generate on success only",
+                        "fail": "Generate on fail only",
+                        "both": "Generate on success or fail"
+                    },
+                    "success.description": "Choose how a save success or failure affects other danger parts",
+                    "success.label": "Based on Save Result",
                     "type.label": "Saving Throw Type"
                 },
                 "tab": {
@@ -414,6 +468,7 @@
                 "door.label": "Is Door?",
                 "label": "Walls",
                 "left.label": "Wall on Left",
+                "light.label": "Light Restriction",
                 "movement.label": "Movement Restriction",
                 "random.description": "From amongst the walls selected (top, right, bottom, left), will randomize whether or not each are actually built in the danger.",
                 "random.label": "Randomize Walls Placed",

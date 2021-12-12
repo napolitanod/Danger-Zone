@@ -6,30 +6,33 @@
         <div class="form-group">
             <label>{{localize 'DANGERZONE.type-form.name.label'}}</label>
             <div class="form-fields">
-                <input type="text" name="name" value="{{zone.name}}" maxlength="75" required>
+                <input type="text" required name="name" value="{{zone.name}}" maxlength="75">
             </div>
         </div>
         <div class="form-group">
             <label for="icon">{{localize 'DANGERZONE.type-form.icon.label'}}</label>
             <div class="form-fields">
                 {{filePicker target="icon" type="image"}}
-                <input type="text" name="icon" value="{{zone.icon}}" required>
+                <input type="text" required name="icon" value="{{zone.icon}}">
             </div>
         </div>
         <div class="form-group">
-            <label>{{localize 'DANGERZONE.type-form.dimensions.label'}}</label>
+            <label>{{localize 'DANGERZONE.type-form.dimensions.label'}}
+                <span class="units">{{localize 'DANGERZONE.grids'}}</span>
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.dimensions.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
             <div class="form-fields">
                 <label>{{localize "DANGERZONE.type-form.area-x.label"}}</label>
                 <div class="form-fields">
-                    <input type="number" name="dimensions.units.w" min="1" step="1"  placeholder="{{localize "DANGERZONE.grids"}}" value={{zone.dimensions.units.w}} required>
+                    <input type="number" required name="dimensions.units.w" min="0" step="1"  placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{zone.dimensions.units.w}}>
                 </div>
                 <label>{{localize "DANGERZONE.type-form.area-y.label"}}</label>
                 <div class="form-fields">
-                    <input type="number" name="dimensions.units.h" min="1" step="1" placeholder="{{localize "DANGERZONE.grids"}}" value={{zone.dimensions.units.h}} required>
+                    <input type="number" required name="dimensions.units.h" min="0" step="1" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{zone.dimensions.units.h}}>
                 </div>
                 <label>{{localize "DANGERZONE.type-form.area-z.label"}}</label>
                 <div class="form-fields">
-                    <input type="number" name="dimensions.units.d" min="0" step="1" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{zone.dimensions.units.d}} required>
+                    <input type="number" required name="dimensions.units.d" min="0" step="1" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{zone.dimensions.units.d}}>
                 </div>
             </div>
         </div>

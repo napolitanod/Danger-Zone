@@ -22,7 +22,7 @@ form.danger-zone-types .content{
     min-height: 38px;
 }
 
-form.danger-zone-record .toolt {
+.dz-toolt {
     color: #9e9e9e;
     vertical-align: super;
     font-size: 10px;
@@ -74,11 +74,14 @@ form ol.danger-setting-group > li {
     flex: 0 0 20%;
     flex-wrap: wrap;
     list-style: none;
-    white-space: normal;
+    white-space: break-spaces;
     text-align: center;
-    justify-content: center;
-    padding: 5px;
+    text-overflow: clip;
+    padding: 10px 0 0 0;
+    width: 86px;
     position: relative;
+    flex-direction: column;
+    align-items: center;
 }
 
 form.danger-zone-type-form .main-danger .form-group {
@@ -86,11 +89,11 @@ form.danger-zone-type-form .main-danger .form-group {
 }
 
 form.danger-zone-type-form .main-danger .form-group > * {
-    flex: 3;
+    flex: 7;
 }
 
 form.danger-zone-type-form .main-danger .form-group > label {
-    flex: 1;
+    flex: 3;
 }
 
 form.danger-zone-type-form .main-danger {
@@ -113,7 +116,7 @@ form.danger-zone-type-form .main-danger {
 }
 
 .danger-zone-type-details, .danger-zone-details {
-    flex: 0 0 90%;
+    flex: 0 0 88%;
     white-space: nowrap;
     overflow-x: hidden; 
     flex-wrap: nowrap;
@@ -140,7 +143,7 @@ form.danger-zone-type-form .main-danger {
 .danger-zone-types-header .danger-zone-controls, 
 .danger-zone-scene .danger-zone-controls,
 .danger-zone-types-list .danger-zone-controls {
-    flex: 0 0 10%;
+    flex: 0 0 12%;
     text-align: right;
     color: #7a7971;
     padding: 0px 4px 0px 0px;
@@ -386,14 +389,20 @@ form ol.danger-setting-group a.danger-zone-type-delete {
     position: absolute;
     top: 68px;
     font-size: 16px;
-    background:rgba(255, 62, 65);
+    background: rgba(255, 62, 65);
     box-shadow: 0 0 10px red;
     width: 60px;
     padding: 8px 0px;
+    margin-top: 6px;
 }
 
 form ol.danger-setting-group .active:hover a.danger-zone-type-delete {
     visibility: visible;
+}
+
+
+form ol.danger-setting-group .active:hover label {
+    visibility: hidden;
 }
 
 .danger-zone-hotbar-trigger:hover li.hidden, 

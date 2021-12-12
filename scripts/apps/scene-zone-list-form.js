@@ -1,7 +1,7 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {dangerZoneDimensions} from './dimensions.js';
-import {DANGERZONETRIGGERS} from './constants.js';
+import {DANGERZONETRIGGERS, sceneOps} from './constants.js';
 import {DangerZoneForm} from './zone-form.js';
 
 export class DangerZoneSceneForm extends FormApplication {
@@ -39,6 +39,10 @@ export class DangerZoneSceneForm extends FormApplication {
           new DangerZoneForm(this, '', this.sceneId).render(true);
           this.refresh();
           break;
+      }
+      case 'copy': {
+        new DangerZoneZoneCopyForm(this, this.sceneId, '').render(true);
+        break;
       }
       case 'edit': {
         new DangerZoneForm(this, zoneId, this.sceneId).render(true);
@@ -128,4 +132,51 @@ export class DangerZoneSceneForm extends FormApplication {
           dangerZoneDimensions.destroyHighlightZone(zoneId);
       }
   }
+}
+
+export class DangerZoneZoneCopyForm extends FormApplication {
+  constructor(app, sceneId, sourceSceneId, ...args) {
+    super(...args);
+    this.sceneId = sceneId,
+    this.sourceSceneId = sourceSceneId,
+    this.parent = app;
+    }
+
+    static get defaultOptions(){
+        const defaults = super.defaultOptions;
+
+        return foundry.utils.mergeObject(defaults, {
+          title : game.i18n.localize("DANGERZONE.copy-zone.label"),
+          id : "danger-zone-zone-copy",
+          template : dangerZone.TEMPLATES.DANGERZONEZONECOPY,
+          height : "auto",
+          width: 425,
+          closeOnSubmit: true
+        });
+      }
+
+    getData(options) {
+      return {
+        sceneId: this.sceneId,
+        sourceSceneId: this.sourceSceneId,
+        sceneOps: sceneOps(),
+        zoneOps: dangerZone.getZoneList(this.sourceSceneId)
+      }
+    }
+
+    activateListeners(html) {
+      super.activateListeners(html);
+      html.on('change', '#danger-zone-copy-source-scene',(event) => {
+        this.sourceSceneId = event.currentTarget.value;
+        this.render(true);
+      });
+    }
+  
+    async _updateObject(event, formData) {
+      const expandedData = foundry.utils.expandObject(formData);
+      if(expandedData.targetSceneId && expandedData.sceneId && expandedData.zoneId){
+        await dangerZone.copyZone(expandedData.sceneId, expandedData.zoneId, expandedData.targetSceneId)
+      }
+      if(this.parent){this.parent.render(true)}
+    }
 }

@@ -1,5 +1,5 @@
 import {dangerZone} from "../danger-zone.js";
-import {VERTICALMOVEMENT, HORIZONTALMOVEMENT} from "./constants.js";
+import {VERTICALMOVEMENT, HORIZONTALMOVEMENT, ELEVATIONMOVEMENT, SOURCETREATMENT} from "./constants.js";
 export class DangerZoneDangerFormTokenMove extends FormApplication {
   constructor(app, eventParent, data, ...args) {
     super(...args);
@@ -24,8 +24,10 @@ export class DangerZoneDangerFormTokenMove extends FormApplication {
     getData(options) {
       return{
         data: this.data,
+        elevationTypeOps: ELEVATIONMOVEMENT,
         horizontalDirOps: HORIZONTALMOVEMENT,
-        verticalDirOps: VERTICALMOVEMENT
+        verticalDirOps: VERTICALMOVEMENT,
+        sourceOps: SOURCETREATMENT
       }
     }
 
@@ -36,6 +38,6 @@ export class DangerZoneDangerFormTokenMove extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.tokenMove = expandedData;
-      if(expandedData.v.dir || expandedData.hz.dir){this.eventParent.addClass('active')};
+      if(expandedData.v.dir || expandedData.hz.dir || expandedData.e.type){this.eventParent.addClass('active')};
     }
 }

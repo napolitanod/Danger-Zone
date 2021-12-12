@@ -257,7 +257,7 @@ export class DangerZoneTypeForm extends FormApplication {
       hasLastingEffect: this.lastingEffect?.file ? true : false,
       hasLight: (this.light.bright || this.light.dim) ? true : false,
       hasTokenEffect: this.tokenEffect?.file ? true : false,
-      hasTokenMove: (this.tokenMove.v.dir || this.tokenMove.hz.dir) ? true : false,
+      hasTokenMove: (this.tokenMove.v.dir || this.tokenMove.hz.dir || this.tokenMove.e.type) ? true : false,
       hasTokenResponse: (this.tokenResponse?.save?.enable || this.tokenResponse?.damage?.enable) ? true : false,
       hasTokenSays: this.tokenSays?.fileType ? true : false,
       hasWall: (this.wall?.top || this.wall?.bottom || this.wall?.left || this.wall?.right) ? true : false,
