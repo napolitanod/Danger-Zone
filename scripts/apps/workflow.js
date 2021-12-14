@@ -1,7 +1,7 @@
 import {dangerZone } from '../danger-zone.js';
 import {dangerZoneDimensions, point, locationToBoundary, documentBoundary, getTagEntities} from './dimensions.js';
 import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
-import {saveTypes, damageTypes} from './constants.js';
+import {saveTypes, damageTypes, FVTTMOVETYPES, FVTTSENSETYPES} from './constants.js';
 
 export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -23,8 +23,8 @@ export const WORKFLOWSTATES = {
     CLEARLASTINGEFFECTS: 30,
     GENERATELASTINGEFFECT: 31,
     CLEARWALLS: 33,
+    GENERATETOKENEFFECT: 34,
     GENERATETOKENMOVE: 35,
-    GENERATETOKENEFFECT: 37,
     DAMAGETOKEN: 40,
     GENERATEWALLS: 54,
     CLEARLIGHT: 55,
@@ -194,24 +194,24 @@ export class workflow {
 
             case WORKFLOWSTATES.CLEARWALLS:
                 if(!this.previouslyExecuted){await this.deleteWalls();}//hard stop here
-                return this.next(WORKFLOWSTATES.GENERATETOKENMOVE)
-
-            case WORKFLOWSTATES.GENERATETOKENMOVE:
-                await this.tokenMove();
                 return this.next(WORKFLOWSTATES.GENERATETOKENEFFECT)
 
             case WORKFLOWSTATES.GENERATETOKENEFFECT:
                 this.promises.push(this.tokenEffect());
-                return this.next(WORKFLOWSTATES.DAMAGETOKEN) 
+                return this.next(WORKFLOWSTATES.GENERATETOKENMOVE) 
+
+            case WORKFLOWSTATES.GENERATETOKENMOVE:
+                this.promises.push(this.tokenMove());
+                return this.next(WORKFLOWSTATES.DAMAGETOKEN)
 
             case WORKFLOWSTATES.DAMAGETOKEN:
                 if(midiQolOn){
-                    await this.damageTokens();
+                    this.promises.push(this.damageTokens());
                 }
                 return this.next(WORKFLOWSTATES.GENERATEWALLS)
                 
             case WORKFLOWSTATES.GENERATEWALLS:
-                await this.createWalls();
+                this.promises.push(this.createWalls());
                 return this.next(WORKFLOWSTATES.CLEARLIGHT) 
 
             case WORKFLOWSTATES.CLEARLIGHT:
@@ -219,7 +219,7 @@ export class workflow {
                 return this.next(WORKFLOWSTATES.GENERATELIGHT)
 
             case WORKFLOWSTATES.GENERATELIGHT:
-                await this.createLight();
+                this.promises.push(this.createLight());
                 return this.next(WORKFLOWSTATES.GENERATEACTIVEEFFECT) 
                  
             case WORKFLOWSTATES.GENERATEACTIVEEFFECT:
@@ -456,19 +456,24 @@ export class workflow {
 
 
         let newTile = {
+            alpha: effect.alpha,
             flags: {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.zone.trigger, type: this.zone.type}}},
-            hidden: false,
+            hidden: effect.hidden,
             img: effect.file,
             locked: false,
             height: boundary.height * effect.scale,
-            overhead: boundary.bottom > 0 ? true : false,
+            occlusion: {
+                alpha: effect.occlusion.alpha,
+                mode: CONST.TILE_OCCLUSION_MODES[effect.occlusion.mode]
+            },
+            overhead: (levelsOn && boundary.bottom > 0) ? true : effect.overhead,
             rotation: 0,
             scale: effect.scale,
             width: boundary.width * effect.scale,
             video: {autoplay: true, loop: effect.loop, volume: 0},
             x: boundary.A.x - ((effect.scale - 1) *  (boundary.width/2)),
             y: boundary.A.y - ((effect.scale - 1) *  (boundary.height/2)),
-            z: boundary.bottom
+            z: effect.z
         };
 
         if(betterRoofsOn && boundary.bottom){
@@ -831,10 +836,10 @@ export class workflow {
             dir: this.zoneTypeOptions.wall.dir,
             door: this.zoneTypeOptions.wall.door,
             ds: 0,
-            light: this.zoneTypeOptions.wall.light,
-            move: this.zoneTypeOptions.wall.move,
-            sense: this.zoneTypeOptions.wall.sense,
-            sound: this.zoneTypeOptions.wall.sound,
+            light: FVTTSENSETYPES[this.zoneTypeOptions.wall.light],
+            move: FVTTMOVETYPES[this.zoneTypeOptions.wall.move],
+            sense: FVTTSENSETYPES[this.zoneTypeOptions.wall.sense],
+            sound: FVTTSENSETYPES[this.zoneTypeOptions.wall.sound],
             flags: {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.zone.trigger, type: this.zone.type}}}
         }
 

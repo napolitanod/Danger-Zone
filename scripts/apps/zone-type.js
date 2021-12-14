@@ -56,11 +56,19 @@ export class dangerZoneType {
           duration: 0
         },
         lastingEffect: {
+          alpha: 1,
           delay: 0,
           file: '',
+          hidden: false,
+          occlusion: {
+            alpha: 0,
+            mode: 'FADE'
+          },
+          overhead: false,
           scale: 1.0,
           loop: true,
-          tag: ''
+          tag: '',
+          z: 0
         },
         tokenEffect: {
           below: 0,
@@ -81,12 +89,12 @@ export class dangerZoneType {
           dir: 0,
           door: 0,
           left: false,
-          light: 20,
-          move: 20,
+          light: 1,
+          move: 1,
           random: false,
           right: false,
-          sense: 20,
-          sound: 20,
+          sense: 1,
+          sound: 1,
           tag: '',
           top: false
         },

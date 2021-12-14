@@ -1,5 +1,5 @@
 import {dangerZone} from "../danger-zone.js";
-import {moveTypes, senseTypes, dirTypes, doorTypes} from './constants.js';
+import {MOVETYPES, dirTypes, doorTypes, SENSETYPES} from './constants.js';
 
 export class DangerZoneDangerFormWall extends FormApplication {
   constructor(app, eventParent, data, ...args) {
@@ -25,8 +25,8 @@ export class DangerZoneDangerFormWall extends FormApplication {
     getData(options) {
       return {
         data: this.data,
-        moveTypes: moveTypes(),
-        senseTypes: senseTypes(),
+        moveTypes: MOVETYPES,
+        senseTypes: SENSETYPES,
         dirTypes: dirTypes(),
         doorTypes: doorTypes()
         }

@@ -1,6 +1,6 @@
 import {dangerZone} from "../danger-zone.js";
 import {monksActiveTilesOn} from '../index.js';
-import {determineMacroList} from './constants.js';
+import {determineMacroList, TILEOCCLUSIONMODES} from './constants.js';
 export class DangerZoneDangerFormLastingEffect extends FormApplication {
   constructor(app, eventParent, data, ...args) {
     super(...args);
@@ -31,7 +31,8 @@ export class DangerZoneDangerFormLastingEffect extends FormApplication {
         lastingEffect: this.data.lastingEffect,
         macroOps: determineMacroList(),
         monksActiveTiles: this.data.monksActiveTiles,
-        monksActiveTilesOnNot: !monksActiveTilesOn
+        monksActiveTilesOnNot: !monksActiveTilesOn,
+        occlusionModesOps: TILEOCCLUSIONMODES
       }
     }
 
