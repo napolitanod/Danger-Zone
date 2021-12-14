@@ -37,7 +37,7 @@
             <label for="move">{{localize "DANGERZONE.type-form.wall.movement.label"}}</label>
             <div class="form-fields">
                 <select name="move" value="{{data.move}}" data-dtype="Number"> 
-                    {{selectOptions moveTypes selected=data.move }}
+                    {{selectOptions moveTypes selected=data.move localize=true}}
                 </select>   
             </div>
         </div>
@@ -45,7 +45,7 @@
             <label for="light">{{localize "DANGERZONE.type-form.wall.light.label"}}</label>
             <div class="form-fields">
                 <select name="light" value="{{data.light}}" data-dtype="Number"> 
-                    {{selectOptions senseTypes selected=data.light }}
+                    {{selectOptions senseTypes selected=data.light localize=true}}
                 </select>   
             </div>
         </div>
@@ -53,7 +53,7 @@
             <label for="sense">{{localize "DANGERZONE.type-form.wall.sight.label"}}</label>
             <div class="form-fields">
                 <select name="sense" value="{{data.sense}}" data-dtype="Number"> 
-                    {{selectOptions senseTypes selected=data.sense }}
+                    {{selectOptions senseTypes selected=data.sense localize=true}}
                 </select>   
             </div>
         </div>
@@ -61,7 +61,7 @@
             <label for="sound">{{localize "DANGERZONE.type-form.wall.sound.label"}}</label>
             <div class="form-fields">
                 <select name="sound" value="{{data.sound}}" data-dtype="Number"> 
-                    {{selectOptions senseTypes selected=data.sound }}
+                    {{selectOptions senseTypes selected=data.sound localize=true}}
                 </select>   
             </div>
         </div>

@@ -148,20 +148,26 @@ export function sceneOps(){
     return game.scenes.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
 }
 
-export function moveTypes(){
-    return Object.keys(CONST.WALL_MOVEMENT_TYPES).reduce((obj, key) => {
-        let k = CONST.WALL_MOVEMENT_TYPES[key];
-        obj[k] = key.titleCase();
-        return obj;
-    }, {})
+export const MOVETYPES = {
+    0: "DANGERZONE.restrictions.none",
+    1: "DANGERZONE.restrictions.normal"
 }
 
-export function senseTypes(){
-   return Object.keys(CONST.WALL_SENSE_TYPES).reduce((obj, key) => {
-        let k = CONST.WALL_SENSE_TYPES[key];
-        obj[k] = key.titleCase();
-        return obj;
-    }, {})
+export const FVTTMOVETYPES = {
+    0: 0,
+    1: 20
+}
+
+export const SENSETYPES = {
+    0: "DANGERZONE.restrictions.none",
+    2: "DANGERZONE.restrictions.limited",
+    1: "DANGERZONE.restrictions.normal"
+}
+
+export const FVTTSENSETYPES = {
+    0: 0,
+    1: 20,
+    2: 10
 }
 
 export function dirTypes(){ 
@@ -212,4 +218,11 @@ export function damageTypes() {
         default:
             return {}
     }
+}
+
+export const TILEOCCLUSIONMODES = {
+    "NONE": "DANGERZONE.occlusionmodes.none",
+    "FADE": "DANGERZONE.occlusionmodes.fade",
+    "ROOF": "DANGERZONE.occlusionmodes.roof",
+    "RADIAL": "DANGERZONE.occlusionmodes.radial"
 }

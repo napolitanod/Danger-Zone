@@ -121,6 +121,12 @@
             "T.label": "Clear lights that share this danger",
             "Z.label": "Clear lights that share this zone"
         },
+        "occlusionmodes": {
+            "none": "None (Always Visible)",
+            "fade": "Fade (Entire Tile)",
+            "roof": "Roof (Blocks Vision and Lighting)",
+            "radial": "Radial (Surrounding Token)"
+        },
         "record": {
             "title.label": "Title",
             "likelihood.label": "Likelihood",
@@ -133,6 +139,11 @@
             "R.label": "Clear effects that share this trigger",
             "T.label": "Clear effects that share this danger",
             "Z.label": "Clear effects that share this zone"
+        },
+        "restrictions":{
+            "none": "None",
+            "limited": "Limited",
+            "normal": "Normal"
         },
         "scene": {
             "add-danger-zone": "Add danger zone",
@@ -342,13 +353,22 @@
                 "main.title": "Core Configuration"
             },
             "tile":{
+                "alpha.label": "Tile Opacity",
                 "delay.label": "Delay Start",
                 "description": "Create a tile with an embedded video or image in the target area.",
                 "effect.description": "This field is required in order for the tile to generate. To generate a blank tile, use a transparent image.",
                 "effect.label": "Tile Image or Video",
                 "file.placeholder": "path/image.png",
                 "file.find": "Browse for Image or Video",
+                "hidden.label":"Hidden",
                 "label": "Lasting Effect",
+                "occlusion":{
+                    "alpha.label": "Occlusion Alpha",
+                    "mode.label":  "Occlusion Mode"
+                },
+                "overhead.label": "Overhead Tile",
+                "overhead.description": "If Levels module is installed, tile will automatically be set to overhead for zones with depth if the bottom of danger when placed in the zone is > 0.",
+                "is-overhead.label": "Is Overhead?",
                 "loop.label": "Loop Video",
                 "scale.label": "Effect Scale",
                 "tab": {
@@ -356,7 +376,8 @@
                     "monks.title": "Monk's Active"
                 },
                 "tag.label": "Tile Tag",
-                "tag.description": "Tagger tag"
+                "tag.description": "Tagger tag",
+                "z.label": "Z-Index"
             },
             "tokenSays": {
                 "compendium.description": "Identify the compendium that holds the 'Source' playlist or rollable table. If 'Compendium' is left blank, then Token Says will use the default compendium or the world source following Token Says settings.",
