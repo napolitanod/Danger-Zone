@@ -235,8 +235,13 @@
         },
         "type-form": {
             "active-effect":{
+                "delay.label": "Delay Start",
                 "description": "Adds an active effect to targeted tokens.",
                 "label": "Active Effect",
+                "limit.description": "If a token already has this effect applied, a second one will not be added.",
+                "limit.label": "Max 1 Per Token",
+                "macro.description": "Determine if active effect macros should repeat on each turn of the associated token.",
+                "macro.label": "Macro Repeat",
                 "notes": "Active effect will be transferred to each danger target.",
                 "edit.title": "Edit Active Effect",
                 "delete.title": "Delete Active Effect"
@@ -252,6 +257,8 @@
                 "file.placeholder": "path/audio.mp3",
                 "file.find": "Browse for Audio File",
                 "delay.label": "Delay Start",
+                "duration.description": "If the sound file is longer than the duration (in seconds) entered, then it will stop the sound at the provided duration following start of play. If duration = 0 then the sound plays for the entire length.",
+                "duration.label": "Duration",
                 "volume.label": "Sound Volume"
             },
             "backgroundEffect":{
@@ -422,6 +429,8 @@
                     "relative.label": "Relative to Token Elevation",
                     "set.label": "Set to Elevation"
                     },
+                "flag.description": "Prevents any movement caused by this danger from triggering a zone (because some zones may have movement-based triggers).",
+                "flag.label": "Doesn't Trigger Zones",
                 "horizontal.label": "Horizontal Movement",
                 "horizontal-distance.label": "Movement Distance",
                 "horizontal-distance-max.label": "Maximum",
@@ -433,6 +442,10 @@
                     "random.label": "Random"
                     },
                 "label": "Move Tokens",
+                "overrides.label": "Movement Overrides",
+                "source-to-target.label": "Move Source to Targeted Area",
+                "tiles-block.label": "Tiles Block Target Depth Move",
+                "walls-block.label": "Walls Block Target X/Y Move",
                 "vertical.label": "Vertical Movement",
                 "vertical-distance.label": "Movement Distance",
                 "vertical-distance-max.label": "Maximum",
@@ -450,6 +463,7 @@
                     "amount.description": "e.g. 1d6+1",
                     "amount.label": "Damage Roll or Amount",
                     "amount.title": "Include parameters for variable roll:\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",
+                    "delay.label": "Delay Start",
                     "description": "Apply damage to each targeted token.",
                     "enable.label": "Activate Damage",
                     "flavor.label": "Flavor (Chat Card)",
@@ -513,6 +527,17 @@
                 "tag.description": "Tagger tag"
             }
         },
+        "tiles-block":{
+            "none.label": "Tiles do not block",
+            "all.label": "All tiles block",
+            "roof.label": "Overhead tiles block",
+            "bottom.label": "Tiles block at depth top",
+            "top.label": "Tiles block at depth bottom"
+        },
+        "times-up-macro": {
+            "start": "Start of character's turn",
+            "end": "End of character's turn"
+        },
         "types-form": {
             "clear": "Delete Danger",
             "confirm": "Are you sure you want to delete this danger?",
@@ -522,6 +547,10 @@
             "export.title": "Export Dangers",
             "import.title": "Import Dangers",
             "type.name.label": "Name"
+        },
+        "walls-block":{
+            "none.label": "Walls do not block",
+            "all.label": "All walls block"
         },
         "wall.replace-types": {
             "A.label": "Clear all walls",

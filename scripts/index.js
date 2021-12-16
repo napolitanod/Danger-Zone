@@ -11,7 +11,7 @@ import {DangerZoneSceneForm} from './apps/scene-zone-list-form.js';
 /**
  * global variables
  */
-export var midiQolOn = false, daeOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
+export var timesUpOn = false, midiQolOn = false, daeOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
 export var dzMActive = false; 
 /**
  * retains the most recent search term while in session for the danger zone type list form
@@ -295,7 +295,7 @@ Hooks.on('updateCombat', async(combat, round, options, id) => {
 });
 
 Hooks.on("updateToken", async (token, update, options, userId) => {
-    if (game.user.isGM && ("x" in update || "y" in update || "elevation" in update)) {
+    if (game.user.isGM && ("x" in update || "y" in update || "elevation" in update) && !options.dangerZoneMove) {
 		if (dangerZone.sceneHasZone(token.parent?.id)) {triggerManager.findMovementTriggers(token, update)};
     }
 });
@@ -316,6 +316,7 @@ function setModsAvailable () {
 	if (game.modules.get("sequencer")?.active){sequencerOn = true} ;
 	if (game.modules.get("tagger")?.active){taggerOn = true} ;
 	if (game.modules.get("wall-height")?.active){wallHeightOn = true} ;
+	if (game.modules.get("times-up")?.active){timesUpOn = true};
 }
 
 /**

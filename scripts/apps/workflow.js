@@ -1,5 +1,5 @@
 import {dangerZone } from '../danger-zone.js';
-import {dangerZoneDimensions, point, locationToBoundary, documentBoundary, getTagEntities} from './dimensions.js';
+import {dangerZoneDimensions, point, locationToBoundary, documentBoundary, getTagEntities, furthestShiftPosition} from './dimensions.js';
 import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
 import {saveTypes, damageTypes, FVTTMOVETYPES, FVTTSENSETYPES} from './constants.js';
 
@@ -14,8 +14,8 @@ export const WORKFLOWSTATES = {
     ESTABLISHTARGETBOUNDARY: 5,
     HIGHLIGHTTARGETBOUNDARY: 6,
     GETZONETARGETS: 7,
+    GENERATEFLAVOR: 8,
     MAKESAVES: 9,
-    GENERATEFLAVOR: 10,
     GENERATEFLUIDCANVAS: 15,
     GENERATEFOREGROUNDEFFECT: 20,
     GENERATEAUDIOEFFECT: 21,
@@ -146,16 +146,17 @@ export class workflow {
                 await this.getZoneTargets();
                 this.log('Zone targets got', {});
                 this.gmChatDetails();
+                return this.next(WORKFLOWSTATES.GENERATEFLAVOR)
+
+                
+            case WORKFLOWSTATES.GENERATEFLAVOR:
+                if(!this.previouslyExecuted){this.flavor();}
                 return this.next(WORKFLOWSTATES.MAKESAVES)
 
             case WORKFLOWSTATES.MAKESAVES:
                 if(Object.keys(saveTypes()).length){
                     await this.makeTokenSaves();
                 }
-                return this.next(WORKFLOWSTATES.GENERATEFLAVOR)
-                
-            case WORKFLOWSTATES.GENERATEFLAVOR:
-                if(!this.previouslyExecuted){this.flavor();}
                 return this.next(WORKFLOWSTATES.GENERATEFLUIDCANVAS)
 
             case WORKFLOWSTATES.GENERATEFLUIDCANVAS:
@@ -576,7 +577,7 @@ export class workflow {
     async foregroundEffect(twin = false){
         const fe = this.zoneTypeOptions.foregroundEffect;
         if(fe?.file) {
-            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.fe;
+            const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.fe);
             if(!sv || (sv > 1 ? this.saveFailed.length : this.saveSucceeded.length)){
                 const boundary = twin ? this.twinLocation : this.targetBoundary;
                 let s = new Sequence()
@@ -634,7 +635,7 @@ export class workflow {
     async backgroundEffect(twin = false){ 
         const be = this.zoneTypeOptions.backgroundEffect;
         if(be && be.file) {
-            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.be;
+            const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.be);
             if(!sv || (sv > 1 ? this.saveFailed.length : this.saveSucceeded.length)){
                 const boundary = twin ? this.twinLocation : this.targetBoundary;      
                 let s = new Sequence()
@@ -664,7 +665,7 @@ export class workflow {
 
     async lastingEffect(){
         if(this.zoneTypeOptions.lastingEffect?.file) {//the delay is handled during the clear operation
-            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.le;
+            const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.le);
             if(!sv || (sv > 1 ? this.saveFailed.length : this.saveSucceeded.length)){
                 let tile = await this.createEffectTile();
                 return this.log('Zone lasting effect generated', {tile: tile});
@@ -678,6 +679,10 @@ export class workflow {
             const audio = this.zoneTypeOptions.audio;
             await wait(audio.delay);
             const sound = await AudioHelper.play({src: audio.file, volume: audio.volume, loop: false, autoplay: true}, true);
+            if(audio.duration){
+                sound.schedule(() => sound.fade(0), audio.duration);//set a duration based on system preferences.
+                sound.schedule(() => sound.stop(), (audio.duration+1)); //stop once fade completes (1000 milliseconds default)
+            }
             this.log('Zone audio effect generated', {sound: sound});
             return {audio: sound}
         }
@@ -688,7 +693,7 @@ export class workflow {
     async tokenEffect(){
         const te = this.zoneTypeOptions.tokenEffect;
         if(te && te.file) {
-            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.te;
+            const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.te);
             let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
             tg = this.zone.sourceTreatment(te.source, tg);
             for (let i = 0; i < tg.length; i++) { 
@@ -719,6 +724,7 @@ export class workflow {
     async damageTokens(){
         const damage = this.zoneTypeOptions.flags.tokenResponse?.damage
         if(damage && damage.enable && damage.amount){
+            if(damage.delay){await wait(damage.delay)}
             const targets = this.zone.sourceTreatment(damage.source, this.targets);
             if(damage.amount.indexOf('@')===-1 && damage.flavor.indexOf('@elevation')===-1 && damage.flavor.indexOf('@moved')===-1){
                 const damageRoll = await new Roll(damage.amount).roll();
@@ -764,14 +770,21 @@ export class workflow {
     }
 
     async activeEffect() {
-        if(Object.keys(this.zoneTypeOptions.effect).length && this.targets.length) {
-            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.ae;
-            const tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
+        const eff = this.zoneTypeOptions.effect;
+        if(Object.keys(eff).length) {
+            let flgs = eff.flags?.['danger-zone'];
+            const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.ae);
+            let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
+            tg = this.zone.sourceTreatment(flgs?.source, tg);
+            if(flgs?.delay){await wait(flgs.delay)}
             for (let i = 0; i < tg.length; i++) { 
-                await tg[i].actor.createEmbeddedDocuments("ActiveEffect", [this.zoneTypeOptions.effect]);
+                if(flgs?.limit && tg[i].actor && tg[i].actor.effects.find(e => e.data.flags['danger-zone']?.origin === this.zoneType.id)){
+                    continue;
+                }
+                await tg[i].actor.createEmbeddedDocuments("ActiveEffect", [eff]);
             }
             this.log('Zone active effect generated', {});
-            return {activeEffect: this.zoneTypeOptions.effect}
+            return {activeEffect: eff}
         }
         this.log('Zone active effect skipped', {});
         return {activeEffect: false}
@@ -816,7 +829,7 @@ export class workflow {
 
     async createWalls() {
         if(this.zoneTypeOptions.wall?.top || this.zoneTypeOptions.wall?.right || this.zoneTypeOptions.wall?.bottom || this.zoneTypeOptions.wall?.left) {
-            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.wall;
+            const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.wall);
             if(!sv || (sv > 1 ? this.saveFailed.length : this.saveSucceeded.length)){
                 const walls = [];
                 if(this.zoneTypeOptions.wall?.top && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData(this.targetBoundary.A, {x: this.targetBoundary.B.x, y: this.targetBoundary.A.y}))}
@@ -979,37 +992,48 @@ export class workflow {
 
     async tokenMove() {
         const move = this.zoneTypeOptions.tokenMove;
-        if(move && this.targets.length && (move.v?.dir || move.hz?.dir || move.e?.type)) {
+        if(move && ((this.targets.length && (move.v?.dir || move.hz?.dir || move.e?.type)) || (move.sToT && this.zone.sources.length))) {
             if(move.delay > 0){
                 await wait(move.delay);
             }
-            const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.tm;
+
+            const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.tm);
             let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
             tg = this.zone.sourceTreatment(move.source, tg);
+            if(move.sToT){tg = this.zone.sourceAdd(tg)}
+
             const updates = [];
             for (let i = 0; i < tg.length; i++) { 
                 let token = this.scene.tokens.get(tg[i].id);
                 if(!token){continue;}
-                let amtV = 0, amtH = 0, e = token.data.elevation;
-                if(move.v?.dir){
-                    let adjV = 1;
-                    if(move.v.dir === "U" || (move.v.dir === "R" && Math.round(Math.random()))){adjV=-1}
-                    amtV = ((move.v.min + Math.floor(Math.random() * (move.v.max - move.v.min + 1))) * adjV)
+                let amtV = 0, amtH = 0, amtE =0, e, x, y;
+                if(move.sToT && this.zone.isSource(token)){
+                    let srcCnt = this.targetBoundary.center;
+                    let tBnd = documentBoundary("Token", token);
+                    x = srcCnt.x - (tBnd.center.x - tBnd.A.x), y = srcCnt.y - (tBnd.center.y - tBnd.A.y);
+                    e = this.targetBoundary.bottom;
+                } else if (move.v?.dir || move.hz?.dir || move.e?.type) {
+                    if(move.v?.dir){
+                        let adjV = 1;
+                        if(move.v.dir === "U" || (move.v.dir === "R" && Math.round(Math.random()))){adjV=-1}
+                        amtV = ((move.v.min + Math.floor(Math.random() * (move.v.max - move.v.min + 1))) * adjV)
+                    }
+                    if(move.hz?.dir){
+                        let adjH = 1;
+                        if(move.hz.dir === "L" || (move.hz.dir === "R" && Math.round(Math.random()))) {adjH=-1}
+                        amtH = ((move.hz.min + Math.floor(Math.random() * (move.hz.max - move.hz.min + 1))) * adjH)
+                    }
+                    if(move.e?.type){
+                        amtE = (move.e.min + Math.floor(Math.random() * (move.e.max - move.e.min + 1)))
+                    }
+                    [x, y] = move.walls ? furthestShiftPosition(token, [amtH, amtV]) : canvas.grid.grid.shiftPosition(token.data.x, token.data.y, amtH, amtV)
+                    e = move.e.type === 'S' ? amtE : token.data.elevation + amtE;
+                    this.tokenMovement.push({tokenId: token.id, hz: Math.abs(amtH), v: Math.abs(amtV), e: Math.abs(e - token.data.elevation)})
                 }
-                if(move.hz?.dir){
-                    let adjH = 1;
-                    if(move.hz.dir === "L" || (move.hz.dir === "R" && Math.round(Math.random()))) {adjH=-1}
-                    amtH = ((move.hz.min + Math.floor(Math.random() * (move.hz.max - move.hz.min + 1))) * adjH)
-                }
-                if(move.e?.type){
-                    let amtE = (move.e.min + Math.floor(Math.random() * (move.e.max - move.e.min + 1)))
-                    e = move.e.type === 'S' ? amtE : e + amtE;
-                }
-                let [x, y] = canvas.grid.grid.shiftPosition(token.data.x, token.data.y, amtH, amtV)
                 updates.push({"_id": token.id,"x": x,"y": y, "elevation": e});
-                this.tokenMovement.push({tokenId: token.id, hz: Math.abs(amtH), v: Math.abs(amtV), e: Math.abs(e - token.data.elevation)})
             }
-            await this.scene.updateEmbeddedDocuments("Token",updates);
+            const opts = move.flag ? {dangerZoneMove: true} : {};
+            await this.scene.updateEmbeddedDocuments("Token",updates, opts);
             return this.log('Token Move generated', {options: updates});
         }
         return this.log('Token Move skipped', {});
@@ -1022,7 +1046,7 @@ export class workflow {
                 if(flag.delay > 0){
                     await wait(flag.delay);
                 }
-                const sv = this.zoneTypeOptions.flags.tokenResponse?.save?.ts;
+                const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.ts);
                 let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
                 tg = this.zone.sourceTreatment(flag.source, tg);
                 const options = {

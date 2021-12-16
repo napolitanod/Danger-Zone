@@ -100,8 +100,8 @@ export const VERTICALMOVEMENT = {
 
 export const ELEVATIONMOVEMENT = {
     "": "",
-    "D": "DANGERZONE.type-form.tokenMove.elevation-types.relative.label",
-    "U": "DANGERZONE.type-form.tokenMove.elevation-types.set.label"
+    "R": "DANGERZONE.type-form.tokenMove.elevation-types.relative.label",
+    "S": "DANGERZONE.type-form.tokenMove.elevation-types.set.label"
 }
 
 export const FLUIDCANVASTYPES = {
@@ -225,4 +225,22 @@ export const TILEOCCLUSIONMODES = {
     "FADE": "DANGERZONE.occlusionmodes.fade",
     "ROOF": "DANGERZONE.occlusionmodes.roof",
     "RADIAL": "DANGERZONE.occlusionmodes.radial"
+}
+
+export const TIMESUPMACROREPEAT = {
+    "startEveryTurn": "DANGERZONE.times-up-macro.start",
+    "endEveryTurn": "DANGERZONE.times-up-macro.end"
+}
+
+export const WALLSBLOCK = {
+    "" : "DANGERZONE.walls-block.none.label",
+    "A" : "DANGERZONE.walls-block.all.label"
+}
+
+export const TILESBLOCK = {
+    "" : "DANGERZONE.tiles-block.none.label",
+    "A" : "DANGERZONE.tiles-block.all.label",
+    "R" : "DANGERZONE.tiles-block.roof.label",
+    "B" : "DANGERZONE.tiles-block.bottom.label",
+    "T" : "DANGERZONE.tiles-block.top.label"
 }

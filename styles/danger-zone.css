@@ -371,6 +371,13 @@ form.danger-zone-record .form-fields .boundary-top-label {
     box-shadow: 0 0 10px #ff6400;
 }
 
+form ol.danger-setting-group button {
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px var(--color-shadow-dark);
+    color: var(--color-text-light-4);
+    border: 1px solid var(--color-border-dark);
+}
+
 form ol.danger-setting-group .active button {
     color: #FFF;
     background-color: rgba(60, 0, 120, 0.5);
