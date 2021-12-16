@@ -22,6 +22,7 @@ export class dangerZone {
     DANGERZONETYPESCONFIG: `modules/${this.ID}/templates/danger-zone-types.hbs`,
     DANGERZONETYPE: `modules/${this.ID}/templates/danger-form.hbs`,
     DANGERZONEACTIVEEFFECT: `modules/${this.ID}/templates/active-effect-form.hbs`,
+    DANGERZONEDANGERACTIVEEFFECT: `modules/${this.ID}/templates/danger-form-active-effect.hbs`,
     DANGERZONEDANGERAUDIO: `modules/${this.ID}/templates/danger-form-audio.hbs`,
     DANGERZONEDANGERBACKGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-background-effect.hbs`,
     DANGERZONEDANGERFLUIDCANVAS: `modules/${this.ID}/templates/danger-form-fluid-canvas.hbs`,
@@ -369,8 +370,13 @@ export class zone {
     return true
   }
 
+  isSource(token){
+    console.log(token.actor?.id === this.source.actor)
+    return token.actor?.id === this.source.actor
+  }
+
   sourceTreatment(treatment, tokens){
-    if(!this.source.actor){return tokens}
+    if(!this.source.actor || !treatment){return tokens}
     switch(treatment){
       case "I":
         return tokens.filter(t => t.actor?.id !== this.source.actor)
@@ -381,6 +387,10 @@ export class zone {
       default:
         return tokens
     }
+  }
+
+  sourceAdd(tokens){
+    return this.sources.concat(tokens.filter(t => t.actor?.id !== this.source.actor))
   }
 
   stretch(options){

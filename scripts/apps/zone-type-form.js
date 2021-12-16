@@ -1,6 +1,6 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
-import {DangerZoneTypeActiveEffectForm} from "./active-effect-form.js";
+import {DangerZoneDangerFormActiveEffect} from "./danger-form-active-effect.js";
 import {DangerZoneDangerFormAudio} from "./danger-form-audio.js";
 import {DangerZoneDangerFormLastingEffect} from "./danger-form-lasting-effect.js";
 import {DangerZoneDangerFormBackgroundEffect} from "./danger-form-background-effect.js";
@@ -106,7 +106,7 @@ export class DangerZoneTypeForm extends FormApplication {
     event.preventDefault();
     switch(partId){
       case 'active-effect':
-        this._activeEffectConfig(event, eventParent)
+        new DangerZoneDangerFormActiveEffect(this, eventParent, this.effect).render(true);
         break;
       case 'audio':
         new DangerZoneDangerFormAudio(this, eventParent, this.audio).render(true);
@@ -152,7 +152,7 @@ export class DangerZoneTypeForm extends FormApplication {
     const danger = new dangerZoneType;
     switch(partId){
       case 'active-effect':
-        this.effect = Object.assign(this.effect, danger.options.effect);
+        this.effect = {};
         break;
       case 'audio':
         this.audio = Object.assign(this.audio, danger.options.audio)
@@ -196,32 +196,6 @@ export class DangerZoneTypeForm extends FormApplication {
     ui.notifications?.info(`${label} ${game.i18n.localize("DANGERZONE.type-form.cleared.info")}`);
   }
 
-  async _activeEffectConfig(event, eventParent) {
-    if (!Object.keys(this.effect).length){  
-      const zoneName = $(event.delegateTarget).find('input[name="name"]').val();
-      const icon = $(event.delegateTarget).find('input[name="icon"]').val();
-      this.effect = {
-        label: zoneName,
-        icon: icon,
-        changes: [],
-        disable: false,
-        transfer: false,
-        origin: this.zoneTypeId
-      }
-    }
-
-    const effect = {
-      documentName: "ActiveEffect",
-      data: this.effect,
-      testUserPermission: (...args) => { return true},
-      parent: {documentName: "Actor"},
-      apps: {},
-      isOwner: true
-    }
-    new DangerZoneTypeActiveEffectForm(this, eventParent, effect).render(true);
-  }
-
-
   getData(options){
     let instance;
 
@@ -257,7 +231,7 @@ export class DangerZoneTypeForm extends FormApplication {
       hasLastingEffect: this.lastingEffect?.file ? true : false,
       hasLight: (this.light.bright || this.light.dim) ? true : false,
       hasTokenEffect: this.tokenEffect?.file ? true : false,
-      hasTokenMove: (this.tokenMove.v.dir || this.tokenMove.hz.dir || this.tokenMove.e.type) ? true : false,
+      hasTokenMove: (this.tokenMove.v.dir || this.tokenMove.hz.dir || this.tokenMove.e.type || this.tokenMove.sToT) ? true : false,
       hasTokenResponse: (this.tokenResponse?.save?.enable || this.tokenResponse?.damage?.enable) ? true : false,
       hasTokenSays: this.tokenSays?.fileType ? true : false,
       hasWall: (this.wall?.top || this.wall?.bottom || this.wall?.left || this.wall?.right) ? true : false,

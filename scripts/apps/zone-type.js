@@ -31,6 +31,7 @@ export class dangerZoneType {
         audio: {
           file:'',
           delay: 0,
+          duration: 0,
           volume: 0.5
         },
         backgroundEffect: {
@@ -80,8 +81,12 @@ export class dangerZoneType {
         tokenMove: {
           delay: 0,
           e: {max:0, min:0},
+          flag: true,
           hz: {dir:'', max:0, min:0},
           source:'',
+          sToT: false,
+          tiles: '',
+          walls: '',
           v: {dir:'', max:0, min:0}
         },
         wall: {
