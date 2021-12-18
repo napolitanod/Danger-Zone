@@ -14,16 +14,30 @@
                 <input type="text" required name="lastingEffect.file" class="image" placeholder="{{localize "DANGERZONE.type-form.tile.file.placeholder"}}" value="{{lastingEffect.file}}">
             </div>
         </div>
-        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
-            <label for="lastingEffect.tag">{{localize "DANGERZONE.type-form.tile.tag.label"}}</label>
+        <div class="form-group">
+            <label for="lastingEffect.randomFile">{{localize "DANGERZONE.type-form.tile.randomFile.label"}}</label>
             <div class="form-fields">
-                <input type="text" name="lastingEffect.tag" placeholder="{{localize "DANGERZONE.type-form.tile.tag.description"}}"  value="{{lastingEffect.tag}}">
+                <input type="checkbox" data-dtype="Boolean" name="lastingEffect.randomFile" {{checked lastingEffect.randomFile}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lastingEffect.scale">{{localize "DANGERZONE.type-form.tile.scale.label"}}
+                <span class="units">{{localize 'DANGERZONE.ratio'}}</span>
+            </label>
+            <div class="form-fields">
+                <input type="number" required name="lastingEffect.scale" min="0.01" max="50" step="0.01" value={{lastingEffect.scale}}>
             </div>
         </div>
         <div class="form-group">
             <label for="lastingEffect.loop">{{localize "DANGERZONE.type-form.tile.loop.label"}}</label>
             <div class="form-fields">
                 <input type="checkbox" data-dtype="Boolean" name="lastingEffect.loop" {{checked lastingEffect.loop}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lastingEffect.z">{{localize "DANGERZONE.type-form.tile.z.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="lastingEffect.z" step="1" value={{lastingEffect.z}}>
             </div>
         </div>
         <div class="form-group">
@@ -37,12 +51,6 @@
             <label for="lastingEffect.hidden">{{localize "DANGERZONE.type-form.tile.hidden.label"}}</label>
             <div class="form-fields">
                 <input type="checkbox" data-dtype="Boolean" name="lastingEffect.hidden" {{checked lastingEffect.hidden}}>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="lastingEffect.z">{{localize "DANGERZONE.type-form.tile.z.label"}}</label>
-            <div class="form-fields">
-                <input type="number" required data-dtype="number" name="lastingEffect.z" step="1" value={{lastingEffect.z}}>
             </div>
         </div>
         <hr>
@@ -78,12 +86,10 @@
                 <input type="number" required data-dtype="number" name="lastingEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{lastingEffect.delay}}>
             </div>
         </div>
-        <div class="form-group">
-            <label for="lastingEffect.scale">{{localize "DANGERZONE.type-form.tile.scale.label"}}
-                <span class="units">{{localize 'DANGERZONE.ratio'}}</span>
-            </label>
+        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
+            <label for="lastingEffect.tag">{{localize "DANGERZONE.type-form.tile.tag.label"}}</label>
             <div class="form-fields">
-                <input type="number" required name="lastingEffect.scale" min="0.01" max="50" step="0.01" value={{lastingEffect.scale}}>
+                <input type="text" name="lastingEffect.tag" placeholder="{{localize "DANGERZONE.type-form.tile.tag.description"}}"  value="{{lastingEffect.tag}}">
             </div>
         </div>
     </div>

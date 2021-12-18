@@ -9,9 +9,9 @@ export class dangerZoneType {
           d: 0
         }
       },
-      this.icon = '',
+      this.icon = 'icons/svg/biohazard.svg',
       this.id = foundry.utils.randomID(16),
-      this.name = '',
+      this.name = 'New Danger',
       this.options = {
         ambientLight: {
           active: 0,
@@ -37,6 +37,7 @@ export class dangerZoneType {
         backgroundEffect: {
           delay: 0,
           file: '',
+          randomFile: false,
           scale: 1.0,
           repeat: 0,
           rotate: false,
@@ -47,6 +48,7 @@ export class dangerZoneType {
         foregroundEffect: {
           delay: 0,
           file: '',
+          randomFile: false,
           scale: 1.0,
           source: {
             enabled: false,
@@ -66,6 +68,7 @@ export class dangerZoneType {
             mode: 'FADE'
           },
           overhead: false,
+          randomFile: false,
           scale: 1.0,
           loop: true,
           tag: '',
@@ -76,6 +79,7 @@ export class dangerZoneType {
           delay: 0,
           duration: 0,
           file: '',
+          randomFile: false,
           scale: 1.0
         },
         tokenMove: {
@@ -106,6 +110,22 @@ export class dangerZoneType {
         macro: ''
       }
     }
+
+  get backgroundEffect(){
+    return this.options.backgroundEffect
+  }
+
+  get foregroundEffect(){
+    return this.options.foregroundEffect
+  }
+
+  get lastingEffect(){
+    return this.options.lastingEffect
+  }
+
+  get tokenEffect(){
+    return this.options.tokenEffect
+  }
 
   async _update(){
     let allTypes = dangerZoneType.allDangerZoneTypes; 
@@ -195,6 +215,47 @@ export class dangerZoneType {
     } else{inError.push(json)}
     await this.setZoneTypes(allTypes);
     return {"added": added, "skipped": alreadyExists, "error": inError}
+  }
+
+  async backgroundEffectFile(){
+    if(!this.backgroundEffect.file || !this.backgroundEffect.randomFile) return [this.backgroundEffect.file]
+    const files = await this._getFilesFromPattern(this.backgroundEffect.file);
+    return files[Math.floor(Math.random() * files.length)]
+  }
+
+  async foregroundEffectFile(){
+    if(!this.foregroundEffect.file || !this.foregroundEffect.randomFile) return [this.foregroundEffect.file]
+    const files = await this._getFilesFromPattern(this.foregroundEffect.file);
+    return files[Math.floor(Math.random() * files.length)]
+  }
+
+  async lastingEffectFile(){
+    if(!this.lastingEffect.file || !this.lastingEffect.randomFile) return [this.lastingEffect.file]
+    const files = await this._getFilesFromPattern(this.lastingEffect.file);
+    return files[Math.floor(Math.random() * files.length)]
+  }
+
+  async tokenEffectFile(){
+    if(!this.tokenEffect.file || !this.tokenEffect.randomFile) return [this.tokenEffect.file]
+    const files = await this._getFilesFromPattern(this.tokenEffect.file);
+    return files[Math.floor(Math.random() * files.length)]
+  }
+
+  async _getFilesFromPattern(pattern) {
+    let source = "data";
+    const browseOptions = { wildcard: true };
+    
+    if ( /\.s3\./.test(pattern) ) {
+      source = "s3";
+      const {bucket, keyPrefix} = FilePicker.parseS3URL(pattern);
+      if ( bucket ) {
+        browseOptions.bucket = bucket;
+        pattern = keyPrefix;
+      }
+    }
+    else if ( pattern.startsWith("icons/") ) source = "public";
+    const content = await FilePicker.browse(source, pattern, browseOptions);
+    return content.files;      
   }
 
 }

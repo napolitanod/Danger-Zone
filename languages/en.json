@@ -268,7 +268,7 @@
                 "file.find": "Browse for Effect",
                 "file.label": "Image or Video",
                 "file.placeholder": "path/image.webm",
-                "mustache.label": "Stache",
+                "randomFile.label": "Randomize Wildcard .webm",
                 "rotate.label": "Random Rotation",
                 "scale.label": "Scale",
                 "repeat.label": "Number of Repeats",
@@ -305,7 +305,7 @@
                 "file.label": "Image or Video",
                 "file.placeholder": "path/image.webm",
                 "file.find": "Browse for Effect",
-                "mustache.label": "Stache",
+                "randomFile.label": "Randomize Wildcard .webm",
                 "scale.label": "Scale",
                 "source": {
                     "enabled.label": "Source to Target",
@@ -377,6 +377,7 @@
                 "overhead.description": "If Levels module is installed, tile will automatically be set to overhead for zones with depth if the bottom of danger when placed in the zone is > 0.",
                 "is-overhead.label": "Is Overhead?",
                 "loop.label": "Loop Video",
+                "randomFile.label": "Randomize Wildcard Image",
                 "scale.label": "Effect Scale",
                 "tab": {
                     "main.title": "Tile",
@@ -415,6 +416,7 @@
                 "file.label": "Image or Video",
                 "file.placeholder": "path/image.webm",
                 "file.find": "Browse for Effect",
+                "randomFile.label": "Randomize Wildcard .webm",
                 "scale.label": "Scale",
                 "duration.label": "Duration"
             },  
