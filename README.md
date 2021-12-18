@@ -42,7 +42,7 @@ The danger is the lava bubble that bursts to the surface or the vent of poisonou
 Add dangers by going to Foundry's 'Configure Settings' > 'Module Settings', locating Danger Zone, and selecting the 'Configure Dangers' button. Or access the Dangers button from the Scenes right navigation area. See [Dangers](../../wiki/Dangers) for more info.
 
 ### 2. Add Zone to Scene
-The zone is the lava field. Within the zone's boundary the dangers are generated. You associated one danger to each zone and a scene can have any number of zones. Zones may also be copied from one scene to another.
+The zone is the lava field. Within the zone's boundary the dangers are generated. You associate one danger to each zone and a scene can have any number of zones. Zones may also be copied from one scene to another.
 
 <img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/r9/zone.JPG"  height="700px">
 
