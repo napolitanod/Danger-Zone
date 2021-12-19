@@ -37,7 +37,7 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 ### 1. Create a Danger
 The danger is the lava bubble that bursts to the surface or the vent of poisonous gas that releases from a lava field. It defines an effect that executes within a zone. With Danger Zone, you have control over a vast array of configuration combinations, including displaying effects, creating lights and walls, spawning tokens, executing macros, playing sounds and moving tokens.
 
-<img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/r9/danger.JPG"  height="500">
+<img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/r9/danger2.JPG"  height="500">
 
 Add dangers by going to Foundry's 'Configure Settings' > 'Module Settings', locating Danger Zone, and selecting the 'Configure Dangers' button. Or access the Dangers button from the Scenes right navigation area. See [Dangers](../../wiki/Dangers) for more info.
 
