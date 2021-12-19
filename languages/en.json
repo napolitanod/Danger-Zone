@@ -309,8 +309,9 @@
                 "scale.label": "Scale",
                 "source": {
                     "enabled.label": "Source to Target",
-                    "name.label": "Source Tag",
+                    "name.label": "Override Source (Tag)",
                     "name.description": "Tagger tag",
+                    "name.notes": "By default the source is the zone's source actor. If a tag is added here, then all entities in the zone with this tag are instead considered to be sources.",
                     "swap.description": "Plays the effect so that it appears to come from target and towards the source.",
                     "swap.label": "Reverse Flow"
                 },
@@ -400,6 +401,7 @@
                     "playlist": "Audio Playlist",
                     "roll-table": "Rollable Table"
                 },
+                "saying-source.label": "Saying Source",
                 "says":{
                     "description": "If populated, token will always say this thing. Leave blank in order to randomize saying using the 'Source' instead.",
                     "label": "Saying",

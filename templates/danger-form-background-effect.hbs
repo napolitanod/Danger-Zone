@@ -15,12 +15,6 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="delay">{{localize "DANGERZONE.type-form.backgroundEffect.delay.label"}}</label>
-            <div class="form-fields">
-                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
-            </div>
-        </div>
-        <div class="form-group">
             <label for="scale">{{localize "DANGERZONE.type-form.backgroundEffect.scale.label"}}
                 <span class="units">{{localize 'DANGERZONE.ratio'}}</span>
             </label>
@@ -45,6 +39,12 @@
             <label for="duration">{{localize "DANGERZONE.type-form.backgroundEffect.duration.label"}}</label>
             <div class="form-fields">
                 <input type="number" required data-dtype="number" name="duration" placeholder="{{localize "DANGERZONE.ms"}}" step="1" value={{duration}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.backgroundEffect.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
             </div>
         </div>
     </div>

@@ -581,13 +581,18 @@ export class workflow {
                 const boundary = twin ? this.twinLocation : this.targetBoundary;
                 let s = new Sequence()
                 if(fe.delay){s = s.wait(fe.delay)}
-                if(fe.source?.enabled && fe.source?.name){
-                    const tagged = await getTagEntities(fe.source.name, this.scene);
+                if(fe.source?.enabled && (fe.source?.name || this.zone.sources.length)){
+                    let tagged;
+                    if(fe.source?.name){
+                        tagged = await getTagEntities(fe.source.name, this.scene);
+                    } else{tagged = this.zone.sources}
+
                     if(tagged && tagged.length){
                         for(let i=0; i<tagged.length; i++){
                             const document = tagged[i]
                             const documentName = document.documentName ? document.documentName : document.document.documentName;
                             const source = documentBoundary(documentName, document, {retain:true});
+                            if(source.A.x === boundary.A.x && source.A.y === boundary.A.y && source.B.x === boundary.B.x && source.B.y === boundary.B.y){continue}
                             s = fe.source.swap ? await this._foregroundSequence(source, s, boundary) : await this._foregroundSequence(boundary, s, source);
                         }
                     } else {
