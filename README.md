@@ -3,7 +3,6 @@
 [![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fdanger-zone&colorB=4aa94a)](https://forge-vtt.com/bazaar#package=danger-zone)
 [![Foundry Hub Endorsements](https://img.shields.io/endpoint?logoColor=white&url=https%3A%2F%2Fwww.foundryvtt-hub.com%2Fwp-json%2Fhubapi%2Fv1%2Fpackage%2Fdanger-zone%2Fshield%2Fendorsements)](https://www.foundryvtt-hub.com/package/danger-zone/)
 
-**Manifest for FVTT 9.0 Beta found [here](https://github.com/napolitanod/Danger-Zone/releases/download/FVTT9.0b4/module.json)**
 
 ## SEE THE [WIKI](../../wiki) FOR DETAILED INSTRUCTIONS AND USE EXAMPLES
 
