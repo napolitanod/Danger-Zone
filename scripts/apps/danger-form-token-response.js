@@ -13,7 +13,7 @@ export class DangerZoneDangerFormTokenResponse extends FormApplication {
         const defaults = super.defaultOptions;
 
         return foundry.utils.mergeObject(defaults, {
-          title : game.i18n.localize("DANGERZONE.type-form.Response.label"),
+          title : game.i18n.localize("DANGERZONE.type-form.tokenResponse.label"),
           id : "danger-zone-danger-token-response",
           template : dangerZone.TEMPLATES.DANGERZONEDANGERTOKENRESPONSE,
           classes: ["sheet","danger-part-form"],

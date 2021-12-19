@@ -9,9 +9,9 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="delay">{{localize "DANGERZONE.type-form.foregroundEffect.delay.label"}}</label>
+            <label for="randomFile">{{localize "DANGERZONE.type-form.foregroundEffect.randomFile.label"}}</label>
             <div class="form-fields">
-                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
+                <input type="checkbox" data-dtype="Boolean" name="randomFile" {{checked randomFile}}>
             </div>
         </div>
         <div class="form-group">
@@ -35,16 +35,11 @@
                 <input type="number" required data-dtype="number" name="duration" placeholder="{{localize "DANGERZONE.ms"}}" step="1" value={{duration}}>
             </div>
         </div>
+        <hr>
         <div class="form-group">
             <label for="source.enabled">{{localize "DANGERZONE.type-form.foregroundEffect.source.enabled.label"}}</label>
             <div class="form-fields">
                 <input type="checkbox" data-dtype="Boolean" name="source.enabled" {{checked source.enabled}}>
-            </div>
-        </div>
-        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
-            <label for="source.name">{{localize "DANGERZONE.type-form.foregroundEffect.source.name.label"}}</label>
-            <div class="form-fields">
-                <input type="text" name="source.name" placeholder="{{localize "DANGERZONE.type-form.foregroundEffect.source.name.description"}}"  value="{{source.name}}">
             </div>
         </div>
         <div class="form-group">
@@ -53,6 +48,21 @@
             </label>
             <div class="form-fields">
                 <input type="checkbox" data-dtype="Boolean" name="source.swap" {{checked source.swap}}>
+            </div>
+        </div>
+        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
+            <label for="source.name">{{localize "DANGERZONE.type-form.foregroundEffect.source.name.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.foregroundEffect.source.name.notes'}}"><i class="fas fa-info-circle"></i></span>
+           </label>
+            <div class="form-fields">
+                <input type="text" name="source.name" placeholder="{{localize "DANGERZONE.type-form.foregroundEffect.source.name.description"}}"  value="{{source.name}}">
+            </div>
+        </div>
+        <hr>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.foregroundEffect.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
             </div>
         </div>
     </div>

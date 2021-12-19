@@ -451,11 +451,10 @@ export class workflow {
     }
 
     async createEffectTile(twinTile) {
-        const effect = this.zoneTypeOptions.lastingEffect;
+        const effect = this.zoneType.lastingEffect;
         const tiles = [];
         const boundary = twinTile ? this.twinLocation : this.targetBoundary
-
-
+        const file = await this.zoneType.lastingEffectFile();
         let newTile = {
             alpha: effect.alpha,
             flags: {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.zone.trigger, type: this.zone.type}}},
@@ -582,20 +581,25 @@ export class workflow {
                 const boundary = twin ? this.twinLocation : this.targetBoundary;
                 let s = new Sequence()
                 if(fe.delay){s = s.wait(fe.delay)}
-                if(fe.source?.enabled && fe.source?.name){
-                    const tagged = await getTagEntities(fe.source.name, this.scene);
+                if(fe.source?.enabled && (fe.source?.name || this.zone.sources.length)){
+                    let tagged;
+                    if(fe.source?.name){
+                        tagged = await getTagEntities(fe.source.name, this.scene);
+                    } else{tagged = this.zone.sources}
+
                     if(tagged && tagged.length){
                         for(let i=0; i<tagged.length; i++){
                             const document = tagged[i]
                             const documentName = document.documentName ? document.documentName : document.document.documentName;
                             const source = documentBoundary(documentName, document, {retain:true});
-                            s = fe.source.swap ? this._foregroundSequence(source, s, boundary) : this._foregroundSequence(boundary, s, source);
+                            if(source.A.x === boundary.A.x && source.A.y === boundary.A.y && source.B.x === boundary.B.x && source.B.y === boundary.B.y){continue}
+                            s = fe.source.swap ? await this._foregroundSequence(source, s, boundary) : await this._foregroundSequence(boundary, s, source);
                         }
                     } else {
                         return this.log('Zone foreground effect skipped - no source', {});
                     }
                 } else {
-                    s = this._foregroundSequence(boundary, s);
+                    s = await this._foregroundSequence(boundary, s);
                 }
                 s.play()
                 return this.log('Zone foreground effect generated', {});
@@ -604,10 +608,11 @@ export class workflow {
         return this.log('Zone foreground effect skipped', {});
     }
 
-    _foregroundSequence(boundary, s, source = {}){
-        const fe = this.zoneTypeOptions.foregroundEffect;
+    async _foregroundSequence(boundary, s, source = {}){
+        const fe = this.zoneType.foregroundEffect;
+        const file = await this.zoneType.foregroundEffectFile();
         s = s.effect()
-            .file(fe.file)
+            .file(file)
             .zIndex(boundary.top)
             if(source.center){
                 s = s.atLocation(source.center)
@@ -633,8 +638,9 @@ export class workflow {
     }
 
     async backgroundEffect(twin = false){ 
-        const be = this.zoneTypeOptions.backgroundEffect;
+        const be = this.zoneType.backgroundEffect;
         if(be && be.file) {
+            const file = await this.zoneType.backgroundEffectFile();
             const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.be);
             if(!sv || (sv > 1 ? this.saveFailed.length : this.saveSucceeded.length)){
                 const boundary = twin ? this.twinLocation : this.targetBoundary;      
@@ -643,7 +649,7 @@ export class workflow {
                         s = s.wait(be.delay)
                     }
                     s = s.effect()
-                        .file(be.file)
+                        .file(file)
                         .atLocation(boundary.center)
                         .scale(be.scale)
                         .zIndex(boundary.bottom)
@@ -691,8 +697,9 @@ export class workflow {
     }
 
     async tokenEffect(){
-        const te = this.zoneTypeOptions.tokenEffect;
+        const te = this.zoneType.tokenEffect;
         if(te && te.file) {
+            const file = await this.zoneType.tokenEffectFile();
             const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.te);
             let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
             tg = this.zone.sourceTreatment(te.source, tg);
@@ -702,7 +709,7 @@ export class workflow {
                    s = s.wait(te.delay)
                 }
                 s = s.effect()
-                    .file(te.file)
+                    .file(file)
                     .attachTo(tg[i])
                     .scale(te.scale)
                 if(te.below){
