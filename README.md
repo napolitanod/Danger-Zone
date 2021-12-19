@@ -5,7 +5,7 @@
 
 **Manifest for FVTT 9.0 Beta found [here](https://github.com/napolitanod/Danger-Zone/releases/download/FVTT9.0b4/module.json)**
 
-## SEE THE [WIKI](../wiki) FOR DETAILED INSTRUCTIONS AND USE EXAMPLES
+## SEE THE [WIKI](../../wiki) FOR DETAILED INSTRUCTIONS AND USE EXAMPLES
 
 Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT module that provides GMs the ability to easily invoke localized effects within a scene. Examples of what you can do with this module:
 * A storm where the danger of being struck by lightning is a deadly possibility.
