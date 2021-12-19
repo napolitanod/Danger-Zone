@@ -46,7 +46,7 @@ Add dangers by going to Foundry's 'Configure Settings' > 'Module Settings', loca
 ### 2. Add Zone to Scene
 The zone is the lava field. Within the zone's boundary the dangers are generated. You associate one danger to each zone and a scene can have any number of zones. Zones may also be copied from one scene to another.
 
-<img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/r9/configureSceneZones.JPG"  height="700px">
+<img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/r9/configureSceneZones.JPG"  height="300px">
 
 Access the Danger Zone section from within scene configuration form's header or by right clicking on the scene in the navigation or within the side menu and selecting 'Configure Zones' from the context menu. This will present the form where you can create new zones or edit existing ones. See [Zones](../../wiki/Zones) for more info.
 
