@@ -184,7 +184,7 @@ Hooks.once('setup', async function() {
 				return game.user.isGM
 			  },
 			  callback: (li) => {
-				let scene = game.scenes.get(li.data('entityId'));
+				let scene = game.scenes.get(li.data('documentId'));
 				if(scene){
 					new DangerZoneSceneForm('', scene.id).render(true);
 				}
