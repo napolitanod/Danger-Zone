@@ -1,0 +1,40 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.fluidCanvas.description"}}</p>
+        <div class="form-group">
+            <label for="type">{{localize "DANGERZONE.type-form.fluidCanvas.type.label"}}</label>
+            <div class="form-fields">
+                <select name="type" value="{{data.type}}"> 
+                    {{selectOptions fluidCanvasOps selected=data.type localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="intensity">{{localize "DANGERZONE.type-form.fluidCanvas.intensity.label"}}</label>
+            <div class="form-fields">
+                <input type="number" data-dtype="number" name="intensity" min="0" step="1" value={{data.intensity}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="iteration">{{localize "DANGERZONE.type-form.fluidCanvas.iteration.label"}}</label>
+            <div class="form-fields">
+                <input type="number" data-dtype="number" name="iteration" min="0" step="1" value={{data.iteration}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="duration">{{localize "DANGERZONE.type-form.fluidCanvas.duration.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="duration" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.duration}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.fluidCanvas.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>

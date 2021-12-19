@@ -1,0 +1,126 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.tokenMove.description"}}</p>
+        <hr>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.tokenMove.horizontal.label"}}</label>
+        </div>
+        <div class="form-group">
+            <label for="hz.dir">{{localize "DANGERZONE.type-form.tokenMove.horizontal-direction.label"}}</label>
+            <div class="form-fields">
+                <select name="hz.dir" value="{{data.hz.dir}}"> 
+                    {{selectOptions horizontalDirOps selected=data.hz.dir localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.tokenMove.horizontal-distance.label"}}
+                <span class="units">{{localize 'DANGERZONE.grids'}}</span>
+            </label>
+            <div class="form-fields">
+                <label for="hz.min">{{localize "DANGERZONE.type-form.tokenMove.horizontal-distance-min.label"}}</label>
+                <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="hz.min" min="0" step="1" value={{data.hz.min}}>
+                <label for="hz.max">{{localize "DANGERZONE.type-form.tokenMove.horizontal-distance-max.label"}}</label>
+                <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="hz.max" min="0" step="1" value={{data.hz.max}}>
+            </div>
+        </div>
+        <hr>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.tokenMove.vertical.label"}}</label>
+        </div>
+        <div class="form-group">
+            <label for="v.dir">{{localize "DANGERZONE.type-form.tokenMove.vertical-direction.label"}}</label>
+            <div class="form-fields">
+                <select name="v.dir" value="{{data.v.dir}}"> 
+                    {{selectOptions verticalDirOps selected=data.v.dir localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.tokenMove.vertical-distance.label"}}
+                <span class="units">{{localize 'DANGERZONE.grids'}}</span>
+            </label>
+            <div class="form-fields">
+                <label for="v.min">{{localize "DANGERZONE.type-form.tokenMove.vertical-distance-min.label"}}</label>
+                <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="v.min" min="0" step="1" value={{data.v.min}}>
+                <label for="v.max">{{localize "DANGERZONE.type-form.tokenMove.vertical-distance-max.label"}}</label>
+                <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}"  data-dtype="Number" name="v.max" min="0" step="1" value={{data.v.max}}>
+            </div>
+        </div>
+        <hr>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.tokenMove.elevation.label"}}</label>
+        </div>
+        <div class="form-group">
+            <label for="e.type">{{localize "DANGERZONE.type-form.tokenMove.elevation-type.label"}}</label>
+            <div class="form-fields">
+                <select name="e.type" value="{{data.e.type}}"> 
+                    {{selectOptions elevationTypeOps selected=data.e.type localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.tokenMove.elevation-distance.label"}}
+                <span class="units">{{localize 'DANGERZONE.distance'}}</span>
+            </label>
+            <div class="form-fields">
+                <label for="e.min">{{localize "DANGERZONE.type-form.tokenMove.elevation-distance-min.label"}}</label>
+                <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="e.min" step="1" value={{data.e.min}}>
+                <label for="e.max">{{localize "DANGERZONE.type-form.tokenMove.elevation-distance-max.label"}}</label>
+                <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="e.max" step="1" value={{data.e.max}}>
+            </div>
+        </div>
+        <hr>
+        <h4>{{localize "DANGERZONE.type-form.tokenMove.overrides.label"}}</h4>
+        <div class="form-group">
+            <label for="walls">{{localize "DANGERZONE.type-form.tokenMove.walls-block.label"}}</label>
+            <div class="form-fields">
+                <select name="walls" value="{{data.walls}}"> 
+                    {{selectOptions wallsBlockOps selected=data.walls localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group hidden">
+            <label for="tiles">{{localize "DANGERZONE.type-form.tokenMove.tiles-block.label"}}</label>
+            <div class="form-fields">
+                <select name="tiles" value="{{data.tiles}}"> 
+                    {{selectOptions tilesBlockOps selected=data.tiles localize=true}}
+                </select>   
+            </div>
+        </div>
+        <hr>
+        <div class="form-group">
+            <label for="flag">{{localize "DANGERZONE.type-form.tokenMove.flag.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenMove.flag.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="flag" {{checked data.flag}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="source">{{localize "DANGERZONE.source.label"}} 
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.source.danger.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <select name="source" value="{{data.source}}"> 
+                    {{selectOptions sourceOps selected=data.source localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="sToT">{{localize "DANGERZONE.type-form.tokenMove.source-to-target.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="sToT" {{checked data.sToT}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.tokenMove.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>

@@ -36,6 +36,10 @@ export class triggerManager {
         return this.previousCombatant?.data?.initiative ? Math.floor(this.previousCombatant.data.initiative) : undefined
     }
 
+    get scene(){
+        return game.scenes.get(this.sceneId);
+    }
+
     get singleCombatant(){
         return this.combatant.id === this.previousCombatant.id
     }
@@ -115,7 +119,16 @@ export class triggerManager {
     async combatTrigger(){
         this.setCombatFlags();
         for (const [id, zn] of this.sceneZones) { 
-            if(this.combatTriggers.indexOf(zn.trigger) !== -1){
+            if(this.combatTriggers.indexOf(zn.trigger) !== -1){    
+                if(zn.trigger==='turn-start'){
+                    if(!zn.sourceTrigger([this.combatant.data.actorId])){continue}
+                }
+                else if(zn.trigger==='turn-end'){
+                    if(!zn.sourceTrigger([this.previousCombatant.data.actorId])){continue}
+                } 
+                else {
+                    if(!zn.sourceTrigger(this.data.combatants.map(c => c.data.actorId))){continue}
+                }
                 if(zn.trigger==='initiative-start' || zn.trigger==='initiative-end' ){
                     let escape = true
                     const zi = zn.initiative ? zn.initiative : 0
@@ -250,6 +263,9 @@ export class triggerManager {
         const move = dangerZoneDimensions.tokenMovement(token, update);
 
         for (let [k,zn] of sceneZones) {
+            if(!zn.sourceTrigger([token?.actor?.id])){
+                continue;
+            }
             const zoneBoundary = await zn.scene.boundary();
             const zoneTokens = zoneBoundary.tokensIn([token]);
             if(zoneTokens.length){

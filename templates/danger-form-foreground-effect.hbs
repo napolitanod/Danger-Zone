@@ -1,0 +1,72 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.foregroundEffect.description"}}</p>
+        <div class="form-group">
+            <label for="file">{{localize "DANGERZONE.type-form.foregroundEffect.file.label"}}</label>
+            <div class="form-fields">
+                {{filePicker target="file" type="imagevideo"}}
+                <input type="text" required name="file" class="image" placeholder="{{localize "DANGERZONE.type-form.foregroundEffect.file.placeholder"}}" value="{{file}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="randomFile">{{localize "DANGERZONE.type-form.foregroundEffect.randomFile.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="randomFile" {{checked randomFile}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="scale">{{localize "DANGERZONE.type-form.foregroundEffect.scale.label"}}
+                <span class="units">{{localize 'DANGERZONE.ratio'}}</span>
+            </label>
+            <div class="form-fields">
+                <input type="number" required name="scale" min="0.01" max="50" step="0.01" value={{scale}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="repeat">{{localize "DANGERZONE.type-form.foregroundEffect.repeat.label"}}</label>
+            <div class="form-fields">
+                <input type="range" data-dtype="number" name="repeat" value="{{repeat}}" min="0" max="20" step="1">
+                <span class="range-value">{{repeat}}</span>    
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="duration">{{localize "DANGERZONE.type-form.foregroundEffect.duration.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="duration" placeholder="{{localize "DANGERZONE.ms"}}" step="1" value={{duration}}>
+            </div>
+        </div>
+        <hr>
+        <div class="form-group">
+            <label for="source.enabled">{{localize "DANGERZONE.type-form.foregroundEffect.source.enabled.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="source.enabled" {{checked source.enabled}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="source.swap">{{localize "DANGERZONE.type-form.foregroundEffect.source.swap.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.foregroundEffect.source.swap.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="source.swap" {{checked source.swap}}>
+            </div>
+        </div>
+        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
+            <label for="source.name">{{localize "DANGERZONE.type-form.foregroundEffect.source.name.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.foregroundEffect.source.name.notes'}}"><i class="fas fa-info-circle"></i></span>
+           </label>
+            <div class="form-fields">
+                <input type="text" name="source.name" placeholder="{{localize "DANGERZONE.type-form.foregroundEffect.source.name.description"}}"  value="{{source.name}}">
+            </div>
+        </div>
+        <hr>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.foregroundEffect.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>

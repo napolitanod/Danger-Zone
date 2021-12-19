@@ -10,12 +10,12 @@ import {DangerZoneForm} from './zone-form.js';
 export function addTriggersToHotbar() {
     if(game.user.isGM){
         const scene = game.scenes.find(scene => scene.data.active);
-        const clss = 'danger-zone-hotbar-trigger';
-        $('#hotbar').find(`.${clss}`).remove();
+        const id = 'danger-zone-hotbar-trigger';
+        $('#ui-middle').find(`#${id}`).remove();
         if(game.user.viewedScene === scene?.id) {
-            const html = $('#action-bar');
+            const html = $('#ui-middle');
             if(!scene?.data?.gridType){return dangerZone.log(false,'No scene navigation when gridless ', {"scene": scene, "nav": html});}
-            _setDangerZoneButton(html, scene, clss)
+            _setDangerZoneButton(html, scene, id)
         }
     }
 }
@@ -25,8 +25,7 @@ function _setDangerZoneButton(html, scene, clss) {
 
     if(zonesInit.size) {
         const zones = Array.from(zonesInit, ([name, value]) => (value)).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)});
-        let triggerList = $('<ol>').addClass(clss);
-        
+        let triggerList = $('<ol>').attr('id', 'danger-zone-hotbar-trigger').addClass(clss);
         let randomSet = 0;
         const hidden = zonesInit.size > 1 ? ' hidden ' : '';
         for (let i = 0; i < zones.length; i++){
@@ -55,7 +54,7 @@ function _setDangerZoneButton(html, scene, clss) {
             if(dzMActive){btn.addClass('active')}
             triggerList.prepend(btn);
         }
-        triggerList.insertAfter(html);
+        html.append(triggerList);
     }
     dangerZone.log(false,'Update scene navigation ', {"scene": scene, "nav": html, "zones": zonesInit});
 }

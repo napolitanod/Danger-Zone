@@ -9,9 +9,9 @@ export class dangerZoneType {
           d: 0
         }
       },
-      this.icon = '',
+      this.icon = 'icons/svg/biohazard.svg',
       this.id = foundry.utils.randomID(16),
-      this.name = '',
+      this.name = 'New Danger',
       this.options = {
         ambientLight: {
           active: 0,
@@ -31,11 +31,13 @@ export class dangerZoneType {
         audio: {
           file:'',
           delay: 0,
+          duration: 0,
           volume: 0.5
         },
         backgroundEffect: {
           delay: 0,
           file: '',
+          randomFile: false,
           scale: 1.0,
           repeat: 0,
           rotate: false,
@@ -46,32 +48,57 @@ export class dangerZoneType {
         foregroundEffect: {
           delay: 0,
           file: '',
+          randomFile: false,
           scale: 1.0,
           source: {
             enabled: false,
-            name: ''
+            name: '',
+            swap: false
           },
           repeat: 0,
           duration: 0
         },
         lastingEffect: {
+          alpha: 1,
           delay: 0,
           file: '',
+          hidden: false,
+          occlusion: {
+            alpha: 0,
+            mode: 'FADE'
+          },
+          overhead: false,
+          randomFile: false,
           scale: 1.0,
           loop: true,
-          tag: ''
+          tag: '',
+          z: 0
         },
         tokenEffect: {
+          below: 0,
           delay: 0,
           duration: 0,
           file: '',
+          randomFile: false,
           scale: 1.0
+        },
+        tokenMove: {
+          delay: 0,
+          e: {max:0, min:0},
+          flag: true,
+          hz: {dir:'', max:0, min:0},
+          source:'',
+          sToT: false,
+          tiles: '',
+          walls: '',
+          v: {dir:'', max:0, min:0}
         },
         wall: {
           bottom:false,
           dir: 0,
           door: 0,
           left: false,
+          light: 1,
           move: 1,
           random: false,
           right: false,
@@ -83,6 +110,22 @@ export class dangerZoneType {
         macro: ''
       }
     }
+
+  get backgroundEffect(){
+    return this.options.backgroundEffect
+  }
+
+  get foregroundEffect(){
+    return this.options.foregroundEffect
+  }
+
+  get lastingEffect(){
+    return this.options.lastingEffect
+  }
+
+  get tokenEffect(){
+    return this.options.tokenEffect
+  }
 
   async _update(){
     let allTypes = dangerZoneType.allDangerZoneTypes; 
@@ -172,6 +215,47 @@ export class dangerZoneType {
     } else{inError.push(json)}
     await this.setZoneTypes(allTypes);
     return {"added": added, "skipped": alreadyExists, "error": inError}
+  }
+
+  async backgroundEffectFile(){
+    if(!this.backgroundEffect.file || !this.backgroundEffect.randomFile) return [this.backgroundEffect.file]
+    const files = await this._getFilesFromPattern(this.backgroundEffect.file);
+    return files[Math.floor(Math.random() * files.length)]
+  }
+
+  async foregroundEffectFile(){
+    if(!this.foregroundEffect.file || !this.foregroundEffect.randomFile) return [this.foregroundEffect.file]
+    const files = await this._getFilesFromPattern(this.foregroundEffect.file);
+    return files[Math.floor(Math.random() * files.length)]
+  }
+
+  async lastingEffectFile(){
+    if(!this.lastingEffect.file || !this.lastingEffect.randomFile) return [this.lastingEffect.file]
+    const files = await this._getFilesFromPattern(this.lastingEffect.file);
+    return files[Math.floor(Math.random() * files.length)]
+  }
+
+  async tokenEffectFile(){
+    if(!this.tokenEffect.file || !this.tokenEffect.randomFile) return [this.tokenEffect.file]
+    const files = await this._getFilesFromPattern(this.tokenEffect.file);
+    return files[Math.floor(Math.random() * files.length)]
+  }
+
+  async _getFilesFromPattern(pattern) {
+    let source = "data";
+    const browseOptions = { wildcard: true };
+    
+    if ( /\.s3\./.test(pattern) ) {
+      source = "s3";
+      const {bucket, keyPrefix} = FilePicker.parseS3URL(pattern);
+      if ( bucket ) {
+        browseOptions.bucket = bucket;
+        pattern = keyPrefix;
+      }
+    }
+    else if ( pattern.startsWith("icons/") ) source = "public";
+    const content = await FilePicker.browse(source, pattern, browseOptions);
+    return content.files;      
   }
 
 }

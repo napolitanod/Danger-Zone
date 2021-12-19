@@ -1,0 +1,52 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.active-effect.description"}}</p>
+        <div class="hidden">
+            <input type="text" value="{{origin}}" name="flags.danger-zone.origin">
+        </div>
+        <div class="form-group">
+            <label>{{localize 'DANGERZONE.type-form.active-effect.edit.title'}}</label>
+            <div class="form-fields">
+                <button data-action="edit" title="{{localize 'DANGERZONE.type-form.active-effect.notes'}}" style="flex: 0 0 100%;"><i class="fas fa-hand-sparkles"></i> {{localize "DANGERZONE.type-form.active-effect.edit.title"}}</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="flags.danger-zone.limit">{{localize "DANGERZONE.type-form.active-effect.limit.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.active-effect.limit.description'}}"><i class="fas fa-info-circle"></i></span>
+           </label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="flags.danger-zone.limit" {{checked data.flags.danger-zone.limit}}>
+            </div>
+        </div>
+        <div class="form-group {{#unless timesUpOn}}hidden{{/unless}}">
+            <label for="flags.dae.macroRepeat">{{localize "DANGERZONE.type-form.active-effect.macro.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.active-effect.macro.description'}}"><i class="fas fa-info-circle"></i></span>
+           </label>
+            <div class="form-fields">
+                <select name="flags.dae.macroRepeat" value="{{data.flags.dae.macroRepeat}}"> 
+                    <option value=""></option>
+                    {{selectOptions macroRepeatOps selected=data.flags.dae.macroRepeat localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="flags.danger-zone.source">{{localize "DANGERZONE.source.label"}} 
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.source.danger.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <select name="flags.danger-zone.source" value="{{data.flags.danger-zone.source}}"> 
+                    {{selectOptions sourceOps selected=data.flags.danger-zone.source localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="flags.danger-zone.delay">{{localize "DANGERZONE.type-form.active-effect.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="flags.danger-zone.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.flags.danger-zone.delay}}{{data.flags.danger-zone.delay}}{{/if}}{{#unless data.flags.danger-zone.delay}}0{{/unless}}>
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>

@@ -69,6 +69,13 @@ export const DANGERZONETRIGGERSORT = {
     "turn-end":  6
 } 
 
+export const SOURCETREATMENT = {
+    "": "DANGERZONE.source.treatment.none",
+    "I": "DANGERZONE.source.treatment.ignore",
+    "S": "DANGERZONE.source.treatment.also",
+    "O": "DANGERZONE.source.treatment.only"
+}
+
 export const STRETCH = {
     "": "",
     "B": "DANGERZONE.stretch.bottom.label",
@@ -77,26 +84,90 @@ export const STRETCH = {
     "T": "DANGERZONE.stretch.top.label"
 }
 
+export const HORIZONTALMOVEMENT = {
+    "": "",
+    "D": "DANGERZONE.type-form.tokenMove.horizontal-directions.left.label",
+    "U": "DANGERZONE.type-form.tokenMove.horizontal-directions.right.label",
+    "R": "DANGERZONE.type-form.tokenMove.horizontal-directions.random.label"
+}
+
+export const VERTICALMOVEMENT = {
+    "": "",
+    "D": "DANGERZONE.type-form.tokenMove.vertical-directions.down.label",
+    "U": "DANGERZONE.type-form.tokenMove.vertical-directions.up.label",
+    "R": "DANGERZONE.type-form.tokenMove.vertical-directions.random.label"
+}
+
+export const ELEVATIONMOVEMENT = {
+    "": "",
+    "R": "DANGERZONE.type-form.tokenMove.elevation-types.relative.label",
+    "S": "DANGERZONE.type-form.tokenMove.elevation-types.set.label"
+}
+
+export const FLUIDCANVASTYPES = {
+    "black": "DANGERZONE.type-form.fluidCanvas.types.black",
+    "blur": "DANGERZONE.type-form.fluidCanvas.types.blur",
+    "drug": "DANGERZONE.type-form.fluidCanvas.types.drug",
+    "earthquake": "DANGERZONE.type-form.fluidCanvas.types.earthquake",
+    "heartbeat": "DANGERZONE.type-form.fluidCanvas.types.heartbeat",
+    "negative": "DANGERZONE.type-form.fluidCanvas.types.negative",
+    "sepia": "DANGERZONE.type-form.fluidCanvas.types.sepia",
+    "spin": "DANGERZONE.type-form.fluidCanvas.types.spin"
+}
+
+export const SOURCETRIGGERS = {
+    "": "DANGERZONE.edit-form.source.triggers.any",
+    "C": "DANGERZONE.edit-form.source.triggers.scene",
+    "S": "DANGERZONE.edit-form.source.triggers.source"
+}
+
+export const TOKENSAYSTYPES = {
+    "audio":  "DANGERZONE.type-form.tokenSays.rule-type-option.playlist",
+    "rollTable":  "DANGERZONE.type-form.tokenSays.rule-type-option.roll-table"
+}
+
+export const DAMAGEONSAVE = {
+    "N": "DANGERZONE.type-form.tokenResponse.damage.save.options.none",
+    "H":"DANGERZONE.type-form.tokenResponse.damage.save.options.half",
+    "F": "DANGERZONE.type-form.tokenResponse.damage.save.options.full"
+}
+
+export const SAVERESULT = {
+    0: "DANGERZONE.type-form.tokenResponse.save.result.both",
+    2: "DANGERZONE.type-form.tokenResponse.save.result.fail",
+    1: "DANGERZONE.type-form.tokenResponse.save.result.success"
+}
+
 export const DAEDuration = daeOn ? DAE.daeSpecialDurations() : {}
 
 export function actorOps(){
     return game.actors.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
 }
 
-export function moveTypes(){
-    return Object.keys(CONST.WALL_MOVEMENT_TYPES).reduce((obj, key) => {
-        let k = CONST.WALL_MOVEMENT_TYPES[key];
-        obj[k] = key.titleCase();
-        return obj;
-    }, {})
+export function sceneOps(){
+    return game.scenes.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
 }
 
-export function senseTypes(){
-   return Object.keys(CONST.WALL_SENSE_TYPES).reduce((obj, key) => {
-        let k = CONST.WALL_SENSE_TYPES[key];
-        obj[k] = key.titleCase();
-        return obj;
-    }, {})
+export const MOVETYPES = {
+    0: "DANGERZONE.restrictions.none",
+    1: "DANGERZONE.restrictions.normal"
+}
+
+export const FVTTMOVETYPES = {
+    0: 0,
+    1: 20
+}
+
+export const SENSETYPES = {
+    0: "DANGERZONE.restrictions.none",
+    2: "DANGERZONE.restrictions.limited",
+    1: "DANGERZONE.restrictions.normal"
+}
+
+export const FVTTSENSETYPES = {
+    0: 0,
+    1: 20,
+    2: 10
 }
 
 export function dirTypes(){ 
@@ -113,4 +184,63 @@ export function doorTypes(){
         obj[k] = key.titleCase();
         return obj;
     }, {})
+}
+
+export function animationTypes() {
+    const animationTypes = {"": game.i18n.localize("DANGERZONE.none")};
+    for ( let [k, v] of Object.entries(CONFIG.Canvas.lightAnimations) ) {
+      animationTypes[k] = v.label;
+    }
+    return animationTypes;
+}
+
+export function determineMacroList() {
+  let list = {};
+  for (let macro of game.macros.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
+    list[macro.id] = macro.name;
+  }
+  return list;
+}
+
+export function saveTypes() {
+    switch(game.world.data.system){
+        case "dnd5e":
+            return game.dnd5e.config.abilities
+        default:
+            return {}
+    }
+}
+
+export function damageTypes() {
+    switch(game.world.data.system){
+        case "dnd5e":
+            return Object.assign(game.dnd5e.config.damageTypes, game.dnd5e.config.healingTypes)
+        default:
+            return {}
+    }
+}
+
+export const TILEOCCLUSIONMODES = {
+    "NONE": "DANGERZONE.occlusionmodes.none",
+    "FADE": "DANGERZONE.occlusionmodes.fade",
+    "ROOF": "DANGERZONE.occlusionmodes.roof",
+    "RADIAL": "DANGERZONE.occlusionmodes.radial"
+}
+
+export const TIMESUPMACROREPEAT = {
+    "startEveryTurn": "DANGERZONE.times-up-macro.start",
+    "endEveryTurn": "DANGERZONE.times-up-macro.end"
+}
+
+export const WALLSBLOCK = {
+    "" : "DANGERZONE.walls-block.none.label",
+    "A" : "DANGERZONE.walls-block.all.label"
+}
+
+export const TILESBLOCK = {
+    "" : "DANGERZONE.tiles-block.none.label",
+    "A" : "DANGERZONE.tiles-block.all.label",
+    "R" : "DANGERZONE.tiles-block.roof.label",
+    "B" : "DANGERZONE.tiles-block.bottom.label",
+    "T" : "DANGERZONE.tiles-block.top.label"
 }

@@ -172,13 +172,10 @@
 		},		
 		"type-form": {		
 			"active-effect":{	
-				"clear": "Effacer l'effet actif",
-				"confirm": "Voulez-vous vraiment effacer les données de l'effet actif ?",
 				"label": "Effet Actif",
 				"notes": "L'effet actif sera transféré à chaque cible en danger",
 				"edit.title": "Modifier l'effet actif",
-				"delete.title": "Supprimer l'effet actif",
-				"cleared.info": "Les données d'effet actif ont été supprimées de ce danger."
+				"delete.title": "Supprimer l'effet actif"
 			},	
 			"animation.label": "Animation",	
 			"area-x.label": "Largeur",	
@@ -193,7 +190,7 @@
 			},	
 			"backgroundEffect":{	
 				"delay.label": "Délai",
-				"label": "Effet secondaire/d'impact",
+				"label": "Effet secondaire/ d'impact",
 				"file.find": "Rechercher un effet",
 				"file.label": "Fichier",
 				"mustache.label": "Moustaches",
@@ -215,7 +212,7 @@
 			},	
 			"foregroundEffect":{	
 				"delay.label": "Délai",
-				"label": "Effet primaire/environnement",
+				"label": "Effet primaire/ environnement",
 				"file.label": "Fichier",
 				"file.find": "Rechercher un effet",
 				"mustache.label": "Moustache",
@@ -280,7 +277,7 @@
 				"tag.label": "Balise(Tag)",
 				"tag.description": "Tagguer la balise(Tag)"
 			},	
-			"token-says": {	
+			"tokenSays": {	
 				"compendium.label": "Compendium",
 				"label": "Le jeton dit ",
 				"notes": "Trigger Token Says fonctionnalité sur les cibles dangereuses pour une liste de lecture ou une source rolltable donnée. La saisie d'une donnée dans le champ 'Token Says' dira toujours cette chose ou jouera la piste de cette liste de lecture, sinon les données source sont aléatoires. ",
@@ -294,7 +291,7 @@
 			},	
 			"tokenEffect":{	
 				"delay.label": "Délai",
-				"label": "Effet de jeton (Sequencer)",
+				"label": "Effet de jeton",
 				"file.label": "Fichier",
 				"file.find": "Rechercher un effet",
 				"scale.label": "Echelle",

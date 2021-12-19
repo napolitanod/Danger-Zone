@@ -16,56 +16,13 @@ form.danger-zone-types .content{
     float: right;
 }
 
-.dz-mid {
-    text-align:right;
-    margin: 0px 7px;
+.danger-zone-type-form .form-group .flexrow label {
+    line-height: 18px;
+    margin-top: 5px;    
+    min-height: 38px;
 }
 
-.dz-mid-r {
-    text-align:left;
-    margin: 0px 7px;
-}
-
-.dz-left-f {
-    text-align:left;
-    margin-right: 7px;
-    flex: 0 0 auto;
-}
-
-.danger-zone-type-form .dz-left-f {
-    min-width: 45px;
-}
-
-.dz-checkbox {flex: 0 0 3%;}
-
-.dz-sel-sm, .dz-input-xs {flex: 0 0 12%;}
-.dz-sel-sm, .dz-input-sm {flex: 0 0 20%;}
-.dz-sel-ms, .dz-input-ms {flex: 0 0 30%;}
-.dz-input, .dz-sel-med {flex: 0 0 40%;}
-.dz-input-lg {flex: 0 0 48%;}
-.dz-sel-med > select, .dz-sel-ms > select, .dz-sel-sm > select, .danger-zone-type-form input[type="color" i]  {width: 100%;}
-
-.dz-range, .dz-range-all {flex: 0 0 25%;}
-.dz-range > input {width: 70%}
-.dz-range > input[type="range"] + .range-value {
-    display: inline-block;
-    width: 20%;
-}
-
-.dz-ms {flex: 0 0 8%;}
-.dz-num {flex: 0 0 6%;}
-
-.dz-sect {margin-bottom: 6px;}
-
-.dz-spacer-60 {flex: 1 1 60%;}
-.dz-spacer-50 {flex: 1 1 50%;}
-.dz-spacer-40 {flex: 1 1 40%;}
-.dz-spacer-30 {flex: 1 1 30%;}
-.dz-spacer-20 {flex: 1 1 20%;}
-.dz-spacer-10 {flex: 1 1 10%;}
-.dz-spacer-5 {flex: 1 1 5%;}
-
-form.danger-zone-record .toolt {
+.dz-toolt {
     color: #9e9e9e;
     vertical-align: super;
     font-size: 10px;
@@ -73,6 +30,7 @@ form.danger-zone-record .toolt {
 
 form.danger-zone-record .hidden, 
 form.danger-zone-type-form .hidden, 
+.danger-part-form .hidden, 
 #danger-zone-type-search-clear.hidden {
     display: none !important;
 }
@@ -101,7 +59,7 @@ form.danger-zone-type-form .hidden,
     font-family: "Modesto Condensed", "Palatino Linotype", serif;
 }
 
-form ol.danger-zone-scene-list, form ol.danger-zone-types-list {
+form ol.danger-zone-scene-list, form ol.danger-zone-types-list, form ol.danger-setting-group {
     flex-basis: 100%;
     list-style: none;
     margin: 0;
@@ -111,25 +69,38 @@ form ol.danger-zone-scene-list, form ol.danger-zone-types-list {
     background: rgba(0, 0, 0, 0.03);
 }
 
-form.danger-zone-type-form .form-group {
-    margin: 0;
-    padding: .55rem;
-    align-items: flex-start;
-    justify-content: flex-end;
-    border-bottom: 1px solid rgba(0,0,0,.1);
-    transition: background .3s ease;
-    position: relative;
+form ol.danger-setting-group > li {
     display: flex;
+    flex: 0 0 20%;
+    flex-wrap: wrap;
+    list-style: none;
+    white-space: break-spaces;
+    text-align: center;
+    text-overflow: clip;
+    padding: 10px 0 0 0;
+    width: 86px;
+    position: relative;
+    flex-direction: column;
+    align-items: center;
 }
 
-form.danger-zone-type-form h3 {
-    padding-bottom: 0px;
-    border-bottom: none;
+form.danger-zone-type-form .main-danger .form-group {
+    margin: 7px 0px;
+}
+
+form.danger-zone-type-form .main-danger .form-group > * {
+    flex: 7;
+}
+
+form.danger-zone-type-form .main-danger .form-group > label {
+    flex: 3;
 }
 
 form.danger-zone-type-form .main-danger {
     background: rgba(0, 0, 0, 0.1);
+    padding: 3px 10px;
 }
+
 .danger-zone-scene-list li.scene-config, 
 .danger-zone-types-list li.type-record {
     flex: 1 1 100%;
@@ -145,7 +116,7 @@ form.danger-zone-type-form .main-danger {
 }
 
 .danger-zone-type-details, .danger-zone-details {
-    flex: 0 0 90%;
+    flex: 0 0 88%;
     white-space: nowrap;
     overflow-x: hidden; 
     flex-wrap: nowrap;
@@ -172,7 +143,7 @@ form.danger-zone-type-form .main-danger {
 .danger-zone-types-header .danger-zone-controls, 
 .danger-zone-scene .danger-zone-controls,
 .danger-zone-types-list .danger-zone-controls {
-    flex: 0 0 10%;
+    flex: 0 0 12%;
     text-align: right;
     color: #7a7971;
     padding: 0px 4px 0px 0px;
@@ -309,8 +280,8 @@ form.danger-zone-record .form-fields .boundary-top-label {
 /*hotbar*/
 .danger-zone-hotbar-trigger {
     position: absolute;
-    right: -50px;
-    bottom: 2px;
+    left: 780px;
+    bottom: 12px;
     list-style: none;
     border-width: 0px;
     background-color: transparent;
@@ -391,11 +362,54 @@ form.danger-zone-record .form-fields .boundary-top-label {
     text-align: center;
 }
 
-.danger-zone-scene-trigger-button:hover, .danger-zone-scene-trigger-master:hover, .danger-zone-scene-trigger-master.active {
+.danger-zone-scene-trigger-button:hover, 
+.danger-zone-scene-trigger-master:hover, 
+.danger-zone-scene-trigger-master.active {
     color: #FFF;
     border: 1px solid red;
     border-bottom: 1px solid #ff6400;
     box-shadow: 0 0 10px #ff6400;
+}
+
+form ol.danger-setting-group button {
+    background-color: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px var(--color-shadow-dark);
+    color: var(--color-text-light-4);
+    border: 1px solid var(--color-border-dark);
+}
+
+form ol.danger-setting-group .active button {
+    color: #FFF;
+    background-color: rgba(60, 0, 120, 0.5);
+    box-shadow: 0 0 10px #9b8dff;
+}
+
+form ol.danger-setting-group button:hover {
+    color: #FFF;
+    border: 1px solid red;
+    border-bottom: 1px solid #ff6400;
+    box-shadow: 0 0 10px #ff6400;
+}
+
+form ol.danger-setting-group a.danger-zone-type-delete {
+    visibility: collapse;
+    position: absolute;
+    top: 68px;
+    font-size: 16px;
+    background: rgba(255, 62, 65);
+    box-shadow: 0 0 10px red;
+    width: 60px;
+    padding: 8px 0px;
+    margin-top: 6px;
+}
+
+form ol.danger-setting-group .active:hover a.danger-zone-type-delete {
+    visibility: visible;
+}
+
+
+form ol.danger-setting-group .active:hover label {
+    visibility: hidden;
 }
 
 .danger-zone-hotbar-trigger:hover li.hidden, 
@@ -422,48 +436,6 @@ form.danger-zone-record .form-fields .boundary-top-label {
     border-top: none;
     flex: 0 0 100%;
 }
-
-.danger-zone-type-form .form-group .flexrow {
-    flex: 0 0 100%;
-    align-items: center;
-    flex-wrap: nowrap;
-}
-
-.danger-zone-type-form .form-group .flexrow label {
-    flex: 1 1 auto;
-    text-overflow: ellipsis;
-    flex-wrap: nowrap;
-    white-space: nowrap;
-    overflow-x: hidden; 
-    max-width: 130px;
-}
-
-.danger-zone-type-form .form-group .flexrow.one-line > label {
-    flex: 1;
-}
-
-.danger-zone-type-form .form-group .flexrow.one-line > div {
-    flex: 5;
-}
-
-.danger-zone-type-form .file-picker-wrapper {
-    display: flex;
-    flex: 0 0 100%;
-}
-
-.danger-zone-type-form .tab h4 {
-    margin: 9px 0px 4px 0px;
-    font-weight: 600;
-}
-
-.danger-zone-type-form .dimensions {
-    width: 50%;
-}
-
-.danger-zone-type-form .dimensions .config-value {
-    flex: 0 0 15%;
-}
-
 
 /*search*/
 #danger-zone-type-primary-controls {
@@ -536,19 +508,17 @@ form.danger-zone-record .form-fields .boundary-top-label {
     margin: 0;
 }
   
-#danger-zone-type-search-icon i, #danger-zone-type-active-effect-edit > i, #danger-zone-type-active-effect-delete > i {
+#danger-zone-type-search-icon i, 
+.danger-zone-type-button > i {
     margin: 0;
 }
 
-#danger-zone-type-active-effect-edit, #danger-zone-type-active-effect-delete {
+.danger-zone-type-button {
     justify-content: center;
     align-items: center;
-    height: 36px;
-    width: 36px;
-}
-
-#danger-zone-type-active-effect-delete {
-    float: right;
+    height: 60px;
+    width: 60px;
+    font-size: 18px;
 }
 
 

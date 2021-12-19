@@ -1,0 +1,94 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.wall.description"}}</p>
+        <div class="form-group">
+            <label for="top">{{localize "DANGERZONE.type-form.wall.top.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="top" {{checked data.top}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="right">{{localize "DANGERZONE.type-form.wall.right.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="right" {{checked data.right}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="bottom">{{localize "DANGERZONE.type-form.wall.bottom.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="bottom" {{checked data.bottom}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="left">{{localize "DANGERZONE.type-form.wall.left.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="left" {{checked data.left}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="random">{{localize "DANGERZONE.type-form.wall.random.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.wall.random.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="random" {{checked data.random}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="move">{{localize "DANGERZONE.type-form.wall.movement.label"}}</label>
+            <div class="form-fields">
+                <select name="move" value="{{data.move}}" data-dtype="Number"> 
+                    {{selectOptions moveTypes selected=data.move localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="light">{{localize "DANGERZONE.type-form.wall.light.label"}}</label>
+            <div class="form-fields">
+                <select name="light" value="{{data.light}}" data-dtype="Number"> 
+                    {{selectOptions senseTypes selected=data.light localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="sense">{{localize "DANGERZONE.type-form.wall.sight.label"}}</label>
+            <div class="form-fields">
+                <select name="sense" value="{{data.sense}}" data-dtype="Number"> 
+                    {{selectOptions senseTypes selected=data.sense localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="sound">{{localize "DANGERZONE.type-form.wall.sound.label"}}</label>
+            <div class="form-fields">
+                <select name="sound" value="{{data.sound}}" data-dtype="Number"> 
+                    {{selectOptions senseTypes selected=data.sound localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="dir">{{localize "DANGERZONE.type-form.wall.direction.label"}}</label>
+            <div class="form-fields">
+                <select name="dir" value="{{data.dir}}" data-dtype="Number"> 
+                    {{selectOptions dirTypes selected=data.dir }}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="door">{{localize "DANGERZONE.type-form.wall.door.label"}}</label>
+            <div class="form-fields">
+                <select name="door" value="{{data.door}}" data-dtype="Number"> 
+                    {{selectOptions doorTypes selected=data.door }}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
+            <label for="tag">{{localize "DANGERZONE.type-form.wall.tag.label"}}</label>
+            <div class="form-fields">
+                <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.wall.tag.description"}}"  value="{{data.tag}}">
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>

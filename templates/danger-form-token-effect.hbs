@@ -1,0 +1,57 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.tokenEffect.description"}}</p>
+        <div class="form-group">
+            <label for="file">{{localize "DANGERZONE.type-form.tokenEffect.file.label"}}</label>
+            <div class="form-fields">
+                {{filePicker target="file" type="imagevideo"}}
+                <input type="text" required name="file" class="image" placeholder="{{localize "DANGERZONE.type-form.tokenEffect.file.placeholder"}}" value="{{data.file}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="randomFile">{{localize "DANGERZONE.type-form.tokenEffect.randomFile.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="randomFile" {{checked data.randomFile}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="scale">{{localize "DANGERZONE.type-form.tokenEffect.scale.label"}}
+                <span class="units">{{localize 'DANGERZONE.ratio'}}</span>
+            </label>
+            <div class="form-fields">
+                <input type="number" required name="scale" min="0.01" max="50" step="0.01" value={{data.scale}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="duration">{{localize "DANGERZONE.type-form.tokenEffect.duration.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="duration" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.duration}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="below">{{localize "DANGERZONE.type-form.tokenEffect.below.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="below" {{checked data.below}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="source">{{localize "DANGERZONE.source.label"}} 
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.source.danger.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <select name="source" value="{{data.source}}"> 
+                    {{selectOptions sourceOps selected=data.source localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.tokenEffect.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>

@@ -1,0 +1,151 @@
+<form autocomplete="off">
+     <nav class="sheet-tabs tabs {{#if monksActiveTilesOnNot}}hidden{{/if}}">
+        <a class="item active" data-tab="main"><i class="fas fa-cube"></i>&nbsp;{{localize 'DANGERZONE.type-form.tile.tab.main.title'}}</a>
+        <a class="item" data-tab="monks"><i class="fas fa-running"></i>&nbsp;{{localize 'DANGERZONE.type-form.tile.tab.monks.title'}}</a>
+    </nav>
+    <div class="tab active" data-tab="main">
+        <p class="notes">{{localize "DANGERZONE.type-form.tile.description"}}</p>
+        <div class="form-group">
+            <label for="lastingEffect.file">{{localize "DANGERZONE.type-form.tile.effect.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tile.effect.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                {{filePicker target="lastingEffect.file" type="imagevideo"}}
+                <input type="text" required name="lastingEffect.file" class="image" placeholder="{{localize "DANGERZONE.type-form.tile.file.placeholder"}}" value="{{lastingEffect.file}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lastingEffect.randomFile">{{localize "DANGERZONE.type-form.tile.randomFile.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="lastingEffect.randomFile" {{checked lastingEffect.randomFile}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lastingEffect.scale">{{localize "DANGERZONE.type-form.tile.scale.label"}}
+                <span class="units">{{localize 'DANGERZONE.ratio'}}</span>
+            </label>
+            <div class="form-fields">
+                <input type="number" required name="lastingEffect.scale" min="0.01" max="50" step="0.01" value={{lastingEffect.scale}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lastingEffect.loop">{{localize "DANGERZONE.type-form.tile.loop.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="lastingEffect.loop" {{checked lastingEffect.loop}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lastingEffect.z">{{localize "DANGERZONE.type-form.tile.z.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="lastingEffect.z" step="1" value={{lastingEffect.z}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lastingEffect.alpha">{{localize "DANGERZONE.type-form.tile.alpha.label"}}</label>
+            <div class="form-fields">
+                <input type="range" name="lastingEffect.alpha" min="0" max="1" step="0.05" value={{lastingEffect.alpha}}>
+                <span class="range-value">{{lastingEffect.alpha}}</span>    
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lastingEffect.hidden">{{localize "DANGERZONE.type-form.tile.hidden.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="lastingEffect.hidden" {{checked lastingEffect.hidden}}>
+            </div>
+        </div>
+        <hr>
+        <h4>{{localize "DANGERZONE.type-form.tile.overhead.label"}}</h4>
+        <div class="form-group">
+            <label for="lastingEffect.overhead">{{localize "DANGERZONE.type-form.tile.is-overhead.label"}} 
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tile.overhead.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="lastingEffect.overhead" {{checked lastingEffect.overhead}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lastingEffect.occlusion.mode">{{localize "DANGERZONE.type-form.tile.occlusion.mode.label"}}</label>
+            <div class="form-fields">
+                <select name="lastingEffect.occlusion.mode" value="{{lastingEffect.occlusion.mode}}"> 
+                    <option value=""></option>
+                    {{selectOptions occlusionModesOps selected=lastingEffect.occlusion.mode localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lastingEffect.occlusion.alpha">{{localize "DANGERZONE.type-form.tile.occlusion.alpha.label"}}</label>
+            <div class="form-fields">
+                <input type="range" name="lastingEffect.occlusion.alpha" min="0" max="1" step="0.05" value={{lastingEffect.occlusion.alpha}}>
+                <span class="range-value">{{lastingEffect.occlusion.alpha}}</span>    
+            </div>
+        </div>
+        <hr>
+        <div class="form-group">
+            <label for="lastingEffect.delay">{{localize "DANGERZONE.type-form.tile.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="lastingEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{lastingEffect.delay}}>
+            </div>
+        </div>
+        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
+            <label for="lastingEffect.tag">{{localize "DANGERZONE.type-form.tile.tag.label"}}</label>
+            <div class="form-fields">
+                <input type="text" name="lastingEffect.tag" placeholder="{{localize "DANGERZONE.type-form.tile.tag.description"}}"  value="{{lastingEffect.tag}}">
+            </div>
+        </div>
+    </div>
+    <div class="tab {{#if monksActiveTilesOnNot}}hidden{{/if}}" data-tab="monks">
+        <p class="notes">{{localize 'DANGERZONE.type-form.monks-active-tiles.notes'}}</p>
+        <hr>
+        <p class="notes">{{localize "DANGERZONE.type-form.monks-active-tiles.macro.description"}}</p>
+        <div class="form-group">
+            <label for="monksActiveTiles.macro.macroid">{{localize "DANGERZONE.type-form.monks-active-tiles.macro.label"}}</label>
+            <div class="form-fields">
+                <select name="monksActiveTiles.macro.macroid" value="{{monksActiveTiles.macro.macroid}}"> 
+                    <option value=""></option>
+                    {{selectOptions macroOps selected=monksActiveTiles.macro.macroid localize=false}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="monksActiveTiles.macro.args">{{localize "DANGERZONE.type-form.monks-active-tiles.macro.args.label"}}</label>
+            <div class="form-fields">
+                <input type="text" name="monksActiveTiles.macro.args" value="{{monksActiveTiles.macro.args}}">
+            </div>
+        </div>
+        <hr>
+        <div class="form-group">
+            <label for="monksActiveTiles.teleport.add">{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="monksActiveTiles.teleport.add" {{checked monksActiveTiles.teleport.add}}>
+            </div>
+        </div>
+        <p class="notes">{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.description"}}</p>
+        <div class="form-group">
+            <label for="monksActiveTiles.teleport.twin">{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.twin.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="monksActiveTiles.teleport.twin" {{checked monksActiveTiles.teleport.twin}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="monksActiveTiles.teleport.source">{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.source.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="monksActiveTiles.teleport.source" {{checked monksActiveTiles.teleport.source}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="monksActiveTiles.teleport.pan">{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.pan.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="monksActiveTiles.teleport.pan" {{checked monksActiveTiles.teleport.pan}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="monksActiveTiles.teleport.avoid">{{localize "DANGERZONE.type-form.monks-active-tiles.teleport.avoid.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="monksActiveTiles.teleport.avoid" {{checked monksActiveTiles.teleport.avoid}}>
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>

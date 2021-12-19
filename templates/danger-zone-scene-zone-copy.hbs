@@ -1,0 +1,32 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.scene.copy-danger-zone"}}</p>
+        <div class="form-group {{#if sceneId}}hidden{{/if}}">
+            <label for="targetSceneId">{{localize "DANGERZONE.copy-zone.target"}}</label>
+            <div class="form-fields">
+                <select name="targetSceneId" value="{{sceneId}}" required> 
+                    {{selectOptions sceneOps selected=sceneId localize=false}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="sceneId">{{localize "DANGERZONE.copy-zone.scene"}}</label>
+            <div class="form-fields">
+                <select id="danger-zone-copy-source-scene" name="sceneId" value="{{sourceSceneId}}" required> 
+                    {{selectOptions sceneOps selected=sourceSceneId localize=false}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="zoneId">{{localize "DANGERZONE.copy-zone.zone"}}</label>
+            <div class="form-fields">
+                <select name="zoneId" value="" required> 
+                    {{selectOptions zoneOps localize=false}}
+                </select>   
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>
