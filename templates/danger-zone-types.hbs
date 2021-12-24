@@ -17,6 +17,7 @@
             <div class="danger-zone-type-details">
                 <div class="name">{{localize 'DANGERZONE.types-form.type.name.label'}}</div>
             </div>
+            <div>{{localize 'DANGERZONE.types-form.world.label'}}</div>
             <div class="danger-zone-controls">
                 <a class="danger-zone-type-add" title="{{localize 'DANGERZONE.add'}}" data-type="type" data-action="add-zone-type">
                     <i class="fas fa-plus"></i> {{localize 'DANGERZONE.add'}}
@@ -29,6 +30,9 @@
                 <div class="danger-zone-type-details flexrow">
                     <img src="{{this.icon}}">
                     <div class="name">{{this.name}}</div>
+                </div>
+                <div>
+                    <input type="checkbox" name="{{this.id}}.isActive" data-action="active" data-dtype="Boolean" {{checked this.globalZone.enabled}} />
                 </div>
                 <div class="danger-zone-controls flexrow">
                     <a class="danger-zone-type-edit" title="{{localize 'DANGERZONE.edit'}}" data-action="edit"><i class="fas fa-edit"></i></a>&nbsp;&nbsp;&nbsp;

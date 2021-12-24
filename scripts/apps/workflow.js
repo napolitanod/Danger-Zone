@@ -272,6 +272,10 @@ export class workflow {
     
     /*prompts the user to select the zone location point (top left grid location) and captures the location*/
     async promptSelectZArea() {
+        if(this.zone.options.noPrompt) {
+            this.userSelectedLocation.z = 0;
+            return await this.promptSelectXYArea();
+        }  
         return new Promise((resolve, reject) => {
             new Dialog({
                 title: game.i18n.localize("DANGERZONE.alerts.input-z"),
@@ -302,7 +306,9 @@ export class workflow {
     async promptSelectXYArea(){
         let currentLayer = canvas.activeLayer;
         canvas.activateLayer('grid');
-        await dangerZoneDimensions.addHighlightZone(this.zone.id, this.scene.id, '_wf');
+        
+        dangerZoneDimensions.destroyHighlightZone(this.zone.id, '', this.zone.scene.dangerId);
+        await dangerZoneDimensions.addHighlightZone(this.zone.id, this.scene.id, '_wf', this.zone.scene.dangerId);
 
         return new Promise((resolve, reject)=>{
             ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
@@ -313,7 +319,7 @@ export class workflow {
         }).then((selected)=> {
                 this.userSelectedLocation.x = selected.x;
                 this.userSelectedLocation.y = selected.y;
-                dangerZoneDimensions.destroyHighlightZone(this.zone.id, '_wf');    
+                dangerZoneDimensions.destroyHighlightZone(this.zone.id, '_wf', this.zone.scene.dangerId);    
                 currentLayer.activate();
         });  
     }
@@ -771,7 +777,7 @@ export class workflow {
     }
 
     async _damageApply(tokens, damage, type, flavor){
-        if(!damage?.total) {return}
+        if(!damage?.total || !tokens.length) {return}
         this.log('Zone token Midi Damage Workflow started', {tokens: tokens, damage: damage, type: type, flavor: flavor});
         await new MidiQOL.DamageOnlyWorkflow(null, null, damage.total, type, tokens, damage, {flavor: flavor}) 
     }

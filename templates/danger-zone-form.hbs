@@ -1,6 +1,7 @@
 <form class="flexcol danger-zone-record" autocomplete="off">
     <section id="danger-zone-record">
         <div>
+            <p class="notes">{{localize "DANGERZONE.edit-form.convert-global.notes"}}</p>
             <div class="hidden">
                 <input type="text" value="{{zone.id}}" name="zoneId"/>
             </div>
@@ -170,6 +171,12 @@
                 <label>
                     <span>{{localize 'DANGERZONE.edit-form.placeTemplate.label'}}</span>
                     <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.placeTemplate.description'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="checkbox-value">
+                    <input type="checkbox" name="options.noPrompt" {{checked zone.options.noPrompt}} />
+                </div>
+                <label>
+                    <span>{{localize 'DANGERZONE.edit-form.promptElevation.label'}}</span>
                 </label>
             </div>
             <hr>

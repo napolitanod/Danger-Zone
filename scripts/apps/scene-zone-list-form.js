@@ -36,7 +36,7 @@ export class DangerZoneSceneForm extends FormApplication {
 
     switch (action) {
       case 'add': {
-          new DangerZoneForm(this, '', this.sceneId).render(true);
+          new DangerZoneForm(this, '', this.sceneId,'').render(true);
           this.refresh();
           break;
       }
@@ -45,7 +45,7 @@ export class DangerZoneSceneForm extends FormApplication {
         break;
       }
       case 'edit': {
-        new DangerZoneForm(this, zoneId, this.sceneId).render(true);
+        new DangerZoneForm(this, zoneId, this.sceneId, '').render(true);
         break;
       }
       case 'delete': {
@@ -89,17 +89,16 @@ export class DangerZoneSceneForm extends FormApplication {
    }
 
   getData(options){
-    const zonesInit = dangerZone.getAllZonesFromScene(this.sceneId);
+    const zonesInit = dangerZone.getAllZonesFromScene(this.sceneId, {enabled: false, typeRequired: false, triggerRequired: false}).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)});
     const dangerZones = [];
-    if(zonesInit.size){
-        const zones = Array.from(zonesInit, ([name, value]) => (value)).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)});
+    if(zonesInit.length){
         zonesInit.forEach(function(zn) {
             let typeDisplay = '';
-            const zoneType = dangerZoneType.getDangerZoneType(zn.type);
-            if(zoneType) {typeDisplay = zoneType.name}
+            const danger = dangerZoneType.getDanger(zn.type);
+            if(danger) {typeDisplay = danger.name}
             dangerZones.push({
                 id: zn.id,
-                icon: zoneType.icon,
+                icon: danger.icon,
                 title: zn.title, 
                 trigger: game.i18n.localize(DANGERZONETRIGGERS[zn.trigger]),
                 typeDisplay: typeDisplay, 
