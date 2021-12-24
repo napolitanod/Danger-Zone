@@ -5,9 +5,10 @@ import {DANGERZONETRIGGERS} from './constants.js';
 import {TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, STRETCH, SOURCETRIGGERS, actorOps} from './constants.js';
 
 export class DangerZoneForm extends FormApplication {
-  constructor(app, zoneId, sceneId, ...args) {
+  constructor(app, zoneId, sceneId, dangerId, ...args) {
       super(...args);
       this.parent = app;
+      this.dangerId = dangerId,
       this.zoneId = zoneId;
       this.sceneId = sceneId;
       this.pickerStart = null;
@@ -77,7 +78,7 @@ export class DangerZoneForm extends FormApplication {
     if(!zoneId){
       instance = new zone(this.sceneId);
     } else {
-      instance = dangerZone.getZoneFromScene(zoneId, this.sceneId);
+      instance = this.dangerId ? dangerZone.getGlobalZone(this.dangerId, this.sceneId) : dangerZone.getZoneFromScene(zoneId, this.sceneId);
     }
 
     const hideInit = (instance.trigger === 'initiative-start' || instance.trigger === 'initiative-end') ? false : true
@@ -92,7 +93,7 @@ export class DangerZoneForm extends FormApplication {
       stretchOps: STRETCH,
       tokenDispositionOps: TOKENDISPOSITION,
       triggerOps: DANGERZONETRIGGERS,
-      zoneTypeOps: dangerZoneType.dangerZoneTypeList,
+      zoneTypeOps: dangerZoneType.dangerList,
       wallReplaceOps: DANGERZONEWALLREPLACE,
       sceneInactive: scene?.data?.active ? false : true
     } 

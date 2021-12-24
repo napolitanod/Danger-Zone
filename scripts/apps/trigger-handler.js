@@ -95,7 +95,7 @@ export class triggerManager {
                 this.log(`Random trigger zone found...`, {eventData: data});
             }
         } else {
-            this.zones.push(dangerZone.getZoneFromScene(data.zone, data.scene))
+            this.zones.push(data.dangerId ? dangerZone.getGlobalZone(data.dangerId, data.scene) : dangerZone.getZoneFromScene(data.zone, data.scene))
         } 
         
         if(this.zones[0].trigger === 'manual'){
@@ -118,7 +118,7 @@ export class triggerManager {
 
     async combatTrigger(){
         this.setCombatFlags();
-        for (const [id, zn] of this.sceneZones) { 
+        for (const zn of this.sceneZones) { 
             if(this.combatTriggers.indexOf(zn.trigger) !== -1){    
                 if(zn.trigger==='turn-start'){
                     if(!zn.sourceTrigger([this.combatant.data.actorId])){continue}
@@ -225,23 +225,16 @@ export class triggerManager {
     }
 
     static async apiDirectTrigger(zn, sceneId, options = {}){
-        if(options === true || options === false){
-            options = {activeOnly: options}
-        }
         const tm = new triggerManager(sceneId, {zone: 'direct', scene: sceneId, options: options});
         tm.zones.push(zn);
-        if(zn.enabled || !options.activeOnly){
-            dangerZone.log(false,'API trigger ready ', {zone: zn, trigger: tm, options: options});
-            return await tm.next();
-        }
-        dangerZone.log(false,'API trigger bypassed scene disabled ', {zone: zn, trigger: tm, options: options});
+        (zn.enabled || !options.activeOnly) ? await tm.next() : console.log('API trigger bypassed scene disabled ', {zone: zn, trigger: tm, options: options});
         return tm
     }
 
     static async findCombatTriggers(combat, hook){
         if(game.user.isGM && combat.scene && combat.started && !(combat.current.round === 1 && combat.current.turn === 0 && combat.combatants.find(c => c.initiative === null))) {
             const sceneZones = dangerZone.getCombatZonesFromScene(combat.scene.id);
-            if(sceneZones.size){
+            if(sceneZones.length){
                 const scene = game.scenes.get(combat.scene.id);
                 if(!scene?.data?.gridType){return dangerZone.log(false,'No Combat Triggers When Gridless ', {combat, hook})}
 
@@ -262,7 +255,7 @@ export class triggerManager {
         const zones = []
         const move = dangerZoneDimensions.tokenMovement(token, update);
 
-        for (let [k,zn] of sceneZones) {
+        for (const zn of sceneZones) {
             if(!zn.sourceTrigger([token?.actor?.id])){
                 continue;
             }

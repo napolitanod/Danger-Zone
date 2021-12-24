@@ -1,7 +1,6 @@
 import {dangerZone} from './danger-zone.js';
 import {TRIGGERDISPLAYOPTIONS, SCENEFORMICONDISPLAYOPTIONS} from './apps/constants.js';
-import {DangerZoneTypesForm} from './apps/zone-type-list-form.js'
-import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
+import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
 import {triggerManager}  from './apps/trigger-handler.js';
 import {api} from "./apps/api.js";
@@ -254,14 +253,7 @@ Hooks.on('preUpdateScene', (scene, change, options, userId) => {
  * Hook for the rendering of the scene list at top of canvas display. Adds zone trigger buttons to scene navigation bar on canvas
  */
 Hooks.on('renderSceneNavigation', async(app, html, options) => {
-	switch(game.settings.get('danger-zone', 'scene-trigger-button-display')){
-		case "S":
-			addTriggersToSceneNavigation(app, html, options);
-			break
-		case "H":
-			addTriggersToHotbar();
-			break
-	}
+	dangerZone.initializeTriggerButtons()
 });
 
 /**

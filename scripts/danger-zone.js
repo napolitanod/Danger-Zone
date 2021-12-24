@@ -1,6 +1,9 @@
 import {dangerZoneDimensions} from './apps/dimensions.js';
-import {DangerZoneTypesForm} from './apps/zone-type-list-form.js';
+import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
+import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
+import {addTriggersToHotbar} from './apps/hotbar.js';
+import { WORLDZONE } from './apps/constants.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -27,6 +30,7 @@ export class dangerZone {
     DANGERZONEDANGERBACKGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-background-effect.hbs`,
     DANGERZONEDANGERFLUIDCANVAS: `modules/${this.ID}/templates/danger-form-fluid-canvas.hbs`,
     DANGERZONEDANGERFOREGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-foreground-effect.hbs`,
+    DANGERZONEDANGERGLOBALZONE: `modules/${this.ID}/templates/danger-form-global-zone.hbs`,
     DANGERZONEDANGERLASTINGEFFECT: `modules/${this.ID}/templates/danger-form-lasting-effect.hbs`,
     DANGERZONEDANGERLIGHT: `modules/${this.ID}/templates/danger-form-light.hbs`,
     DANGERZONEDANGERTOKENRESPONSE: `modules/${this.ID}/templates/danger-form-token-response.hbs`,
@@ -55,6 +59,76 @@ export class dangerZone {
       }
   }
 
+  /**
+   * converts a JSON object to a zone class
+   * @param {object} flag 
+   * @returns 
+   */
+  static _toClass(flag){
+    if(!flag.scene?.sceneId){return {}}
+    let zn =  new zone(flag.scene.sceneId);
+    return mergeObject(zn, flag, {insertKeys: false, enforceTypes: true})
+  }
+
+  static sceneHasZone(sceneId){
+    return game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE) ? true : false 
+  }
+
+  static getAllZonesFromScene(sceneId, options = {enabled: true, typeRequired: true, triggerRequired: true}){
+    const ar = [];
+    const flag = sceneId ? game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE) : ar; 
+    for (var zn in flag) {
+        if((!options.enabled || flag[zn].enabled) && (!options.typeRequired || flag[zn].type) && (!options.triggerRequired || flag[zn].trigger) && flag[zn].scene?.sceneId) ar.push(this._toClass(flag[zn]));
+    }
+    return ar
+  }
+  
+  static getZoneList(sceneId){
+    const list = {};
+    for (const zn of this.getAllZonesFromScene(sceneId).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)})) {
+      list[zn.id] = zn.title;
+    }
+    return list;
+  }
+
+  /**
+   * Returns all zones on a given scene that automatically triggered during combat
+   * @param {string} sceneId  the scene id
+   * @returns 
+   */
+  static getCombatZonesFromScene(sceneId) {
+    return this.getAllZonesFromScene(sceneId).filter(zn => !["manual","aura","move"].includes(zn.trigger))
+  }  
+
+    /**
+  * Returns all zones on a given scene that are enabled and that are triggered by movement
+  * @param {string} sceneId  the scene id
+  * @returns array of zones
+  */
+  static getMovementZonesFromScene(sceneId) {
+    return this.getAllZonesFromScene(sceneId).filter(zn => ["move","aura"].includes(zn.trigger))
+  }
+
+  /**
+   * Returns all zones on a given scene that are either manual and enabled or triggered in an automated fashion
+   * @param {string} sceneId  the scene id
+   * @returns array of zones
+   */
+  static getTriggerZonesFromScene(sceneId) {
+      return this.getAllZonesFromScene(sceneId, {enabled: false}).filter(zn => zn.enabled || zn.trigger !== 'manual').concat(this.getGlobalZones(sceneId))
+  }
+  
+  static getRandomZonesFromScene(sceneId) {
+    return this.getAllZonesFromScene(sceneId).filter(zn => zn.random)
+  }
+
+  static getGlobalZones(sceneId) {
+    return dangerZoneType.allGlobalZones.map(danger => {
+      return this._convertZoneGlobalToScene(danger, sceneId);
+      }
+    )
+  }
+
  /**
    * Returns a specific zone from the given scene
    * @param {string} zoneId the danger zone id
@@ -63,11 +137,12 @@ export class dangerZone {
    */
   static getZoneFromScene(zoneId, sceneId) {
     let flag = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE + `.${zoneId}`);
-    if(!flag){return}
-    const zn = this._toClass(flag);
-    //dangerZone.log(false,'Zone Got Got ', {"zone": zn, zoneId, sceneId});
-    return zn
+    return flag ? this._toClass(flag) : undefined
   } 
+  
+  static getGlobalZone(dangerId, sceneId){
+    return this._convertZoneGlobalToScene(dangerZoneType.getDanger(dangerId), sceneId);
+  }
 
    /**
    * Returns a specific zone from the given scene using its name
@@ -76,11 +151,7 @@ export class dangerZone {
    * @returns 
    */
     static getZoneNameFromScene(zoneName, sceneId) {
-      let flags = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE);
-      if(!flags){return}
-      for (var zn in flags) {
-        if (flags[zn].title === zoneName){return this._toClass(flags[zn])}
-      }
+      return this.getAllZonesFromScene(sceneId, false, false).find(zn => zn.title === zoneName)
     }
 
   /**
@@ -95,16 +166,11 @@ export class dangerZone {
   } 
 
   static async copyZone(sourceSceneId, sourceZoneId, targetSceneId){
-    const source = deepClone(dangerZone.getZoneFromScene(sourceZoneId,sourceSceneId));
+    const source = deepClone(this.getZoneFromScene(sourceZoneId,sourceSceneId));
     delete source['id']; delete source['scene'];
     const zn = new zone(targetSceneId);
-    await zn.update(source); 
-    const updt = dangerZone.getZoneFromScene(zn.id,targetSceneId)
-    if(updt){
-      ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.zone-copied"));
-    } else {
-      ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.zone-copy-fail"));
-    }
+    const updt = await zn.update(source); 
+    updt.data.flags?.[this.ID]?.[this.FLAGS.SCENEZONE]?.[zn.id] ? ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.zone-copied")) : ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.zone-copy-fail"));
     return updt    
   }
 
@@ -130,128 +196,36 @@ export class dangerZone {
     return await this.getZoneFromScene(zoneId, sceneId).delete();
   }
 
-  /**
-   * converts a JSON object to a zone class
-   * @param {object} flag 
-   * @returns 
-   */
-  static _toClass(flag){
-    if(!flag.scene?.sceneId){return {}}
-    let zn =  new zone(flag.scene.sceneId);
-    return mergeObject(zn, flag, {insertKeys: false, enforceTypes: true})
+  static _convertZoneGlobalToScene(danger, sceneId){
+    const zn = danger?.options?.globalZone;
+    if(!zn)  zn = WORLDZONE;
+    zn.scene = {sceneId: sceneId, dangerId: danger.id};
+    zn.type= danger.id;
+    zn.title = danger.name;
+    return this._toClass(zn);
   }
 
-  /**
-   * Returns all zones on a given scene
-   * @param {string} sceneId  the scene id
-   * @returns 
-   */
-   static sceneHasZone(sceneId){
-    const flags = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE); 
-    if(flags){return true}
-    return false 
-  }
-
-  /**
-   * Returns all zones on a given scene
-   * @param {string} sceneId  the scene id
-   * @returns 
-   */
-  static getAllZonesFromScene(sceneId){
-    const flags = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE); 
-    if(!flags){return new Map}
-    return new Map(Object.entries(flags).map(([k,v]) => [k, this._toClass(v)])) 
-  }
-
-  static getZoneList(sceneId){
-    const list = {};
-    if(!sceneId){return list}
-    const flags = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE); 
-    for (var f in flags) {
-      if(flags[f].title){
-        list[f]=flags[f].title;
-      }
-    }
-    return list;
-  }
-
-  /**
-   * Returns all zones on a given scene that automatically triggered during combat
-   * @param {string} sceneId  the scene id
-   * @returns 
-   */
-  static getCombatZonesFromScene(sceneId) {
-    let mp = new Map
-    let zones = this.getAllZonesFromScene(sceneId); 
-    for (let [k,zn] of zones) {
-      if(zn.trigger !== "manual" && zn.trigger !== "aura" && zn.trigger !== "move" && zn.enabled && zn.type){mp.set(k, zn)}
-    }
-    return mp
-  }  
-   
-  /**
-  * Returns all zones on a given scene that are enabled and that are triggered by movement
-  * @param {string} sceneId  the scene id
-  * @returns 
-  */
-   static getMovementZonesFromScene(sceneId) {
-    let mp = new Map
-    let zones = this.getAllZonesFromScene(sceneId); 
-    for (let [k,zn] of zones) {
-      if(zn.enabled && (zn.trigger === "move" || zn.trigger === "aura")){mp.set(k, zn)}
-    }
-    return mp
-  }
-
-  /**
-   * Returns all zones on a given scene that are either manual and enabled or triggered in an automated fashion
-   * @param {string} sceneId  the scene id
-   * @returns 
-   */
-  static getTriggerZonesFromScene(sceneId) {
-    let mp = new Map
-    let zones = this.getAllZonesFromScene(sceneId); 
-    for (let [k,zn] of zones) {
-      if(zn.trigger && zn.type && zn.scene?.sceneId && (zn.enabled || zn.trigger !== 'manual')){mp.set(k, zn)}
-    }
-    return mp
-  }
-
-  /**
-   * returns a random zone for a given scene and trigger, accounting for weight.
-   * @param {*} sceneId 
-   * @param {*} trigger 
-   * @returns 
-   */
   static async getRandomZoneFromScene(sceneId, trigger, eligibaleZones = []) {
     let keptZones = [], max = 0;
-    let zones = this.getAllZonesFromScene(sceneId);
-    if(!zones.size){return false}
-    for (let [k,zn] of zones) {
-      const trig = (zn.trigger === 'initiative-start' || zn.trigger === 'initiative-end') ? (zn.trigger + '-' + (zn.initiative ? zn.initiative.toString() : '0')) : zn.trigger;
-      if(trig===trigger && zn.random && zn.type && zn.scene?.sceneId && zn.enabled && (!eligibaleZones.length || eligibaleZones.find(z => z.id === zn.id))){
+    let zones = this.getRandomZonesFromScene(sceneId);
+    for (const zn of zones) {
+      if(zn.triggerWithInitiative === trigger && (!eligibaleZones.length || eligibaleZones.find(z => z.id === zn.id))){
         let min = max + 1;
         max += zn.weight;
         keptZones.push({zone: zn, min: min, max: max});
       }
     }
 
-    if(!keptZones){return dangerZone.log(false,'Random Zone Get Failed ', {sceneZones: zones, eligibleZones: keptZones, range: {min: 1, max:max}});}
+    if(!keptZones) return
     const maybe = await new Roll(`1d${max}`).roll();
     const randomResult = maybe.result;
 
-    for (let i = 0; i < keptZones.length; i++) {
-      let zn = keptZones[i];
-      if(randomResult >= zn.min && randomResult <= zn.max){
-        dangerZone.log(false,'Random Zone Identified ', {zone: zn.zone, zones:keptZones, roll: randomResult, range: {min: 1, max:max}});
-        return zn.zone
-      }
-    }
-    dangerZone.log(false,'Random Zone Not Identified ', {sceneZones: zones, eligibleZones: keptZones, roll: randomResult, range: {min: 1, max:max}});
+    this.log(false,'Random Zone Search ', {zones:keptZones, roll: randomResult, range: {min: 1, max:max}});
+    return keptZones.find(zn => randomResult >= zn.min && randomResult <= zn.max).zone
   }
 
   static validatePreupdateZones(scene){
-    const flag = scene.data.flags?.[dangerZone.ID]?.[dangerZone.FLAGS.SCENEZONE];
+    const flag = scene.data.flags?.[this.ID]?.[this.FLAGS.SCENEZONE];
     let b = false;
     if(flag){
       Object.keys(flag).forEach(function(key) {
@@ -262,6 +236,17 @@ export class dangerZone {
       });
     }
     return b ? flag : b
+  }
+
+  static initializeTriggerButtons(){
+    switch(game.settings.get(this.ID, 'scene-trigger-button-display')){
+      case "S":
+        addTriggersToSceneNavigation();
+        break
+      case "H":
+        addTriggersToHotbar();
+        break
+    }
   }
 
 }
@@ -287,6 +272,7 @@ export class zone {
     this.options = {
       allInArea: false,
       bleed: true,
+      noPrompt:false,
       placeTemplate:false,
       runUntilTokenFound: false,
       stretch: '',
@@ -308,7 +294,7 @@ export class zone {
   }
 
   get danger(){
-    return dangerZoneType.getDangerZoneType(this.type)
+    return dangerZoneType.getDanger(this.type)
   }
 
   get sourceOnScene(){
@@ -319,12 +305,17 @@ export class zone {
     return this.scene.scene.tokens.filter(t => t.actor?.id === this.source.actor) 
   }
 
+  get triggerWithInitiative(){
+    return (this.trigger === 'initiative-start' || this.trigger === 'initiative-end') ? (this.trigger + '-' + (this.initiative ? this.initiative.toString() : '0')) : this.trigger
+  }
+
   /**
    * sets the flag data for the module on the scene for this zone, effectively saving the zone 
    * @returns module flag on the scene
    */
   async _setFlag(){
-    await game.scenes.get(this.scene.sceneId).setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, {[this.id]: this});
+    const updt = await game.scenes.get(this.scene.sceneId).setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, {[this.id]: this});
+    return updt
   }
 
   /**
@@ -333,7 +324,8 @@ export class zone {
    * @returns returns the zone after update
    */
   async update(updateData){
-    return await this._update(updateData);
+    const updt = await this._update(updateData);
+    return updt
   }
 
   /**
@@ -342,7 +334,8 @@ export class zone {
    */
   async _update(updateData){
     mergeObject(this, updateData, {insertKeys: false, enforceTypes: true});
-    await this._setFlag();
+    const updt = await this._setFlag();
+    return updt
   }
 
   /**
@@ -371,7 +364,6 @@ export class zone {
   }
 
   isSource(token){
-    console.log(token.actor?.id === this.source.actor)
     return token.actor?.id === this.source.actor
   }
 

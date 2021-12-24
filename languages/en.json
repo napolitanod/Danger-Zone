@@ -57,6 +57,7 @@
                 "x.label": "x",
                 "y.label": "y"
             },
+            "convert-global.notes": "Save a version of this global zone to this scene (the global zone will still exist).",
             "enabled.label": "Active",
             "initiative-count.label": "Count",
             "flavor.label": "Flavor",
@@ -71,6 +72,7 @@
             "other.label": "Other Settings",
             "placeTemplate.label": "Choose Location",
             "placeTemplate.description": "On trigger, you will be prompted to select the scene location to target with the danger (otherwise the location is randomly selected from within the bounds of the zone and bleed). If the location that you select is fully outside of the zone, the danger effects will generate but tokens outside of the zone will not be targeted. ",
+            "promptElevation.label": "Skip Elevation Prompt",
             "random.label": "Randomize",
             "random.description": "All zones in this scene that share the same trigger are grouped and only one is triggered at random. Assign a weight to control how often one triggers in relation to the others.",
             "replace.label": "Lasting Effects",
@@ -318,6 +320,10 @@
                 "repeat.label": "Number of Repeats",
                 "duration.label": "Duration"
             },
+            "global-zone": {
+                "description": "Configures this danger so that it becomes available on every scene as a manually triggered zone with a more limited option set.",
+                "label": "World Zone"
+            },
             "icon.label": "Icon",
             "icon.find": "Browse for Icon",
             "light":{
@@ -550,7 +556,8 @@
             "search.clear": "Clear Search",
             "export.title": "Export Dangers",
             "import.title": "Import Dangers",
-            "type.name.label": "Name"
+            "type.name.label": "Name",
+            "world.label": "World"
         },
         "walls-block":{
             "none.label": "Walls do not block",

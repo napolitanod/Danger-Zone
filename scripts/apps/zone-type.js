@@ -1,4 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
+import {WORLDZONE} from './constants.js';
 
 export class dangerZoneType {
     constructor() {
@@ -58,6 +59,7 @@ export class dangerZoneType {
           repeat: 0,
           duration: 0
         },
+        globalZone : {},
         lastingEffect: {
           alpha: 1,
           delay: 0,
@@ -119,6 +121,14 @@ export class dangerZoneType {
     return this.options.foregroundEffect
   }
 
+  get globalZone(){
+    return this.options.globalZone
+  }
+
+  get hasGlobalZone(){
+    return Object.keys(this.options.globalZone).length ? true : false
+  }
+
   get lastingEffect(){
     return this.options.lastingEffect
   }
@@ -127,21 +137,22 @@ export class dangerZoneType {
     return this.options.tokenEffect
   }
 
-  async _update(){
-    let allTypes = dangerZoneType.allDangerZoneTypes; 
-    allTypes[this.id] = this;
-    await dangerZoneType.setZoneTypes(allTypes);
-    return this
+  static get _allDangers() {
+    const flags = game.settings.get(dangerZone.ID, 'zone-types');
+    return flags ? flags : {}
   }
   
-  static get allDangerZoneTypes() {
-    const flags = game.settings.get('danger-zone', 'zone-types');
-    if(!flags){return{}}
-    return flags
+  static get allDangers() {
+    const flag = this._allDangers;
+    const ar = [];
+    for (var danger in flag) {
+        ar.push(this._toClass(flag[danger]));
+    }
+    return ar
   }
-  
-  static get dangerZoneTypeList() {    
-    const flags = game.settings.get('danger-zone', 'zone-types'); 
+
+  static get dangerList() {    
+    const flags = this._allDangers; 
     let list = {};
     for (var f in flags) {
       if(flags[f].name && flags[f].icon){
@@ -151,8 +162,16 @@ export class dangerZoneType {
     return list;
   }
 
-  static getDangerZoneType(id) {
-    return this.toClass(this.allDangerZoneTypes[id]);
+  static get allGlobalZones() {
+    return this.allDangers.filter(d => d.globalZone?.enabled)
+  }
+
+  static getDanger(id) {
+    return this._toClass(this._allDangers[id]);
+  }
+
+  static getDangerName(name){
+    return this.allDangers.find(d => d.name === name);
   }
 
   /**
@@ -160,7 +179,7 @@ export class dangerZoneType {
    * @param {object} flag 
    * @returns 
    */
-  static toClass(obj, enforceTypes = false){
+  static _toClass(obj, enforceTypes = false){
     if(obj){
       let type =  new dangerZoneType;
       mergeObject(type, obj, {insertKeys: false, enforceTypes: enforceTypes});
@@ -170,7 +189,7 @@ export class dangerZoneType {
   }
 
   static async deleteZoneType(id) {
-    let allTypes = this.allDangerZoneTypes; 
+    let allTypes = this._allDangers; 
     delete allTypes[id];
     await this.setZoneTypes(allTypes);
     dangerZone.log(false,'Zone Type Deleted ', {deleted: id, remaining: allTypes});
@@ -179,26 +198,43 @@ export class dangerZoneType {
   
   static async addZoneType() {
     const newType = new dangerZoneType; 
-    const allTypes = this.allDangerZoneTypes;
+    const allTypes = this._allDangers;
     allTypes[newType.id] = newType;
     await this.setZoneTypes(allTypes);
     return newType;
   }
 
   static async setZoneTypes(dangerZoneTypes) {
-    return await game.settings.set('danger-zone', 'zone-types', dangerZoneTypes);
+    return await game.settings.set(dangerZone.ID, 'zone-types', dangerZoneTypes);
+  }
+
+  async _update(){
+    let allTypes = dangerZoneType._allDangers; 
+    allTypes[this.id] = this;
+    await dangerZoneType.setZoneTypes(allTypes);
+    return this
   }
 
   static async updateDangerZoneType(id, updateData) {
-    let type = this.toClass(updateData);
+    let type = this._toClass(updateData);
     if(!type){return allTypes}
     await type._update();
     dangerZone.log(false,'Zone Type Updated ', {"type": type});
     return 
   }
 
+  async toggleWorldZone(){
+    this.options.globalZone.enabled ? this.options.globalZone.enabled = false : this.options.globalZone.enabled = true
+    await this._update();
+  }
+
+  async activateWorldZone(){
+    this.options.globalZone = WORLDZONE;
+    await this._update();
+  }
+
   static async importFromJSON(json){
-    const allTypes = this.allDangerZoneTypes;
+    const allTypes = this._allDangers;
     let added = [], alreadyExists = [], inError = [];
     if(json){
         for (var addId in json) {
@@ -208,7 +244,7 @@ export class dangerZoneType {
             } else if (allTypes[addId]) {
               alreadyExists.push(record);
             } else{
-              allTypes[record.id]=this.toClass(record, false);
+              allTypes[record.id]=this._toClass(record, false);
               added.push(record);
             }
         }

@@ -42,7 +42,7 @@ export class dangerZoneDimensions {
     }
 
     get zone(){
-        return dangerZone.getZoneFromScene(this.zoneId, this.sceneId);
+        return this.dangerId ? dangerZone.getGlobalZone(this.dangerId, this.sceneId) : dangerZone.getZoneFromScene(this.zoneId, this.sceneId);
     }
 
     _subDimensions(w,h){
@@ -106,22 +106,24 @@ export class dangerZoneDimensions {
 		}
     }
 
-    static async addHighlightZone(zoneId, sceneId, nameModifier = ''){
-        const zn = dangerZone.getZoneFromScene(zoneId, sceneId).scene;
-        await zn.addHighlightZone(nameModifier)
+    static async addHighlightZone(zoneId, sceneId, nameModifier = '', dangerId = ''){
+        const zn = dangerId ? dangerZone.getGlobalZone(dangerId, sceneId)?.scene : dangerZone.getZoneFromScene(zoneId, sceneId)?.scene;
+        if(zn) await zn.addHighlightZone(nameModifier)
     }
 
     async addHighlightZone(nameModifier = ''){
         const boundary = await this.boundary()
-        boundary.highlight(this.zoneId + nameModifier, 16737280)
+        this.dangerId ? boundary.highlight(this.dangerId + nameModifier, 10737280) : boundary.highlight(this.zoneId + nameModifier, 16737280)
     }
 
-    static destroyHighlightZone(zoneId, nameModifier = ''){
-        canvas.grid.destroyHighlightLayer('dz-'+zoneId + nameModifier)
+    static destroyHighlightZone(zoneId, nameModifier = '', dangerId = ''){
+        const name = 'dz-' + (dangerId ? dangerId : zoneId) + nameModifier;
+        if(canvas.grid.highlightLayers[name]) canvas.grid.destroyHighlightLayer(name)
     }
 
     destroyHighlightZone(nameModifier = ''){
-        canvas.grid.destroyHighlightLayer('dz-'+ this.zoneId + nameModifier)
+        const name = 'dz-'+ (this.dangerId ? this.dangerId : this.zoneId) + nameModifier;
+        if(canvas.grid.highlightLayers[name]) canvas.grid.destroyHighlightLayer(name)
     }
 
     async _excludedTagged(){
