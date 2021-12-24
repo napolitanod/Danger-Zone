@@ -1,4 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
+import {dangerZoneType} from './zone-type.js';
 import {boundary, dangerZoneDimensions} from './dimensions.js';
 import {triggerManager} from './trigger-handler.js';
 
@@ -39,11 +40,10 @@ export class api {
      * @param {string} sceneId - the scene id
      * @param {string} identifier - an identifier that user provides that differentiates this highlight layer from other highlight layers created for this zone
      */
-    static async _addHighlightZone(zoneName, sceneId, identifier){
+    static async _addHighlightZone(zoneName, sceneId, identifier = ''){
+        if(!sceneId){sceneId = canvas.scene?.id}
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        if(zn){
-            await dangerZoneDimensions.addHighlightZone(zn.id, sceneId, identifier);
-        }
+        zn ? await dangerZoneDimensions.addHighlightZone(zn.id, sceneId, identifier) : console.log(`A zone with the name provided was not found on scene ${sceneId}`)
     }
 
     /**
@@ -52,24 +52,39 @@ export class api {
      * @param {string} sceneId - the scene id
      * @param {string} identifier - an identifier that user provided when highlight was created that differentiates this highlight layer from other highlight layers created for this zone
      */
-    static _destroyHighlightZone(zoneName, sceneId, identifier){
+    static _destroyHighlightZone(zoneName, sceneId, identifier = ''){
+        if(!sceneId){sceneId = canvas.scene?.id}
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        if(zn){
-            dangerZoneDimensions.destroyHighlightZone(zn.id, identifier);
-        }
+        zn ? dangerZoneDimensions.destroyHighlightZone(zn.id, identifier) : console.log(`A scene zone with the name provided was not found on scene ${sceneId}`)
     }
 
     /**
      * triggers the given zone on the given scene
      * @param {string} zoneName - the zone's title
-     * @param {string} sceneId - the scene id
+     * @param {string} sceneId - the scene id. If left blank, defaults to canvas scene
      * @param {object} options - object with options - 
-     *                          {activeOnly: , location: }
+     *                          {activeOnly: , location: , scope: }
      *                          activeOnly {boolean} to only trigger if zone is active; 
      *                          location {object} {x:,y:,z:} bypasses zone targeting. Provide x,y pixel and z elevation for danger to target
+     *                          scope {string} limit to trigger only scene zone or global zone. If left blank, will check for both. Options: 'world', 'scene'
      */
-    static async _triggerZone(zoneName, sceneId, options = {}){
-        const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
+    static async _triggerZone(zoneName, sceneId, options = {activeOnly: false, scope: '', location: {}}){
+        if(!sceneId){sceneId = canvas.scene?.id}
+        if(!zoneName) return console.log('Zone name is required');
+        let zn; const opts = {}; 
+        if(options === true || options === false) opts['activeOnly'] = options;
+        if(options.location && Object.keys(options.location).length) opts['location'] = options.location
+
+        if(options.scope !== 'world') zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
+        if (!zn && options.scope !== 'scene') {
+            const danger = dangerZoneType.getDangerName(zoneName);
+            if(danger){
+                zn = dangerZone.getGlobalZone(danger.id, sceneId);
+                opts['dangerId'] = zn?.id;
+            }
+        } 
+    
+        if(!zn){return console.log(`A zone with the name provided was not found on scene ${sceneId}`)}
         await triggerManager.apiDirectTrigger(zn, sceneId, options);
     }
 
@@ -79,8 +94,9 @@ export class api {
      * @param {string} sceneId - the scene id
      * */
     static async _toggleZone(zoneName, sceneId) {
+        if(!sceneId){sceneId = canvas.scene?.id}
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        await zn.toggleZoneActive();
+        zn ? await zn.toggleZoneActive() : console.log(`A zone with the name provided was not found on scene ${sceneId}`)
     }
 
     /**
@@ -89,10 +105,10 @@ export class api {
      * @param {string} sceneId - the scene id
      * */
     static async _enableZone(zoneName, sceneId){
+        if(!sceneId){sceneId = canvas.scene?.id}
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        if(!zn.enabled){
-            await zn.toggleZoneActive();
-        }
+        if(!zn) return console.log(`A zone with the name provided was not found on scene ${sceneId}`);
+        if(zn && !zn.enabled) await zn.toggleZoneActive();
     }
 
     /**
@@ -101,10 +117,10 @@ export class api {
      * @param {string} sceneId - the scene id
      * */
     static async _disableZone(zoneName, sceneId){
+        if(!sceneId){sceneId = canvas.scene?.id}
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        if(zn.enabled){
-           await zn.toggleZoneActive();
-        }
+        if(!zn) return console.log(`A zone with the name provided was not found on scene ${sceneId}`)
+        if(zn.enabled) await zn.toggleZoneActive()
     }
 
     static _tokensInBoundary(A,B){

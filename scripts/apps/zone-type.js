@@ -1,4 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
+import {WORLDZONE} from './constants.js';
 
 export class dangerZoneType {
     constructor() {
@@ -169,6 +170,10 @@ export class dangerZoneType {
     return this._toClass(this._allDangers[id]);
   }
 
+  static getDangerName(name){
+    return this.allDangers.find(d => d.name === name);
+  }
+
   /**
    * converts a JSON object to a zone class
    * @param {object} flag 
@@ -224,26 +229,7 @@ export class dangerZoneType {
   }
 
   async activateWorldZone(){
-    this.options.globalZone = {
-      "options": {
-          "bleed": false,
-          "placeTemplate": false,
-          "noPrompt": false,
-          "stretch": "",
-          "allInArea": false
-      },
-      "source": {
-          "actor": ""
-      },
-      "tokenDisposition": "",
-      "actor": "",
-      "loop": 1,
-      "replace": "N",
-      "lightReplace": "N",
-      "wallReplace": "N",
-      "flavor": "",
-      "enabled": true
-    }
+    this.options.globalZone = WORLDZONE;
     await this._update();
   }
 

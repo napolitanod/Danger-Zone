@@ -3,6 +3,7 @@ import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
 import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
+import { WORLDZONE } from './apps/constants.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -150,7 +151,7 @@ export class dangerZone {
    * @returns 
    */
     static getZoneNameFromScene(zoneName, sceneId) {
-      return this.getAllZonesFromScene(sceneId, false, false).filter(zn => zn.title === zoneName)
+      return this.getAllZonesFromScene(sceneId, false, false).find(zn => zn.title === zoneName)
     }
 
   /**
@@ -197,7 +198,7 @@ export class dangerZone {
 
   static _convertZoneGlobalToScene(danger, sceneId){
     const zn = danger?.options?.globalZone;
-    if(!zn)  return;
+    if(!zn)  zn = WORLDZONE;
     zn.scene = {sceneId: sceneId, dangerId: danger.id};
     zn.type= danger.id;
     zn.title = danger.name;

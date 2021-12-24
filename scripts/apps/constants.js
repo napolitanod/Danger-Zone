@@ -1,5 +1,26 @@
 import {daeOn} from '../index.js';
 
+export const WORLDZONE = {
+    "options": {
+        "bleed": false,
+        "placeTemplate": false,
+        "noPrompt": false,
+        "stretch": "",
+        "allInArea": false
+    },
+    "source": {
+        "actor": ""
+    },
+    "tokenDisposition": "",
+    "actor": "",
+    "loop": 1,
+    "replace": "N",
+    "lightReplace": "N",
+    "wallReplace": "N",
+    "flavor": "",
+    "enabled": true
+  }
+
 export const SCENEFORMICONDISPLAYOPTIONS = {
     'B': 'DANGERZONE.setting.scene-header.display.iconLabel', 
     'I': 'DANGERZONE.setting.scene-header.display.iconOnly', 

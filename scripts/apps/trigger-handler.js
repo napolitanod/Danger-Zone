@@ -225,16 +225,9 @@ export class triggerManager {
     }
 
     static async apiDirectTrigger(zn, sceneId, options = {}){
-        if(options === true || options === false){
-            options = {activeOnly: options}
-        }
         const tm = new triggerManager(sceneId, {zone: 'direct', scene: sceneId, options: options});
         tm.zones.push(zn);
-        if(zn.enabled || !options.activeOnly){
-            dangerZone.log(false,'API trigger ready ', {zone: zn, trigger: tm, options: options});
-            return await tm.next();
-        }
-        dangerZone.log(false,'API trigger bypassed scene disabled ', {zone: zn, trigger: tm, options: options});
+        (zn.enabled || !options.activeOnly) ? await tm.next() : console.log('API trigger bypassed scene disabled ', {zone: zn, trigger: tm, options: options});
         return tm
     }
 
