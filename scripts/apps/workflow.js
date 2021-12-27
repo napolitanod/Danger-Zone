@@ -1134,7 +1134,6 @@ export class workflow {
             let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
             tg = this.zone.sourceTreatment(mutate.source, tg);
             for (const token of tg) { 
-                console.log(updates, token)
                 await warpgate.mutate(token, updates, {}, options);
             }
             return this.log('Mutation Peformed! ', {"targets": tg, "mutation-data": mutate});
