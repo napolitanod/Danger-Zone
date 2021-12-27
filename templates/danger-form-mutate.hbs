@@ -1,0 +1,38 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.mutate.description"}}</p>
+        <div class="form-group stacked command">
+            <label for="token">{{localize "DANGERZONE.type-form.mutate.token.label"}}</label>
+            <textarea name="token" placeholder="{{localize "DANGERZONE.type-form.mutate.token.description"}}" value="{{token}}">{{token}}</textarea>
+        </div>
+        <div class="form-group stacked command">
+            <label for="actor">{{localize "DANGERZONE.type-form.mutate.actor.label"}}</label>
+            <textarea name="actor" placeholder="{{localize "DANGERZONE.type-form.mutate.actor.description"}}" value="{{actor}}">{{actor}}</textarea>
+        </div>
+        <div class="form-group stacked command">
+            <label for="embedded">{{localize "DANGERZONE.type-form.mutate.embedded.label"}}</label>
+            <textarea name="embedded" placeholder="{{localize "DANGERZONE.type-form.mutate.embedded.description"}}" value="{{embedded}}">{{embedded}}</textarea>
+        </div>
+        <div class="form-group">
+            <label for="permanent">{{localize "DANGERZONE.type-form.mutate.permanent.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="permanent" {{checked permanent}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.mutate.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if delay}}{{delay}}{{/if}}{{#unless delay}}0{{/unless}}>
+            </div>
+        </div>
+        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
+            <label for="tag">{{localize "DANGERZONE.type-form.mutate.tag.label"}}</label>
+            <div class="form-fields">
+                <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.mutate.tag.description"}}"  value="{{tag}}">
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>

@@ -22,6 +22,7 @@
             "danger-depth-exceeds-zone": "The danger's depth may not exceed the zone's depth nor can a danger have a depth > 0 when a zone's depth is infinite (equal to 0).",
             "input-z": "Elevation",
             "enter-z": "Enter the danger's elevation",
+            "json-invalid": "data is not in a valid object format.",
             "no-trigger-if-not-on-combat-scene": "Danger Zones do not trigger while you are not active on the current combat scene.",
             "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
             "select-zone-end": "Select an end location for this zone. Selected area will snap to grid and represent the lower right corner of this zone.",
@@ -360,6 +361,20 @@
                     "twin.label": "Twin Tiles (i.e. Portal)"
                 }
             },
+            "mutate": {
+                "actor.label": "Token Actor Data",
+                "actor.description": "Updates token actor by passing in object data. Expects key: value pairs. This will be wrapped in {brackets} and passed as an object to the Warpgate actor mutation.",
+                "delay.label": "Delay Start",
+                "description": "Transforms targeted tokens with revertable changes using Warpgate. This is in beta and form layout / data collection is subject to change.",
+                "embedded.label": "Embedded Data",
+                "embedded.description": "Updates token items or active effects by passing in object data. Expects key: value pairs. This will be wrapped in {brackets} and passed as an object to the Warpgate embedded mutation.",
+                "label": "Mutate",
+                "permanent.label": "Mutation is Permanent",
+                "tag.label": "Token Tag",
+                "tag.description": "Tagger tag",
+                "token.label": "Token Data",
+                "token.description": "Updates token by passing in object data. Expects key: value pairs. This will be wrapped in {brackets} and passed as an object to the Warpgate token mutation."
+            },
             "name.label": "Name",
             "tab" :{
                 "effects.title": "Effects",
@@ -580,3 +595,4 @@
     }
 
 }
+    

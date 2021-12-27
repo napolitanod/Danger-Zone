@@ -2,6 +2,7 @@ import {dangerZone } from '../danger-zone.js';
 import {dangerZoneDimensions, point, locationToBoundary, documentBoundary, getTagEntities, furthestShiftPosition} from './dimensions.js';
 import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
 import {saveTypes, damageTypes, FVTTMOVETYPES, FVTTSENSETYPES} from './constants.js';
+import {stringToObj} from './helpers.js';
 
 export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 
@@ -33,6 +34,7 @@ export const WORKFLOWSTATES = {
     GENERATEMACRO: 70,
     TOKENSAYS: 80,
     WARPGATE: 81,
+    MUTATE: 82,
     AWAITPROMISES: 95,
     CANCEL: 98,
     COMPLETE: 99
@@ -243,7 +245,15 @@ export class workflow {
                 if(warpgateOn){
                     this.promises.push(this.spawnWarpgate())
                 } else {
-                    this.log('Warpgate not active in this world', {warpgateOn: warpgateOn});
+                    this.log('Spawn Skipped: Warpgate not active in this world', {warpgateOn: warpgateOn});
+                }
+                return this.next(WORKFLOWSTATES.MUTATE) 
+
+            case WORKFLOWSTATES.MUTATE:
+                if(warpgateOn){
+                    this.promises.push(this.mutate())
+                } else {
+                    this.log('Mutate skipped: Warpgate not active in this world', {warpgateOn: warpgateOn});
                 }
                 return this.next(WORKFLOWSTATES.AWAITPROMISES) 
 
@@ -1055,7 +1065,7 @@ export class workflow {
     async tokenSays() {
         const flag = this.flags?.tokenSays;
         if(flag){
-            if(this.targets.length && flag.fileType && (flag.fileName || flag.fileType)) {
+            if(flag.fileType && (flag.fileName || flag.fileType)) {
                 if(flag.delay > 0){
                     await wait(flag.delay);
                 }
@@ -1108,6 +1118,28 @@ export class workflow {
         }
         this.log('Warpgate skipped ', {})
         return {warpgate: false}
+    }
+
+    async mutate() {
+        const mutate = this.flags?.mutate;
+        if(mutate?.token || mutate?.actor || mutate?.embedded){                           
+            const updates = {}, options = {};
+            if (mutate.token) updates['token']  = stringToObj(mutate.token);
+            if (mutate.actor) updates['actor'] =  stringToObj(mutate.actor)
+            if (mutate.embedded) updates['embedded'] = stringToObj(mutate.embedded)
+            if(mutate.permanent) options['permanent'] = mutate.permanent;
+            if(mutate.tag){updates.token['flags'] = {"tagger":{"tags": [mutate.tag]}}}
+            if(mutate.delay) await warpgate.wait(mutate.delay);
+            const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.mt);
+            let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
+            tg = this.zone.sourceTreatment(mutate.source, tg);
+            for (const token of tg) { 
+                console.log(updates, token)
+                await warpgate.mutate(token, updates, {}, options);
+            }
+            return this.log('Mutation Peformed! ', {"targets": tg, "mutation-data": mutate});
+        }
+        return this.log('Mutation skipped ', {})
     }
 }
 

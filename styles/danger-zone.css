@@ -35,6 +35,10 @@ form.danger-zone-type-form .hidden,
     display: none !important;
 }
 
+.danger-part-form textarea {
+    min-height: 100px;
+}
+
 .danger-zone-scene-trigger-button.hidden {
     visibility: hidden;
     opacity: 0;
