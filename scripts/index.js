@@ -3,7 +3,7 @@ import {TRIGGERDISPLAYOPTIONS, SCENEFORMICONDISPLAYOPTIONS} from './apps/constan
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
 import {triggerManager}  from './apps/trigger-handler.js';
-import {api} from "./apps/api.js";
+import {api, _triggerZone} from "./apps/api.js";
 import {DangerZoneScene} from "./apps/scene-form.js";
 import {DangerZoneSceneForm} from './apps/scene-zone-list-form.js';
 
@@ -12,10 +12,7 @@ import {DangerZoneSceneForm} from './apps/scene-zone-list-form.js';
  */
 export var timesUpOn = false, midiQolOn = false, daeOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
 export var dzMActive = false; 
-/**
- * retains the most recent search term while in session for the danger zone type list form
- * @param {string} inSearch - most recent term
- */
+export let dangerZoneSocket; //var for socketlib
 
 Hooks.once('init', async function() {  
     
@@ -120,6 +117,15 @@ Hooks.once('init', async function() {
 		type: Boolean,
 	});
 
+	game.settings.register(modulename, "open-socket", {
+		name: game.i18n.localize("DANGERZONE.setting.open-socket.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.open-socket.description"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
+
 	game.settings.register(modulename, "token-depth-multiplier", {
 		name: game.i18n.localize("DANGERZONE.setting.token-depth-multiplier.label"),
 		hint: game.i18n.localize("DANGERZONE.setting.token-depth-multiplier.description"),
@@ -221,6 +227,14 @@ Hooks.once('setup', async function() {
  */
 Hooks.once('devModeReady', ({registerPackageDebugFlag}) => {
     registerPackageDebugFlag(dangerZone.ID);
+});
+
+/**
+ * Register sockets
+ */
+Hooks.once("socketlib.ready", () => {
+	dangerZoneSocket = socketlib.registerModule(dangerZone.ID);
+	dangerZoneSocket.register("_triggerZone", _triggerZone);
 });
 
 /**
