@@ -117,6 +117,15 @@ Hooks.once('init', async function() {
 		type: Boolean,
 	});
 
+	game.settings.register(modulename, "open-socket", {
+		name: game.i18n.localize("DANGERZONE.setting.open-socket.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.open-socket.description"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+	});
+
 	game.settings.register(modulename, "token-depth-multiplier", {
 		name: game.i18n.localize("DANGERZONE.setting.token-depth-multiplier.label"),
 		hint: game.i18n.localize("DANGERZONE.setting.token-depth-multiplier.description"),

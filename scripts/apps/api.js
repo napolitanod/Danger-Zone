@@ -112,8 +112,11 @@ export class api {
      */
      static async _triggerZone(zoneName, sceneId, options = {activeOnly: false, scope: '', location: {}}){
         if (!game.user.isGM){
-            if( game.modules.get("socketlib")?.active && dangerZoneSocket){return dangerZoneSocket.executeAsGM("_triggerZone", zoneName, sceneId, options)}
-            return console.log("Socketlib module is required in order to run Danger Zone api as a non-GM");
+            if( game.modules.get("socketlib")?.active && dangerZoneSocket){
+                if(game.settings.get(dangerZone.ID, 'open-socket')) return dangerZoneSocket.executeAsGM("_triggerZone", zoneName, sceneId, options)
+                return console.log("The GM does not allow players to trigger Danger Zones in this world.")
+            }
+            return console.log("Socketlib module is required in order to run Danger Zone api as a non-GM.");
         } 
         if(!sceneId){sceneId = canvas.scene?.id}
         if(!zoneName) return console.log('Zone name is required');

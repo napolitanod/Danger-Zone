@@ -170,6 +170,8 @@
             "danger-zone-types-config.name": "Dangers",
             "danger-zone-types-config.label": "Configure Dangers",
             "display-danger-boundary.label": "Highlight Danger Target Area",
+            "open-socket.label": "Players Can Trigger API",
+            "open-socket.description": "Enabling this settings allows players to use the 'dangerZone.triggerZone' API in macros (dangerZone.triggerZone() is passed to the GM's session to execute, which requires that the GM be logged in at the time that the macro is run).",
             "display-danger-boundary.description": "Temporarily highlights the area targeted by a danger when the zone is triggered (GM's session only).",
             "scene-control-button-display.label": "Display Clear Lasting Effects Button",
             "scene-control-button-display.description": "Toggles the display of the Clear Danger Zone Lasting Effects button within the scene control buttons tiles grouping",
