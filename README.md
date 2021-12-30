@@ -14,6 +14,7 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 
 <img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/crumbling%20ceiling%20gif.gif" height="400">
 
+> A danger zone is triggered by the start of a new combat turn, causing the screen to shake and rubble to tumble down. Using Danger Zone, you can define a portion of the scene to be the zone (e.g. the hallway) where a danger (e.g the falling rocks and screen shake) is invoked. Note that Danger Zone includes no video components and integrates with other free modules to expand functionality. In the above example, Danger Zone creates a tile in the target location and integrates with JB2A module for the rubble asset and Kandashi's Fluid Canvas for the screen shaking. Danger Zone pulls these together into a cohesive whole along with it's own trigger and zone location and targeting functionality.
 
 ## What's in the module
 * Effectively turns your scene into an actor, adding defined zones to the scene within which the effects the you define generate.
@@ -27,13 +28,16 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 * Accessible API for accessing Danger Zone functionality from another module or macro.
 
 ## What's not in the module
-* Does not include any video, image or audio components. 
+* **!!!Does not include any video, image or audio components.!!!**
 * When another module can do something well, such as summoning a token (Warpgate), shaking the screen canvas (Kandashi's Fluid Canvas), or teleporting tokens (Monk's Active Tiles) then Danger Zone will integrate with that module to provide those effects rather than include them in the module itself.
 
 ### Gridless scenes not supported
 * The module currently does not extend to include gridless scenes (though a gridded scene with a transparent grid is supported). This is a planned future extension of the module, the math is just much more difficult.
 
 ## Getting Started
+<img src="https://user-images.githubusercontent.com/22696153/147769650-1a095760-9c4e-4ef9-8cff-403abc049bb1.gif" height="400">
+
+> A danger zone is triggered by token movement within a zone using the zone aura trigger.
 
 ### 1. Create a Danger
 The danger is the lava bubble that bursts to the surface or the vent of poisonous gas that releases from a lava field. It defines an effect that executes within a zone. With Danger Zone, you have control over a vast array of configuration combinations, including displaying effects, creating lights and walls, spawning tokens, executing macros, playing sounds and moving tokens.
@@ -96,6 +100,11 @@ Trigger zones and access other Danger Zone features directly from the API
 See [API](../../wiki/API) for more info.
 
 ## Module Integration
+<img src="https://user-images.githubusercontent.com/22696153/147769508-3df0ad4c-88bf-4203-93ba-d3be997c6dde.gif" height="400">
+
+> Installing other (free) Foundry VTT modules will increase the available danger possibilities.
+> 
+
 Danger Zone integrates with a series of other Foundary modules in order to provide enhanced effects and token targetting. See the [Module Integration](../../wiki/Module-Integration) page for details on which modules extend Danger Zone base functionality if installed.
 
 ## Future Enhancements
