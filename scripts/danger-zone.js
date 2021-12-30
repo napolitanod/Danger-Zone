@@ -364,19 +364,19 @@ export class zone {
     return true
   }
 
-  isSource(token){
-    return token.actor?.id === this.source.actor
+  isSource(token, sources = []){
+    return sources.length ? sources.filter(s => s.id === token.id).length > 0 : token.actor?.id === this.source.actor
   }
 
-  sourceTreatment(treatment, tokens){
-    if(!this.source.actor || !treatment){return tokens}
+  sourceTreatment(treatment, tokens, sources = [] ){
+    if(!treatment || (!this.source.actor && !sources.length)) return tokens
     switch(treatment){
       case "I":
-        return tokens.filter(t => t.actor?.id !== this.source.actor)
+        return sources.length ? tokens.filter(t => !sources.find(s => s.id === t.id)) : tokens.filter(t => t.actor?.id !== this.source.actor)
       case "S":
-        return this.sources.concat(tokens.filter(t => t.actor?.id !== this.source.actor))
+        return tokens.filter(t => t.actor?.id !== this.source.actor).concat(sources.length ? sources : this.sources)
       case "O":
-        return this.sources
+        return sources.length ? sources : this.sources
       default:
         return tokens
     }
