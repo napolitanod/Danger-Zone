@@ -1,6 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
-import {boundary, dangerZoneDimensions} from './dimensions.js';
+import {boundary, dangerZoneDimensions, documentBoundary} from './dimensions.js';
 import {triggerManager} from './trigger-handler.js';
 import {dangerZoneSocket} from '../index.js';
 
@@ -21,6 +21,7 @@ export class api {
             toggleZone: api._toggleZone,
             enableZone: api._enableZone,
             disableZone: api._disableZone,
+            boundary: api._boundary,
             tokensInBoundary: api._tokensInBoundary
         }
 
@@ -31,6 +32,7 @@ export class api {
             toggleZone: api._toggleZone,
             enableZone: api._enableZone,
             disableZone: api._disableZone,
+            boundary: api._boundary,
             tokensInBoundary: api._tokensInBoundary
         }
     }
@@ -99,6 +101,10 @@ export class api {
         const b = new boundary(A,B);
         return b.tokensIn(canvas.scene.tokens);
     }
+
+    static _boundary(document){
+        return documentBoundary(document.documentName, document);
+    }
     
     /**
      * triggers the given zone on the given scene
@@ -109,11 +115,15 @@ export class api {
      *                          activeOnly {boolean} to only trigger if zone is active; 
      *                          location {object} {x:,y:,z:} bypasses zone targeting. Provide x,y pixel and z elevation for danger to target
      *                          scope {string} limit to trigger only scene zone or global zone. If left blank, will check for both. Options: 'world', 'scene'
+     *                          targets {array} an array of token documents that will be the targets (overrides any zone targeting)
      */
-     static async _triggerZone(zoneName, sceneId, options = {activeOnly: false, scope: '', location: {}}){
+     static async _triggerZone(zoneName, sceneId, options = {activeOnly: false, scope: '', location: {}, targets: [], sources: []}){
         if (!game.user.isGM){
             if( game.modules.get("socketlib")?.active && dangerZoneSocket){
-                if(game.settings.get(dangerZone.ID, 'open-socket')) return dangerZoneSocket.executeAsGM("_triggerZone", zoneName, sceneId, options)
+                if(game.settings.get(dangerZone.ID, 'open-socket')) {
+                    await dangerZoneSocket.executeAsGM("_triggerZone", zoneName, sceneId, options)
+                    return
+                }
                 return console.log("The GM does not allow players to trigger Danger Zones in this world.")
             }
             return console.log("Socketlib module is required in order to run Danger Zone api as a non-GM.");
@@ -122,7 +132,10 @@ export class api {
         if(!zoneName) return console.log('Zone name is required');
         let zn; const opts = {}; 
         if(options === true || options === false) opts['activeOnly'] = options;
-        if(options.location && Object.keys(options.location).length) opts['location'] = options.location
+        if(options.boundary && Object.keys(options.boundary).length) opts['boundary'] = options.boundary;
+        if(options.location && Object.keys(options.location).length) opts['location'] = options.location;
+        if(options.targets?.length) opts['targets'] = options.targets;
+        if(options.sources?.length) opts['sources'] = options.sources;
 
         if(options.scope !== 'world') zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
         if (!zn && options.scope !== 'scene') {
@@ -139,5 +152,5 @@ export class api {
 }
 
 export async function _triggerZone(zoneName, sceneId, options){
-    api._triggerZone( zoneName, sceneId, options)
+    await api._triggerZone( zoneName, sceneId, options)
 }

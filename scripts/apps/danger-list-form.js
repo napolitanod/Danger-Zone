@@ -14,7 +14,7 @@ export class DangerZoneTypesForm extends FormApplication {
       id : "danger-zone-types",
       template : dangerZone.TEMPLATES.DANGERZONETYPESCONFIG,
       width : 600,
-      height : "auto",
+      height : 500,
       closeOnSubmit: false,
       submitOnChange: true, 
       tabs:[]

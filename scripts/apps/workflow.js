@@ -58,7 +58,9 @@ export class workflow {
         this.tokenMovement = [],
         this.trigger = trigger,
         this.twinLocation = {},
+        this.userSelectedBoundary = options.boundary ? options.boundary : {},
         this.userSelectedLocation = options.location ? options.location : {},
+        this.userSelectedSources = options.sources ? options.sources : [],
         this.userSelectedTargets = options.targets ? options.targets : [],
         this.zone = zone,
         this.zoneBoundary,
@@ -353,6 +355,9 @@ export class workflow {
     }
 
     async establishTargetBoundary() {
+        if(Object.keys(this.userSelectedBoundary).length){
+            return this.getChosenBoundary();
+        }
         if(Object.keys(this.userSelectedLocation).length){
             return this.getChosenLocationBoundary();
         }
@@ -365,6 +370,11 @@ export class workflow {
             await wait(5000)
             this.targetBoundary.destroyHighlight(this.id);
         }
+    }
+
+    getChosenBoundary(){
+        this.targetBoundary = this.userSelectedBoundary;
+        this.eligibleTargets = this.targetBoundary.tokensIn(this.zoneEligibleTokens);
     }
 
     getChosenLocationBoundary(){
@@ -408,7 +418,7 @@ export class workflow {
     async makeTokenSaves(){
         const save = this.zoneTypeOptions.flags.tokenResponse?.save
         if(save && save.enable){
-            const tg = this.zone.sourceTreatment(save.source, this.targets);
+            const tg = this.zone.sourceTreatment(save.source, this.targets, this.userSelectedSources);
             if(tg.length){
                 for(let token of tg){ 
                     if(token.actor){  
@@ -597,9 +607,11 @@ export class workflow {
                 const boundary = twin ? this.twinLocation : this.targetBoundary;
                 let s = new Sequence()
                 if(fe.delay){s = s.wait(fe.delay)}
-                if(fe.source?.enabled && (fe.source?.name || this.zone.sources.length)){
+                if(fe.source?.enabled && (fe.source?.name || this.zone.sources.length || this.userSelectedSources.length)){
                     let tagged;
-                    if(fe.source?.name){
+                    if(this.userSelectedSources.length){
+                        tagged = this.userSelectedSources
+                    } else if(fe.source?.name){
                         tagged = await getTagEntities(fe.source.name, this.scene);
                     } else{tagged = this.zone.sources}
 
@@ -612,16 +624,19 @@ export class workflow {
                             s = fe.source.swap ? await this._foregroundSequence(source, s, boundary) : await this._foregroundSequence(boundary, s, source);
                         }
                     } else {
-                        return this.log('Zone foreground effect skipped - no source', {});
+                        this.log('Zone foreground effect skipped - no source', {});
+                        return {'foreground-effect': 'No source'}
                     }
                 } else {
                     s = await this._foregroundSequence(boundary, s);
                 }
                 s.play()
-                return this.log('Zone foreground effect generated', {});
+                this.log('Zone foreground effect generated', {});
+                return {'foreground-effect': true}
             }
         } 
-        return this.log('Zone foreground effect skipped', {});
+        this.log('Zone foreground effect skipped', {});
+        return {'foreground-effect': false}
     }
 
     async _foregroundSequence(boundary, s, source = {}){
@@ -679,10 +694,12 @@ export class workflow {
                             s = s.repeats(be.repeat)
                         }
                     s.play()
-                return this.log('Zone background effect generated', {});
+                this.log('Zone background effect generated', {});
+                return {'background-effect': true}
             }
         } 
-        return this.log('Zone background effect skipped', {});
+        this.log('Zone background effect skipped', {});
+        return {'background-effect': false}
     }
 
     async lastingEffect(){
@@ -690,10 +707,12 @@ export class workflow {
             const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.le);
             if(!sv || (sv > 1 ? this.saveFailed.length : this.saveSucceeded.length)){
                 let tile = await this.createEffectTile();
-                return this.log('Zone lasting effect generated', {tile: tile});
+                this.log('Zone lasting effect generated', {tile: tile});
+                return {'lasting-effect': tile}
             }
         } 
-        return this.log('Zone lasting effect skipped', {});
+        this.log('Zone lasting effect skipped', {});
+        return {'lasting-effect': false}
     }
 
     async audioEffect() {
@@ -718,7 +737,7 @@ export class workflow {
             const file = await this.zoneType.tokenEffectFile();
             const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.te);
             let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
-            tg = this.zone.sourceTreatment(te.source, tg);
+            tg = this.zone.sourceTreatment(te.source, tg, this.userSelectedSources);
             for (let i = 0; i < tg.length; i++) { 
                 let s = new Sequence()
                 if(te.delay){
@@ -739,16 +758,18 @@ export class workflow {
                 }
                 s.play()
             }
-            return this.log('Zone token effect generated', {});
+            this.log('Zone token effect generated', {});
+            return {'token-effect': true}
         } 
-        return this.log('Zone token effect skipped', {});
+        this.log('Zone token effect skipped', {});
+        return {'token-effect': false}
     }
 
     async damageTokens(){
         const damage = this.zoneTypeOptions.flags.tokenResponse?.damage
         if(damage && damage.enable && damage.amount){
             if(damage.delay){await wait(damage.delay)}
-            const targets = this.zone.sourceTreatment(damage.source, this.targets);
+            const targets = this.zone.sourceTreatment(damage.source, this.targets, this.userSelectedSources);
             if(damage.amount.indexOf('@')===-1 && damage.flavor.indexOf('@elevation')===-1 && damage.flavor.indexOf('@moved')===-1){
                 const damageRoll = await new Roll(damage.amount).roll();
                 if(!this.zoneTypeOptions.flags.tokenResponse.save?.enable || damage.save==='F'){
@@ -771,9 +792,11 @@ export class workflow {
                     await this._determineDamage(isHalf, damageRoll, damage.type, [tg], flavor)
                 }
             }
-            return this.log('Zone token damage applied', {});
+            this.log('Zone token damage applied', {});
+            return {'damage-tokens': true}
         }
-        return this.log('Zone token damage skipped', {});
+        this.log('Zone token damage skipped', {});
+        return {'damage-tokens': false}
     }
 
     async _determineDamage(isHalf, damageRoll, type, tokens, flavorAdd){
@@ -798,7 +821,7 @@ export class workflow {
             let flgs = eff.flags?.['danger-zone'];
             const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.ae);
             let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
-            tg = this.zone.sourceTreatment(flgs?.source, tg);
+            tg = this.zone.sourceTreatment(flgs?.source, tg, this.userSelectedSources);
             if(flgs?.delay){await wait(flgs.delay)}
             for (let i = 0; i < tg.length; i++) { 
                 if(flgs?.limit && tg[i].actor && tg[i].actor.effects.find(e => e.data.flags['danger-zone']?.origin === this.zoneType.id)){
@@ -860,10 +883,12 @@ export class workflow {
                 if(this.zoneTypeOptions.wall?.bottom && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData(this.targetBoundary.B, {x: this.targetBoundary.A.x, y: this.targetBoundary.B.y}))}
                 if(this.zoneTypeOptions.wall?.left && (!this.zoneTypeOptions.wall.random || Math.random() < 0.5)){walls.push(this._wallData({x: this.targetBoundary.A.x, y: this.targetBoundary.B.y}, this.targetBoundary.A))}
                 if(walls.length){await this.scene.createEmbeddedDocuments("Wall",walls)}
-                return this.log('Zone walls generated', {wall: walls});
+                this.log('Zone walls generated', {wall: walls});
+                return {'walls': walls}
             }
         }
-        return this.log('Zone walls not generated', {});
+        this.log('Zone walls not generated', {});
+        return {'walls': false}
     }
 
     _wallData(start, end){
@@ -963,9 +988,11 @@ export class workflow {
                 }
             }
             await this.scene.createEmbeddedDocuments("AmbientLight",[light]);
-            return this.log('Zone ambient light generated', {light: light});
+            this.log('Zone ambient light generated', {light: light});
+            return {'ambient-light': light}
         }
-        return this.log('Zone ambient light not generated', {});
+        this.log('Zone ambient light not generated', {});
+        return {'ambient-light': false}
     }
 
     /*Module Integrations*/
@@ -1010,27 +1037,31 @@ export class workflow {
                     await KFC.executeForEveryone("spin",flag.intensity, flag.duration, flag.iteration);
                     break;
             }
+            this.log('Fluid Canvas generated', {flag: flag});
+            return {'fluid-canvas': true}
         }
+        this.log('Fluid Canvas skipped', {});
+        return {'fluid-canvas': false}
     }
 
     async tokenMove() {
         const move = this.zoneTypeOptions.tokenMove;
-        if(move && ((this.targets.length && (move.v?.dir || move.hz?.dir || move.e?.type)) || (move.sToT && this.zone.sources.length))) {
+        if(move && ((this.targets.length && (move.v?.dir || move.hz?.dir || move.e?.type)) || (move.sToT && (this.zone.sources.length || this.userSelectedSources.length)))) {
             if(move.delay > 0){
                 await wait(move.delay);
             }
 
             const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.tm);
             let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
-            tg = this.zone.sourceTreatment(move.source, tg);
-            if(move.sToT){tg = this.zone.sourceAdd(tg)}
+            tg = this.zone.sourceTreatment(move.source, tg, this.userSelectedSources);
+            if(move.sToT){tg = this.userSelectedSources ? tg.concat(this.userSelectedSources.filter(s => tg.find(t => t.id !== s.id))) : this.zone.sourceAdd(tg)}
 
             const updates = [];
-            for (let i = 0; i < tg.length; i++) { 
-                let token = this.scene.tokens.get(tg[i].id);
+            for (const tk of tg) { 
+                let token = this.scene.tokens.get(tk.id);
                 if(!token){continue;}
                 let amtV = 0, amtH = 0, amtE =0, e, x, y;
-                if(move.sToT && this.zone.isSource(token)){
+                if(move.sToT && (this.zone.isSource(token, this.userSelectedSources))){
                     let srcCnt = this.targetBoundary.center;
                     let tBnd = documentBoundary("Token", token);
                     x = srcCnt.x - (tBnd.center.x - tBnd.A.x), y = srcCnt.y - (tBnd.center.y - tBnd.A.y);
@@ -1057,9 +1088,11 @@ export class workflow {
             }
             const opts = move.flag ? {dangerZoneMove: true} : {};
             await this.scene.updateEmbeddedDocuments("Token",updates, opts);
-            return this.log('Token Move generated', {options: updates});
+            this.log('Token Move generated', {options: updates});
+            return {'token-move': updates}
         }
-        return this.log('Token Move skipped', {});
+        this.log('Token Move skipped', {});
+        return {'token-move': false}
     }
 
     async tokenSays() {
@@ -1071,7 +1104,7 @@ export class workflow {
                 }
                 const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.ts);
                 let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
-                tg = this.zone.sourceTreatment(flag.source, tg);
+                tg = this.zone.sourceTreatment(flag.source, tg, this.userSelectedSources);
                 const options = {
                     likelihood: flag.likelihood ? flag.likelihood : 100,
                     type: flag.fileType,
@@ -1132,13 +1165,15 @@ export class workflow {
             if(mutate.delay) await warpgate.wait(mutate.delay);
             const sv = parseInt(this.zoneTypeOptions.flags.tokenResponse?.save?.mt);
             let tg = sv ? (sv > 1 ? this.saveFailed : this.saveSucceeded) : this.targets;
-            tg = this.zone.sourceTreatment(mutate.source, tg);
+            tg = this.zone.sourceTreatment(mutate.source, tg, this.userSelectedSources);
             for (const token of tg) { 
                 await warpgate.mutate(token, updates, {}, options);
             }
-            return this.log('Mutation Peformed! ', {"targets": tg, "mutation-data": mutate});
+            this.log('Mutation Peformed! ', {"targets": tg, "mutation-data": mutate});
+            return {mutate: {"data": mutate}} 
         }
-        return this.log('Mutation skipped ', {})
+        this.log('Mutation skipped ', {})
+        return {mutate: false}
     }
 }
 

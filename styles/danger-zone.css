@@ -1,15 +1,5 @@
-form.danger-zone-types .content{
-    height: 460px;
-}
-
-.danger-zone-types .tabs .item {
-    font-size: 16px;
-    margin-bottom: 12px;
-}
-
-.danger-zone-type-form .tabs .item  {
-    font-size: 16px;
-    margin: 12px 0px;
+.danger-zone-types footer, .danger-zone-scene footer {
+    margin: 14px 0px 4px 0px;
 }
 
 .danger-zone-add, .danger-zone-type-add {
@@ -467,7 +457,7 @@ form ol.danger-setting-group .active:hover label {
 /*search*/
 #danger-zone-type-primary-controls {
     width: 100%;
-    margin: 10px 0px 24px 0px;
+    margin: 8px 0px 8px 0px;
     height: 36px;
 }
 

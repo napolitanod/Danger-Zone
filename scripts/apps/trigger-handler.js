@@ -75,7 +75,9 @@ export class triggerManager {
         const options = {previouslyExecuted: previousExec}
         if(zone.trigger !== 'move'){
             if(this.data?.options?.location && zone.trigger !== 'aura'){options['location'] = this.data.options.location}
+            if(this.data?.options?.boundary){options['boundary'] = this.data.options.boundary}
             if(this.data?.options?.targets){options['targets'] = this.data.options.targets}
+            if(this.data?.options?.sources){options['sources'] = this.data.options.sources}
         }
 
         const flow = new workflow(zone, this, options);

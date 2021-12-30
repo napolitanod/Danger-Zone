@@ -12,7 +12,7 @@
             <button id="danger-zone-type-import-config" title="{{localize "DANGERZONE.types-form.import.title"}}"><i class="fas fa-file-import fa-fw"></i></button>  
         </div>
     </div>
-    <section class="content">
+    <div class="tab">
         <div class="danger-zone-types-header flexrow">
             <div class="danger-zone-type-details">
                 <div class="name">{{localize 'DANGERZONE.types-form.type.name.label'}}</div>
@@ -41,5 +41,8 @@
             </li>
             {{/each}}
         </ol>
-    </section>
+    </div>
+	<footer class="sheet-footer flexrow">
+        <p class="notes">{{localize "DANGERZONE.types-form.description"}}</p>
+	</footer>
 </form>
