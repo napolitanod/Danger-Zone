@@ -102,6 +102,11 @@ export class api {
         return b.tokensIn(canvas.scene.tokens);
     }
 
+    /**
+     * Generate a danger zone rectangle boundary from a Foundary document (supports tokens, ambient lights, walls, drawings, tiles)
+     * @param {object} document - a Foundry document (e.g. token document) 
+     * @returns a danger zone boundary
+     */
     static _boundary(document){
         return documentBoundary(document.documentName, document);
     }
@@ -113,11 +118,13 @@ export class api {
      * @param {object} options - object with options - 
      *                          {activeOnly: , location: , scope: }
      *                          activeOnly {boolean} to only trigger if zone is active; 
-     *                          location {object} {x:,y:,z:} bypasses zone targeting. Provide x,y pixel and z elevation for danger to target
+     *                          boundary {boundary}: bypass zone location targeting and danger dimensions. A dangerZone boundary defining the target boundary. Create a danger zone boundary from a document by using the dangerZone.boundary() api call
+     *                          location {object} {x:,y:,z:} bypasses zone location targeting while keeping danger dimensions. Provide x,y pixel and z elevation for where danger targets (this represents the top left of danger boundary)
      *                          scope {string} limit to trigger only scene zone or global zone. If left blank, will check for both. Options: 'world', 'scene'
+     *                          sources {array} an array of token documents that represent zone sources (this overrides and source defined in the zone for purposes of this method)
      *                          targets {array} an array of token documents that will be the targets (overrides any zone targeting)
      */
-     static async _triggerZone(zoneName, sceneId, options = {activeOnly: false, scope: '', location: {}, targets: [], sources: []}){
+     static async _triggerZone(zoneName, sceneId, options = {activeOnly: false, scope: '', location: {}, targets: [], sources: [], boundary: {}}){
         if (!game.user.isGM){
             if( game.modules.get("socketlib")?.active && dangerZoneSocket){
                 if(game.settings.get(dangerZone.ID, 'open-socket')) {
