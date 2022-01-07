@@ -1,5 +1,36 @@
 import {daeOn} from '../index.js';
 
+
+export const WORKFLOWSTATES = {
+    INIT: 0,
+    AWAITLOCATION: 1,
+    EXECUTELIKELIHOOD: 2,
+    SETZONEDATA: 3,
+    INFORM: 5,
+    CLEAR: 7,
+    GENERATEFLAVOR: 8,
+    MAKESAVES: 9,
+    GENERATEFLUIDCANVAS: 15,
+    GENERATEFOREGROUNDEFFECT: 20,
+    GENERATEAUDIOEFFECT: 21,
+    GENERATEBACKGROUNDEFFECT: 22,
+    CLEARLASTINGEFFECTS: 30,
+    GENERATELASTINGEFFECT: 31,
+    GENERATETOKENEFFECT: 34,
+    GENERATETOKENMOVE: 35,
+    DAMAGETOKEN: 40,
+    GENERATEWALLS: 54,
+    GENERATELIGHT: 56,
+    GENERATEACTIVEEFFECT: 68,
+    GENERATEMACRO: 70,
+    TOKENSAYS: 80,
+    SPAWN: 81,
+    MUTATE: 82,
+    AWAITPROMISES: 95,
+    CANCEL: 98,
+    COMPLETE: 99
+}
+
 export const WORLDZONE = {
     "options": {
         "bleed": false,
@@ -130,6 +161,7 @@ export const FLUIDCANVASTYPES = {
     "blur": "DANGERZONE.type-form.fluidCanvas.types.blur",
     "drug": "DANGERZONE.type-form.fluidCanvas.types.drug",
     "earthquake": "DANGERZONE.type-form.fluidCanvas.types.earthquake",
+    "fade": "DANGERZONE.type-form.fluidCanvas.types.fade",
     "heartbeat": "DANGERZONE.type-form.fluidCanvas.types.heartbeat",
     "negative": "DANGERZONE.type-form.fluidCanvas.types.negative",
     "sepia": "DANGERZONE.type-form.fluidCanvas.types.sepia",

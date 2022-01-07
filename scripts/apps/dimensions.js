@@ -312,7 +312,7 @@ export class boundary{
 }
 
 export class point{
-    constructor({x, y, z=0}){
+    constructor({x=0, y=0, z=0}){
         this.x = x ? x : 0, 
         this.y = y ? y : 0,
         this.z = z ? z : 0;

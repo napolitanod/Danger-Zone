@@ -368,15 +368,15 @@ export class zone {
     return sources.length ? sources.filter(s => s.id === token.id).length > 0 : token.actor?.id === this.source.actor
   }
 
-  sourceTreatment(treatment, tokens, sources = [] ){
-    if(!treatment || (!this.source.actor && !sources.length)) return tokens
+  static sourceTreatment(treatment, tokens, sources = []){
+    if(!treatment || !sources.length) return tokens
     switch(treatment){
       case "I":
-        return sources.length ? tokens.filter(t => !sources.find(s => s.id === t.id)) : tokens.filter(t => t.actor?.id !== this.source.actor)
+        return tokens.filter(t => !sources.find(s => s.id === t.id))
       case "S":
-        return tokens.filter(t => t.actor?.id !== this.source.actor).concat(sources.length ? sources : this.sources)
+        return tokens.filter(t => t.actor?.id !== this.source.actor).concat(sources)
       case "O":
-        return sources.length ? sources : this.sources
+        return sources
       default:
         return tokens
     }
@@ -404,6 +404,28 @@ export class zone {
     return options
   }
 
+  async wipe(document){
+      let ids = []; const data = this._wipeData(document);
+      switch (data.replace) {
+          case 'Z':
+            ids=this.scene.scene[data.placeable].filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.id).map(t => t.id);
+              break;
+          case 'T':
+            ids=this.scene.scene[data.placeable].filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.type).map(t => t.id);
+              break;
+          case 'R':
+            ids=this.scene.scene[data.placeable].filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.trigger === this.trigger).map(t => t.id);
+              break;
+          case 'A':
+            ids=this.scene.scene[data.placeable].filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]).map(t => t.id);
+              break;
+          default:
+            return false;
+      }
+      if(ids.length) await this.scene.scene.deleteEmbeddedDocuments(document, ids)
+      return true
+ }
+
   zoneEligibleTokens(tokens){
     let kept = [];
     if(this.actor || this.tokenDisposition){
@@ -419,6 +441,72 @@ export class zone {
       }
     } else {kept = tokens}
     return kept
+  }
+
+  _wipeData(document){
+    switch(document){
+      case 'Tile':
+        return {replace: this.replace, placeable: 'tiles'}
+      case 'Wall':
+        return {replace: this.wallReplace, placeable: 'walls'}
+      case 'AmbientLight':
+        return {replace: this.lightReplace, placeable: 'lights'}
+    }
+  }
+
+  /*prompts the user to select the zone location point (top left grid location) and captures the location*/
+  async promptTemplate() {
+    const z = (this.options.noPrompt) ? 0 : await this._promptZ() 
+    const {x,y} = await this._promptXY(z);
+    return {x: x, y: y, z: z}
+  }
+
+  async _promptZ(){
+    const z = await new Promise((resolve, reject) => {
+      new Dialog({
+          title: game.i18n.localize("DANGERZONE.alerts.input-z"),
+          content: `<p>${game.i18n.localize("DANGERZONE.alerts.enter-z")}</p><center><input type="number" id="zInput" min="0" steps="1" value="0"></center><br>`,
+          buttons: {
+              submit: {
+                  label: game.i18n.localize("DANGERZONE.yes"),
+                  icon: '<i class="fas fa-check"></i>',
+                  callback: async (html) => {
+                      const z = parseInt(html.find("#zInput")[0].value);
+                      resolve(z)
+                      }
+                  },
+              cancel:  {
+                  label: game.i18n.localize("DANGERZONE.cancel"),
+                  icon: '<i class="fas fa-times"></i>',
+                  callback: () => {
+                      resolve(0)
+                      }
+                  }
+              },
+          default: 'submit'
+          }, {width: 75}).render(true);
+    });  
+    return z
+  }
+
+  async _promptXY(){
+    let currentLayer = canvas.activeLayer;
+    canvas.activateLayer('grid');
+    
+    dangerZoneDimensions.destroyHighlightZone(this.id, '', this.scene.dangerId);
+    await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_wf', this.scene.dangerId);
+
+    const xy = await new Promise((resolve, reject)=>{
+        ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
+        canvas.app.stage.once('pointerdown', event => {
+            let selected = event.data.getLocalPosition(canvas.app.stage);
+            resolve(selected);
+        })
+    });
+      
+    dangerZoneDimensions.destroyHighlightZone(this.id, '_wf', this.scene.dangerId);    
+    currentLayer.activate();
+    return xy
   }
 }
 

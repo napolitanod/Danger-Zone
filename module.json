@@ -5,7 +5,7 @@
             "name": "napolitanod"
         }
     ],
-    "description": "Bring danger, personality and life to your scenes. Danger Zone provides GMs the ability to easily invoke localized targeted effects within a scene.",
+    "description": "Bring your scenes to life and add an element of danger! Danger Zone provides GMs the ability to easily invoke zone-based targeted effects within a scene either manually with provided button or in automated fashion using game events, such as token movement.",
     "languages": [
         {
             "lang": "en",
@@ -29,8 +29,8 @@
         "styles/danger-zone.css"
     ],
     "title": "Danger Zone",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "url": "https://github.com/napolitanod/Danger-Zone",
     "manifest": "https://raw.githubusercontent.com/napolitanod/Danger-Zone/master/module.json",
-    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/1.2.0/module.zip"
+    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/1.3.0/module.zip"
 }

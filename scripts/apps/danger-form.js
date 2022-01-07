@@ -719,7 +719,7 @@ class DangerZoneDangerFormMutate extends FormApplication {
           template : dangerZone.TEMPLATES.DANGERZONEDANGERMUTATE,
           height : "auto",
           width: 425,
-          height: 570,
+          height: 595,
           closeOnSubmit: true,
           resizable: true
         });
