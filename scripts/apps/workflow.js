@@ -1,43 +1,26 @@
 import {dangerZone, zone} from '../danger-zone.js';
-import {dangerZoneDimensions, point, locationToBoundary, documentBoundary, getTagEntities, furthestShiftPosition} from './dimensions.js';
+import {point, locationToBoundary, documentBoundary, getTagEntities, furthestShiftPosition} from './dimensions.js';
 import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
-import {saveTypes, damageTypes, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
+import {damageTypes, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {getFilesFromPattern, stringToObj} from './helpers.js';
 
 export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
-
-class plan {
-    constructor(executor){
-        this.ongoing,
-        this.executor = executor,
-        this.manifest = new Map;
-        this._initialize()
-    }
-
-    get initializePlan(){
-        return [
-            () => this.executor.load(),
-            () => this.executor.ready()
-        ]
-    }
-
-    _initialize(){
-        this.manifest.set("load", );
-        this.ongoing = this.manifest.entries();
-    }
+async function delay(delay){
+    if(delay) await wait(delay)
 }
-
 export class workflow {
 
     constructor(zone, trigger, options = {}) {
         this.active = true,
-        this.currentState = WORKFLOWSTATES.INIT,
-        this.id = foundry.utils.randomID(16),
-        this.report = 'Workflow is processing...',
-        this.trigger = trigger,
         this.executor = new executor(zone, options);
-        this.plan = new plan(this.executor)
+        this._id = foundry.utils.randomID(16),
+        this._state = WORKFLOWSTATES.NONE,
+        this.trigger = trigger
     };
+
+    get state(){
+        return WORKFLOWSTATES[this._state].titleCase();
+    }
 
     get previouslyExecuted(){
         return this.executor.previouslyExecuted
@@ -51,139 +34,32 @@ export class workflow {
         dangerZone.log(false,`${message} ${this.title}... `, {workflow: this, data:data});
     }
 
-    async next(nextState){
+    async next(nextState = WORKFLOWSTATES.INITIALIZE){
         if(!this.active){return this}
-        await this._next(nextState);
+        this._state = nextState
+        await this._next();
         if(!this.active){return this}
     }
 
-    async _next(state){
-        this.currentState = state;
-        switch(state) {
-            case WORKFLOWSTATES.NONE:
-                let [k,v] = this.plan.ongoing.next().value
-                for(const f of v){
-                    if(this.executor.state) {await f()} else {this.next(WORKFLOWSTATES.CANCEL)}
+    async _next(){
+        switch(this._state) {
+            case WORKFLOWSTATES.INITIALIZE:
+                return this.next(WORKFLOWSTATES.EXECUTE)
+
+            case WORKFLOWSTATES.EXECUTE:
+                await this.executor.go()
+                switch(this.executor.state){
+                    case 0: 
+                        return this.next(WORKFLOWSTATES.CANCEL)
+                    case 1: 
+                        return this.next(WORKFLOWSTATES.COMPLETE)
+                    case 2: 
+                        return this.next(WORKFLOWSTATES.INFORM)
                 }
-                return this.next(WORKFLOWSTATES.EXECUTELIKELIHOOD)
 
-            case WORKFLOWSTATES.EXECUTELIKELIHOOD:
-                this.active = await this.executor.check();
-                this.log('Zone likelihood determined',  this.executor.data);
-                if(!this.active) return this.next(WORKFLOWSTATES.INFORM)
-                return this.next(WORKFLOWSTATES.SETZONEDATA)
-            
-            case WORKFLOWSTATES.SETZONEDATA:
-                this.active = await this.executor.setZoneData()
-                this.log('Zone data set', this.executor.data);
-                return this.next(WORKFLOWSTATES.INFORM)
-
-            case WORKFLOWSTATES.INFORM:
-                await this.executor.inform()
-                this.log('Information generated', {});
-                if(!this.active) return this.next(WORKFLOWSTATES.CANCEL)
-                return this.next(WORKFLOWSTATES.CLEAR)
-
-            case WORKFLOWSTATES.CLEAR:
-                await this.executor.wipe();
-                this.log('Documents wiped', {});
-                return this.next(WORKFLOWSTATES.GENERATEFLAVOR)
-
-            case WORKFLOWSTATES.GENERATEFLAVOR:
-                if(!this.previouslyExecuted) this.executor.flavor();
-                this.log('Flavor step complete', {});
-                return this.next(WORKFLOWSTATES.MAKESAVES)
-
-            case WORKFLOWSTATES.MAKESAVES:
-                await this.executor.save();
-                this.log('Saves step complete', this.executor._save);
-                return this.next(WORKFLOWSTATES.GENERATEFLUIDCANVAS)
-
-            case WORKFLOWSTATES.GENERATEFLUIDCANVAS:
-                await this.executor.canvas()
-                this.log('Canvas initiated', this.executor._canvas)
-                return this.next(WORKFLOWSTATES.GENERATEFOREGROUNDEFFECT)
-
-            case WORKFLOWSTATES.GENERATEFOREGROUNDEFFECT:
-                await this.executor.primaryEffect()
-                this.log('Primary effect initiated', this.executor._primaryEffect)
-                return this.next(WORKFLOWSTATES.GENERATEAUDIOEFFECT)
-
-            case WORKFLOWSTATES.GENERATEAUDIOEFFECT:
-                await this.executor.audio();
-                this.log('Audio initiated', this.executor._audio);
-                return this.next(WORKFLOWSTATES.GENERATEBACKGROUNDEFFECT)
-
-            case WORKFLOWSTATES.GENERATEBACKGROUNDEFFECT:
-                await this.executor.secondaryEffect()
-                this.log('Secondary effect initiated', this.executor._secondaryEffect)
-                return this.next(WORKFLOWSTATES.GENERATELASTINGEFFECT)
-
-            case WORKFLOWSTATES.GENERATELASTINGEFFECT:
-                await this.executor.lastingEffect()
-                this.log('Lasting effect initiated', this.executor._lastingEffect)
-                return this.next(WORKFLOWSTATES.GENERATETOKENEFFECT)
-
-            case WORKFLOWSTATES.GENERATETOKENEFFECT:
-                await this.executor.tokenEffect()
-                this.log('Token effect initiated', this.executor._tokenEffect)
-                return this.next(WORKFLOWSTATES.GENERATETOKENMOVE) 
-
-            case WORKFLOWSTATES.GENERATETOKENMOVE:
-                await this.executor.tokenMove()
-                this.log('Token move initiated', this.executor._tokenMove)
-                return this.next(WORKFLOWSTATES.DAMAGETOKEN)
-
-            case WORKFLOWSTATES.DAMAGETOKEN:
-                await this.executor.damageToken()
-                this.log('Damage token initiated', this.executor._damageToken)
-                return this.next(WORKFLOWSTATES.GENERATEWALLS)
-                
-            case WORKFLOWSTATES.GENERATEWALLS:
-                await this.executor.wall()
-                this.log('Wall initiated', this.executor._wall)
-                return this.next(WORKFLOWSTATES.GENERATELIGHT) 
-
-            case WORKFLOWSTATES.GENERATELIGHT:
-                await this.executor.ambientLight()
-                this.log('Ambient light initiated', this.executor._ambientLight)
-                return this.next(WORKFLOWSTATES.GENERATEACTIVEEFFECT) 
-                 
-            case WORKFLOWSTATES.GENERATEACTIVEEFFECT:
-                await this.executor.activeEffect()
-                this.log('Active effect initiated', this.executor._activeEffect)
-                return this.next(WORKFLOWSTATES.GENERATEMACRO)  
-
-            case WORKFLOWSTATES.GENERATEMACRO:
-                await this.executor.macro(this)
-                this.log('Macro initiated', this.executor._macro)
-                return this.next(WORKFLOWSTATES.TOKENSAYS) 
-
-            case WORKFLOWSTATES.TOKENSAYS:
-                await this.executor.tokenSays()
-                this.log('Token Says initiated', this.executor._tokenSays)
-                return this.next(WORKFLOWSTATES.SPAWN) 
-
-            case WORKFLOWSTATES.SPAWN:
-                await this.executor.spawn()
-                this.log('Spawn initiated', this.executor._spawn)
-                return this.next(WORKFLOWSTATES.MUTATE) 
-
-            case WORKFLOWSTATES.MUTATE:
-                await this.executor.mutate()
-                this.log('Mutate initiated', this.executor._mutate)
-                return this.next(WORKFLOWSTATES.AWAITPROMISES) 
-
-            case WORKFLOWSTATES.AWAITPROMISES: 
-                const executeResult = await this.executor.done();
-                this.report = executeResult.results;
-                if(executeResult.success){
-                    this.log('Zone executed successfully ', this.report)
-                    return this.next(WORKFLOWSTATES.COMPLETE) 
-                } else {
-                    this.log('Zone executed with errors ', this.report);
-                    return this.next(WORKFLOWSTATES.CANCEL) 
-                }
+            case WORKFLOWSTATES.INFORM: 
+                await this.executor.inform();
+                return this.next(WORKFLOWSTATES.COMPLETE)
 
             case WORKFLOWSTATES.CANCEL: 
                 this.active = false
@@ -194,6 +70,93 @@ export class workflow {
                 this.active = false;
                 return this.log('Zone workflow complete', {})
         }
+    }
+}
+
+class plan {
+    constructor(executor){
+        this.current,
+        this.elapsedTime = 0,
+        this.executor = executor,
+        this.manifest = new Map,
+        this.ongoing,
+        this.running = [],
+        this.valid = true;
+        this._initialize()
+    }
+
+    get title(){
+        return this.executor.data.zone.title
+    }
+
+    _build(){
+        const groups = [...new Set(this.executor.executables.map(e => e.delay))].sort((a, b) => {return a < b ? -1 : (a > b ? 1 : 0)}); 
+        if(!groups.length) return
+        this.setElapsedTime(groups[0]);
+        for(const group of groups){
+            this.manifest.set(`Dangers group ${group} delay`,[()=> {return this._newStep(group)}]);
+            this.manifest.set(`Dangers group ${group}`,this.executor.executables.filter(e => e.delay === group).map(e => ()=> {return e.go()}));
+        }
+    }
+
+    _clearRun(){
+        this.running = []
+    }
+
+    async done(){
+        const run = await Promise.all(this.running).then((r) => {return {success: true, result: r}}).catch((e) => {return {success: false, result: e}})
+        this.runReport(run.result)
+        this._clearRun()
+        return run.success
+    }
+
+    _initialize(){
+        this.manifest.set("load", [() => {return this.executor.load()}]);
+        this.manifest.set("ready", [() => {return this.executor.ready()}]);
+        this.manifest.set("check", [() => {return this.executor.check()}]);
+        this.manifest.set("data", [() => {return this.executor.setZoneData()}]);
+        this.manifest.set("inform", [() => {return this.executor.inform()}]);
+        this.manifest.set("wipe", [() => {return this.executor.wipe()}]);
+        this._build();
+        this.ongoing = this.manifest.entries();
+    }
+
+    log(message, data){
+        dangerZone.log(false,`${this.title} ${message}... `, data);
+    }
+
+    async _newStep(time){
+        const del = time-this.elapsedTime;
+        await delay(time-this.elapsedTime);
+        this.setElapsedTime(time)
+        return {"danger": `Delay ${del} millisecond`, "data": this}
+    }
+
+    async runPlan(){
+        this.current = this.ongoing.next();
+        while (this.valid && !this.current.done) {
+            const [k,v] = this.current.value
+            for(const f of v){
+                if(this.executor.state===1) {this.runStep(f())} else {break;}
+            }
+            this.valid = await this.done()
+            this.current = this.ongoing.next();
+        }
+        return this.valid
+    }
+
+    runReport(run){
+        for (const report of run){
+            if(report) this.log(`plan step executed ${report?.danger}`, report?.data)
+        }
+    }
+
+    runStep(f){
+        this.running.push(f)
+    }
+
+    setElapsedTime(time){
+        this.elapsedTime = time
     }
 }
 
@@ -312,7 +275,7 @@ class executorData {
     }
 
     informLikelihood(){
-        console.log(`Zone likelihood of ${this.zone.likelihood} was ${this.happens ? '' : 'not '} met with a roll of ${this.likelihoodResult}`)
+        console.log(`Zone likelihood of ${this.zone.likelihood} was${this.happens ? '' : ' not'} met with a roll of ${this.likelihoodResult}`)
     }
 
     async randomBoundary() {
@@ -382,14 +345,16 @@ class executorData {
 class executor {
     constructor(zone, options = {}) {
         this.data = new executorData(zone, options),
-        this.parts = [],
         this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
         this.promises = {
             load: [],
             execute: []
         },
-        this.state = 1,
+        this.state = 1;
+
         this._initialize();
+
+        this.plan = new plan(this);
     }
 
     _initialize(){
@@ -398,6 +363,7 @@ class executor {
         this._audio = new audio(this.danger.audio, this.data, {title: "Audio", modules: [{active: sequencerOn, name: "sequencer", dependent: false}]}),
         this._canvas = new fluidCanvas(this.danger.canvas, this.data, {title: "Canvas", modules: [{active: fluidCanvasOn, name: "kandashis-fluid-canvas", dependent: true}]}),
         this._damageToken = new damageToken(this.danger.damage, this.data, {title: "Damage", modules: [{active: midiQolOn, name: "midi-qol", dependent: true}]}), 
+        this._flavor = new flavor(this.zone.flavor, this.data, {title: "Flavor"}),
         this._lastingEffect = new lastingEffect(this.danger.lastingEffect, this.data, {title: "Lasting Effect", wipeable: true, modules: [{active: monksActiveTilesOn, name: "monks-active-tiles", dependent: false},{active: taggerOn, name: "tagger", dependent: false},{active: levelsOn, name: "levels", dependent: false},{active: betterRoofsOn, name: "better-roofs", dependent: false}]}),
         this._macro = new macro(this.danger.macro, this.data, {title: "Macro"}),
         this._mutate = new mutate(this.danger.mutate, this.data, {title: "Mutate", modules:[{active: warpgateOn, name: "warpgate", dependent: true}, {active: taggerOn, name: "tagger", dependent: false}]}),
@@ -409,19 +375,18 @@ class executor {
         this._tokenEffect = new tokenEffect(this.danger.tokenEffect, this.data, {title: "Token Effect", modules: [{active: sequencerOn, name: "sequencer", dependent: true}]}),
         this._tokenSays = new tokenSays(this.danger.tokenSays, this.data, {title: "Token Says", modules: [{active: tokenSaysOn, name: "token-says", dependent: true}]}),
         this._wall = new wall(this.danger.wall, this.data, {title: "Wall", wipeable: true, modules:[{active: wallHeightOn, name: "wall-height", dependent: false}, {active: taggerOn, name: "tagger", dependent: false}]})
-        this.parts = [this._activeEffect,this._ambientLight,this._audio,this._canvas,this._damageToken,this._lastingEffect,this._macro,this._mutate,this._primaryEffect,this._secondaryEffect,this._save,this._spawn,this._tokenMove,this._tokenEffect,this._tokenSays,this._wall]
-    }
+        }
 
     get danger(){
         return this.zone.danger
     }
 
-    get _flavor(){
-        return this.data.zone.flavor
-    }
-
     get executables(){
         return this.parts.filter(e => e.has)
+    }
+
+    get parts(){
+        return [this._activeEffect, this._ambientLight, this._audio, this._canvas, this._damageToken, this._flavor, this._lastingEffect, this._macro, this._mutate, this._primaryEffect, this._secondaryEffect, this._save, this._spawn, this._tokenMove, this._tokenEffect, this._tokenSays, this._wall]
     }
 
     get wipeables(){
@@ -449,11 +414,13 @@ class executor {
     }
 
     async check(){
-        let cont = false
-        if(!this.data.danger) return cont
-        cont = await this.data.checkLikelihood()
-        if(!cont) this.data.informLikelihood()
-        return cont
+        if(!this.data.danger) return this.state = 0
+        const cont = await this.data.checkLikelihood()
+        if(!cont) {
+            this.data.informLikelihood();
+            this.state = 2;
+        }
+        return this.report('Check');
     }
 
     async damageToken(){
@@ -465,9 +432,15 @@ class executor {
         this.previouslyExecuted = true;
         return result
     }
+ 
+    async inform(){
+        await this.data.highlightBoundary()
+        this.data.about();
+        return this.report('Inform');
+    }
 
-    flavor() {
-        if(this._flavor) ChatMessage.create({content : this._flavor})
+    async go(){
+        await this.plan.runPlan()
     }
 
     async lastingEffect(){
@@ -479,6 +452,7 @@ class executor {
         const promises = [this._audio.file, this._lastingEffect.file, this._primaryEffect.file, this._secondaryEffect.file, this._tokenEffect.file];
         const files = await Promise.all(promises).then((results) => {return results.filter(r => r)}).catch((e) => {return console.log('Danger Zone file caching failed.')});
         this.promises.load.push(Sequencer.Preloader.preloadForClients(files))
+        return this.report('Load')
     }
 
     async macro(args){
@@ -495,6 +469,7 @@ class executor {
 
     async ready(){
         this.state = await Promise.all(this.promises.load).then(() => {return 1}).catch((e) => {return 0});
+        return this.report('Ready')
     }
 
     async save(){
@@ -533,16 +508,16 @@ class executor {
                 await wipeable.wipe();
             }
         }
+        return this.report('Wipe')
     }
- 
-    async inform(){
-        await this.data.highlightBoundary()
-        this.data.about();
+
+    report(title){
+        return {"danger": title, "data": this}
     }
     
     async setZoneData(){
         await this.data.set()
-        return this.data.valid
+        return this.report('Data');
     }
 }
 
@@ -569,7 +544,7 @@ class executable {
     }
 
     get report(){
-        return {"danger": this._dangerName, "executed": this._executed, "modules": this._modules}
+        return {"danger": this._dangerName, "data": this, "executed": this._executed, "modules": this._modules}
     }
 
     get scale(){
@@ -597,10 +572,7 @@ class executable {
     }
 
     async go(){
-        if(this.has) {
-            await this._wait();
-            await this.play(); 
-        }
+        if(this.has) await this.play(); 
         return this.report
     }
 
@@ -610,10 +582,6 @@ class executable {
 
     setExecuted(){
         this._executed = true
-    }
-
-    async _wait() {
-        await delay(this.delay);
     }
 
     async wipe(document){
@@ -899,6 +867,27 @@ class damageToken extends executable{
         if(!damage?.total || !tokens.length) return
         await new MidiQOL.DamageOnlyWorkflow(null, null, damage.total, this.type, tokens, damage, {flavor: flavor}) 
     }
+}
+
+class flavor extends executable{
+
+    get delay(){
+        return -1
+    }
+
+    get flavor(){
+        return this._part
+    }
+    
+    get has(){
+        return this.flavor ? true : false
+    }
+
+    async play(){
+        await super.play()
+        ChatMessage.create({content : this.flavor})
+    }
+
 }
 
 class fluidCanvas extends executable{
@@ -1246,6 +1235,10 @@ class primaryEffect extends executableWithFile {
 }
 
 class save extends executable{
+
+    get delay(){
+        return -1
+    }
 
     get diff(){
         return this._part.diff
@@ -1674,8 +1667,4 @@ class wall extends executable {
     async wipe(){
         await super.wipe('Wall')
     }
-}
-
-async function delay(delay){
-    if(delay) await wait(delay)
 }

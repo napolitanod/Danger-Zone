@@ -1,5 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
-import {WORLDZONE} from './constants.js';
+import {WORLDZONE, saveTypes} from './constants.js';
 import {monksActiveTilesOn} from '../index.js';
 
 export class dangerZoneType {
@@ -168,7 +168,7 @@ export class dangerZoneType {
   }
 
   get save(){
-    return this.options.flags.tokenResponse?.save ? this.options.flags.tokenResponse.save : {}
+    return (this.options.flags.tokenResponse?.save && Object.keys(saveTypes()).length)  ? this.options.flags.tokenResponse.save : {}
   }
 
   get tokenEffect(){
