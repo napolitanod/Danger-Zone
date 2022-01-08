@@ -1,5 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
-import {dangerZoneDimensions} from './dimensions.js'
+import {dangerZoneDimensions, boundary} from './dimensions.js'
 import {workflow} from './workflow.js';
 import {DANGERZONETRIGGERSORT} from './constants.js';
 
@@ -75,9 +75,21 @@ export class triggerManager {
         const options = {previouslyExecuted: previousExec}
         if(zone.trigger !== 'move'){
             if(this.data?.options?.location && zone.trigger !== 'aura'){options['location'] = this.data.options.location}
-            if(this.data?.options?.boundary){options['boundary'] = this.data.options.boundary}
-            if(this.data?.options?.targets){options['targets'] = this.data.options.targets}
-            if(this.data?.options?.sources){options['sources'] = this.data.options.sources}
+            if(this.data?.options?.boundary){options['boundary'] = new boundary(this.data.options.boundary.A, this.data.options.boundary.B)}
+            if(this.data?.options?.targets){
+                options.targets = [];
+                for(const token of this.data.options.targets){
+                    const t = this.scene.tokens.get(token._id ? token._id : token.id);
+                    if(t) options.targets.push(t)
+                }
+            }
+            if(this.data?.options?.sources){
+                options.sources = [];
+                for(const token of this.data.options.sources){
+                    const t = this.scene.tokens.get(token._id ? token._id : token.id);
+                    if(t) options.sources.push(t)
+                }
+            }
         }
 
         const flow = new workflow(zone, this, options);

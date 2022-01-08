@@ -18,8 +18,12 @@ export class workflow {
         this.trigger = trigger
     };
 
-    get state(){
-        return WORKFLOWSTATES[this._state].titleCase();
+    get danger(){
+        return this.executor.data.danger
+    }
+
+    get plan(){
+        return this.executor.plan
     }
 
     get previouslyExecuted(){
@@ -27,7 +31,11 @@ export class workflow {
     }
 
     get title(){
-        return this.executor.data.zone.title
+        return this.zone.title
+    }
+
+    get zone(){
+        return this.executor.data.zone
     }
 
     log(message, data){
@@ -67,6 +75,7 @@ export class workflow {
                 return this
 
             case WORKFLOWSTATES.COMPLETE: 
+                this.executor.done();
                 this.active = false;
                 return this.log('Zone workflow complete', {})
         }
@@ -105,9 +114,13 @@ class plan {
 
     async done(){
         const run = await Promise.all(this.running).then((r) => {return {success: true, result: r}}).catch((e) => {return {success: false, result: e}})
-        this.runReport(run.result)
+        run.success ? this.runReport(run.result) : this.errorReport(run.result)
         this._clearRun()
         return run.success
+    }
+
+    errorReport(report){
+        console.log(`Danger Zone ${this.title} plan step execution failed ${report?.danger}...`, report)
     }
 
     _initialize(){
@@ -167,6 +180,7 @@ class executorData {
         this.eligibleTargets = [],
         this.likelihoodResult = 100,
         this.location = options.location ? new point(options.location) : {},
+        this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
         this.save = {failed: [], succeeded: []},
         this._sources = options.sources ? options.sources : [],
         this.targets = options.targets ? options.targets : [],
@@ -195,8 +209,8 @@ class executorData {
         return this.save.failed.length ? true : false
     }
 
-    get happens(){
-        return this.likelihoodResult <= this.zone.likelihood
+    get hasDualBoundaries(){
+        return (!this.dualBoundaries.length || this.dualBoundaries.length % 2) ? false : true 
     }
 
     get hasBoundary(){
@@ -217,6 +231,22 @@ class executorData {
 
     get hasTargets(){
         return this.targets.length ? true : false
+    }
+
+    get twinDanger(){
+        return (this.zone.danger.twinDanger) ? true : false
+    }
+
+    get likelihoodMet(){
+        return this.likelihoodResult <= this.zone.likelihood
+    }
+
+    get saveFailed(){
+        return this.save.failed
+    }
+
+    get saveSucceeded(){
+        return this.save.succeeded
     }
 
     get scene() {
@@ -263,7 +293,7 @@ class executorData {
             const maybe = await new Roll(`1d100`).roll();
             this.likelihoodResult = maybe.result;
         }
-        return this.happens
+        return this.likelihoodMet
     }
 
     async highlightBoundary(){
@@ -275,7 +305,7 @@ class executorData {
     }
 
     informLikelihood(){
-        console.log(`Zone likelihood of ${this.zone.likelihood} was${this.happens ? '' : ' not'} met with a roll of ${this.likelihoodResult}`)
+        console.log(`Zone likelihood of ${this.zone.likelihood} was${this.likelihoodMet ? '' : ' not'} met with a roll of ${this.likelihoodResult}`)
     }
 
     async randomBoundary() {
@@ -290,6 +320,7 @@ class executorData {
             this.boundary = b.value;
             this.eligibleTargets = this.boundary.tokensIn(targetPool);
         } while(!this.eligibleTargets.length && i < max);
+        (test.done && !this.hasDualBoundaries) ? this.twinBoundary = this.boundary : this.twinBoundary = test.next().value
     }
 
     async set(){
@@ -345,11 +376,9 @@ class executorData {
 class executor {
     constructor(zone, options = {}) {
         this.data = new executorData(zone, options),
-        this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
-        this.promises = {
-            load: [],
-            execute: []
-        },
+        this.executable = {},
+        this.parts = [],
+        this.promises = {load: []},
         this.state = 1;
 
         this._initialize();
@@ -358,24 +387,31 @@ class executor {
     }
 
     _initialize(){
-        this._activeEffect = new activeEffect(this.danger.effect, this.data, {title: "Active Effect"}),
-        this._ambientLight = new ambientLight(this.danger.ambientLight, this.data, {title: "Ambient Light", wipeable: true, modules: [{active: levelsOn, name: "levels", dependent: false}, {active: taggerOn, name: "tagger", dependent: false}]})
-        this._audio = new audio(this.danger.audio, this.data, {title: "Audio", modules: [{active: sequencerOn, name: "sequencer", dependent: false}]}),
-        this._canvas = new fluidCanvas(this.danger.canvas, this.data, {title: "Canvas", modules: [{active: fluidCanvasOn, name: "kandashis-fluid-canvas", dependent: true}]}),
-        this._damageToken = new damageToken(this.danger.damage, this.data, {title: "Damage", modules: [{active: midiQolOn, name: "midi-qol", dependent: true}]}), 
-        this._flavor = new flavor(this.zone.flavor, this.data, {title: "Flavor"}),
-        this._lastingEffect = new lastingEffect(this.danger.lastingEffect, this.data, {title: "Lasting Effect", wipeable: true, modules: [{active: monksActiveTilesOn, name: "monks-active-tiles", dependent: false},{active: taggerOn, name: "tagger", dependent: false},{active: levelsOn, name: "levels", dependent: false},{active: betterRoofsOn, name: "better-roofs", dependent: false}]}),
-        this._macro = new macro(this.danger.macro, this.data, {title: "Macro"}),
-        this._mutate = new mutate(this.danger.mutate, this.data, {title: "Mutate", modules:[{active: warpgateOn, name: "warpgate", dependent: true}, {active: taggerOn, name: "tagger", dependent: false}]}),
-        this._primaryEffect = new primaryEffect(this.danger.foregroundEffect, this.data, {title: "Primary Effect", modules: [{active: sequencerOn, name: "sequencer", dependent: true}]}),
-        this._secondaryEffect = new secondaryEffect(this.danger.backgroundEffect, this.data, {title: "Secondary Effect", modules: [{active: sequencerOn, name: "sequencer", dependent: true}]}),
-        this._save = new save(this.danger.save, this.data, {title: "Save"}),
-        this._spawn = new spawn(this.danger.warpgate, this.data, {title: "Spawn", modules:[{active: warpgateOn, name: "warpgate", dependent: true}, {active: taggerOn, name: "tagger", dependent: false}]}),
-        this._tokenMove = new tokenMove(this.danger.tokenMove, this.data, {title: "Token Move"}),
-        this._tokenEffect = new tokenEffect(this.danger.tokenEffect, this.data, {title: "Token Effect", modules: [{active: sequencerOn, name: "sequencer", dependent: true}]}),
-        this._tokenSays = new tokenSays(this.danger.tokenSays, this.data, {title: "Token Says", modules: [{active: tokenSaysOn, name: "token-says", dependent: true}]}),
-        this._wall = new wall(this.danger.wall, this.data, {title: "Wall", wipeable: true, modules:[{active: wallHeightOn, name: "wall-height", dependent: false}, {active: taggerOn, name: "tagger", dependent: false}]})
+        let flags = Object.fromEntries(this.data.danger.parts.filter(p => ["monks-active-tiles"].includes(p[0])));
+        for(let [name,part] of this.data.danger.parts){
+            let be;
+            switch(name){
+                case 'effect': name = 'activeEffect'; be = new activeEffect(part, this.data, {title: "Active Effect"}); break;
+                case 'audio': be = new audio(part, this.data, {title: "Audio", modules: [{active: sequencerOn, name: "sequencer", dependent: false}]}); break;
+                case 'foregroundEffect': name = 'secondaryEffect'; be = new primaryEffect(this.danger.foregroundEffect, this.data, {title: "Primary Effect", modules: [{active: sequencerOn, name: "sequencer", dependent: true}]}); break;
+                case 'ambientLight': be = new ambientLight(this.danger.ambientLight, this.data, {title: "Ambient Light", wipeable: true, modules: [{active: levelsOn, name: "levels", dependent: false}, {active: taggerOn, name: "tagger", dependent: false}]}); break;
+                case 'fluidCanvas': name = 'canvas'; be = new fluidCanvas(this.danger.canvas, this.data, {title: "Canvas", modules: [{active: fluidCanvasOn, name: "kandashis-fluid-canvas", dependent: true}]}); break;
+                case 'damage': be = new damageToken(this.danger.damage, this.data, {title: "Damage", modules: [{active: midiQolOn, name: "midi-qol", dependent: true}]}); break;
+                case 'lastingEffect': be = new lastingEffect(this.danger.lastingEffect, this.data, {flags: flags, title: "Lasting Effect", wipeable: true, modules: [{active: monksActiveTilesOn, name: "monks-active-tiles", dependent: false},{active: taggerOn, name: "tagger", dependent: false},{active: levelsOn, name: "levels", dependent: false},{active: betterRoofsOn, name: "better-roofs", dependent: false}]}); break;
+                case 'macro': be = new macro(this.danger.macro, this.data, {title: "Macro"}); break;
+                case 'mutate': be = new mutate(this.danger.mutate, this.data, {title: "Mutate", modules:[{active: warpgateOn, name: "warpgate", dependent: true}, {active: taggerOn, name: "tagger", dependent: false}]}); break;
+                case 'backgroundEffect': name = 'secondaryEffect'; be = new secondaryEffect(this.danger.backgroundEffect, this.data, {title: "Secondary Effect", modules: [{active: sequencerOn, name: "sequencer", dependent: true}]}); break;
+                case 'save': be = new save(this.danger.save, this.data, {title: "Save"}); break;
+                case 'warpgate': name = 'spawn'; be = new spawn(this.danger.warpgate, this.data, {title: "Spawn", modules:[{active: warpgateOn, name: "warpgate", dependent: true}, {active: taggerOn, name: "tagger", dependent: false}]}); break;
+                case 'tokenMove': be = new tokenMove(this.danger.tokenMove, this.data, {title: "Token Move"}); break;
+                case 'tokenEffect': be = new tokenEffect(this.danger.tokenEffect, this.data, {title: "Token Effect", modules: [{active: sequencerOn, name: "sequencer", dependent: true}]}); break;
+                case 'tokenSays': be = new tokenSays(this.danger.tokenSays, this.data, {title: "Token Says", modules: [{active: tokenSaysOn, name: "token-says", dependent: true}]}); break;
+                case 'wall': be = new wall(this.danger.wall, this.data, {title: "Wall", wipeable: true, modules:[{active: wallHeightOn, name: "wall-height", dependent: false}, {active: taggerOn, name: "tagger", dependent: false}]}); break; 
+            }
+            if(be) this.reconcile(name, be);
         }
+        this.reconcile('flavor', new flavor(this.zone.flavor, this.data, {title: "Flavor"})); 
+    }
 
     get danger(){
         return this.zone.danger
@@ -385,8 +421,8 @@ class executor {
         return this.parts.filter(e => e.has)
     }
 
-    get parts(){
-        return [this._activeEffect, this._ambientLight, this._audio, this._canvas, this._damageToken, this._flavor, this._lastingEffect, this._macro, this._mutate, this._primaryEffect, this._secondaryEffect, this._save, this._spawn, this._tokenMove, this._tokenEffect, this._tokenSays, this._wall]
+    get previouslyExecuted(){
+        return this.data.previouslyExecuted
     }
 
     get wipeables(){
@@ -395,22 +431,6 @@ class executor {
 
     get zone(){
         return this.data.zone
-    }
-
-    async activeEffect(){
-        this.promises.execute.push(this._activeEffect.go())
-    }
-
-    async ambientLight(){
-        this.promises.execute.push(this._ambientLight.go())
-    }
-
-    async audio() {
-        this.promises.execute.push(this._audio.go())
-    }
-
-    async canvas(){
-        this.promises.execute.push(this._canvas.go());
     }
 
     async check(){
@@ -423,14 +443,12 @@ class executor {
         return this.report('Check');
     }
 
-    async damageToken(){
-        this.promises.execute.push(this._damageToken.go());
+    async done(){
+        this.data.previouslyExecuted = true;
     }
 
-    async done(){
-        const result = await Promise.all(this.promises.execute).then((results) => {return {success:true, results: results}}).catch((e) => {return {success:false, results: e}});
-        this.previouslyExecuted = true;
-        return result
+    async go(){
+        await this.plan.runPlan()
     }
  
     async inform(){
@@ -439,32 +457,12 @@ class executor {
         return this.report('Inform');
     }
 
-    async go(){
-        await this.plan.runPlan()
-    }
-
-    async lastingEffect(){
-        this.promises.execute.push(this._lastingEffect.go())
-    }
-
     async load(){
         if(!sequencerOn || this.previouslyExecuted) return true
-        const promises = [this._audio.file, this._lastingEffect.file, this._primaryEffect.file, this._secondaryEffect.file, this._tokenEffect.file];
+        const promises = this.parts.filter(p => p._file).map(p => p.file);
         const files = await Promise.all(promises).then((results) => {return results.filter(r => r)}).catch((e) => {return console.log('Danger Zone file caching failed.')});
         this.promises.load.push(Sequencer.Preloader.preloadForClients(files))
         return this.report('Load')
-    }
-
-    async macro(args){
-        this.promises.execute.push(this._macro.go(args))
-    }
-
-    async mutate(){
-        this.promises.execute.push(this._mutate.go())
-    }
-
-    async primaryEffect(){
-        this.promises.execute.push(this._primaryEffect.go())
     }
 
     async ready(){
@@ -472,43 +470,11 @@ class executor {
         return this.report('Ready')
     }
 
-    async save(){
-        const result = this._save.go();
-        this.promises.execute.push(result)
-        await result
-    }
-
-    async secondaryEffect(){
-        this.promises.execute.push(this._secondaryEffect.go())
-    }
-
-    async spawn(){
-        this.promises.execute.push(this._spawn.go())
-    }
-
-    async tokenEffect(){
-        this.promises.execute.push(this._tokenEffect.go())
-    }
-
-    async tokenMove(){
-        this.promises.execute.push(this._tokenMove.go())
-    }
-
-    async tokenSays(){
-        this.promises.execute.push(this._tokenSays.go())
-    }
-
-    async wall(){
-        this.promises.execute.push(this._wall.go())
-    }
-
-    async wipe(){
-        if(!this.previouslyExecuted){
-            for(const wipeable of this.wipeables){
-                await wipeable.wipe();
-            }
+    reconcile(name, part){
+        if(part.has){
+            this.parts.push(part);
+            this.executable[name] = part;
         }
-        return this.report('Wipe')
     }
 
     report(title){
@@ -519,6 +485,15 @@ class executor {
         await this.data.set()
         return this.report('Data');
     }
+
+    async wipe(){
+        if(!this.previouslyExecuted){
+            for(const wipeable of this.wipeables){
+                await wipeable.wipe();
+            }
+        }
+        return this.report('Wipe')
+    }
 }
 
 class executable {
@@ -527,6 +502,7 @@ class executable {
         this._executed = false,
         this._modules = options.modules ? options.modules : [],
         this._dangerName = options.title ? options.title : '',
+        this._flags = options.flags ? options.flags : {},
         this._part = part,
         this.wipeable = options.wipeable ? true : false
     }
@@ -805,7 +781,7 @@ class damageToken extends executable{
     }
 
     get isBulk(){
-        return (this.amount.indexOf('@')===-1 || this.flavor.indexOf('@elevation')===-1 || this.flavor.indexOf('@moved')===-1) ? false : true
+        return (this.amount.indexOf('@')!==-1 || this.flavor.indexOf('@elevation')!==-1 || this.flavor.indexOf('@moved')!==-1) ? false : true
     }
     
     get _save(){
@@ -880,7 +856,7 @@ class flavor extends executable{
     }
     
     get has(){
-        return this.flavor ? true : false
+        return (this.flavor && !this.data.previouslyExecuted) ? true : false
     }
 
     async play(){
@@ -957,7 +933,6 @@ class fluidCanvas extends executable{
 }
 
 class lastingEffect extends executableWithFile{
-
     get activeTiles(){
         return this.flags["monks-active-tiles"] ? this.flags["monks-active-tiles"] : {}
     }
@@ -967,7 +942,7 @@ class lastingEffect extends executableWithFile{
     }
 
     get flags(){
-        return this._part.flags ? this._part.flags : {}
+        return this._flags ? this._flags : {}
     }
 
     get hasActiveTiles(){
@@ -1000,8 +975,9 @@ class lastingEffect extends executableWithFile{
 
     build(){
         const tiles = [];
-        for(let i = 0; i < this.data.dualBoundaries.length; i++){
-            tiles.push(this._tile(this.data.dualBoundaries[i], i))
+        const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
+        for(let i = 0; i < boundaries.length; i++){
+            tiles.push(this._tile(boundaries[i], i))
         }
         return tiles
     }
@@ -1013,7 +989,9 @@ class lastingEffect extends executableWithFile{
             await this.data.scene.createEmbeddedDocuments("Tile", tiles);
         }
     }
+
     _pairedBoundary(index){
+        if(!this.data.hasDualBoundaries) return this.data.boundary
         if(index % 2 && this.data.dualBoundaries.length >= index) return this.data.dualBoundaries[index-1]
         if(this.data.dualBoundaries.length >= index+1) return this.data.dualBoundaries[index+1]
         return this.data.dualBoundaries[index]
@@ -1081,10 +1059,13 @@ class lastingEffect extends executableWithFile{
                     {
                         "action": "teleport",
                         "data": {
-                            "animatepan": this.activeTiles.teleport.animatepan,
-                            "avoidtokens": this.activeTiles.teleport.avoidtokens,
-                            "deletesource": this.activeTiles.teleport.deletesource,
-                            "location": this._pairedBoundary(index).center
+                            animatepan: this.activeTiles.teleport.animatepan ? true : false,
+                            avoidtokens: this.activeTiles.teleport.avoidtokens ? true : false,
+                            deletesource: this.activeTiles.teleport.deletesource ? true : false,
+                            entity: "",
+                            location: this._pairedBoundary(index).center,
+                            preservesettings: true,
+                            remotesnap: true
                         },
                         "id": foundry.utils.randomID(16)
                     }
@@ -1101,22 +1082,21 @@ class lastingEffect extends executableWithFile{
 
 class macro extends executable{
 
-    get _macro(){
+    get macroId(){
         return this._part
     }
     
     get has(){
-        return this._macro ? true : false
+        return this.macroId ? true : false
     }
 
     get macro(){
-        return this._marco ? game.macros.get(this._macro) : false
+        return this.macroId ? game.macros.get(this.macroId) : false
     }
 
     async play(){
-        if(!this.macro) return
         await super.play()
-        await macro.execute(this.data);
+        await this.macro.execute(this.data);
     }
 }
 
@@ -1192,7 +1172,8 @@ class primaryEffect extends executableWithFile {
     
     async _build(){
         let s = new Sequence(), play = true;
-        for (const boundary of this.data.dualBoundaries){
+        const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
+        for (const boundary of boundaries){
             if(this.hasSources){
                 const tagged = this.source.name ? await getTagEntities(this.source.name, this.data.scene) : this.data.sources
                 if(tagged.length){
@@ -1308,7 +1289,8 @@ class secondaryEffect extends executableWithFile {
 
     async _build(){
         let s = new Sequence();
-        for (const boundary of this.data.dualBoundaries){
+        const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
+        for (const boundary of boundaries){
             s = this._sequence(boundary, s);
         }
         return s
@@ -1480,7 +1462,7 @@ class tokenMove extends executable {
     
     get targets(){
         let targets = super.targets
-        if(this.sToT) targets = tg.concat(this.data.sources.filter(s => targets.find(t => t.id !== s.id))) 
+        if(this.sToT) targets = targets.concat(this.data.sources.filter(s => targets.find(t => t.id !== s.id))) 
         return targets
     }
 
@@ -1492,7 +1474,7 @@ class tokenMove extends executable {
                     let location = this.data.boundary.center;
                     let tokenBoundary = documentBoundary("Token", token);
                     x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
-                    e = this.targetBoundary.bottom;
+                    e = this.data.boundary.bottom;
                 } else if (this.movesTargets) {
                     [x, y] = this.walls ? furthestShiftPosition(token, [amtH, amtV]) : canvas.grid.grid.shiftPosition(token.data.x, token.data.y, amtH, amtV)
                     e = this.e.type === 'S' ? amtE : token.data.elevation + amtE;
@@ -1639,8 +1621,10 @@ class wall extends executable {
 
     async play(){
         await super.play()
-        const walls = this._build;
-        if(walls.length) await this.data.scene.createEmbeddedDocuments("Wall",walls)
+        if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
+            const walls = this._build;
+            if(walls.length) await this.data.scene.createEmbeddedDocuments("Wall",walls)
+        }
     }
 
     randomize(){

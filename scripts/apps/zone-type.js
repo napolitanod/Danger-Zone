@@ -167,6 +167,12 @@ export class dangerZoneType {
     return this.options.flags.mutate ? this.options.flags.mutate : {}
   }
 
+  get parts(){
+    const flags = this.options.flags ? Object.entries(this.options.flags).filter(o => o[0]!=='tokenResponse') : []
+    const tr = this.options.flags?.tokenResponse ? Object.entries(this.options.flags.tokenResponse) : []
+    return Object.entries(this.options).filter(o => o[0]!=='flags').concat(flags).concat(tr)
+  }
+
   get save(){
     return (this.options.flags.tokenResponse?.save && Object.keys(saveTypes()).length)  ? this.options.flags.tokenResponse.save : {}
   }
@@ -181,6 +187,11 @@ export class dangerZoneType {
 
   get tokenSays(){
     return this.options.flags.tokenSays ? this.options.flags.tokenSays : {}
+  }
+
+  get twinDanger(){
+    const mat = this.options.flags['monks-active-tiles']?.teleport
+    return (mat && mat.add && mat.twin) ? true : false
   }
 
   get wall(){
