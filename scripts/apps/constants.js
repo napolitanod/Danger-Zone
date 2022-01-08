@@ -1,5 +1,15 @@
 import {daeOn} from '../index.js';
 
+
+export const WORKFLOWSTATES = {
+    NONE: 0,
+    INITIALIZE: 1,
+    EXECUTE: 2,
+    INFORM: 3,
+    CANCEL: 98,
+    COMPLETE: 99
+}
+
 export const WORLDZONE = {
     "options": {
         "bleed": false,
@@ -130,6 +140,7 @@ export const FLUIDCANVASTYPES = {
     "blur": "DANGERZONE.type-form.fluidCanvas.types.blur",
     "drug": "DANGERZONE.type-form.fluidCanvas.types.drug",
     "earthquake": "DANGERZONE.type-form.fluidCanvas.types.earthquake",
+    "fade": "DANGERZONE.type-form.fluidCanvas.types.fade",
     "heartbeat": "DANGERZONE.type-form.fluidCanvas.types.heartbeat",
     "negative": "DANGERZONE.type-form.fluidCanvas.types.negative",
     "sepia": "DANGERZONE.type-form.fluidCanvas.types.sepia",

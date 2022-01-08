@@ -1,5 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
-import {WORLDZONE} from './constants.js';
+import {WORLDZONE, saveTypes} from './constants.js';
+import {monksActiveTilesOn} from '../index.js';
 
 export class dangerZoneType {
     constructor() {
@@ -82,6 +83,7 @@ export class dangerZoneType {
           duration: 0,
           file: '',
           randomFile: false,
+          source: '',
           scale: 1.0
         },
         tokenMove: {
@@ -113,8 +115,28 @@ export class dangerZoneType {
       }
     }
 
+  get effect(){
+    return this.options.effect
+  }
+
+  get ambientLight(){
+    return this.options.ambientLight ? this.options.ambientLight : {}
+  }
+
+  get audio(){
+    return this.options.audio
+  }
+
   get backgroundEffect(){
     return this.options.backgroundEffect
+  }
+
+  get canvas(){
+    return this.options.flags.fluidCanvas ? this.options.flags.fluidCanvas : {}
+  }
+
+  get damage(){
+    return this.options.flags.tokenResponse?.damage ? this.options.flags.tokenResponse.damage : {}
   }
 
   get foregroundEffect(){
@@ -129,12 +151,55 @@ export class dangerZoneType {
     return Object.keys(this.options.globalZone).length ? true : false
   }
 
+  get hasTwinBoundary(){
+    return (monksActiveTilesOn && this.lastingEffect.flags?.['monks-active-tiles']?.teleport) ? true : false
+  }
+
   get lastingEffect(){
     return this.options.lastingEffect
   }
 
+  get macro(){
+    return this.options.macro 
+  }
+
+  get mutate(){
+    return this.options.flags.mutate ? this.options.flags.mutate : {}
+  }
+
+  get parts(){
+    const flags = this.options.flags ? Object.entries(this.options.flags).filter(o => o[0]!=='tokenResponse') : []
+    const tr = this.options.flags?.tokenResponse ? Object.entries(this.options.flags.tokenResponse) : []
+    return Object.entries(this.options).filter(o => o[0]!=='flags').concat(flags).concat(tr)
+  }
+
+  get save(){
+    return (this.options.flags.tokenResponse?.save && Object.keys(saveTypes()).length)  ? this.options.flags.tokenResponse.save : {}
+  }
+
   get tokenEffect(){
     return this.options.tokenEffect
+  }
+
+  get tokenMove(){
+    return this.options.tokenMove
+  }
+
+  get tokenSays(){
+    return this.options.flags.tokenSays ? this.options.flags.tokenSays : {}
+  }
+
+  get twinDanger(){
+    const mat = this.options.flags['monks-active-tiles']?.teleport
+    return (mat && mat.add && mat.twin) ? true : false
+  }
+
+  get wall(){
+    return this.options.wall
+  }
+
+  get warpgate(){
+    return this.options.flags.warpgate ? this.options.flags.warpgate : {}
   }
 
   static get _allDangers() {
@@ -252,47 +317,5 @@ export class dangerZoneType {
     await this.setZoneTypes(allTypes);
     return {"added": added, "skipped": alreadyExists, "error": inError}
   }
-
-  async backgroundEffectFile(){
-    if(!this.backgroundEffect.file || !this.backgroundEffect.randomFile) return [this.backgroundEffect.file]
-    const files = await this._getFilesFromPattern(this.backgroundEffect.file);
-    return files[Math.floor(Math.random() * files.length)]
-  }
-
-  async foregroundEffectFile(){
-    if(!this.foregroundEffect.file || !this.foregroundEffect.randomFile) return [this.foregroundEffect.file]
-    const files = await this._getFilesFromPattern(this.foregroundEffect.file);
-    return files[Math.floor(Math.random() * files.length)]
-  }
-
-  async lastingEffectFile(){
-    if(!this.lastingEffect.file || !this.lastingEffect.randomFile) return [this.lastingEffect.file]
-    const files = await this._getFilesFromPattern(this.lastingEffect.file);
-    return files[Math.floor(Math.random() * files.length)]
-  }
-
-  async tokenEffectFile(){
-    if(!this.tokenEffect.file || !this.tokenEffect.randomFile) return [this.tokenEffect.file]
-    const files = await this._getFilesFromPattern(this.tokenEffect.file);
-    return files[Math.floor(Math.random() * files.length)]
-  }
-
-  async _getFilesFromPattern(pattern) {
-    let source = "data";
-    const browseOptions = { wildcard: true };
-    
-    if ( /\.s3\./.test(pattern) ) {
-      source = "s3";
-      const {bucket, keyPrefix} = FilePicker.parseS3URL(pattern);
-      if ( bucket ) {
-        browseOptions.bucket = bucket;
-        pattern = keyPrefix;
-      }
-    }
-    else if ( pattern.startsWith("icons/") ) source = "public";
-    const content = await FilePicker.browse(source, pattern, browseOptions);
-    return content.files;      
-  }
-
 }
   

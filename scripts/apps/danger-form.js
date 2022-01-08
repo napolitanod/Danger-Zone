@@ -586,7 +586,7 @@ class DangerZoneDangerFormGlobalZone extends FormApplication {
           id : "danger-zone-danger-global-zone",
           template : dangerZone.TEMPLATES.DANGERZONEDANGERGLOBALZONE,
           height : "auto",
-          width: 450,
+          width: 475,
           closeOnSubmit: true
         });
       }
@@ -719,7 +719,7 @@ class DangerZoneDangerFormMutate extends FormApplication {
           template : dangerZone.TEMPLATES.DANGERZONEDANGERMUTATE,
           height : "auto",
           width: 425,
-          height: 570,
+          height: 595,
           closeOnSubmit: true,
           resizable: true
         });

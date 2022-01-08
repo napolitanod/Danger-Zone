@@ -8,3 +8,20 @@ export function stringToObj(string, identifier = '', notify = false) {
     }
     return obj;
 }
+
+export async function getFilesFromPattern(pattern) {
+    let source = "data";
+    const browseOptions = { wildcard: true };
+    
+    if ( /\.s3\./.test(pattern) ) {
+      source = "s3";
+      const {bucket, keyPrefix} = FilePicker.parseS3URL(pattern);
+      if ( bucket ) {
+        browseOptions.bucket = bucket;
+        pattern = keyPrefix;
+      }
+    }
+    else if ( pattern.startsWith("icons/") ) source = "public";
+    const content = await FilePicker.browse(source, pattern, browseOptions);
+    return content.files;      
+}
