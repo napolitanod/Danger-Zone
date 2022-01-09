@@ -95,15 +95,17 @@ export class DangerZoneSceneForm extends FormApplication {
         zonesInit.forEach(function(zn) {
             let typeDisplay = '';
             const danger = dangerZoneType.getDanger(zn.type);
-            if(danger) {typeDisplay = danger.name}
-            dangerZones.push({
-                id: zn.id,
-                icon: danger.icon,
-                title: zn.title, 
-                trigger: game.i18n.localize(DANGERZONETRIGGERS[zn.trigger]),
-                typeDisplay: typeDisplay, 
-                random: zn.random
-            })
+            if(danger) {
+              typeDisplay = danger.name
+              dangerZones.push({
+                  id: zn.id,
+                  icon: danger.icon,
+                  title: zn.title, 
+                  trigger: game.i18n.localize(DANGERZONETRIGGERS[zn.trigger]),
+                  typeDisplay: typeDisplay, 
+                  random: zn.random
+              })
+            }
         });
     }
     return {
