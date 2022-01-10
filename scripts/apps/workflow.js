@@ -452,7 +452,7 @@ class executor {
     }
  
     async inform(){
-        await this.data.highlightBoundary()
+        this.data.highlightBoundary()
         this.data.about();
         return this.report('Inform');
     }
@@ -812,7 +812,7 @@ class damageToken extends executable{
         } 
         else { 
             if(this.data.save.failed.length) await this._calculateDamage(false, damageRoll,  this.data.save.failed, this.flavor)
-            if(this.save === 'H' && this.data.hasSaves) await this._calculateDamage(true, damageRoll, this.data.save.succeeded, this.flavor)
+            if(this.save === 'H' && this.data.hasSuccesses) await this._calculateDamage(true, damageRoll, this.data.save.succeeded, this.flavor)
         }
     }
 
