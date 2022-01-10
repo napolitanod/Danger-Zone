@@ -299,7 +299,7 @@ class executorData {
     async highlightBoundary(){
         if(this.hasBoundary && game.user.isGM && game.settings.get(dangerZone.ID, 'display-danger-boundary')){
             this.boundary.highlight(this.id, 16711719)
-            await wait(5000)
+            await wait(2500)
             this.boundary.destroyHighlight(this.id);
         }
     }
@@ -1492,7 +1492,7 @@ class tokenMove extends executable {
     
     _hz(){
         if(!this.hz?.dir) return 0
-        const adjH = (this.hz.dir === "L" || (this.hz.dir === "R" && Math.round(Math.random()))) ? -1 : 1
+        const adjH = (this.hz.dir === "D" || (this.hz.dir === "R" && Math.round(Math.random()))) ? -1 : 1
         return ((this.hz.min + Math.floor(Math.random() * (this.hz.max - this.hz.min + 1))) * adjH)
     }
 
