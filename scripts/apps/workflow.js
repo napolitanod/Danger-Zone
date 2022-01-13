@@ -461,7 +461,7 @@ class executor {
         if(!sequencerOn || this.previouslyExecuted) return true
         const promises = this.parts.filter(p => p._file).map(p => p.file);
         const files = await Promise.all(promises).then((results) => {return results.filter(r => r)}).catch((e) => {return console.log('Danger Zone file caching failed.')});
-        this.promises.load.push(Sequencer.Preloader.preloadForClients(files))
+        if(files.length) this.promises.load.push(Sequencer.Preloader.preloadForClients(files))
         return this.report('Load')
     }
 
