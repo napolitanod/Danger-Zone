@@ -4,8 +4,13 @@
 [![Foundry Hub Endorsements](https://img.shields.io/endpoint?logoColor=white&url=https%3A%2F%2Fwww.foundryvtt-hub.com%2Fwp-json%2Fhubapi%2Fv1%2Fpackage%2Fdanger-zone%2Fshield%2Fendorsements)](https://www.foundryvtt-hub.com/package/danger-zone/)
 
 
-## SEE THE [WIKI](../../wiki) FOR DETAILED INSTRUCTIONS AND USE EXAMPLES
+### WIKI
+[For detailed instructions and documented examples](../../wiki) 
 
+### TUTORIALS
+[Intro example - explosions sound accompanied by screen shaking](https://youtu.be/-n0MFJNj8IM)
+
+## About
 Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT module that provides GMs the ability to easily invoke localized effects within a scene. Examples of what you can do with this module:
 * A storm where the danger of being struck by lightning is a deadly possibility.
 * A crumbling building where the collapsing ceiling can injure or trap occupants.
