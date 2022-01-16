@@ -171,6 +171,20 @@ Hooks.once('init', async function() {
  */
 Hooks.once('ready', async function() { 
 	setModsAvailable();
+
+	game.socket.on("module.danger-zone", async (request) => {
+        if(request.stop){
+            //dangerZone.log(false,'Socket Call... ', {sound: request.stop});
+            const sounds = game.audio.playing.values();
+            for (const s of sounds){
+                if(s.id === request.stop) {
+                    await s.fade(0, {duration: 250})
+                    s.stop();
+                    break;
+                }
+            }
+        }
+      });
 });
 
 /**

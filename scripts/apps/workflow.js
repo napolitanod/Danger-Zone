@@ -750,15 +750,17 @@ class audio extends executableWithFile {
         this._schedule();
     }
 
-    _schedule(){
+    async _schedule(){
         if(this.duration){
-            this.sound.schedule(() => this.sound.fade(0), this.duration);
-            this.sound.schedule(() => this.sound.stop(), this.duration+1); 
+            await wait(this.duration)
+            await this.stop();            
         }
     }
 
-    stop(){
-       this.sound.stop();
+    async stop(){
+        game.socket.emit('module.danger-zone', {stop: this.sound.id})
+        await this.sound.fade(0, {duration: 250})
+        this.sound.stop();  
     }
 }
 
@@ -1199,10 +1201,8 @@ class primaryEffect extends executableWithFile {
             .zIndex(boundary.top)
             if(source.center){
                 s = s.atLocation(source.center)
-                    .reachTowards(boundary.center)
-                    .gridSize(this.scale * 200)
-                    .startPoint(this.scale * 200)
-                    .endPoint(this.scale * 200);
+                    .stretchTo(boundary.center)
+                    .template({gridSize: this.scale * 200, startPoint: this.scale * 200, endPoint: this.scale * 200});
                     if(this.duration) s = s.waitUntilFinished(this.duration)
             } else {
                 s = s.atLocation(boundary.center)
