@@ -42,6 +42,12 @@ export class workflow {
         dangerZone.log(false,`${message} ${this.title}... `, {workflow: this, data:data});
     }
 
+    static async go(zone, trigger, options){
+        const flow = new workflow(zone, trigger, options);
+        const priorTrigger = await flow.next(); 
+        return priorTrigger
+    }
+
     async next(nextState = WORKFLOWSTATES.INITIALIZE){
         if(!this.active){return this}
         this._state = nextState
