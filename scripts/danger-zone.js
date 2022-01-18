@@ -273,6 +273,7 @@ export class zone {
     this.options = {
       allInArea: false,
       bleed: true,
+      delay: {min: 0, max: 0},
       noPrompt:false,
       placeTemplate:false,
       runUntilTokenFound: false,
@@ -296,6 +297,15 @@ export class zone {
 
   get danger(){
     return dangerZoneType.getDanger(this.type)
+  }
+
+  get delay(){
+    const del = this.options.delay.max - this.options.delay.min
+    return del > 0 ? del : 0
+  }
+
+  get randomDelay(){
+    return Math.floor(Math.random() * this.delay)
   }
 
   get sourceOnScene(){

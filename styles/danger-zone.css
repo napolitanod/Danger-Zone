@@ -14,11 +14,10 @@
 
 .dz-toolt {
     color: #9e9e9e;
-    vertical-align: super;
     font-size: 10px;
 }
 
-form.danger-zone-record .hidden, 
+.danger-zone-record .hidden, 
 form.danger-zone-type-form .hidden, 
 .danger-part-form .hidden, 
 #danger-zone-type-search-clear.hidden {
@@ -194,86 +193,26 @@ form.danger-zone-type-form .main-danger {
     text-overflow: ellipsis;
     padding: 0px 6px 0px 0px;
 }
+
 .danger-zone-details .random {flex: 0 0 10%; text-align: center;}
 
-form.danger-zone-record .form-group .form-fields {
-    justify-content: flex-start;
-    align-items: center;
-    flex-grow: 4;
-}
-
-form.danger-zone-record .form-group .type-select-label {
-    justify-content: flex-start;
-    align-items: center;
-    flex-grow: 2;
-}
-
-form.danger-zone-record .form-group .type-select-label > a {
+.danger-zone-record .form-group a {
     text-align: right;
     color: #7a7971;
     padding-right: 10px;
 }
 
-form.danger-zone-record .form-group {
-    margin: 7px 0px;
-}
-
-.danger-zone-record .form-group.flexrow {
-    flex: 1 1 auto;
-    justify-content: flex-start;
-    flex-wrap: nowrap;
-}
-
-.danger-zone-record .form-group.flexrow label, 
-.danger-zone-record .form-group.flexrow h3 {
-    flex: 1 1 auto;
-    flex-wrap: nowrap;
-}
-
-.danger-zone-record .form-group.flexrow .form-fields {
-    flex: 0 0 70%;
-    flex-wrap: nowrap;
-}
-
-.danger-zone-record .form-group.flexrow .form-fields select {
-    width: 100%;
-}
-.danger-zone-record .form-group.flexrow .trigger-select select ,
-.danger-zone-record .form-group.flexrow .stretch select {
-    width: 100%;
-}
-
-.danger-zone-record .form-group.flexrow .checkbox-value {
-    flex: 0 0 7%;
-}
-
-.danger-zone-record .weight, .danger-zone-record .initiative, .danger-zone-record .initiative-label, .danger-zone-record .weight-label {
-    float: right;
-    flex: 0 0 15%; 
-} 
-.danger-zone-record .random-label {flex: 1 1 17%;}
-
-.danger-zone-record .weight-label,
-.danger-zone-record .stretch-label,
-.danger-zone-record .initiative-label
-{
-    margin-left: 15px;
-    margin-right: 15px;
+.danger-zone-record .form-group .form-group > label {
     text-align: right;
+    padding-right: 10px;
 }
 
-form.danger-zone-record .form-fields .boundary-z{
-    flex: 0 0 14%; 
+.danger-zone-record .form-group button {
+    float: left;
 }
 
-form.danger-zone-record .form-fields .boundary-bottom-label {
-    flex: 0 0 39%; 
-    text-align: right;
-}
-
-form.danger-zone-record .form-fields .boundary-top-label {
-    flex: 0 0 31%; 
-    text-align: right;
+.danger-zone-record .tab > .notes {
+    margin-bottom: 8px;
 }
 
 /*hotbar*/

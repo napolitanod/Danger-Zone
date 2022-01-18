@@ -21,14 +21,22 @@ export class DangerZoneForm extends FormApplication {
     const overrides = {
       title : game.i18n.localize("DANGERZONE.edit-form.name"),
       id : "danger-zone",
+      classes: ["sheet","danger-zone-record"],
       template : dangerZone.TEMPLATES.DANGERZONECONFIG,
       width : 450,
       height : "auto",
-      closeOnSubmit: true      
+      closeOnSubmit: true,
+      tabs : [
+        {navSelector: ".tabs", contentSelector: "form", initial: "basics"}
+      ]   
     };
     const mergedOptions = foundry.utils.mergeObject(defaults, overrides);
     
     return mergedOptions;
+  }
+
+  get scene(){
+    return game.scenes.get(this.sceneId)
   }
 
   async _handleButtonClick(event) {
@@ -46,20 +54,26 @@ export class DangerZoneForm extends FormApplication {
   }
 
   async _handleChange(event) {
-    const action = $(event.currentTarget).data().action;
+    const action = $(event.currentTarget).data().action, val = event.currentTarget.value, checked = event.currentTarget.checked;
     switch (action) {
       case 'trigger-select': {
-        const initLabel = document.getElementById(`dz-initiative-label`);
         const init = document.getElementById(`dz-initiative`);
-        const val = document.getElementById(`dz-trigger-value`).value
-        if(val === 'initiative-start' || val === 'initiative-end'){
-          initLabel.classList.remove('hidden')
+        if(['initiative-start', 'initiative-end'].includes(val)){
           init.classList.remove('hidden')
         } else {
-          initLabel.classList.add('hidden')
           init.classList.add('hidden')
-          init.children[0].value=0;
+          init.children[1].children[0].value=0;
         }
+        break;
+      }
+      case 'random-toggle': {
+        const rando = document.getElementById(`dz-random-weight`);
+        checked ? rando.classList.remove('hidden') : rando.classList.add('hidden')
+        break;
+      }
+      case 'template-toggle': {
+        const templt = document.getElementById(`dz-elevation-prompt`);
+        checked ? templt.classList.remove('hidden') : templt.classList.add('hidden')
         break;
       }
     }
@@ -71,22 +85,15 @@ export class DangerZoneForm extends FormApplication {
     html.on('change', "[data-action]", this._handleChange.bind(this));
   }
 
-  getData(options){
-    let zoneId = this.zoneId, instance;
-    let scene = game.scenes.get(this.sceneId);
-
-    if(!zoneId){
-      instance = new zone(this.sceneId);
-    } else {
-      instance = this.dangerId ? dangerZone.getGlobalZone(this.dangerId, this.sceneId) : dangerZone.getZoneFromScene(zoneId, this.sceneId);
-    }
-
-    const hideInit = (instance.trigger === 'initiative-start' || instance.trigger === 'initiative-end') ? false : true
-
+  getData(){
+    const instance = this.zoneId ? (this.dangerId ? dangerZone.getGlobalZone(this.dangerId, this.sceneId) : dangerZone.getZoneFromScene(this.zoneId, this.sceneId)) : new zone(this.sceneId);
     return {
       "zone": instance,
       actorOps: actorOps(),
-      hideInit: hideInit,
+      hideElevationPrompt: !instance.options.placeTemplate,
+      hideInit: ['initiative-start','initiative-end'].includes(instance.trigger) ? false : true,
+      hideWeight: !instance.random,
+      hideWorld: this.dangerId ? false : true,
       replaceOps: DANGERZONEREPLACE,
       lightReplaceOps: DANGERZONELIGHTREPLACE,
       sourceTriggerOps: SOURCETRIGGERS,
@@ -95,7 +102,7 @@ export class DangerZoneForm extends FormApplication {
       triggerOps: DANGERZONETRIGGERS,
       zoneTypeOps: dangerZoneType.dangerList,
       wallReplaceOps: DANGERZONEWALLREPLACE,
-      sceneInactive: scene?.data?.active ? false : true
+      sceneInactive: (this.scene?.data?.active && this.scene.data.gridType) ? false : true
     } 
   }
   
@@ -147,7 +154,7 @@ export class DangerZoneForm extends FormApplication {
 
   pickToForm(){
     const pick = new boundary(this.pickerStart, this.pickerEnd);
-    let size = game.scenes.get(this.sceneId).dimensions.size;
+    let size = this.scene.dimensions.size;
     pick.B.x = pick.B.x + size;
     pick.B.y = pick.B.y + size;
     $(this.form).find("input[name='scene.start.x']").val(pick.A.x);

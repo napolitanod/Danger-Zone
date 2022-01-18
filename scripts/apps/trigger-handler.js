@@ -1,6 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneDimensions, boundary} from './dimensions.js'
-import {workflow} from './workflow.js';
+import {wait, workflow} from './workflow.js';
 import {DANGERZONETRIGGERSORT} from './constants.js';
 
 export class triggerManager {
@@ -92,8 +92,8 @@ export class triggerManager {
             }
         }
 
-        const flow = new workflow(zone, this, options);
-        this.priorTrigger = await flow.next(); 
+        if(zone.delay > 0) await wait(zone.randomDelay)
+        this.priorTrigger = await workflow.go(zone, this, options);
         if(finalLoop){await this.next()}
     }
 

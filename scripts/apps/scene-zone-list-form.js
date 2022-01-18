@@ -121,7 +121,7 @@ export class DangerZoneSceneForm extends FormApplication {
   _showZoneHighlight(event){
     const hov = $(event.currentTarget);
     const zoneId = hov.parents('[data-id]')?.data()?.id;
-    if(zoneId && this.sceneId === canvas.scene.id){
+    if(zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.data?.gridType){
         dangerZoneDimensions.addHighlightZone(zoneId, this.sceneId);
       }
   } 
@@ -129,7 +129,7 @@ export class DangerZoneSceneForm extends FormApplication {
   _hideZoneHighlight(event){
     const hov = $(event.currentTarget);
     const zoneId = hov.parents('[data-id]')?.data()?.id;
-      if(zoneId && this.sceneId === canvas.scene.id){
+      if(zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.data?.gridType){
           dangerZoneDimensions.destroyHighlightZone(zoneId);
       }
   }
