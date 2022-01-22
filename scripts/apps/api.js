@@ -22,7 +22,8 @@ export class api {
             enableZone: api._enableZone,
             disableZone: api._disableZone,
             boundary: api._boundary,
-            tokensInBoundary: api._tokensInBoundary
+            tokensInBoundary: api._tokensInBoundary,
+            getExecutor: api._getExecutor
         }
 
         game.modules.get(dangerZone.ID).api = {
@@ -33,7 +34,8 @@ export class api {
             enableZone: api._enableZone,
             disableZone: api._disableZone,
             boundary: api._boundary,
-            tokensInBoundary: api._tokensInBoundary
+            tokensInBoundary: api._tokensInBoundary,
+            getExecutor: api._getExecutor
         }
     }
 
@@ -155,6 +157,12 @@ export class api {
     
         if(!zn){return console.log(`A zone with the name provided was not found on scene ${sceneId}`)}
         await triggerManager.apiDirectTrigger(zn, sceneId, options);
+    }
+
+    static async _getExecutor(zoneName, sceneId){
+        const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId)
+        const ex = await zn.executor()
+        return ex
     }
 }
 

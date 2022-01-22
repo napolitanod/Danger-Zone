@@ -2,6 +2,7 @@
     "DANGERZONE": {
         "add": "Add",
         "cancel": "Cancel",
+        "clear": "Clear",
         "copy": "Copy",
         "degrees": "(Degrees)",
         "delete": "Delete",
@@ -12,9 +13,11 @@
         "location-picker": "Select the zone dimensions",
         "ms": "ms",
         "none": "None",
+        "play": "Play",
         "ratio": "(Ratio)",
         "save": "Save",
         "sec": "sec",
+        "stop": "Stop",
         "view": "View",
         "yes": "Ok",
         "zones": "Configure Zones",
@@ -116,6 +119,71 @@
             "wall.replace.description": "Choose what to do with existing Danger Zone created walls when this zone triggers.",
             "weight.label": "Weight"
         },
+        "executor-form":{
+            "boundary":{
+                "clear.label": "Clear boundary",
+                "label": "Target Boundary",
+                "highlight.label": "Highlight boundary location",
+                "none.label": "There is no target boundery selected.",
+                "prompt.label": "Choose boundary location",
+                "random.label": "New random boundary location",
+                "target.label": "Change boundary to scene target's location"
+            },
+            "danger":{
+                "edit.label": "Edit danger",
+                "label": "Danger"
+            },
+            "eligible":{
+                "fail.label": "Fail the saving throw for all eligible tokens in the boundary",
+                "label": "Zone",
+                "list.label": "Boundary Eligible Tokens",
+                "none.label": "There are no eligible tokens in the target boundary.",
+                "refresh.label": "Refresh eligible boundary tokens list",
+                "succeed.label": "Succeed the saving throw for all eligible tokens in the boundary",
+                "target.label": "Target all eligible tokens in the boundary"
+            },
+            "form-name": "Danger Zone Executor",
+            "no-executor.label": "Select a zone from the dropdown.",
+            "play-zone.label": "Trigger zone",
+            "save":{
+                "add-success.label": "Add scene targets to save success list",
+                "clear.label": "Clear save list",
+                "list.label": "Saving Throw List",
+                "none.label": "Saves have not been made",
+                "add-fail.label": "Add scene targets to save fail list",
+                "requires-fail.label": "Plays only if save failed",
+                "requires-success.label": "Plays only if save succeeded"
+            },
+            "scope": {
+                "boundary.label": "Plays on target boundary",
+                "scene.label": "Plays on scene",
+                "token.label": "Plays on target tokens"
+            },
+            "source":{
+                "add.label": "Add scene targets to source list",
+                "clear.label": "Clear source list",
+                "list.label": "Source List",
+                "none.label": "Source List is empty",
+                "replace.label": "Replace source list with scene targets"
+            },
+            "targets":{
+                "add.label": "Add scene targets to target list",
+                "clear.label": "Clear target list",
+                "list.label": "Target List",
+                "none.label": "Target list is empty",
+                "random.label": "Set targets randomly from eligible targets",
+                "replace.label": "Replace target list with scene targets"
+            },
+            "zone":{
+                "fail.label": "Fail the saving throw for all eligible tokens in the zone",
+                "label": "Zone",
+                "list.label": "Zone Eligible Tokens",
+                "none.label": "There are no eligible tokens in the zone.",
+                "refresh.label": "Refresh eligible zone tokens list",
+                "succeed.label": "Succeed the saving throw for all eligible tokens in the zone",
+                "target.label": "Target all eligible tokens in the zone"
+            }
+        },
         "export":{
             "title": "Export Dangers"
         },
@@ -167,6 +235,7 @@
             "delete-danger-zone": "Delete danger zone",
             "description": "Zones define where a danger can happen, when and to whom. Each zone contains a danger. Documentation at https://github.com/napolitanod/Danger-Zone/wiki/Zones.",
             "edit-danger-zone": "Edit danger zone",
+            "executor.label": "Launch Danger Zone Executor",
             "header.name": "Configure Scene Zones",
             "label": "Danger Zone",
             "random": "Random",

@@ -4,6 +4,8 @@ import {dangerZoneType} from './apps/zone-type.js';
 import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
 import { WORLDZONE } from './apps/constants.js';
+import {executor} from './apps/workflow.js';
+import {wait} from './apps/helpers.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -21,6 +23,7 @@ export class dangerZone {
  
   static TEMPLATES = {
     DANGERZONECONFIG: `modules/${this.ID}/templates/danger-zone-form.hbs`,
+    DANGERZONEEXECUTOR: `modules/${this.ID}/templates/danger-zone-executor-form.hbs`,
     DANGERZONESCENE: `modules/${this.ID}/templates/danger-zone-scene-form.hbs`,
     DANGERZONETYPESCONFIG: `modules/${this.ID}/templates/danger-zone-types.hbs`,
     DANGERZONETYPE: `modules/${this.ID}/templates/danger-form.hbs`,
@@ -100,6 +103,10 @@ export class dangerZone {
   static getCombatZonesFromScene(sceneId) {
     return this.getAllZonesFromScene(sceneId).filter(zn => !["manual","aura","move"].includes(zn.trigger))
   }  
+
+  static getExecutorZones(sceneId){
+    return this.getAllZonesFromScene(sceneId, {enabled: false}).concat(this.getGlobalZones(sceneId))
+  }
 
     /**
   * Returns all zones on a given scene that are enabled and that are triggered by movement
@@ -304,6 +311,10 @@ export class zone {
     return del > 0 ? del : 0
   }
 
+  get hasSourcing(){
+    return this.source.actor ? true : false
+  }
+
   get randomDelay(){
     return Math.floor(Math.random() * this.delay)
   }
@@ -356,6 +367,26 @@ export class zone {
   async delete(){
     return await game.scenes.get(this.scene.sceneId).unsetFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE + `.${this.id}`);
   }
+
+  get _executor(){
+    return new executor(this)
+  }
+
+  async executor(options={}){
+    const ex = new executor(this, options);
+    await ex.set();
+    return ex
+  }
+
+  
+  async highlightZone(){
+    if(this.scene.sceneId === canvas.scene?.id && canvas.scene?.data?.gridType){
+      dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
+      await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_tzHL', this.scene.dangerId);
+      await wait(2500)
+      dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
+    }
+  } 
 
   /**
    * enables or disables the zone
@@ -414,9 +445,9 @@ export class zone {
     return options
   }
 
-  async wipe(document){
+  async wipe(document, replace = ''){
       let ids = []; const data = this._wipeData(document);
-      switch (data.replace) {
+      switch (replace ? replace : data.replace) {
           case 'Z':
             ids=this.scene.scene[data.placeable].filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.id).map(t => t.id);
               break;

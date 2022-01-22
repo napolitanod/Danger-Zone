@@ -1,7 +1,8 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneDimensions, boundary} from './dimensions.js'
-import {wait, workflow} from './workflow.js';
+import {workflow} from './workflow.js';
 import {DANGERZONETRIGGERSORT} from './constants.js';
+import {wait} from './helpers.js';
 
 export class triggerManager {
 

@@ -1,6 +1,6 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
-import {DangerForm} from './danger-form.js'
+import {DangerForm} from './danger-form.js';
 
 export var lastSearch = '';
 
@@ -71,7 +71,7 @@ export class DangerZoneTypesForm extends FormApplication {
         break;
       }
       default:
-        dangerZone.log(false, 'Invalid action detected', action);
+        (false, 'Invalid action detected', action);
     }
   }
 

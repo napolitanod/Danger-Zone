@@ -1,3 +1,5 @@
+export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
+
 export function stringToObj(string, identifier = '', notify = false) {
     let obj;
     const error = `${identifier} ${game.i18n.localize("DANGERZONE.alerts.json-invalid")}`;

@@ -1,5 +1,5 @@
 import {dangerZone} from './danger-zone.js';
-import {TRIGGERDISPLAYOPTIONS, SCENEFORMICONDISPLAYOPTIONS} from './apps/constants.js';
+import {TRIGGERDISPLAYOPTIONS, SCENEFORMICONDISPLAYOPTIONS, setExecutableOptions} from './apps/constants.js';
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
 import {triggerManager}  from './apps/trigger-handler.js';
@@ -185,6 +185,8 @@ Hooks.once('ready', async function() {
             }
         }
       });
+
+	  setExecutableOptions();
 });
 
 /**
