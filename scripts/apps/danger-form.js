@@ -5,8 +5,9 @@ import {actorOps, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPL
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
-  constructor(dangerId, ...args) {
+  constructor(dangerId, parent, ...args) {
     super(...args);
+    this.parent = parent,
     this.audio,
     this.effect,
     this.backgroundEffect,
@@ -277,7 +278,7 @@ export class DangerForm extends FormApplication {
 
     await dangerZoneType.updateDangerZoneType(expandedData.id, expandedData);
     dangerZone.initializeTriggerButtons();
-    dangerZone.DangerZoneTypesForm.refresh();
+    this.parent.refresh();
   }
 
 }

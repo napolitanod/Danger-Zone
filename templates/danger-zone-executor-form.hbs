@@ -45,6 +45,12 @@
                     {{#if this.hasTokenScope}}<i class="far fa-user" title="{{localize 'DANGERZONE.executor-form.scope.token.label'}}"></i>{{/if}}
                     {{#if this.requiresSaveFail}}<i class="far fa-thumbs-down" title="{{localize 'DANGERZONE.executor-form.save.requires-fail.label'}}"></i>{{/if}}
                     {{#if this.requiresSaveSuccess}}<i class="far fa-thumbs-up" title="{{localize 'DANGERZONE.executor-form.save.requires-success.label'}}"></i>{{/if}}
+                    {{#if this.hasTokenScope}}
+                        {{#unless (eq this.source "O")}}<i class="fas fa-bullseye" title="{{localize 'DANGERZONE.source.treatment.targets'}}"></i>{{/unless}}
+                        {{#if (eq this.source "S")}}+<i class="fas fa-dragon" title="{{localize 'DANGERZONE.source.treatment.also'}}"></i>{{/if}}
+                        {{#if (eq this.source "I")}}-<i class="fas fa-dragon" title="{{localize 'DANGERZONE.source.treatment.ignore'}}"></i>{{/if}}
+                        {{#if (eq this.source "O")}}<i class="fas fa-dragon" title="{{localize 'DANGERZONE.source.treatment.only'}}"></i>{{/if}}
+                    {{/if}}
                 </span>
             </span>
             <div>

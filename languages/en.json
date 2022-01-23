@@ -176,6 +176,7 @@
             },
             "zone":{
                 "fail.label": "Fail the saving throw for all eligible tokens in the zone",
+                "highlight.label": "Highlight zone",
                 "label": "Zone",
                 "list.label": "Zone Eligible Tokens",
                 "none.label": "There are no eligible tokens in the zone.",
@@ -286,7 +287,8 @@
                 "none": "No special treatment",
                 "ignore": "Do not apply to source (if targeted)",
                 "also": "Apply also to source",
-                "only": "Apply to source instead of targets"
+                "only": "Apply to source instead of targets",
+                "targets": "Apply to targets"
             }
         },
         "stretch": {

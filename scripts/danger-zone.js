@@ -5,6 +5,7 @@ import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
 import { WORLDZONE } from './apps/constants.js';
 import {executor} from './apps/workflow.js';
+import {ExecutorForm} from './apps/executor-form.js';
 import {wait} from './apps/helpers.js';
 
 /**
@@ -48,6 +49,7 @@ export class dangerZone {
 
   static initialize() {
     this.DangerZoneTypesForm = new DangerZoneTypesForm();
+    this.executorForm = new ExecutorForm();
   }
 
   /**
@@ -550,5 +552,3 @@ export class zone {
     return xy
   }
 }
-
-

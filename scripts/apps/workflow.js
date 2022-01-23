@@ -531,7 +531,8 @@ export class executor {
     }
 
     get executables(){
-        return this.parts.filter(e => e.has)
+        return Object.entries(this.executable)
+        //return this.parts.filter(e => e.has)
     }
 
     get hasSourcing(){

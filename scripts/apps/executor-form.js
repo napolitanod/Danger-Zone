@@ -55,6 +55,10 @@ export class ExecutorForm extends FormApplication {
         return (this.hasExecutor && (this.executor.data.hasFails || this.executor.data.hasSuccesses)) ? this.executor.saveSucceeded.map(t => t.data.name + ' <i class="fas fa-thumbs-up"></i>').concat(this.executor.saveFailed.map(t => t.data.name + ' <i class="fas fa-thumbs-down"></i>' )).concat(this.executor.targets.filter(t=> !this.executor.saveFailed.find(s=>s.id === t.id) && !this.executor.saveSucceeded.find(s=>s.id === t.id) ).map(t => t.data.name + ' <i class="fas fa-question"></i>')).join(', ') : game.i18n.localize("DANGERZONE.executor-form.save.none.label")
     }
 
+    get scene(){
+        return this.sceneId ? game.scenes.get(this.sceneId) : {}
+    }
+
     get sourceList(){
         return (this.hasExecutor && this.executor.sources.length) ? this.executor.sources.map(t => t.data.name).join(', ') : game.i18n.localize("DANGERZONE.executor-form.source.none.label")
     }
@@ -127,6 +131,7 @@ export class ExecutorForm extends FormApplication {
             eligibleTargetList: this.eligibleTargetList,
             eligibleZoneList: this.eligibleZoneList,
             executor: this.executor,
+            executables: this.executor.executables.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)}),
             hasSave: this.hasSave,
             hasSourcing: this.hasSourcing,
             hasTargeting: this.hasTargeting,
@@ -147,7 +152,7 @@ export class ExecutorForm extends FormApplication {
         const executable = executableId ? this.executor.executable[executableId] : {}
         switch (action) {
             case 'edit-danger':
-                new DangerForm(this.zone.type).render(true);
+                new DangerForm(this.zone.type, this).render(true);
                 break;
             case 'play':
                 await executable.play()
@@ -217,7 +222,7 @@ export class ExecutorForm extends FormApplication {
           case 'zone': 
             this.zoneId = val;
             await this.setExecutor();
-            this.refresh();
+            await this.refresh(false);
             break;
         }
     }
@@ -310,7 +315,8 @@ export class ExecutorForm extends FormApplication {
         } 
     }
 
-    refresh(){
+    async refresh(full = true){
+        if(full) await this.setExecutor()
         this.render();
     }
 
@@ -328,8 +334,9 @@ export class ExecutorForm extends FormApplication {
 
     async _setHook(){
         Hooks.once("canvasReady", async(app) => {
+            console.log(app)
             if(this.rendered && app.scene?.id){
-               const rendered = await ExecutorForm.renderOnScene(app.scene.id);
+               const rendered = await this.renderOnScene(app.scene.id);
                if(!rendered) this.close();
             }
         });
@@ -352,14 +359,18 @@ export class ExecutorForm extends FormApplication {
         await this.refreshZone();
     }
     
-    static async renderOnScene(sceneId){
-        const scene = game.scenes.get(sceneId)
-        if(game.user.isGM && scene.active && scene.data.gridType){
-            const zones = dangerZone.getExecutorZones(sceneId);
-            if(zones.length){
-                const exec = await zones[0].executor()
-                new ExecutorForm(sceneId, exec, zones).render(true);
-                return true
+    async renderOnScene(sceneId, zoneId, zones){
+        this.sceneId = sceneId ? sceneId : canvas.scene.id;
+        if(game.user.isGM){
+            this._setHook()
+            if(this.scene.active && this.scene.data.gridType){
+                this.zones = zones ? zones : dangerZone.getExecutorZones(this.sceneId);
+                if(this.zones.length){
+                    this.executor = zoneId ? await this.setExecutor() : await this.zones[0].executor();
+                    this.zoneId = zoneId ? zoneId : this.executor.zone?.id;
+                    this.render(true);
+                    return true
+                }
             } 
         }
     }

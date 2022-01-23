@@ -83,5 +83,5 @@ function _contextMenu(event){
 
 async function _executor(event){
     const data = $(event.currentTarget).data("data-id");
-    ExecutorForm.renderOnScene(data.scene);
+    dangerZone.executorForm.renderOnScene();
 }

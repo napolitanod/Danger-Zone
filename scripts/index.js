@@ -433,6 +433,3 @@ export function addQuickZonesLaunch(app, html) {
 export function toggleMasterButtonActive(){
     dzMActive ? dzMActive = false : dzMActive = true
 }
-
-
-
