@@ -3,11 +3,17 @@
         <input type="text" value="{{sceneId}}" name="id">
     </div>
     <div class="form-group main-header">
-        <label for="zoneId">{{localize 'DANGERZONE.executor-form.zone.label'}}</label>
+        <label for="zoneId">
+            <i class="fas fa-radiation"></i>&nbsp;
+            {{localize 'DANGERZONE.executor-form.zone.label'}}
+        </label>
         <div class="form-fields">
-            <select name="zoneId" value="{{zoneId}}" data-action="zone">
-                {{selectOptions zoneOps selected=zoneId localize=false}}
-            </select>     
+            <div class="controls">
+                <select name="zoneId" value="{{zoneId}}" data-action="zone">
+                    {{selectOptions zoneOps selected=zoneId localize=false}}
+                </select>     
+                <a title="{{localize 'DANGERZONE.executor-form.zone.edit.label'}}" data-action="edit-zone"><i class="fas fa-edit"></i></a>
+            </div>
         </div>
     </div>
     <div class="form-group">
@@ -43,6 +49,7 @@
                     {{#if this.hasBoundaryScope}}<i class="fas fa-expand" title="{{localize 'DANGERZONE.executor-form.scope.boundary.label'}}"></i>{{/if}}
                     {{#if this.hasSceneScope}}<i class="far fa-map" title="{{localize 'DANGERZONE.executor-form.scope.scene.label'}}"></i>{{/if}}
                     {{#if this.hasTokenScope}}<i class="far fa-user" title="{{localize 'DANGERZONE.executor-form.scope.token.label'}}"></i>{{/if}}
+                    {{#if this.source.enabled}}<i class="fas fa-long-arrow-alt-right" title="{{localize 'DANGERZONE.type-form.foregroundEffect.source.enabled.label'}}"></i>{{/if}}
                     {{#if this.requiresSaveFail}}<i class="far fa-thumbs-down" title="{{localize 'DANGERZONE.executor-form.save.requires-fail.label'}}"></i>{{/if}}
                     {{#if this.requiresSaveSuccess}}<i class="far fa-thumbs-up" title="{{localize 'DANGERZONE.executor-form.save.requires-success.label'}}"></i>{{/if}}
                     {{#if this.hasTokenScope}}

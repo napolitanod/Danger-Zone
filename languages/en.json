@@ -175,6 +175,7 @@
                 "replace.label": "Replace target list with scene targets"
             },
             "zone":{
+                "edit.label": "Edit zone",
                 "fail.label": "Fail the saving throw for all eligible tokens in the zone",
                 "highlight.label": "Highlight zone",
                 "label": "Zone",

@@ -5,7 +5,6 @@ import {dangerZoneDimensions} from './dimensions.js';
 import {triggerManager} from './trigger-handler.js';
 import {DANGERZONETRIGGERS} from './constants.js';
 import {DangerZoneForm} from './zone-form.js';
-import {ExecutorForm} from './executor-form.js';
 
 export function addTriggersToHotbar() {
     if(game.user.isGM){

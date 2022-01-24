@@ -315,7 +315,7 @@ class executorData {
     async highlightBoundary(override = false){
         if(this.hasBoundary && game.user.isGM && (override || game.settings.get(dangerZone.ID, 'display-danger-boundary'))){
             this.boundary.highlight(this.id, 16711719)
-            await wait(2500)
+            await wait(1000)
             this.boundary.destroyHighlight(this.id);
         }
     }
@@ -347,18 +347,18 @@ class executorData {
         (test.done && !this.hasDualBoundaries) ? this.twinBoundary = this.boundary : this.twinBoundary = test.next().value
     }
 
-    async set(){
+    async set(asRun = true){
         await this.setZone();
-        await this.setBoundary()
+        await this.setBoundary(asRun)
         this.setTargets()
         if(this.danger.hasTwinBoundary) await this.setTwinBoundary()
         if(!this.hasBoundary) this.valid = false
     }
     
-    async setBoundary() {
+    async setBoundary(asRun = false) {
         if(this.hasBoundary) return this._setBoundary();
         if(this.hasLocation) return this._setLocationBoundary();
-        if(this.zone.options.placeTemplate) {
+        if(asRun && this.zone.options.placeTemplate) {
             await this.promptBoundary();
             return
         }
@@ -531,12 +531,23 @@ export class executor {
     }
 
     get executables(){
-        return Object.entries(this.executable)
-        //return this.parts.filter(e => e.has)
+        return this.parts.filter(e => e.has)
+    }
+
+    get hasSave(){
+        return this.executable.save ? true : false
     }
 
     get hasSourcing(){
         return (this.zone.hasSourcing || this.executables.find(e => e.hasSourcing)) ? true : false
+    }
+
+    get hasSourceToTarget(){
+        return false
+    }
+
+    get hasTargeting(){
+        return (this.hasSave || this.executables.find(e => e.hasTargeting)) ? true : false
     }
 
     get previouslyExecuted(){
@@ -729,15 +740,15 @@ export class executor {
        await this.data.setZone()
     }
     
-    async setZoneData(){
-        await this.data.set()
+    async setZoneData(asRun = true){
+        await this.data.set(asRun)
         return this.report('Data');
     }
 
-    async set(){     
+    async set(asRun = true){     
         await this.load();
         await this.ready();
-        await this.setZoneData();
+        await this.setZoneData(asRun);
     }
 
     async wipe(){
@@ -757,6 +768,7 @@ class executable {
         this._executed = false,
         this._modules = options.modules ? options.modules : [],
         this.icon = options.icon ? options.icon : 'fas fa-hryvnia',
+        this.likelihoodResult = 100,
         this.name = options.title ? options.title : '',
         this._flags = flags,
         this._part = part,
@@ -784,12 +796,24 @@ class executable {
         return this.source ? true : false
     }
 
+    get hasTargeting(){
+        return this.hasTokenScope
+    }
+
     get hasTokenScope(){
         return this.scope === 'token' ? true : false
     }
 
     get hasTargets(){
         return this.targets.length ? true : false
+    }
+
+    get likelihood(){
+        return this._part.likelihood ? this._part.likelihood : 100
+    }
+
+    get likelihoodMet(){
+        return this.likelihoodResult <= this.likelihood
     }
 
     get report(){
@@ -830,10 +854,27 @@ class executable {
     
     get targets(){
         return zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.data.sources);
+    }   
+
+    async check(){
+        await this.checkLikelihood()
+        if(!this.likelihoodMet) this.informLikelihood();
+    }
+    
+    async checkLikelihood() {
+        if(this.likelihood < 100){
+            const maybe = await new Roll(`1d100`).roll();
+            this.likelihoodResult = maybe.result;
+        }
+    }
+
+    informLikelihood(){
+        console.log(`${this.name} likelihood of ${this.likelihood} was${this.likelihoodMet ? '' : ' not'} met with a roll of ${this.likelihoodResult}`)
     }
 
     async go(){
-        if(this.has) await this.play(); 
+        await this.check()
+        if(this.has && this.likelihoodMet) await this.play(); 
         return this.report
     }
 
@@ -1450,6 +1491,14 @@ class primaryEffect extends executableWithFile {
     get hasSources(){
         return (this.source.enabled && (this.source.name || this.data.hasSources))
     }
+    
+    get hasSourceToTarget(){
+        return this.source.enabled
+    }
+
+    get hasTargeting(){
+        return (super.hasTargeting || this.hasSourceToTarget) ? true : false
+    }
 
     get save(){
         return this.data.danger.save.fe ? parseInt(this.data.danger.save.fe) : super.save
@@ -1743,6 +1792,10 @@ class tokenMove extends executable {
         return (super.has && (this.movesTargets || this.sToT)) ? true : false
     }
 
+    get hasSourceToTarget(){
+        return this.sToT
+    }
+
     get movesTargets(){
         return (this.v?.dir || this.hz?.dir || this.e?.type) ? true : false
     }
@@ -1817,17 +1870,12 @@ class tokenSays extends executable {
         return this._part.fileType
     }
     
-    get likelihood(){
-        return this._part.likelihood ? this._part.likelihood : 100
-    }
-
     get has(){
         return (super.has && this.fileType && (this.fileName || this.fileTitle)) ? true : false
     }
 
     get options(){
         return {
-            likelihood: this.likelihood,
             type: this.fileType,
             source: this.fileName,
             compendium: this.compendiumName,

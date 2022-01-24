@@ -528,11 +528,17 @@ form ol.danger-setting-group .active:hover label {
 }
 
 .danger-zone-executor .controls {
-    text-align: right;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
 }
 
 .danger-zone-executor .controls > a {
     margin-left: 6px;
+}
+
+.danger-zone-executor .controls > select {
+    width: 100%;
 }
 
 .danger-zone-executor .form-group > label {

@@ -234,8 +234,6 @@ Hooks.once('setup', async function() {
 		  );
 		}
 	  });
-	
-	
  });
 
 /**

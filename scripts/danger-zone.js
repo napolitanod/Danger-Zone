@@ -376,7 +376,7 @@ export class zone {
 
   async executor(options={}){
     const ex = new executor(this, options);
-    await ex.set();
+    await ex.set(false);
     return ex
   }
 
@@ -385,7 +385,7 @@ export class zone {
     if(this.scene.sceneId === canvas.scene?.id && canvas.scene?.data?.gridType){
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
       await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_tzHL', this.scene.dangerId);
-      await wait(2500)
+      await wait(750)
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
     }
   } 

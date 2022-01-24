@@ -1,6 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneDimensions} from "./dimensions.js";
 import {DangerForm} from './danger-form.js';
+import {DangerZoneForm} from './zone-form.js';
 
 export class ExecutorForm extends FormApplication {
     constructor(sceneId, executor = {}, zones, ...args) {
@@ -40,15 +41,15 @@ export class ExecutorForm extends FormApplication {
     }
 
     get hasSave(){
-        return (this.hasExecutor && this.executor.executable.save) ? true : false
+        return this.executor?.hasSave ? true : false
     }
 
     get hasSourcing(){
-        return (this.hasExecutor && this.executor.hasSourcing) ? true : false
+        return this.executor?.hasSourcing ? true : false
     }
 
     get hasTargeting(){
-        return (this.hasExecutor && (this.hasSave || this.executor.executables.find(e => e.hasTokenScope))) ? true : false
+        return this.executor.hasTargeting ? true : false
     }
 
     get saveList(){
@@ -153,6 +154,9 @@ export class ExecutorForm extends FormApplication {
         switch (action) {
             case 'edit-danger':
                 new DangerForm(this.zone.type, this).render(true);
+                break;
+            case 'edit-zone': 
+                new DangerZoneForm(this, this.zoneId, this.sceneId, this.worldId).render(true);
                 break;
             case 'play':
                 await executable.play()
@@ -327,15 +331,14 @@ export class ExecutorForm extends FormApplication {
     }
 
     async refreshZone(){
-        await this.executor.setZone();
+        await this.executor.setZone(true);
         this.drawZoneEligible();
         this.drawBoundaryEligible();
     }
 
     async _setHook(){
-        Hooks.once("canvasReady", async(app) => {
-            console.log(app)
-            if(this.rendered && app.scene?.id){
+        Hooks.on("canvasReady", async(app) => {
+            if(game.user.isGM && this.rendered && app.scene?.id){
                const rendered = await this.renderOnScene(app.scene.id);
                if(!rendered) this.close();
             }
@@ -361,17 +364,14 @@ export class ExecutorForm extends FormApplication {
     
     async renderOnScene(sceneId, zoneId, zones){
         this.sceneId = sceneId ? sceneId : canvas.scene.id;
-        if(game.user.isGM){
-            this._setHook()
-            if(this.scene.active && this.scene.data.gridType){
-                this.zones = zones ? zones : dangerZone.getExecutorZones(this.sceneId);
-                if(this.zones.length){
-                    this.executor = zoneId ? await this.setExecutor() : await this.zones[0].executor();
-                    this.zoneId = zoneId ? zoneId : this.executor.zone?.id;
-                    this.render(true);
-                    return true
-                }
-            } 
+        if(game.user.isGM && this.scene.active && this.scene.data.gridType){
+            this.zones = zones ? zones : dangerZone.getExecutorZones(this.sceneId);
+            if(this.zones.length){
+                this.executor = zoneId ? await this.setExecutor() : await this.zones[0].executor();
+                this.zoneId = zoneId ? zoneId : this.executor.zone?.id;
+                this.render(true);
+                return true
+            }
         }
     }
     
