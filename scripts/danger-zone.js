@@ -7,6 +7,7 @@ import { WORLDZONE } from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait} from './apps/helpers.js';
+import { warpgateOn } from './index.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -107,7 +108,9 @@ export class dangerZone {
   }  
 
   static getExecutorZones(sceneId){
-    return this.getAllZonesFromScene(sceneId, {enabled: false}).concat(this.getGlobalZones(sceneId))
+    return this.getAllZonesFromScene(sceneId, {enabled: false}).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)})
+      .concat(this.getGlobalZones(sceneId).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)}))
+      .concat(this.getAllDangersAsGlobalZones(sceneId).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)}))
   }
 
     /**
@@ -130,6 +133,13 @@ export class dangerZone {
   
   static getRandomZonesFromScene(sceneId) {
     return this.getAllZonesFromScene(sceneId).filter(zn => zn.random)
+  }
+
+  static getAllDangersAsGlobalZones(sceneId) {
+    return dangerZoneType.allDangers.map(danger => {
+      return this._convertZoneGlobalToScene(danger, sceneId);
+      }
+    )
   }
 
   static getGlobalZones(sceneId) {
@@ -533,19 +543,23 @@ export class zone {
   }
 
   async _promptXY(){
-    let currentLayer = canvas.activeLayer;
+    let currentLayer = canvas.activeLayer, xy;
     canvas.activateLayer('grid');
     
     dangerZoneDimensions.destroyHighlightZone(this.id, '', this.scene.dangerId);
     await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_wf', this.scene.dangerId);
 
-    const xy = await new Promise((resolve, reject)=>{
-        ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
-        canvas.app.stage.once('pointerdown', event => {
-            let selected = event.data.getLocalPosition(canvas.app.stage);
-            resolve(selected);
-        })
-    });
+    ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
+    if(warpgateOn){
+      xy = await warpgate.crosshairs.show({icon: this.danger.icon, fillAlpha: 0.1, fillColor: '#000000', interval: -1})
+    } else {
+      xy = await new Promise((resolve, reject)=>{
+         canvas.app.stage.once('pointerdown', event => {
+              let selected = event.data.getLocalPosition(canvas.app.stage);
+              resolve(selected);
+          })
+      });
+    }
       
     dangerZoneDimensions.destroyHighlightZone(this.id, '_wf', this.scene.dangerId);    
     currentLayer.activate();

@@ -197,7 +197,7 @@ class executorData {
         this.likelihoodResult = 100,
         this.location = options.location ? new point(options.location) : {},
         this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
-        this.save = {failed: [], succeeded: []},
+        this.save = {failed: options.save?.failed ? options.save?.failed : [], succeeded: options.save?.succeeded ? options.save?.succeeded : []},
         this._sources = options.sources ? options.sources : [],
         this.targets = options.targets ? options.targets : [],
         this.tokenMovement = [],
@@ -460,62 +460,57 @@ export class executor {
             let be;
             switch(name){
                 case 'effect': 
-                    be = new activeEffect(part, this.data, EXECUTABLEOPTIONS[name]); 
-                    name = 'activeEffect'; 
+                    be = new activeEffect(part, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'audio': 
-                    be = new audio(part, this.data, EXECUTABLEOPTIONS[name]); 
+                    be = new audio(part, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'foregroundEffect': 
-                    be = new primaryEffect(this.danger.foregroundEffect, this.data, EXECUTABLEOPTIONS[name], flags); 
-                    name = 'primaryEffect';  
+                    be = new primaryEffect(this.danger.foregroundEffect, this.data, name, EXECUTABLEOPTIONS[name], flags); 
                     break;
                 case 'ambientLight': 
-                    be = new ambientLight(this.danger.ambientLight, this.data, EXECUTABLEOPTIONS[name]); 
+                    be = new ambientLight(this.danger.ambientLight, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'fluidCanvas': 
-                    be = new fluidCanvas(this.danger.canvas, this.data, EXECUTABLEOPTIONS[name]);
-                    name = 'canvas'; 
+                    be = new fluidCanvas(this.danger.canvas, this.data, name, EXECUTABLEOPTIONS[name]);
                     break;
                 case 'damage': 
-                    be = new damageToken(this.danger.damage, this.data, EXECUTABLEOPTIONS[name]); 
+                    be = new damageToken(this.danger.damage, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'lastingEffect': 
-                    be = new lastingEffect(this.danger.lastingEffect, this.data, EXECUTABLEOPTIONS[name]); 
+                    be = new lastingEffect(this.danger.lastingEffect, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'macro': 
-                    be = new macro(this.danger.macro, this.data, EXECUTABLEOPTIONS[name]); 
+                    be = new macro(this.danger.macro, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'mutate': 
-                    be = new mutate(this.danger.mutate, this.data, EXECUTABLEOPTIONS[name]); 
+                    be = new mutate(this.danger.mutate, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'backgroundEffect': 
-                    be = new secondaryEffect(this.danger.backgroundEffect, this.data, EXECUTABLEOPTIONS[name]);
-                    name = 'secondaryEffect';
+                    be = new secondaryEffect(this.danger.backgroundEffect, this.data, name, EXECUTABLEOPTIONS[name]);
                     break;
                 case 'save': 
-                    be = new save(this.danger.save, this.data, EXECUTABLEOPTIONS[name]); 
+                    be = new save(this.danger.save, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'warpgate': 
-                    be = new spawn(this.danger.warpgate, this.data, EXECUTABLEOPTIONS[name]);
-                    name = 'spawn'; 
+                    be = new spawn(this.danger.warpgate, this.data, name, EXECUTABLEOPTIONS[name]);
                     break;
                 case 'tokenMove': 
-                    be = new tokenMove(this.danger.tokenMove, this.data, EXECUTABLEOPTIONS[name]); 
+                    be = new tokenMove(this.danger.tokenMove, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'tokenEffect': 
-                    be = new tokenEffect(this.danger.tokenEffect, this.data, EXECUTABLEOPTIONS[name]); 
+                    be = new tokenEffect(this.danger.tokenEffect, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'tokenSays': 
-                    be = new tokenSays(this.danger.tokenSays, this.data, EXECUTABLEOPTIONS[name]); 
+                    be = new tokenSays(this.danger.tokenSays, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'wall': 
-                    be = new wall(this.danger.wall, this.data, EXECUTABLEOPTIONS[name]); 
+                    be = new wall(this.danger.wall, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break; 
             }
             if(be) this.reconcile(name, be);
         }
-        this.reconcile('flavor', new flavor(this.zone.flavor, this.data, EXECUTABLEOPTIONS['flavor'])); 
+        this.reconcile('flavor', new flavor(this.zone.flavor, this.data, 'flavor', EXECUTABLEOPTIONS['flavor'])); 
     }
 
     get boundary(){
@@ -641,7 +636,7 @@ export class executor {
 
     clearBoundary(options={}){
         if(options.clearTargets) this.clearTargets();
-        this.clearLocation()
+        if(options.clearLocation) this.clearLocation()
         this.data.updateBoundary()
     }
 
@@ -762,12 +757,13 @@ export class executor {
 }
 
 class executable {
-    constructor(part = {}, data = executorData, options = {}, flags = {}){
+    constructor(part = {}, data = executorData, id, options = {}, flags = {}){
         this.data = data,
         this._document = options.document,
         this._executed = false,
         this._modules = options.modules ? options.modules : [],
         this.icon = options.icon ? options.icon : 'fas fa-hryvnia',
+        this._id = id,
         this.likelihoodResult = 100,
         this.name = options.title ? options.title : '',
         this._flags = flags,
@@ -1115,9 +1111,13 @@ class damageToken extends executable{
     }
 
     get requiresSaveFail(){
-        return this.save === "N" ? true : false
+        return this.save === "N" ? false : true
     }
-    
+
+    get requiresSaveSuccess(){
+        return this.save === "H" ? true : false
+    }
+
     get _save(){
         return this._part.save
     } 

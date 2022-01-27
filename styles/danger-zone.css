@@ -516,7 +516,7 @@ form ol.danger-setting-group .active:hover label {
     width: 115px;
 }
 
-.dz-executable-list > li > span i {
+.dz-executable-list > li > span i, .dz-executable-list .no-play {
     color: #424242;
     width: 18px;
     text-align: center;
@@ -565,4 +565,13 @@ form ol.danger-setting-group .active:hover label {
 
 .danger-zone-executor .form-group > label > i {
     margin-right: 4px;
+}
+
+.danger-zone-executor select option:disabled {
+    color: #212121;
+    font-weight: bold;
+}
+
+.danger-zone-executor .warning{
+    color: rgba(255, 62, 65);
 }

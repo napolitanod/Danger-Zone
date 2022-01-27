@@ -29,7 +29,7 @@
             "no-trigger-if-not-on-combat-scene": "Danger Zones do not trigger while you are not active on the current combat scene.",
             "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
             "select-zone-end": "Select an end location for this zone. Selected area will snap to grid and represent the lower right corner of this zone.",
-            "select-target": "Select a location in the zone. Selected area will snap to grid and represent the top left corner of the danger's target.",
+            "select-target": "Select a location in the zone for the danger to target. Selected area will snap to grid and represent the top left corner of the danger's target.",
             "user-selection-exited": "You have exited from danger location selection prematurely. Zone trigger execution stopped.",
             "zone-copied": "The zone was copied successfully! Please review the zone dimensions.",
             "zone-copy-fail": "Oops, there was an issue copying the zone."
@@ -124,10 +124,12 @@
                 "clear.label": "Clear boundary",
                 "label": "Target Boundary",
                 "highlight.label": "Highlight boundary location",
+                "lock.label": "Boundary will not update due to zone changes",
                 "none.label": "There is no target boundery selected.",
                 "prompt.label": "Choose boundary location",
                 "random.label": "New random boundary location",
-                "target.label": "Change boundary to scene target's location"
+                "target.label": "Change boundary to scene target's location",
+                "unlock.label": "Boundary will update due to zone changes"
             },
             "danger":{
                 "edit.label": "Edit danger",
@@ -135,24 +137,29 @@
             },
             "eligible":{
                 "fail.label": "Fail the saving throw for all eligible tokens in the boundary",
+                "highlight.label": "Target on the game canvas any tokens that are on this list",
                 "label": "Zone",
                 "list.label": "Boundary Eligible Tokens",
                 "none.label": "There are no eligible tokens in the target boundary.",
                 "refresh.label": "Refresh eligible boundary tokens list",
                 "succeed.label": "Succeed the saving throw for all eligible tokens in the boundary",
-                "target.label": "Target all eligible tokens in the boundary"
+                "target.label": "Move all eligible tokens in the boundary to the target list"
             },
             "form-name": "Danger Zone Executor",
             "no-executor.label": "Select a zone from the dropdown.",
+            "no-play": "Play disabled due to missing required element.",
             "play-zone.label": "Trigger zone",
             "save":{
                 "add-success.label": "Add scene targets to save success list",
                 "clear.label": "Clear save list",
+                "highlight.label": "Target on the game canvas any tokens that are on this list",
                 "list.label": "Saving Throw List",
+                "lock.label": "Save list will not update due to zone or boundary changes",
                 "none.label": "Saves have not been made",
                 "add-fail.label": "Add scene targets to save fail list",
                 "requires-fail.label": "Plays only if save failed",
-                "requires-success.label": "Plays only if save succeeded"
+                "requires-success.label": "Plays only if save succeeded",
+                "unlock.label": "Save list will update due to zone or boundary changes"
             },
             "scope": {
                 "boundary.label": "Plays on target boundary",
@@ -162,17 +169,23 @@
             "source":{
                 "add.label": "Add scene targets to source list",
                 "clear.label": "Clear source list",
+                "highlight.label": "Target on the game canvas any tokens that are on this list",
                 "list.label": "Source List",
-                "none.label": "Source List is empty",
-                "replace.label": "Replace source list with scene targets"
+                "lock.label": "Source list will not update due to zone or boundary changes",
+                "none.label": "Source list is empty",
+                "replace.label": "Replace source list with scene targets",
+                "unlock.label": "Source list will update due to zone or boundary changes"
             },
             "targets":{
                 "add.label": "Add scene targets to target list",
                 "clear.label": "Clear target list",
+                "highlight.label": "Target on the game canvas any tokens that are on this list",
                 "list.label": "Target List",
+                "lock.label": "Target list will not update due to zone or boundary changes",
                 "none.label": "Target list is empty",
                 "random.label": "Set targets randomly from eligible targets",
-                "replace.label": "Replace target list with scene targets"
+                "replace.label": "Replace target list with scene targets",
+                "unlock.label": "Target list will update due to zone or boundary changes"
             },
             "zone":{
                 "edit.label": "Edit zone",
@@ -181,9 +194,14 @@
                 "label": "Zone",
                 "list.label": "Zone Eligible Tokens",
                 "none.label": "There are no eligible tokens in the zone.",
+                "options":{
+                    "scene": "Scene Zones",
+                    "world": "World Zones",
+                    "danger": "Dangers"
+                },
                 "refresh.label": "Refresh eligible zone tokens list",
                 "succeed.label": "Succeed the saving throw for all eligible tokens in the zone",
-                "target.label": "Target all eligible tokens in the zone"
+                "target.label": "Move all eligible tokens in the zone to the target list"
             }
         },
         "export":{

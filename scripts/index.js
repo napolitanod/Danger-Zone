@@ -164,6 +164,12 @@ Hooks.once('init', async function() {
 	Hooks.on("renderDangerZoneTypesForm", (app, html, options) => {
         app._filter();
 	});
+	
+	//hook to ensure that, on executor form render, appropriate field flagging is done
+	Hooks.on("renderExecutorForm", (app, html, options) => {
+		console.log(app); console.log(html)
+        app._handleSuppress(html);
+	});
 });
 
 /**
@@ -315,8 +321,8 @@ Hooks.on('updateCombat', async(combat, round, options, id) => {
 });
 
 Hooks.on("updateToken", async (token, update, options, userId) => {
-    if (game.user.isGM && ("x" in update || "y" in update || "elevation" in update) && !options.dangerZoneMove) {
-		if (dangerZone.sceneHasZone(token.parent?.id)) {triggerManager.findMovementTriggers(token, update)};
+    if (game.user.isGM && ("x" in update || "y" in update || "elevation" in update) && !options.dangerZoneMove && dangerZone.getMovementZonesFromScene(token.parent?.id).length) {
+		triggerManager.findMovementTriggers(token, update)
     }
 });
 
