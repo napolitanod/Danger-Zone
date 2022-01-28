@@ -1,3 +1,16 @@
+.danger-zone-executor, .danger-zone-record, .danger-zone-type-form, .danger-part-form {
+    font-size: min(var(--font-size-14), 16px) !important;
+}
+
+.danger-zone-executor .units, .danger-zone-record .units, .danger-zone-type-form .units, .danger-part-form .units,
+.danger-zone-executor .notes, .danger-zone-record .notes, .danger-zone-type-form .notes, .danger-part-form .notes {
+    font-size: min(var(--font-size-12), 14px) !important;
+}
+
+.danger-zone-executor button, .danger-zone-record button, .danger-zone-type-form button, .danger-part-form button {
+    font-size: min(var(--font-size-14), 16px) !important;
+}
+
 .danger-zone-types footer, .danger-zone-scene footer {
     margin: 14px 0px 4px 0px;
 }
