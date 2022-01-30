@@ -107,6 +107,21 @@ export const SOURCETREATMENT = {
     "O": "DANGERZONE.source.treatment.only"
 }
 
+export const SOURCEAREA = {
+    "": "DANGERZONE.source.area.none",
+    "A": "DANGERZONE.source.area.actor",
+    "D": "DANGERZONE.source.area.danger",
+    "T": "DANGERZONE.source.area.tag",
+    "Z": "DANGERZONE.source.area.zone"
+}
+
+export const SOURCEAREATARGET = {
+    "": "DANGERZONE.source.target.none",
+    "A": "DANGERZONE.source.target.adjacent",
+    "I": "DANGERZONE.source.target.in",
+    "B": "DANGERZONE.source.target.both"
+}
+
 export const STRETCH = {
     "": "",
     "B": "DANGERZONE.stretch.bottom.label",

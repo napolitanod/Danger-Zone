@@ -303,7 +303,9 @@ export class zone {
     this.replace = 'N',
     this.scene = new dangerZoneDimensions(sceneId, this.id),
     this.source = {
+      area: '',
       actor: '',
+      target: '',
       trigger: ''
     },
     this.title = '',
@@ -549,10 +551,16 @@ export class zone {
     dangerZoneDimensions.destroyHighlightZone(this.id, '', this.scene.dangerId);
     await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_wf', this.scene.dangerId);
 
-    ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
+    
     if(warpgateOn){
-      xy = await warpgate.crosshairs.show({icon: this.danger.icon, fillAlpha: 0.1, fillColor: '#000000', interval: -1})
+      ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-warpgate-target"));
+      const size = canvas.grid.type === 1 ? Math.max(this.danger.dimensions.units.w, this.danger.dimensions.units.h) : 1
+      xy = await warpgate.crosshairs.show({icon: this.danger.icon, fillAlpha: 0.1, fillColor: '#000000', size: size, interval: (size % 2) > 0 ? -1 : 1 })
+      let tg = canvas.grid.grid.getGridPositionFromPixels(xy.x, xy.y)
+      let tl = canvas.grid.grid.getPixelsFromGridPosition(tg[0]-Math.floor(size/2), tg[1]-Math.floor(size/2))
+      xy.x = tl[0], xy.y = tl[1]
     } else {
+      ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
       xy = await new Promise((resolve, reject)=>{
          canvas.app.stage.once('pointerdown', event => {
               let selected = event.data.getLocalPosition(canvas.app.stage);

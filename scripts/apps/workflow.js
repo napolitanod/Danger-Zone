@@ -1086,6 +1086,21 @@ class audio extends executableWithFile {
             this.sound.stop();
         }  
     }
+
+    async _setFile(){
+        if(!this.filePath || !this.randomFile) return this._file = this.filePath;
+        const playlist = game.playlists.getName(this.filePath);
+        if(!playlist) {
+            this._file = ''
+        } else {
+            const index = Math.floor(Math.random() * playlist.data.sounds.size)
+            let i = 0; 
+            for (let key of playlist.data.sounds) {
+                if (i++ == index) {this._file = key?.path; break;}  
+            }
+        }
+        return this._file
+    }
 }
 
 class damageToken extends executable{

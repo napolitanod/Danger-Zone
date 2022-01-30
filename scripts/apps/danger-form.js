@@ -314,9 +314,12 @@ class DangerZoneActiveEffectForm extends ActiveEffectConfig {
       const button = event.currentTarget;
       switch (button.dataset.action) {
         case "add":
-          return this._addEffectChange(button);
+          this._addEffectChange(button);
+          break;
         case "delete":
-          return button.closest(".effect-change").remove();
+          button.closest(".effect-change").remove();
+          this.setPosition()
+          break;
       }
     }
   
@@ -332,6 +335,7 @@ class DangerZoneActiveEffectForm extends ActiveEffectConfig {
       let del = $('<div>').addClass("effect-controls").append($('<a>').addClass("effect-control").attr("data-action", "delete").click(this._onEffectControl).append($('<i>').addClass("fas fa-trash")))
       change.append(del);
       changes.appendChild(change[0]);
+      this.setPosition()
     }  
   
     async _updateObject(event, formData) {
@@ -452,6 +456,31 @@ class DangerZoneDangerFormAudio extends FormApplication {
 
     activateListeners(html) {
       super.activateListeners(html);
+      html.on('click', "[data-action]", this._handleButtonClick.bind(this));
+    }
+
+    _random(checked){
+      const group = $(this.form).find("#dz-audio-file")
+      if(checked){
+        group.addClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.audio.playlist.label"))
+        group.find('input').attr("placeholder", "")
+      } else {
+        group.removeClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.audio.file.label"))
+        group.find('input').attr("placeholder", game.i18n.localize("DANGERZONE.type-form.audio.file.placeholder"))
+      }
+    }
+
+    async _handleButtonClick(event) {
+      const clickedElement = $(event.currentTarget);
+      const action = clickedElement.data().action;  
+      switch (action) {
+        case 'random': {
+          this._random(event.currentTarget.checked)
+          break;
+        }
+      }
     }
   
     async _updateObject(event, formData) {

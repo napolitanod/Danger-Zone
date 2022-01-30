@@ -42,6 +42,10 @@ form.danger-zone-type-form .hidden,
     min-height: 100px;
 }
 
+.danger-part-form .hidden-picker button{
+    display: none !important;
+}
+
 .danger-zone-scene-trigger-button.hidden {
     visibility: hidden;
     opacity: 0;

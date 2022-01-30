@@ -45,7 +45,7 @@ export class ExecutorForm extends FormApplication {
     }
 
     get eligibleZoneList(){
-        return (this.hasExecutor && this.executor.zoneEligibleTokens.length) ? this.executor.zoneEligibleTokens.map(t => t.data.name).join(', ') : ''// game.i18n.localize("DANGERZONE.executor-form.zone.none.label")
+        return (this.hasExecutor && this.executor.zoneEligibleTokens.length) ? this.executor.zoneEligibleTokens.map(t => t.data.name).join(', ') : '&nbsp;'// game.i18n.localize("DANGERZONE.executor-form.zone.none.label")
     }
 
     get hasSave(){
@@ -146,15 +146,18 @@ export class ExecutorForm extends FormApplication {
     }
 
     drawBoundaryEligible(){
-        document.getElementById(`dz-eligible-target-list`).innerHTML = this.eligibleTargetList
+        document.getElementById(`dz-eligible-target-list`).innerHTML = this.eligibleTargetList;
+        this.setPosition()
     }
 
     drawSaves(){
-        document.getElementById(`dz-save-list`).innerHTML = this.saveList
+        document.getElementById(`dz-save-list`).innerHTML = this.saveList;
+        this.setPosition()
     }
 
     drawSources(){
-        document.getElementById(`dz-source-list`).innerHTML = this.sourceList
+        document.getElementById(`dz-source-list`).innerHTML = this.sourceList;
+        this.setPosition()
     }
 
     drawTargets(){
@@ -163,7 +166,8 @@ export class ExecutorForm extends FormApplication {
     }
 
     drawZoneEligible(){
-        document.getElementById(`dz-eligible-zone-list`).innerHTML = this.eligibleZoneList
+        document.getElementById(`dz-eligible-zone-list`).innerHTML = this.eligibleZoneList;
+        this.setPosition()
     }
 
     getData(){
