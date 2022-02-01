@@ -6,7 +6,7 @@ import {addTriggersToHotbar} from './apps/hotbar.js';
 import { WORLDZONE } from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
-import {wait} from './apps/helpers.js';
+import {wait, getTagEntities} from './apps/helpers.js';
 import { warpgateOn } from './index.js';
 
 /**
@@ -305,6 +305,7 @@ export class zone {
     this.source = {
       area: '',
       actor: '',
+      tag: '',
       target: '',
       trigger: ''
     },
@@ -331,10 +332,6 @@ export class zone {
 
   get randomDelay(){
     return Math.floor(Math.random() * this.delay)
-  }
-
-  get sourceOnScene(){
-    return this.scene.scene.tokens.find(t => t.actor?.id === this.source.actor) ? true : false
   }
 
   get sources(){
@@ -392,6 +389,11 @@ export class zone {
     return ex
   }
 
+  get flaggablePlaceables(){
+    return this.scene.scene.walls.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE])
+      .concat(this.scene.scene.lights.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
+      .concat(this.scene.scene.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
+  }
   
   async highlightZone(){
     if(this.scene.sceneId === canvas.scene?.id && canvas.scene?.data?.gridType){
@@ -411,10 +413,40 @@ export class zone {
     return await this._setFlag();
   }
 
-  sourceTrigger(actorIds){
+  async sourceArea(){
+    const obj = {documents: [], target: this.source.target}
+    switch(this.source.area){
+        case 'A':
+          obj['documents'] = this.scene.scene.tokens.filter(t => t.actor?.name === this.source.actor);
+          break;
+        case 'C':
+          obj['documents'] = this.scene.scene.tiles.filter(t => t.data.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].type === this.source.tag);
+          break;
+        case 'D':
+          obj['documents'] = this.flaggablePlaceables.filter(t => t.data.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].type === this.source.tag);
+          break;
+        case 'T':
+          obj['documents'] = await getTagEntities(this.source.tag, this.scene.scene)
+          break;
+        case 'Y':
+          obj['documents'] = this.scene.scene.tiles.filter(t => t.data.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].zoneId === this.source.tag);
+          break;
+        case 'Z':
+          obj['documents'] = this.flaggablePlaceables.filter(t => t.data.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].zoneId === this.source.tag);
+          break;
+    }
+    return obj
+  }
+
+  async sourceOnScene(){
+
+    return (this.scene.scene.tokens.find(t => t.actor?.id === this.source.actor) || await this.sourceArea().documents.length) ? true : false
+  }
+
+  async sourceTrigger(actorIds){
     dangerZone.log(false,'Determining Source Trigger ', {zone: this, triggerActors: actorIds});
     if(this.source.trigger && this.source.actor){
-        return (this.source.trigger === 'C' ? this.sourceOnScene : actorIds.includes(this.source.actor));
+        return (this.source.trigger === 'C' ? await this.sourceOnScene() : actorIds.includes(this.source.actor));
     }
     return true
   }

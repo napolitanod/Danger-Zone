@@ -3,6 +3,7 @@ import {dangerZoneType} from './zone-type.js';
 import {boundary, point} from './dimensions.js';
 import {DANGERZONETRIGGERS} from './constants.js';
 import {TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, actorOps} from './constants.js';
+import { taggerOn } from '../index.js';
 
 export class DangerZoneForm extends FormApplication {
   constructor(app, zoneId, sceneId, dangerId, ...args) {
@@ -39,6 +40,10 @@ export class DangerZoneForm extends FormApplication {
     return game.scenes.get(this.sceneId)
   }
 
+  get zone(){
+    return this.zoneId ? (this.dangerId ? dangerZone.getGlobalZone(this.dangerId, this.sceneId) : dangerZone.getZoneFromScene(this.zoneId, this.sceneId)) : new zone(this.sceneId);
+  }
+
   async _handleButtonClick(event) {
     const action = $(event.currentTarget).data().action;
     switch (action) {
@@ -66,16 +71,17 @@ export class DangerZoneForm extends FormApplication {
         }
         break;
       }
-      case 'random-toggle': {
+      case 'random-toggle': 
         const rando = document.getElementById(`dz-random-weight`);
         checked ? rando.classList.remove('hidden') : rando.classList.add('hidden')
         break;
-      }
-      case 'template-toggle': {
+      case 'source-area':
+        this._handleSourceTag(val)
+        break;
+      case 'template-toggle': 
         const templt = document.getElementById(`dz-elevation-prompt`);
         checked ? templt.classList.remove('hidden') : templt.classList.add('hidden')
         break;
-      }
     }
   }
 
@@ -88,7 +94,7 @@ export class DangerZoneForm extends FormApplication {
   getData(){
     const instance = this.zoneId ? (this.dangerId ? dangerZone.getGlobalZone(this.dangerId, this.sceneId) : dangerZone.getZoneFromScene(this.zoneId, this.sceneId)) : new zone(this.sceneId);
     return {
-      "zone": instance,
+      "zone": this.zone,
       actorOps: actorOps(),
       hideElevationPrompt: !instance.options.placeTemplate,
       hideInit: ['initiative-start','initiative-end'].includes(instance.trigger) ? false : true,
@@ -102,10 +108,57 @@ export class DangerZoneForm extends FormApplication {
       stretchOps: STRETCH,
       tokenDispositionOps: TOKENDISPOSITION,
       triggerOps: DANGERZONETRIGGERS,
+      zoneOps: dangerZone.getZoneList(this.sceneId),
       zoneTypeOps: dangerZoneType.dangerList,
       wallReplaceOps: DANGERZONEWALLREPLACE,
       sceneInactive: (this.scene?.data?.active && this.scene.data.gridType) ? false : true
     } 
+  }
+
+  _handleSourceTag(sourceArea = this.zone.source.area){
+    const tag = $(this.form).find('#dz-source-tag')
+    const sourceT = $(this.form).find('#dz-source-tag-tag')
+    const sourceD = $(this.form).find('#dz-source-tag-danger')
+    const sourceZ = $(this.form).find('#dz-source-tag-zone')
+    switch(sourceArea){
+      case 'D':
+        tag.removeClass('hidden');
+        sourceD.removeClass('hidden');
+        tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.danger.label'))
+        $(this.form).find('#dz-source-tag-danger').attr('name', 'source.tag')
+        break;
+      case 'T':
+        tag.removeClass('hidden');
+        sourceT.removeClass('hidden');
+        tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.tag.label'))
+        $(this.form).find('#dz-source-tag-tag').attr('name', 'source.tag')
+        break;
+      case 'Z':
+        tag.removeClass('hidden');
+        sourceZ.removeClass('hidden');
+        tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.zone.label'))
+        $(this.form).find('#dz-source-tag-zone').attr('name', 'source.tag')
+        break;
+      default:
+        tag.addClass('hidden');
+        break;
+    }
+    if(sourceArea !=='D'){
+      sourceD.addClass('hidden')
+      sourceD.removeAttr('name')
+      sourceD.val('')
+    }
+    if(sourceArea !=='T'){
+      sourceT.addClass('hidden')
+      sourceT.removeAttr('name')
+      sourceT.val('')
+    }
+    if(sourceArea !=='Z'){
+      sourceZ.addClass('hidden')
+      sourceZ.removeAttr('name')
+      sourceZ.val('')
+    }
+    this.setPosition()
   }
   
   async _updateObject(event, formData) {

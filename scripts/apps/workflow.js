@@ -1,8 +1,8 @@
 import {dangerZone, zone} from '../danger-zone.js';
-import {point, locationToBoundary, documentBoundary, getTagEntities, furthestShiftPosition} from './dimensions.js';
+import {point, boundary} from './dimensions.js';
 import {monksActiveTilesOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
-import {getFilesFromPattern, stringToObj, wait} from './helpers.js';
+import {furthestShiftPosition, getFilesFromPattern, getTagEntities, stringToObj, wait} from './helpers.js';
 
 async function delay(delay){
     if(delay) await wait(delay)
@@ -391,9 +391,9 @@ class executorData {
     }
 
     _setLocationBoundary(){
-        const options = {excludes: this.zoneBoundary.excludes}
+        const options = {excludes: this.zoneBoundary.excludes, universe: this.zoneBoundary.universe}
         this.zone.stretch(options);
-        this.boundary = locationToBoundary(this.location, this.danger.dimensions.units, options);
+        this.boundary = boundary.locationToBoundary(this.location, this.danger.dimensions.units, options);
         this._setBoundary();
     }
 
@@ -1530,21 +1530,21 @@ class primaryEffect extends executableWithFile {
     async _build(){
         let s = new Sequence(), play = true;
         const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
-        for (const boundary of boundaries){
+        for (const bound of boundaries){
             if(this.hasSources){
                 const tagged = this.source.name ? await getTagEntities(this.source.name, this.data.scene) : this.data.sources
                 if(tagged.length){
                     for(const document of tagged){
                         const documentName = document.documentName ? document.documentName : document.document.documentName;
-                        const source = documentBoundary(documentName, document, {retain:true});
-                        if(source.A.x === boundary.A.x && source.A.y === boundary.A.y && source.B.x === boundary.B.x && source.B.y === boundary.B.y){continue}
-                        s = this.source.swap ? await this._sequence(source, s, boundary) : await this._sequence(boundary, s, source);
+                        const source = boundary.documentBoundary(documentName, document, {retain:true});
+                        if(source.A.x === bound.A.x && source.A.y === bound.A.y && source.B.x === bound.B.x && source.B.y === bound.B.y){continue}
+                        s = this.source.swap ? await this._sequence(source, s, bound) : await this._sequence(bound, s, source);
                     }
                 } else {
                     play = false
                 }
             } else {
-                s = this._sequence(boundary, s);
+                s = this._sequence(bound, s);
             }
         }
         return {sequence: s, play: play}
@@ -1831,7 +1831,7 @@ class tokenMove extends executable {
                 let amtV = this._v(), amtH = this._hz(), amtE = this._e(), e, x, y;
                 if(this.sToT && this.data.sources.find(s => s.id === token.id)){
                     let location = this.data.boundary.center;
-                    let tokenBoundary = documentBoundary("Token", token);
+                    let tokenBoundary = boundary.documentBoundary("Token", token);
                     x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
                     e = this.data.boundary.bottom;
                 } else if (this.movesTargets) {

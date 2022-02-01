@@ -1,6 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
-import {boundary, dangerZoneDimensions, documentBoundary} from './dimensions.js';
+import {boundary, dangerZoneDimensions} from './dimensions.js';
 import {triggerManager} from './trigger-handler.js';
 import {dangerZoneSocket} from '../index.js';
 
@@ -110,7 +110,7 @@ export class api {
      * @returns a danger zone boundary
      */
     static _boundary(document){
-        return documentBoundary(document.documentName, document);
+        return boundary.documentBoundary(document.documentName, document);
     }
     
     /**

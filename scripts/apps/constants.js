@@ -110,9 +110,11 @@ export const SOURCETREATMENT = {
 export const SOURCEAREA = {
     "": "DANGERZONE.source.area.none",
     "A": "DANGERZONE.source.area.actor",
-    "D": "DANGERZONE.source.area.danger",
+    "C": "DANGERZONE.source.area.danger.tile",
+    "D": "DANGERZONE.source.area.danger.placeable",
     "T": "DANGERZONE.source.area.tag",
-    "Z": "DANGERZONE.source.area.zone"
+    "Y": "DANGERZONE.source.area.zone.tile",
+    "Z": "DANGERZONE.source.area.zone.placeable"
 }
 
 export const SOURCEAREATARGET = {

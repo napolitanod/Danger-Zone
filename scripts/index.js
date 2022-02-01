@@ -160,6 +160,10 @@ Hooks.once('init', async function() {
 
 	dangerZone.initialize();
 
+	Hooks.on("renderDangerZoneForm", (app, html, options) => {
+		app._handleSourceTag();
+	});
+
     //hook to ensure that, on settings render, the search is applied to the list
 	Hooks.on("renderDangerZoneTypesForm", (app, html, options) => {
         app._filter();
@@ -167,7 +171,6 @@ Hooks.once('init', async function() {
 	
 	//hook to ensure that, on executor form render, appropriate field flagging is done
 	Hooks.on("renderExecutorForm", (app, html, options) => {
-		console.log(app); console.log(html)
         app._handleSuppress(html);
 	});
 });

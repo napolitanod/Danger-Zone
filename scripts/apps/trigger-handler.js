@@ -136,13 +136,13 @@ export class triggerManager {
         for (const zn of this.sceneZones) { 
             if(this.combatTriggers.indexOf(zn.trigger) !== -1){    
                 if(zn.trigger==='turn-start'){
-                    if(!zn.sourceTrigger([this.combatant.data.actorId])){continue}
+                    if(!(await zn.sourceTrigger([this.combatant.data.actorId]))){continue}
                 }
                 else if(zn.trigger==='turn-end'){
-                    if(!zn.sourceTrigger([this.previousCombatant.data.actorId])){continue}
+                    if(!(await zn.sourceTrigger([this.previousCombatant.data.actorId]))){continue}
                 } 
                 else {
-                    if(!zn.sourceTrigger(this.data.combatants.map(c => c.data.actorId))){continue}
+                    if(!(await zn.sourceTrigger(this.data.combatants.map(c => c.data.actorId)))){continue}
                 }
                 if(zn.trigger==='initiative-start' || zn.trigger==='initiative-end' ){
                     let escape = true
@@ -271,7 +271,7 @@ export class triggerManager {
         const move = dangerZoneDimensions.tokenMovement(token, update);
 
         for (const zn of sceneZones) {
-            if(!zn.sourceTrigger([token?.actor?.id])){
+            if(!(await zn.sourceTrigger([token?.actor?.id]))){
                 continue;
             }
             const zoneBoundary = await zn.scene.boundary();

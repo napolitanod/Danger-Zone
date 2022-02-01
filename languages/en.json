@@ -100,6 +100,11 @@
                 "area.description": "Defines a source area within the zone which may influence targeting",
                 "description": "The source may influence when and if a zone triggers. Many danger parts can be defined in relation to the zone's source.",
                 "label": "Source",
+                "tag":{
+                    "zone.label": "Zone",
+                    "danger.label": "Danger",
+                    "tag.label": "Tag"
+                },
                 "target.label": "Targeting Influence",
                 "target.description": "Limits targeting within zone based on the zone's source areas.\n *has no influence on aura triggered zones or ones where GM chooses target location",
                 "trigger.description": "Have source actor determine if zone triggers.\n    * Has no influence on zones triggered manually or by API.\nFor combat triggers where 'Only source can trigger zone', the source must be in the scope as a combatant.\n    Turn: the combatant equating to turn.\n    Other: must be a combatant in combat.",
@@ -307,10 +312,12 @@
         "source":{
             "area": {
                 "none": "No source area defined",
-                "danger": "Grids with danger created placeables",
-                "tag": "Grids with tagged placeables",
-                "actor": "Grids with source actor",
-                "zone": "Grids with zone created placeables"
+                "danger.placeable": "Grids containing danger created placeables",
+                "danger.tile": "Grids containing danger created tiles",
+                "tag": "Grids containing tagged placeables",
+                "actor": "Grids containing source actor",
+                "zone.placeable": "Grids containing zone created placeables",
+                "zone.tile": "Grids containing zone created tiles"
             },
             "danger.description": "The source is an actor defined within the zone form.\nDefine how this danger part should be applied in relation to the targets and the source.",
             "label": "Source",
@@ -322,9 +329,9 @@
             },
             "treatment":{
                 "none": "No special treatment",
-                "ignore": "Do not apply to source (if targeted)",
-                "also": "Apply also to source",
-                "only": "Apply to source instead of targets",
+                "ignore": "Do not apply to source actor (if targeted)",
+                "also": "Apply also to source actor",
+                "only": "Apply to source actor instead of targets",
                 "targets": "Apply to targets"
             }
         },
