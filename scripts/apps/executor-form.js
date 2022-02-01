@@ -222,8 +222,10 @@ export class ExecutorForm extends FormApplication {
                 break;
             case 'add-target':
             case 'clear-target':
+            case 'fail-target':
             case 'random-target':
             case 'replace-target':
+            case 'succeed-target':
             case 'target-boundary-eligible':
             case 'target-zone':
                 this._handleTarget(action)
@@ -231,7 +233,9 @@ export class ExecutorForm extends FormApplication {
                 break;
             case 'add-source':
             case 'clear-source':
+            case 'fail-source':
             case 'replace-source':
+            case 'succeed-source':
                 this._handleSource(action);
                 this.drawSources();
                 break;
@@ -361,8 +365,16 @@ export class ExecutorForm extends FormApplication {
             case 'clear-source':
                 this.executor.clearSources();
                 break;
+            case 'fail-source':
+                this.executor.insertSaveFailed(this.executor.sources);
+                this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.executor.sources.find(f => f.id === s.id)));
+                break;
             case 'replace-source':
                 this.executor.updateSources(this.userTargets);
+                break;
+            case 'succeed-source':
+                this.executor.insertSaveSucceeded(this.executor.sources);
+                this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.executor.sources.find(f => f.id === s.id)));
                 break;
         } 
     }
@@ -375,11 +387,19 @@ export class ExecutorForm extends FormApplication {
             case 'clear-target':
                 this.executor.clearTargets();
                 break;
+            case 'fail-target':
+                this.executor.insertSaveFailed(this.executor.targets);
+                this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.executor.targets.find(f => f.id === s.id)));
+                break;
             case 'random-target':
                 this.executor.randomTarget();
                 break;
             case 'replace-target':
                 this.executor.updateTargets(this.userTargets);
+                break;
+            case 'succeed-target':
+                this.executor.insertSaveSucceeded(this.executor.targets);
+                this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.executor.targets.find(f => f.id === s.id)));
                 break;
             case 'target-boundary-eligible':
                 this.executor.insertTargets(this.executor.eligibleTargets);

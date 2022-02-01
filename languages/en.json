@@ -160,13 +160,13 @@
             "no-play": "Play disabled due to missing required element.",
             "play-zone.label": "Trigger zone",
             "save":{
-                "add-success.label": "Add scene targets to save success list",
+                "add-success.label": "Add canvas targeted tokens to save success list",
                 "clear.label": "Clear save list",
                 "highlight.label": "Target on the game canvas any tokens that are on this list",
                 "list.label": "Saving Throw List",
                 "lock.label": "Save list will not update due to zone or boundary changes",
                 "none.label": "Saves have not been made",
-                "add-fail.label": "Add scene targets to save fail list",
+                "add-fail.label": "Add canvas targeted tokens to save fail list",
                 "requires-fail.label": "Plays only if save failed",
                 "requires-success.label": "Plays only if save succeeded",
                 "unlock.label": "Save list will update due to zone or boundary changes"
@@ -177,24 +177,28 @@
                 "token.label": "Plays on target tokens"
             },
             "source":{
-                "add.label": "Add scene targets to source list",
+                "add.label": "Add canvas targeted tokens to source list",
                 "clear.label": "Clear source list",
+                "fail.label": "Fail the saving throw for all targets in list",
                 "highlight.label": "Target on the game canvas any tokens that are on this list",
                 "list.label": "Source List",
                 "lock.label": "Source list will not update due to zone or boundary changes",
                 "none.label": "Source list is empty",
                 "replace.label": "Replace source list with scene targets",
+                "succeed.label": "Succeed the saving throw for all sources in list",
                 "unlock.label": "Source list will update due to zone or boundary changes"
             },
             "targets":{
-                "add.label": "Add scene targets to target list",
+                "add.label": "Add canvas targeted tokens to target list",
                 "clear.label": "Clear target list",
+                "fail.label": "Fail the saving throw for all targets in list",
                 "highlight.label": "Target on the game canvas any tokens that are on this list",
                 "list.label": "Target List",
                 "lock.label": "Target list will not update due to zone or boundary changes",
                 "none.label": "Target list is empty",
                 "random.label": "Set targets randomly from eligible targets",
                 "replace.label": "Replace target list with scene targets",
+                "succeed.label": "Succeed the saving throw for all targets in list",
                 "unlock.label": "Target list will update due to zone or boundary changes"
             },
             "zone":{

@@ -1,4 +1,5 @@
 import {taggerOn} from '../index.js';
+import {dangerZone} from '../danger-zone.js';
 
 export function circleAreaGrid(xLoc,yLoc,w,h){
   if((!xLoc &&!yLoc) || (yLoc===h&&!xLoc) || (xLoc===w&&!yLoc) || (xLoc===w&&yLoc===h)){return false}

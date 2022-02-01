@@ -439,16 +439,15 @@ export class zone {
   }
 
   async sourceOnScene(){
-
-    return (this.scene.scene.tokens.find(t => t.actor?.id === this.source.actor) || await this.sourceArea().documents.length) ? true : false
+    if(this.source.actor && this.scene.scene.tokens.find(t => t.actor?.id === this.source.actor)) return true
+    const area = await this.sourceArea()
+    return area.documents.length ? true : false
   }
 
   async sourceTrigger(actorIds){
-    dangerZone.log(false,'Determining Source Trigger ', {zone: this, triggerActors: actorIds});
-    if(this.source.trigger && this.source.actor){
-        return (this.source.trigger === 'C' ? await this.sourceOnScene() : actorIds.includes(this.source.actor));
-    }
-    return true
+    const trigger = this.source.trigger ? (this.source.trigger === 'C' ? await this.sourceOnScene() : actorIds.includes(this.source.actor)) : true;
+    dangerZone.log(false,'Determining Source Trigger ', {zone: this, triggerActors: actorIds, trigger: trigger});
+    return trigger
   }
 
   isSource(token, sources = []){

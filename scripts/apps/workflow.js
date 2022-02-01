@@ -758,6 +758,7 @@ export class executor {
 
 class executable {
     constructor(part = {}, data = executorData, id, options = {}, flags = {}){
+        this._cancel = false,
         this.data = data,
         this._document = options.document,
         this._executed = false,
@@ -876,6 +877,7 @@ class executable {
 
     async play(){  
         this.setExecuted()
+        if (this.hasBoundaryScope && !this.data.hasBoundary) this._cancel = true
     }
 
     setExecuted(){
@@ -921,7 +923,7 @@ class executableWithFile extends executable{
 
     async play(){
         if(!this._file) await this.file;
-        this.setExecuted()
+        await super.play()
     }
 
     async _setFile(){
@@ -963,7 +965,8 @@ class activeEffect extends executable {
     }
 
     async play(){  
-        await super.play()                  
+        await super.play() 
+        if(this._cancel) return                 
         for (const token of this.targets) {
             if(this.limit && token.actor && token.actor.effects.find(e => e.data.flags[dangerZone.ID]?.origin === this.data.danger.id)){
                 continue;
@@ -1048,6 +1051,7 @@ class ambientLight extends executable{
     
     async play(){
         await super.play()
+        if(this._cancel) return
         await this.data.scene.createEmbeddedDocuments("AmbientLight",[this._light]);
     }
 }   
@@ -1068,6 +1072,7 @@ class audio extends executableWithFile {
 
     async play() {
         await super.play()
+        if(this._cancel) return
         this.sound = await AudioHelper.play({src: this.file, volume: this.volume, loop: false, autoplay: true}, true)
         this._schedule();
     }
@@ -1151,6 +1156,7 @@ class damageToken extends executable{
 
     async play(){    
         await super.play()
+        if(this._cancel) return
         this.isBulk ? await this._bulkWorkflow() : await this._individualWorkflow()
     }
 
@@ -1210,6 +1216,7 @@ class flavor extends executable{
 
     async play(){
         await super.play()
+        if(this._cancel) return
         ChatMessage.create({content : this.flavor})
     }
 
@@ -1251,6 +1258,7 @@ class fluidCanvas extends executable{
 
     async play(){
         await super.play()
+        if(this._cancel) return
         switch(this.type){
             case 'blur':
                 await KFC.executeAsGM(this.type, this.users, this.intensity);
@@ -1333,6 +1341,7 @@ class lastingEffect extends executableWithFile{
 
     async play(){
         await super.play()
+        if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
             const tiles = this.build();
             await this.data.scene.createEmbeddedDocuments("Tile", tiles);
@@ -1441,6 +1450,7 @@ class macro extends executable{
 
     async play(){
         await super.play()
+        if(this._cancel) return
         await this.macro.execute(this.data);
     }
 }
@@ -1482,7 +1492,8 @@ class mutate extends executable {
     }
 
     async play(){    
-        await super.play()            
+        await super.play()  
+        if(this._cancel) return          
         for (const token of this.targets) { 
             await warpgate.mutate(token, this.updates, {}, this.options);
         }
@@ -1521,6 +1532,7 @@ class primaryEffect extends executableWithFile {
 
     async play(){
         await super.play()
+        if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
             const result = await this._build();
             if(result.play) result.sequence.play();
@@ -1606,6 +1618,7 @@ class save extends executable{
 
     async play(){
         await super.play()
+        if(this._cancel) return
         this._initialize()
         for(const token of this.targets){ 
             if(token.actor){  
@@ -1636,6 +1649,7 @@ class secondaryEffect extends executableWithFile {
 
     async play(){
         await super.play()
+        if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
             const result = await this._build();
             result.play()
@@ -1702,6 +1716,7 @@ class spawn extends executable {
 
     async play(){
         await super.play()
+        if(this._cancel) return
         const token = await this.token();
         if(token) await warpgate.spawnAt(this.data.boundary.center, token, this.updates, {}, this.options);
     }
@@ -1741,6 +1756,7 @@ class  tokenEffect extends executableWithFile {
 
     async play(){
         await super.play()
+        if(this._cancel) return
         const result = await this._build();
         result.play()
     }
@@ -1826,6 +1842,8 @@ class tokenMove extends executable {
     }
 
     async play() {
+        await super.play()
+        if(this._cancel) return
         if(this.movesTargets || (this.sToT && this.data.hasSources)){
             for (const token of this.targets) { 
                 let amtV = this._v(), amtH = this._hz(), amtE = this._e(), e, x, y;
@@ -1904,6 +1922,7 @@ class tokenSays extends executable {
 
     async play() {
         await super.play()
+        if(this._cancel) return
         for (const token of this.targets) { 
             await game.modules.get("token-says").api.saysDirect(token.id, '', this.data.scene.id, this.options);
         }
@@ -1975,6 +1994,7 @@ class wall extends executable {
 
     async play(){
         await super.play()
+        if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
             const walls = this._build;
             if(walls.length) await this.data.scene.createEmbeddedDocuments("Wall",walls)

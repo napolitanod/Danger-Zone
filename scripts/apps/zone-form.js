@@ -121,6 +121,7 @@ export class DangerZoneForm extends FormApplication {
     const sourceD = $(this.form).find('#dz-source-tag-danger')
     const sourceZ = $(this.form).find('#dz-source-tag-zone')
     switch(sourceArea){
+      case 'C':
       case 'D':
         tag.removeClass('hidden');
         sourceD.removeClass('hidden');
@@ -133,6 +134,7 @@ export class DangerZoneForm extends FormApplication {
         tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.tag.label'))
         $(this.form).find('#dz-source-tag-tag').attr('name', 'source.tag')
         break;
+      case 'Y':
       case 'Z':
         tag.removeClass('hidden');
         sourceZ.removeClass('hidden');
@@ -143,7 +145,7 @@ export class DangerZoneForm extends FormApplication {
         tag.addClass('hidden');
         break;
     }
-    if(sourceArea !=='D'){
+    if(!['C','D'].includes(sourceArea)){
       sourceD.addClass('hidden')
       sourceD.removeAttr('name')
       sourceD.val('')
@@ -153,7 +155,7 @@ export class DangerZoneForm extends FormApplication {
       sourceT.removeAttr('name')
       sourceT.val('')
     }
-    if(sourceArea !=='Z'){
+    if(!['Y','Z'].includes(sourceArea)){
       sourceZ.addClass('hidden')
       sourceZ.removeAttr('name')
       sourceZ.val('')

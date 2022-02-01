@@ -129,6 +129,8 @@
                 <a title="{{localize 'DANGERZONE.executor-form.targets.add.label'}}" data-action="add-target"><i class="fas fa-plus"></i></a>
                 <a title="{{localize 'DANGERZONE.executor-form.targets.random.label'}}" data-action="random-target"><i class="fas fa-random"></i></a>
                 <a title="{{localize 'DANGERZONE.executor-form.targets.replace.label'}}" data-action="replace-target"><i class="fas fa-exchange-alt"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}" title="{{localize 'DANGERZONE.executor-form.target.fail.label'}}" data-action="fail-target"><i class="fas fa-thumbs-down"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}" title="{{localize 'DANGERZONE.executor-form.target.succeed.label'}}" data-action="succeed-target"><i class="fas fa-thumbs-up"></i></a>
                 <a title="{{localize 'DANGERZONE.executor-form.targets.clear.label'}}" data-action="clear-target"><i class="fas fa-eraser"></i></a>
                 <a title="{{localize 'DANGERZONE.executor-form.targets.lock.label'}}" data-action="unlock-target" {{#unless locked.target}}class="hidden"{{/unless}}><i class="fas fa-lock"></i></a>
                 <a title="{{localize 'DANGERZONE.executor-form.targets.unlock.label'}}" data-action="lock-target" {{#if locked.target}}class="hidden"{{/if}}><i class="fas fa-unlock"></i></a>
@@ -145,7 +147,9 @@
                 <a title="{{localize 'DANGERZONE.executor-form.source.highlight.label'}}" data-action="highlight-source"><i class="fas fa-bullseye"></i></a>
                 <a title="{{localize 'DANGERZONE.executor-form.source.add.label'}}" data-action="add-source"><i class="fas fa-plus"></i></a>
                 <a title="{{localize 'DANGERZONE.executor-form.source.replace.label'}}" data-action="replace-source"><i class="fas fa-exchange-alt"></i></a>
-                <a title="{{localize 'DANGERZONE.executor-form.source.clear.label'}}" data-action="clear-source"><i class="fas fa-eraser"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}" title="{{localize 'DANGERZONE.executor-form.source.fail.label'}}" data-action="fail-source"><i class="fas fa-thumbs-down"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}" title="{{localize 'DANGERZONE.executor-form.source.succeed.label'}}" data-action="succeed-source"><i class="fas fa-thumbs-up"></i></a>
+                 <a title="{{localize 'DANGERZONE.executor-form.source.clear.label'}}" data-action="clear-source"><i class="fas fa-eraser"></i></a>
                 <a title="{{localize 'DANGERZONE.executor-form.source.lock.label'}}" data-action="unlock-source" {{#unless locked.source}}class="hidden"{{/unless}}><i class="fas fa-lock"></i></a>
                 <a title="{{localize 'DANGERZONE.executor-form.source.unlock.label'}}" data-action="lock-source" {{#if locked.source}}class="hidden"{{/if}}><i class="fas fa-unlock"></i></a>
             </div>

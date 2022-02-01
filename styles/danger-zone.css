@@ -554,7 +554,9 @@ form ol.danger-setting-group .active:hover label {
     margin-left: 6px;
 }
 
-.danger-zone-executor .controls > select {
+.danger-zone-executor .controls > select,
+.danger-part-form select,
+.danger-zone-record select {
     width: 100%;
 }
 
