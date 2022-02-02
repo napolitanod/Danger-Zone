@@ -1,7 +1,7 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {dangerZoneDimensions} from './dimensions.js';
-import {DANGERZONETRIGGERS, sceneOps} from './constants.js';
+import {sceneOps} from './constants.js';
 import {DangerZoneForm} from './zone-form.js';
 
 export class DangerZoneSceneForm extends FormApplication {
@@ -89,27 +89,8 @@ export class DangerZoneSceneForm extends FormApplication {
    }
 
   getData(options){
-    const zonesInit = dangerZone.getAllZonesFromScene(this.sceneId, {enabled: false, typeRequired: false, triggerRequired: false}).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)});
-    const dangerZones = [];
-    if(zonesInit.length){
-        zonesInit.forEach(function(zn) {
-            let typeDisplay = '';
-            const danger = dangerZoneType.getDanger(zn.type);
-            if(danger) {
-              typeDisplay = danger.name
-              dangerZones.push({
-                  id: zn.id,
-                  icon: danger.icon,
-                  title: zn.title, 
-                  trigger: game.i18n.localize(DANGERZONETRIGGERS[zn.trigger]),
-                  typeDisplay: typeDisplay, 
-                  random: zn.random
-              })
-            }
-        });
-    }
     return {
-        dangerZones: dangerZones.sort((a, b) => a.title.localeCompare(b.title)),
+        dangerZones: dangerZone.getAllZonesFromScene(this.sceneId, {enabled: false, typeRequired: false, triggerRequired: false}).sort((a, b) => a.title.localeCompare(b.title)),
         sceneId: this.sceneId
     }
   }

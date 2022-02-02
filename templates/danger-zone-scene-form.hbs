@@ -20,10 +20,10 @@
             {{#each dangerZones }}
             <li class="scene-config flexrow" data-id="{{this.id}}" data-container="types" draggable="true">
                 <div class="danger-zone-details flexrow">
-                    <img src="{{this.icon}}">
+                    <img src="{{this.danger.icon}}">
                     <div class="title">{{this.title}}</div>
-                    <div class="type">{{this.typeDisplay}}</div>
-                    <div class="trigger">{{this.trigger}}</div>
+                    <div class="type">{{this.danger.name}}</div>
+                    <div class="trigger">{{this.triggerDescription}}</div>
                     <div class="random">{{#if this.random}}<i class="fas fa-radiation"></i>{{/if}}</div>
                 </div>
                 <div class="danger-zone-controls flexrow">

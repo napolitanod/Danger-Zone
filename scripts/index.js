@@ -1,5 +1,5 @@
 import {dangerZone} from './danger-zone.js';
-import {TRIGGERDISPLAYOPTIONS, SCENEFORMICONDISPLAYOPTIONS} from './apps/constants.js';
+import {TRIGGERDISPLAYOPTIONS, SCENEFORMICONDISPLAYOPTIONS, setExecutableOptions, setModOptions} from './apps/constants.js';
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
 import {triggerManager}  from './apps/trigger-handler.js';
@@ -45,6 +45,16 @@ Hooks.once('init', async function() {
 		config: true,
 		default: true,
 		type: Boolean,
+	});
+
+	game.settings.register(modulename, "display-executor", {
+		name: game.i18n.localize("DANGERZONE.setting.display-executor.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.display-executor.description"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+        onChange: debouncedReload
 	});
 
     game.settings.register(modulename, 'scene-header', {
@@ -160,9 +170,18 @@ Hooks.once('init', async function() {
 
 	dangerZone.initialize();
 
+	Hooks.on("renderDangerZoneForm", (app, html, options) => {
+		app._handleSourceTag();
+	});
+
     //hook to ensure that, on settings render, the search is applied to the list
 	Hooks.on("renderDangerZoneTypesForm", (app, html, options) => {
         app._filter();
+	});
+	
+	//hook to ensure that, on executor form render, appropriate field flagging is done
+	Hooks.on("renderExecutorForm", (app, html, options) => {
+        app._handleSuppress(html);
 	});
 });
 
@@ -185,6 +204,9 @@ Hooks.once('ready', async function() {
             }
         }
       });
+
+	  setExecutableOptions();
+	  setModOptions();
 });
 
 /**
@@ -232,8 +254,6 @@ Hooks.once('setup', async function() {
 		  );
 		}
 	  });
-	
-	
  });
 
 /**
@@ -315,8 +335,8 @@ Hooks.on('updateCombat', async(combat, round, options, id) => {
 });
 
 Hooks.on("updateToken", async (token, update, options, userId) => {
-    if (game.user.isGM && ("x" in update || "y" in update || "elevation" in update) && !options.dangerZoneMove) {
-		if (dangerZone.sceneHasZone(token.parent?.id)) {triggerManager.findMovementTriggers(token, update)};
+    if (game.user.isGM && ("x" in update || "y" in update || "elevation" in update) && !options.dangerZoneMove && dangerZone.getMovementZonesFromScene(token.parent?.id).length) {
+		triggerManager.findMovementTriggers(token, update)
     }
 });
 
@@ -431,6 +451,3 @@ export function addQuickZonesLaunch(app, html) {
 export function toggleMasterButtonActive(){
     dzMActive ? dzMActive = false : dzMActive = true
 }
-
-
-

@@ -5,8 +5,9 @@ import {actorOps, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPL
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
-  constructor(dangerId, ...args) {
+  constructor(dangerId, parent, ...args) {
     super(...args);
+    this.parent = parent,
     this.audio,
     this.effect,
     this.backgroundEffect,
@@ -277,7 +278,7 @@ export class DangerForm extends FormApplication {
 
     await dangerZoneType.updateDangerZoneType(expandedData.id, expandedData);
     dangerZone.initializeTriggerButtons();
-    dangerZone.DangerZoneTypesForm.refresh();
+    this.parent.refresh();
   }
 
 }
@@ -313,9 +314,12 @@ class DangerZoneActiveEffectForm extends ActiveEffectConfig {
       const button = event.currentTarget;
       switch (button.dataset.action) {
         case "add":
-          return this._addEffectChange(button);
+          this._addEffectChange(button);
+          break;
         case "delete":
-          return button.closest(".effect-change").remove();
+          button.closest(".effect-change").remove();
+          this.setPosition()
+          break;
       }
     }
   
@@ -331,6 +335,7 @@ class DangerZoneActiveEffectForm extends ActiveEffectConfig {
       let del = $('<div>').addClass("effect-controls").append($('<a>').addClass("effect-control").attr("data-action", "delete").click(this._onEffectControl).append($('<i>').addClass("fas fa-trash")))
       change.append(del);
       changes.appendChild(change[0]);
+      this.setPosition()
     }  
   
     async _updateObject(event, formData) {
@@ -437,6 +442,7 @@ class DangerZoneDangerFormAudio extends FormApplication {
         return foundry.utils.mergeObject(defaults, {
           title : game.i18n.localize("DANGERZONE.type-form.audio.label"),
           id : "danger-zone-danger-form-audio",
+          classes: ["sheet","danger-part-form"],
           template : dangerZone.TEMPLATES.DANGERZONEDANGERAUDIO,
           height : "auto",
           width: 425,
@@ -450,6 +456,31 @@ class DangerZoneDangerFormAudio extends FormApplication {
 
     activateListeners(html) {
       super.activateListeners(html);
+      html.on('click', "[data-action]", this._handleButtonClick.bind(this));
+    }
+
+    _random(checked){
+      const group = $(this.form).find("#dz-audio-file")
+      if(checked){
+        group.addClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.audio.playlist.label"))
+        group.find('input').attr("placeholder", "")
+      } else {
+        group.removeClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.audio.file.label"))
+        group.find('input').attr("placeholder", game.i18n.localize("DANGERZONE.type-form.audio.file.placeholder"))
+      }
+    }
+
+    async _handleButtonClick(event) {
+      const clickedElement = $(event.currentTarget);
+      const action = clickedElement.data().action;  
+      switch (action) {
+        case 'random': {
+          this._random(event.currentTarget.checked)
+          break;
+        }
+      }
     }
   
     async _updateObject(event, formData) {
@@ -473,6 +504,7 @@ class DangerZoneDangerFormBackgroundEffect extends FormApplication {
         return foundry.utils.mergeObject(defaults, {
           title : game.i18n.localize("DANGERZONE.type-form.backgroundEffect.label"),
           id : "danger-zone-danger-background-effect",
+          classes: ["sheet","danger-part-form"],
           template : dangerZone.TEMPLATES.DANGERZONEDANGERBACKGROUNDEFFECT,
           height : "auto",
           width: 425,
@@ -509,6 +541,7 @@ class DangerZoneDangerFormFluidCanvas extends FormApplication {
         return foundry.utils.mergeObject(defaults, {
           title : game.i18n.localize("DANGERZONE.type-form.fluidCanvas.label"),
           id : "danger-zone-danger-fluid-canvas",
+          classes: ["sheet","danger-part-form"],
           template : dangerZone.TEMPLATES.DANGERZONEDANGERFLUIDCANVAS,
           height : "auto",
           width: 425,
@@ -548,6 +581,7 @@ class DangerZoneDangerFormForegroundEffect extends FormApplication {
         return foundry.utils.mergeObject(defaults, {
           title : game.i18n.localize("DANGERZONE.type-form.foregroundEffect.label"),
           id : "danger-zone-danger-foreground-effect",
+          classes: ["sheet","danger-part-form"],
           template : dangerZone.TEMPLATES.DANGERZONEDANGERFOREGROUNDEFFECT,
           height : "auto",
           width: 425,
@@ -584,6 +618,7 @@ class DangerZoneDangerFormGlobalZone extends FormApplication {
         return foundry.utils.mergeObject(defaults, {
           title : game.i18n.localize("DANGERZONE.type-form.global-zone.label"),
           id : "danger-zone-danger-global-zone",
+          classes: ["sheet","danger-part-form"],
           template : dangerZone.TEMPLATES.DANGERZONEDANGERGLOBALZONE,
           height : "auto",
           width: 475,
@@ -676,6 +711,7 @@ class DangerZoneDangerFormLight extends FormApplication {
         return foundry.utils.mergeObject(defaults, {
           title : game.i18n.localize("DANGERZONE.type-form.light.label"),
           id : "danger-zone-danger-light",
+          classes: ["sheet","danger-part-form"],
           template : dangerZone.TEMPLATES.DANGERZONEDANGERLIGHT,
           height : "auto",
           width: 425,
@@ -757,6 +793,7 @@ class DangerZoneDangerFormTokenEffect extends FormApplication {
         return foundry.utils.mergeObject(defaults, {
           title : game.i18n.localize("DANGERZONE.type-form.tokenEffect.label"),
           id : "danger-zone-danger-token-effect",
+          classes: ["sheet","danger-part-form"],
           template : dangerZone.TEMPLATES.DANGERZONEDANGERTOKENEFFECT,
           height : "auto",
           width: 425,
@@ -891,6 +928,7 @@ class DangerZoneDangerFormTokenSays extends FormApplication {
         return foundry.utils.mergeObject(defaults, {
           title : game.i18n.localize("DANGERZONE.type-form.tokenSays.label"),
           id : "danger-zone-danger-token-says",
+          classes: ["sheet","danger-part-form"],
           template : dangerZone.TEMPLATES.DANGERZONEDANGERTOKENSAYS,
           height : "auto",
           width: 425,
@@ -931,6 +969,7 @@ class DangerZoneDangerFormWarpgate extends FormApplication {
         return foundry.utils.mergeObject(defaults, {
           title : game.i18n.localize("DANGERZONE.type-form.warpgate.label"),
           id : "danger-zone-danger-warpgate",
+          classes: ["sheet","danger-part-form"],
           template : dangerZone.TEMPLATES.DANGERZONEDANGERWARPGATE,
           height : "auto",
           width: 425,
@@ -967,6 +1006,7 @@ class DangerZoneDangerFormWall extends FormApplication {
         return foundry.utils.mergeObject(defaults, {
           title : game.i18n.localize("DANGERZONE.type-form.wall.label"),
           id : "danger-zone-danger-wall",
+          classes: ["sheet","danger-part-form"],
           template : dangerZone.TEMPLATES.DANGERZONEDANGERWALL,
           height : "auto",
           width: 425,

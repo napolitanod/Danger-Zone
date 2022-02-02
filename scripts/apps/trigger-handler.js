@@ -1,7 +1,8 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneDimensions, boundary} from './dimensions.js'
-import {wait, workflow} from './workflow.js';
+import {workflow} from './workflow.js';
 import {DANGERZONETRIGGERSORT} from './constants.js';
+import {wait} from './helpers.js';
 
 export class triggerManager {
 
@@ -135,13 +136,13 @@ export class triggerManager {
         for (const zn of this.sceneZones) { 
             if(this.combatTriggers.indexOf(zn.trigger) !== -1){    
                 if(zn.trigger==='turn-start'){
-                    if(!zn.sourceTrigger([this.combatant.data.actorId])){continue}
+                    if(!(await zn.sourceTrigger([this.combatant.data.actorId]))){continue}
                 }
                 else if(zn.trigger==='turn-end'){
-                    if(!zn.sourceTrigger([this.previousCombatant.data.actorId])){continue}
+                    if(!(await zn.sourceTrigger([this.previousCombatant.data.actorId]))){continue}
                 } 
                 else {
-                    if(!zn.sourceTrigger(this.data.combatants.map(c => c.data.actorId))){continue}
+                    if(!(await zn.sourceTrigger(this.data.combatants.map(c => c.data.actorId)))){continue}
                 }
                 if(zn.trigger==='initiative-start' || zn.trigger==='initiative-end' ){
                     let escape = true
@@ -270,7 +271,7 @@ export class triggerManager {
         const move = dangerZoneDimensions.tokenMovement(token, update);
 
         for (const zn of sceneZones) {
-            if(!zn.sourceTrigger([token?.actor?.id])){
+            if(!(await zn.sourceTrigger([token?.actor?.id]))){
                 continue;
             }
             const zoneBoundary = await zn.scene.boundary();

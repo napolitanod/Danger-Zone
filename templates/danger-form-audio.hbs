@@ -2,10 +2,16 @@
     <div class="tab">
         <p class="notes">{{localize "DANGERZONE.type-form.audio.description"}}</p>
         <div class="form-group">
-            <label for="file">{{localize "DANGERZONE.type-form.audio.file.label"}}</label>
+            <label for="randomFile">{{localize "DANGERZONE.type-form.audio.random.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-action="random" data-dtype="Boolean" name="randomFile" {{checked randomFile}}>
+            </div>
+        </div>
+        <div id="dz-audio-file" class="form-group {{#if randomFile}}hidden-picker{{/if}}">
+            <label for="file">{{#if randomFile}}{{localize "DANGERZONE.type-form.audio.playlist.label"}}{{/if}}{{#unless randomFile}}{{localize "DANGERZONE.type-form.audio.file.label"}}{{/unless}}</label>
             <div class="form-fields">
                 {{filePicker target="file" type="audio"}}
-                <input type="text" required  name="file" class="image" placeholder="{{localize "DANGERZONE.type-form.audio.file.placeholder"}}" value="{{file}}">
+                <input type="text" required  name="file" class="image" placeholder="{{#unless randomFile}}{{localize "DANGERZONE.type-form.audio.file.placeholder"}}{{/unless}}" value="{{file}}">
             </div>
         </div>
         <div class="form-group">

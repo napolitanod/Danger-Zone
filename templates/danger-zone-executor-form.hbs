@@ -1,0 +1,177 @@
+<form autocomplete="off">
+    <div class="hidden">
+        <input type="text" value="{{sceneId}}" name="id">
+    </div>
+    <div class="form-group main-header">
+        <label for="zoneId">
+            <i class="fas fa-radiation"></i>&nbsp;
+            {{localize 'DANGERZONE.executor-form.zone.label'}}
+        </label>
+        <div class="form-fields">
+            <div class="controls">
+                <select name="zoneId" value="{{zoneId}}" data-action="zone">
+                    <option value="" disabled>{{localize 'DANGERZONE.executor-form.zone.options.scene'}}</option>
+                    {{selectOptions zoneOps selected=zoneId localize=false}}
+                    <option value="" disabled>{{localize 'DANGERZONE.executor-form.zone.options.world'}}</option>
+                    {{selectOptions worldZoneOps selected=zoneId localize=false}}
+                    <option value="" disabled>{{localize 'DANGERZONE.executor-form.zone.options.danger'}}</option>
+                    {{selectOptions dangerOps selected=zoneId localize=false}}
+                </select>     
+                <a title="{{localize 'DANGERZONE.executor-form.zone.edit.label'}}" data-action="edit-zone"><i class="fas fa-edit"></i></a>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>
+            <img src="{{executor.danger.icon}}">
+            {{executor.danger.name}}
+        </label>
+        <div class="form-fields">
+            <div class="controls">
+                <a title="{{localize 'DANGERZONE.executor-form.danger.edit.label'}}" data-action="edit-danger"><i class="fas fa-edit"></i></a>
+            </div>
+        </div>
+    </div>
+    <ol class="dz-executable-list">
+        {{#unless executor.executable}}
+            {{localize 'DANGERZONE.executor-form.no-executor.label'}}
+        {{/unless}}
+        {{#if executor.executable}}
+        <li id="dz-zoneId">
+            <i class="fas fa-radiation"></i>
+            <span>{{localize 'DANGERZONE.executor-form.play-zone.label'}}</span>
+            <div>
+                <a title="{{localize 'DANGERZONE.play'}}" data-action="play-zone"><i class="fas fa-play"></i></a>
+            </div>
+        </li>
+        {{/if}}
+        {{#each executables}}
+        <li data-id="{{this._id}}">
+            <i class="{{this.icon}}"></i>
+            <span>
+                <label>{{this.name}}</label>
+                <span>
+                    {{#if this.hasBoundaryScope}}<i class="fas fa-expand" title="{{localize 'DANGERZONE.executor-form.scope.boundary.label'}}"></i>{{/if}}
+                    {{#if this.hasSceneScope}}<i class="far fa-map" title="{{localize 'DANGERZONE.executor-form.scope.scene.label'}}"></i>{{/if}}
+                    {{#if this.hasTokenScope}}<i class="far fa-user" title="{{localize 'DANGERZONE.executor-form.scope.token.label'}}"></i>{{/if}}
+                    {{#if this.source.enabled}}<i class="fas fa-long-arrow-alt-right" title="{{localize 'DANGERZONE.type-form.foregroundEffect.source.enabled.label'}}"></i>{{/if}}
+                    {{#if this.requiresSaveFail}}<i class="far fa-thumbs-down" title="{{localize 'DANGERZONE.executor-form.save.requires-fail.label'}}"></i>{{/if}}
+                    {{#if this.requiresSaveSuccess}}<i class="far fa-thumbs-up" title="{{localize 'DANGERZONE.executor-form.save.requires-success.label'}}"></i>{{/if}}
+                    {{#if this.hasTokenScope}}
+                        {{#unless (eq this.source "O")}}<i class="fas fa-crosshairs" title="{{localize 'DANGERZONE.source.treatment.targets'}}"></i>{{/unless}}
+                        {{#if (eq this.source "S")}}+<i class="fas fa-dragon dzex-or-source" title="{{localize 'DANGERZONE.source.treatment.also'}}"></i>{{/if}}
+                        {{#if (eq this.source "I")}}-<i class="fas fa-dragon" title="{{localize 'DANGERZONE.source.treatment.ignore'}}"></i>{{/if}}
+                        {{#if (eq this.source "O")}}<i class="fas fa-dragon dzex-source" title="{{localize 'DANGERZONE.source.treatment.only'}}"></i>{{/if}}
+                    {{/if}}
+                </span>
+            </span>
+            <div>
+                {{#if this.stoppable}}<a title="{{localize 'DANGERZONE.stop'}}" data-action="stop"><i class="fas fa-stop"></i></a>{{/if}}
+                {{#if this.wipeable}}<a title="{{localize 'DANGERZONE.clear'}}" data-action="wipe"><i class="fas fa-eraser"></i></a>{{/if}}
+                <a title="{{localize 'DANGERZONE.play'}}" data-action="play"><i class="fas fa-play"></i></a>
+                <span title="{{localize 'DANGERZONE.executor-form.no-play'}}" class="no-play hidden"><i class="fas fa-play"></i></span>
+            </div>
+        </li>
+        {{/each}}
+    </ol>
+    <div class="form-group {{#unless hasTargeting}} hidden{{/unless}}">
+        <label><i class="fas fa-radiation"></i> {{localize 'DANGERZONE.executor-form.zone.list.label'}}</label>
+        <div class="form-fields">
+            <div class="controls">
+                <a title="{{localize 'DANGERZONE.executor-form.zone.highlight.label'}}" data-action="highlight-zone"><i class="fas fa-highlighter"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.zone.target.label'}}" data-action="target-zone"><i class="fas fa-crosshairs"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}" title="{{localize 'DANGERZONE.executor-form.zone.fail.label'}}" data-action="fail-zone"><i class="fas fa-thumbs-down"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}" title="{{localize 'DANGERZONE.executor-form.zone.succeed.label'}}" data-action="succeed-zone"><i class="fas fa-thumbs-up"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.zone.refresh.label'}}" data-action="refresh-zone"><i class="fas fa-redo-alt"></i></a>
+            </div>
+        </div>
+    </div>
+    <div id="dz-eligible-zone-list" class="dz-executable-info-list {{#unless hasTargeting}} hidden{{/unless}}">
+        {{{eligibleZoneList}}}
+    </div>
+    <div class="form-group">
+        <label><i class="fas fa-expand"></i> {{localize 'DANGERZONE.executor-form.boundary.label'}}</label>
+        <div class="form-fields">
+            <div class="controls">
+                <a title="{{localize 'DANGERZONE.executor-form.boundary.highlight.label'}}" data-action="highlight-boundary"><i class="fas fa-highlighter"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.boundary.prompt.label'}}" data-action="prompt-boundary"><i class="fas fa-mouse-pointer"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.boundary.random.label'}}" data-action="random-boundary"><i class="fas fa-random"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.boundary.target.label'}}" data-action="target-boundary"><i class="fas fa-exchange-alt"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.boundary.clear.label'}}" data-action="clear-boundary"><i class="fas fa-eraser"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.boundary.lock.label'}}" data-action="unlock-boundary" {{#unless locked.boundary}}class="hidden"{{/unless}}><i class="fas fa-lock"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.boundary.unlock.label'}}" data-action="lock-boundary" {{#if locked.boundary}}class="hidden"{{/if}}><i class="fas fa-unlock"></i></a>
+            </div>
+        </div>
+    </div>
+    <div id="dz-boundary" class="dz-executable-info-list">
+        {{{boundary}}}
+    </div>
+    <div class="form-group{{#unless hasTargeting}} hidden{{/unless}}">
+        <label><i class="fas fa-expand"></i> {{localize 'DANGERZONE.executor-form.eligible.list.label'}}</label>
+        <div class="form-fields">
+            <div class="controls">
+                <a title="{{localize 'DANGERZONE.executor-form.eligible.highlight.label'}}" data-action="highlight-boundary-eligible"><i class="fas fa-bullseye"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.eligible.target.label'}}" data-action="target-boundary-eligible"><i class="fas fa-crosshairs"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}" title="{{localize 'DANGERZONE.executor-form.eligible.fail.label'}}" data-action="fail-boundary-eligible"><i class="fas fa-thumbs-down"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}"  title="{{localize 'DANGERZONE.executor-form.eligible.succeed.label'}}" data-action="succeed-boundary-eligible"><i class="fas fa-thumbs-up"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.eligible.refresh.label'}}" data-action="refresh-boundary-eligible"><i class="fas fa-redo-alt"></i></a>
+            </div>
+        </div>
+    </div>
+    <div id="dz-eligible-target-list" class="dz-executable-info-list {{#unless hasTargeting}} hidden{{/unless}}">
+        {{{eligibleTargetList}}}
+    </div>
+    <div class="form-group {{#unless hasTargeting}} hidden{{/unless}}">
+        <label><i class="fas fa-crosshairs"></i> {{localize 'DANGERZONE.executor-form.targets.list.label'}}</label>
+        <div class="form-fields">
+            <div class="controls">
+                <a title="{{localize 'DANGERZONE.executor-form.targets.highlight.label'}}" data-action="highlight-target"><i class="fas fa-bullseye"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.targets.add.label'}}" data-action="add-target"><i class="fas fa-plus"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.targets.random.label'}}" data-action="random-target"><i class="fas fa-random"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.targets.replace.label'}}" data-action="replace-target"><i class="fas fa-exchange-alt"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}" title="{{localize 'DANGERZONE.executor-form.target.fail.label'}}" data-action="fail-target"><i class="fas fa-thumbs-down"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}" title="{{localize 'DANGERZONE.executor-form.target.succeed.label'}}" data-action="succeed-target"><i class="fas fa-thumbs-up"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.targets.clear.label'}}" data-action="clear-target"><i class="fas fa-eraser"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.targets.lock.label'}}" data-action="unlock-target" {{#unless locked.target}}class="hidden"{{/unless}}><i class="fas fa-lock"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.targets.unlock.label'}}" data-action="lock-target" {{#if locked.target}}class="hidden"{{/if}}><i class="fas fa-unlock"></i></a>
+            </div>
+        </div>
+    </div>
+    <div id="dz-targets-list" class="dz-executable-info-list {{#unless hasTargeting}} hidden{{/unless}}">
+        {{{targetList}}}
+    </div>
+    <div class="form-group {{#unless hasSourcing}} hidden{{/unless}}">
+        <label><i class="fas fa-dragon"></i> {{localize 'DANGERZONE.executor-form.source.list.label'}}</label>
+        <div class="form-fields">
+            <div class="controls">
+                <a title="{{localize 'DANGERZONE.executor-form.source.highlight.label'}}" data-action="highlight-source"><i class="fas fa-bullseye"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.source.add.label'}}" data-action="add-source"><i class="fas fa-plus"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.source.replace.label'}}" data-action="replace-source"><i class="fas fa-exchange-alt"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}" title="{{localize 'DANGERZONE.executor-form.source.fail.label'}}" data-action="fail-source"><i class="fas fa-thumbs-down"></i></a>
+                <a class="{{#unless hasSave}} hidden{{/unless}}" title="{{localize 'DANGERZONE.executor-form.source.succeed.label'}}" data-action="succeed-source"><i class="fas fa-thumbs-up"></i></a>
+                 <a title="{{localize 'DANGERZONE.executor-form.source.clear.label'}}" data-action="clear-source"><i class="fas fa-eraser"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.source.lock.label'}}" data-action="unlock-source" {{#unless locked.source}}class="hidden"{{/unless}}><i class="fas fa-lock"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.source.unlock.label'}}" data-action="lock-source" {{#if locked.source}}class="hidden"{{/if}}><i class="fas fa-unlock"></i></a>
+            </div>
+        </div>
+    </div>
+    <div id="dz-source-list" class="dz-executable-info-list {{#unless hasSourcing}} hidden{{/unless}}">
+        {{{sourceList}}}
+    </div>
+    <div class="form-group{{#unless hasSave}} hidden{{/unless}}">
+        <label>{{localize 'DANGERZONE.executor-form.save.list.label'}}</label>
+        <div class="form-fields">
+            <div class="controls">
+                <a title="{{localize 'DANGERZONE.executor-form.save.highlight.label'}}" data-action="highlight-saves"><i class="fas fa-bullseye"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.save.add-fail.label'}}" data-action="add-save-fail"><i class="fas fa-thumbs-down"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.save.add-success.label'}}" data-action="add-save-success"><i class="fas fa-thumbs-up"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.save.clear.label'}}" data-action="clear-saves"><i class="fas fa-eraser"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.save.lock.label'}}" data-action="unlock-saves" {{#unless locked.saves}}class="hidden"{{/unless}}><i class="fas fa-lock"></i></a>
+                <a title="{{localize 'DANGERZONE.executor-form.save.unlock.label'}}" data-action="lock-saves" {{#if locked.saves}}class="hidden"{{/if}}><i class="fas fa-unlock"></i></a>
+            </div>
+        </div>
+    </div>
+    <div id="dz-save-list" class="dz-executable-info-list{{#unless hasSave}} hidden{{/unless}}">
+        {{{saveList}}}
+    </div>
+</form>

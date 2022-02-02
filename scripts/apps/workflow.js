@@ -1,10 +1,9 @@
 import {dangerZone, zone} from '../danger-zone.js';
-import {point, locationToBoundary, documentBoundary, getTagEntities, furthestShiftPosition} from './dimensions.js';
-import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
-import {damageTypes, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
-import {getFilesFromPattern, stringToObj} from './helpers.js';
+import {point, boundary} from './dimensions.js';
+import {monksActiveTilesOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn} from '../index.js';
+import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
+import {furthestShiftPosition, getFilesFromPattern, getTagEntities, stringToObj, wait} from './helpers.js';
 
-export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));
 async function delay(delay){
     if(delay) await wait(delay)
 }
@@ -61,7 +60,7 @@ export class workflow {
                 return this.next(WORKFLOWSTATES.EXECUTE)
 
             case WORKFLOWSTATES.EXECUTE:
-                await this.executor.go()
+                await this.executor.play()
                 switch(this.executor.state){
                     case 0: 
                         return this.next(WORKFLOWSTATES.CANCEL)
@@ -90,7 +89,7 @@ export class workflow {
 
 class plan {
     constructor(executor){
-        this.current,
+        this.current = {},
         this.elapsedTime = 0,
         this.executor = executor,
         this.manifest = new Map,
@@ -112,6 +111,7 @@ class plan {
             this.manifest.set(`Dangers group ${group} delay`,[()=> {return this._newStep(group)}]);
             this.manifest.set(`Dangers group ${group}`,this.executor.executables.filter(e => e.delay === group).map(e => ()=> {return e.go()}));
         }
+        if(this.elapsedTime > 0) this.setElapsedTime(0);
     }
 
     _clearRun(){
@@ -151,6 +151,16 @@ class plan {
         return {"danger": `Delay ${del} millisecond`, "data": this}
     }
 
+    reset(){
+        this.current = {},
+        this.elapsedTime = 0,
+        this.manifest = new Map,
+        this.ongoing,
+        this.running = [],
+        this.valid = true;
+        this._initialize()
+    }
+
     async runPlan(){
         this.current = this.ongoing.next();
         while (this.valid && !this.current.done) {
@@ -187,7 +197,7 @@ class executorData {
         this.likelihoodResult = 100,
         this.location = options.location ? new point(options.location) : {},
         this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
-        this.save = {failed: [], succeeded: []},
+        this.save = {failed: options.save?.failed ? options.save?.failed : [], succeeded: options.save?.succeeded ? options.save?.succeeded : []},
         this._sources = options.sources ? options.sources : [],
         this.targets = options.targets ? options.targets : [],
         this.tokenMovement = [],
@@ -302,16 +312,24 @@ class executorData {
         return this.likelihoodMet
     }
 
-    async highlightBoundary(){
-        if(this.hasBoundary && game.user.isGM && game.settings.get(dangerZone.ID, 'display-danger-boundary')){
+    async highlightBoundary(override = false){
+        if(this.hasBoundary && game.user.isGM && (override || game.settings.get(dangerZone.ID, 'display-danger-boundary'))){
             this.boundary.highlight(this.id, 16711719)
-            await wait(2500)
+            await wait(1000)
             this.boundary.destroyHighlight(this.id);
         }
     }
 
     informLikelihood(){
         console.log(`Zone likelihood of ${this.zone.likelihood} was${this.likelihoodMet ? '' : ' not'} met with a roll of ${this.likelihoodResult}`)
+    }
+
+    async promptBoundary(){ 
+        this.location = await this.zone.promptTemplate();
+        if(!this.hasLocation) {
+            return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
+        }
+        return this._setLocationBoundary()
     }
 
     async randomBoundary() {
@@ -329,25 +347,20 @@ class executorData {
         (test.done && !this.hasDualBoundaries) ? this.twinBoundary = this.boundary : this.twinBoundary = test.next().value
     }
 
-    async set(){
-        this.zoneBoundary = await this.zone.scene.boundary();
-        this.zoneTokens = this.zoneBoundary.tokensIn(this.sceneTokens);
-        this.zoneEligibleTokens = this.zone.zoneEligibleTokens(this.zoneTokens);
-        await this.setBoundary()
+    async set(asRun = true){
+        await this.setZone();
+        await this.setBoundary(asRun)
         this.setTargets()
         if(this.danger.hasTwinBoundary) await this.setTwinBoundary()
         if(!this.hasBoundary) this.valid = false
     }
     
-    async setBoundary() {
+    async setBoundary(asRun = false) {
         if(this.hasBoundary) return this._setBoundary();
         if(this.hasLocation) return this._setLocationBoundary();
-        if(this.zone.options.placeTemplate) {
-            this.location = await this.zone.promptTemplate();
-            if(!this.hasLocation) {
-                return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
-            }
-            return this._setLocationBoundary()
+        if(asRun && this.zone.options.placeTemplate) {
+            await this.promptBoundary();
+            return
         }
         await this.randomBoundary()
     }
@@ -367,19 +380,68 @@ class executorData {
         this.twinBoundary = itr.next().value
     }
 
+    async setZone(){
+        this.zoneBoundary = await this.zone.scene.boundary();
+        this.zoneTokens = this.zoneBoundary.tokensIn(this.sceneTokens);
+        this.zoneEligibleTokens = this.zone.zoneEligibleTokens(this.zoneTokens);
+    }
+
     _setBoundary(){
         this.eligibleTargets = this.boundary.tokensIn(this.zoneEligibleTokens);
     }
 
     _setLocationBoundary(){
-        const options = {excludes: this.zoneBoundary.excludes}
+        const options = {excludes: this.zoneBoundary.excludes, universe: this.zoneBoundary.universe}
         this.zone.stretch(options);
-        this.boundary = locationToBoundary(this.location, this.danger.dimensions.units, options);
+        this.boundary = boundary.locationToBoundary(this.location, this.danger.dimensions.units, options);
         this._setBoundary();
+    }
+
+    insertSaveFailed(failed){
+        this.save.failed = failed?.length ? this.save.failed.concat(failed.filter(t => !this.save.failed.find(tg => tg.id === t.id))) : [];
+    }
+
+    insertSaveSucceeded(success){
+        this.save.succeeded = success?.length ? this.save.succeeded.concat(success.filter(t => !this.save.succeeded.find(tg => tg.id === t.id))) : [];
+    }
+
+    insertSources(sources){
+        this._sources = sources?.length ? this.sources.concat(sources.filter(t => !this.sources.find(tg => tg.id === t.id))) : [];
+    }
+
+    insertTargets(targets){
+        this.targets = targets?.length ? this.targets.concat(targets.filter(t => !this.targets.find(tg => tg.id === t.id))) : [];
+    }
+
+    updateBoundary(boundary){
+        this.boundary = boundary ? boundary : {}
+    }
+
+    updateLocation(location){
+        const obj = {
+            x: location?.x ? location.x : 0, y: location?.y ? location.y : 0, z: location?.z ? location.z : (location?.elevation ? location.elevation : 0)
+        }
+        this.location = location ? new point(obj) : {};
+    }
+
+    updateSaveFailed(saves){
+        this.save.failed = saves?.length ? saves : [] 
+    }
+
+    updateSaveSucceeded(saves){
+        this.save.succeeded = saves?.length ? saves : [] 
+    }
+
+    updateSources(sources){
+        this._sources = sources?.length ? sources : []
+    }
+
+    updateTargets(targets){
+        this.targets = targets?.length ? targets : [];
     }
 }
 
-class executor {
+export class executor {
     constructor(zone, options = {}) {
         this.data = new executorData(zone, options),
         this.executable = {},
@@ -397,38 +459,110 @@ class executor {
         for(let [name,part] of this.data.danger.parts){
             let be;
             switch(name){
-                case 'effect': name = 'activeEffect'; be = new activeEffect(part, this.data, {title: "Active Effect"}); break;
-                case 'audio': be = new audio(part, this.data, {title: "Audio", modules: [{active: sequencerOn, name: "sequencer", dependent: false}]}); break;
-                case 'foregroundEffect': name = 'secondaryEffect'; be = new primaryEffect(this.danger.foregroundEffect, this.data, {title: "Primary Effect", modules: [{active: sequencerOn, name: "sequencer", dependent: true}]}); break;
-                case 'ambientLight': be = new ambientLight(this.danger.ambientLight, this.data, {title: "Ambient Light", wipeable: true, modules: [{active: levelsOn, name: "levels", dependent: false}, {active: taggerOn, name: "tagger", dependent: false}]}); break;
-                case 'fluidCanvas': name = 'canvas'; be = new fluidCanvas(this.danger.canvas, this.data, {title: "Canvas", modules: [{active: fluidCanvasOn, name: "kandashis-fluid-canvas", dependent: true}]}); break;
-                case 'damage': be = new damageToken(this.danger.damage, this.data, {title: "Damage", modules: [{active: midiQolOn, name: "midi-qol", dependent: true}]}); break;
-                case 'lastingEffect': be = new lastingEffect(this.danger.lastingEffect, this.data, {flags: flags, title: "Lasting Effect", wipeable: true, modules: [{active: monksActiveTilesOn, name: "monks-active-tiles", dependent: false},{active: taggerOn, name: "tagger", dependent: false},{active: levelsOn, name: "levels", dependent: false},{active: betterRoofsOn, name: "better-roofs", dependent: false}]}); break;
-                case 'macro': be = new macro(this.danger.macro, this.data, {title: "Macro"}); break;
-                case 'mutate': be = new mutate(this.danger.mutate, this.data, {title: "Mutate", modules:[{active: warpgateOn, name: "warpgate", dependent: true}, {active: taggerOn, name: "tagger", dependent: false}]}); break;
-                case 'backgroundEffect': name = 'secondaryEffect'; be = new secondaryEffect(this.danger.backgroundEffect, this.data, {title: "Secondary Effect", modules: [{active: sequencerOn, name: "sequencer", dependent: true}]}); break;
-                case 'save': be = new save(this.danger.save, this.data, {title: "Save"}); break;
-                case 'warpgate': name = 'spawn'; be = new spawn(this.danger.warpgate, this.data, {title: "Spawn", modules:[{active: warpgateOn, name: "warpgate", dependent: true}, {active: taggerOn, name: "tagger", dependent: false}]}); break;
-                case 'tokenMove': be = new tokenMove(this.danger.tokenMove, this.data, {title: "Token Move"}); break;
-                case 'tokenEffect': be = new tokenEffect(this.danger.tokenEffect, this.data, {title: "Token Effect", modules: [{active: sequencerOn, name: "sequencer", dependent: true}]}); break;
-                case 'tokenSays': be = new tokenSays(this.danger.tokenSays, this.data, {title: "Token Says", modules: [{active: tokenSaysOn, name: "token-says", dependent: true}]}); break;
-                case 'wall': be = new wall(this.danger.wall, this.data, {title: "Wall", wipeable: true, modules:[{active: wallHeightOn, name: "wall-height", dependent: false}, {active: taggerOn, name: "tagger", dependent: false}]}); break; 
+                case 'effect': 
+                    be = new activeEffect(part, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'audio': 
+                    be = new audio(part, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'foregroundEffect': 
+                    be = new primaryEffect(this.danger.foregroundEffect, this.data, name, EXECUTABLEOPTIONS[name], flags); 
+                    break;
+                case 'ambientLight': 
+                    be = new ambientLight(this.danger.ambientLight, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'fluidCanvas': 
+                    be = new fluidCanvas(this.danger.canvas, this.data, name, EXECUTABLEOPTIONS[name]);
+                    break;
+                case 'damage': 
+                    be = new damageToken(this.danger.damage, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'lastingEffect': 
+                    be = new lastingEffect(this.danger.lastingEffect, this.data, name, EXECUTABLEOPTIONS[name], flags); 
+                    break;
+                case 'macro': 
+                    be = new macro(this.danger.macro, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'mutate': 
+                    be = new mutate(this.danger.mutate, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'backgroundEffect': 
+                    be = new secondaryEffect(this.danger.backgroundEffect, this.data, name, EXECUTABLEOPTIONS[name]);
+                    break;
+                case 'save': 
+                    be = new save(this.danger.save, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'warpgate': 
+                    be = new spawn(this.danger.warpgate, this.data, name, EXECUTABLEOPTIONS[name]);
+                    break;
+                case 'tokenMove': 
+                    be = new tokenMove(this.danger.tokenMove, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'tokenEffect': 
+                    be = new tokenEffect(this.danger.tokenEffect, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'tokenSays': 
+                    be = new tokenSays(this.danger.tokenSays, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'wall': 
+                    be = new wall(this.danger.wall, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break; 
             }
             if(be) this.reconcile(name, be);
         }
-        this.reconcile('flavor', new flavor(this.zone.flavor, this.data, {title: "Flavor"})); 
+        this.reconcile('flavor', new flavor(this.zone.flavor, this.data, 'flavor', EXECUTABLEOPTIONS['flavor'])); 
+    }
+
+    get boundary(){
+        return this.data.hasBoundary ? this.data.boundary : ''
     }
 
     get danger(){
         return this.zone.danger
     }
 
+    get eligibleTargets(){
+        return this.data.eligibleTargets
+    }
+
     get executables(){
         return this.parts.filter(e => e.has)
     }
 
+    get hasSave(){
+        return this.executable.save ? true : false
+    }
+
+    get hasSourcing(){
+        return (this.zone.hasSourcing || this.executables.find(e => e.hasSourcing)) ? true : false
+    }
+
+    get hasSourceToTarget(){
+        return false
+    }
+
+    get hasTargeting(){
+        return (this.hasSave || this.executables.find(e => e.hasTargeting)) ? true : false
+    }
+
     get previouslyExecuted(){
         return this.data.previouslyExecuted
+    }
+
+    get saveFailed(){
+        return this.data.saveFailed
+    }
+
+    get saveSucceeded(){
+        return this.data.saveSucceeded
+    }
+
+    get sources(){
+        return this.data.sources
+    }
+
+    get targets(){
+        return this.data.targets
     }
 
     get wipeables(){
@@ -437,6 +571,10 @@ class executor {
 
     get zone(){
         return this.data.zone
+    }
+
+    get zoneEligibleTokens(){
+        return this.data.zoneEligibleTokens
     }
 
     async check(){
@@ -452,10 +590,6 @@ class executor {
     async done(){
         this.data.previouslyExecuted = true;
     }
-
-    async go(){
-        await this.plan.runPlan()
-    }
  
     async inform(){
         this.data.highlightBoundary()
@@ -469,6 +603,14 @@ class executor {
         const files = await Promise.all(promises).then((results) => {return results.filter(r => r)}).catch((e) => {return console.log('Danger Zone file caching failed.')});
         if(files.length) this.promises.load.push(Sequencer.Preloader.preloadForClients(files))
         return this.report('Load')
+    }
+
+    newPlan(){
+        this.plan.reset()
+    }
+
+    async play(){
+        await this.plan.runPlan()
     }
 
     async ready(){
@@ -486,10 +628,122 @@ class executor {
     report(title){
         return {"danger": title, "data": this}
     }
+
+    async reset(){
+        this.data = new executorData(this.data.zone, {}),
+        await this.set()
+    }
+
+    clearBoundary(options={}){
+        if(options.clearTargets) this.clearTargets();
+        if(options.clearLocation) this.clearLocation()
+        this.data.updateBoundary()
+    }
+
+    clearLocation(){
+        this.data.updateLocation();
+    }
+
+    clearSaveFailed(){
+        this.data.updateSaveFailed()
+    }
+
+    clearSaveSucceeded(){
+        this.data.updateSaveSucceeded()
+    }
+
+    clearSources(){
+        this.data.updateSources()
+    }
+
+    clearTargets(){
+        this.data.updateTargets()
+    }
+
+    async highlightBoundary(override = false){
+        await this.data.highlightBoundary(override)
+    }
+
+    insertSaveFailed(fails){
+        this.data.insertSaveFailed(fails)
+    }
+
+    insertSaveSucceeded(saves){
+        this.data.insertSaveSucceeded(saves)
+    }
+
+    insertSources(sources){
+        this.data.insertSources(sources)
+    }
+
+    insertTargets(targets){
+        this.data.insertTargets(targets)
+    }
+
+    async promptBoundary(options={}){
+        this.clearBoundary(options);
+        await this.data.promptBoundary()
+        if(options.highlight) this.highlightBoundary(true)
+    }
+
+    async randomBoundary(options = {}){
+        await this.setBoundary(options)
+    }
+
+    randomTarget(){
+        this.clearTargets()
+        this.setTargets()
+    }
+
+    async setBoundary(options = {}){
+        this.clearBoundary(options);
+        await this.data.setBoundary()
+        if(options.highlight) this.highlightBoundary(true)
+    }
+
+    setTargets(){
+        this.data.setTargets()
+    }
+
+    async updateBoundary(boundary, options={}){
+        this.data.updateBoundary(boundary)
+        await this.setBoundary(options)
+    }
+
+    async updateLocation(location, options={}){
+        this.data.updateLocation(location);
+        await this.setBoundary(options);
+    }
+
+    updateSaveFailed(saves){
+        this.data.updateSaveFailed(saves)
+    }
+
+    updateSaveSucceeded(saves){
+        this.data.updateSaveSucceeded(saves)
+    }
+
+    updateSources(sources){
+        this.data.updateSources(sources)
+    }
+
+    updateTargets(targets){
+        this.data.updateTargets(targets)
+    }
     
-    async setZoneData(){
-        await this.data.set()
+    async setZone(){
+       await this.data.setZone()
+    }
+    
+    async setZoneData(asRun = true){
+        await this.data.set(asRun)
         return this.report('Data');
+    }
+
+    async set(asRun = true){     
+        await this.load();
+        await this.ready();
+        await this.setZoneData(asRun);
     }
 
     async wipe(){
@@ -503,13 +757,19 @@ class executor {
 }
 
 class executable {
-    constructor(part = {}, data = executorData, options = {} ){
+    constructor(part = {}, data = executorData, id, options = {}, flags = {}){
+        this._cancel = false,
         this.data = data,
+        this._document = options.document,
         this._executed = false,
         this._modules = options.modules ? options.modules : [],
-        this._dangerName = options.title ? options.title : '',
-        this._flags = options.flags ? options.flags : {},
+        this.icon = options.icon ? options.icon : 'fas fa-hryvnia',
+        this._id = id,
+        this.likelihoodResult = 100,
+        this.name = options.title ? options.title : '',
+        this._flags = flags,
         this._part = part,
+        this.scope = options.scope,
         this.wipeable = options.wipeable ? true : false
     }
 
@@ -521,12 +781,48 @@ class executable {
         return (!Object.keys(this._part).length || this._modules.find(m => m.dependent === true && m.active === false)) ? false : true 
     }
 
+    get hasBoundaryScope(){
+        return this.scope === 'boundary' ? true : false
+    }
+
+    get hasSceneScope(){
+        return this.scope === 'scene' ? true : false
+    }
+
+    get hasSourcing(){
+        return this.source ? true : false
+    }
+
+    get hasTargeting(){
+        return this.hasTokenScope
+    }
+
+    get hasTokenScope(){
+        return this.scope === 'token' ? true : false
+    }
+
     get hasTargets(){
         return this.targets.length ? true : false
     }
 
+    get likelihood(){
+        return this._part.likelihood ? this._part.likelihood : 100
+    }
+
+    get likelihoodMet(){
+        return this.likelihoodResult <= this.likelihood
+    }
+
     get report(){
-        return {"danger": this._dangerName, "data": this, "executed": this._executed, "modules": this._modules}
+        return {"danger": this.name, "data": this, "executed": this._executed, "modules": this._modules}
+    }
+
+    get requiresSaveFail(){
+        return this.save === 2 ? true : false
+    }
+
+    get requiresSaveSuccess(){
+        return this.save === 1 ? true : false
     }
 
     get scale(){
@@ -541,6 +837,10 @@ class executable {
         return 0
     }
 
+    get stoppable(){
+        return this.stop ? true : false
+    }
+
     get tag(){
         return this._part.tag ? this._part.tag : ''
     }
@@ -551,23 +851,45 @@ class executable {
     
     get targets(){
         return zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.data.sources);
+    }   
+
+    async check(){
+        await this.checkLikelihood()
+        if(!this.likelihoodMet) this.informLikelihood();
+    }
+    
+    async checkLikelihood() {
+        if(this.likelihood < 100){
+            const maybe = await new Roll(`1d100`).roll();
+            this.likelihoodResult = maybe.result;
+        }
+    }
+
+    informLikelihood(){
+        console.log(`${this.name} likelihood of ${this.likelihood} was${this.likelihoodMet ? '' : ' not'} met with a roll of ${this.likelihoodResult}`)
     }
 
     async go(){
-        if(this.has) await this.play(); 
+        await this.check()
+        if(this.has && this.likelihoodMet) await this.play(); 
         return this.report
     }
 
     async play(){  
         this.setExecuted()
+        if (this.hasBoundaryScope && !this.data.hasBoundary) this._cancel = true
     }
 
     setExecuted(){
         this._executed = true
     }
 
-    async wipe(document){
-        this.data.zone.wipe(document)
+    async wipe(){
+        this.data.zone.wipe(this._document)
+    }
+
+    async wipeType(){
+        this.data.zone.wipe(this._document, 'T')
     }
 }
 
@@ -601,7 +923,7 @@ class executableWithFile extends executable{
 
     async play(){
         if(!this._file) await this.file;
-        this.setExecuted()
+        await super.play()
     }
 
     async _setFile(){
@@ -643,7 +965,8 @@ class activeEffect extends executable {
     }
 
     async play(){  
-        await super.play()                  
+        await super.play() 
+        if(this._cancel) return                 
         for (const token of this.targets) {
             if(this.limit && token.actor && token.actor.effects.find(e => e.data.flags[dangerZone.ID]?.origin === this.data.danger.id)){
                 continue;
@@ -728,11 +1051,8 @@ class ambientLight extends executable{
     
     async play(){
         await super.play()
+        if(this._cancel) return
         await this.data.scene.createEmbeddedDocuments("AmbientLight",[this._light]);
-    }
-    
-    async wipe(){
-       await super.wipe('AmbientLight')
     }
 }   
 
@@ -752,6 +1072,7 @@ class audio extends executableWithFile {
 
     async play() {
         await super.play()
+        if(this._cancel) return
         this.sound = await AudioHelper.play({src: this.file, volume: this.volume, loop: false, autoplay: true}, true)
         this._schedule();
     }
@@ -764,9 +1085,26 @@ class audio extends executableWithFile {
     }
 
     async stop(){
-        game.socket.emit('module.danger-zone', {stop: this.sound.id})
-        await this.sound.fade(0, {duration: 250})
-        this.sound.stop();  
+        if(this.sound?.id){
+            game.socket.emit('module.danger-zone', {stop: this.sound.id})
+            await this.sound.fade(0, {duration: 250})
+            this.sound.stop();
+        }  
+    }
+
+    async _setFile(){
+        if(!this.filePath || !this.randomFile) return this._file = this.filePath;
+        const playlist = game.playlists.getName(this.filePath);
+        if(!playlist) {
+            this._file = ''
+        } else {
+            const index = Math.floor(Math.random() * playlist.data.sounds.size)
+            let i = 0; 
+            for (let key of playlist.data.sounds) {
+                if (i++ == index) {this._file = key?.path; break;}  
+            }
+        }
+        return this._file
     }
 }
 
@@ -791,7 +1129,15 @@ class damageToken extends executable{
     get isBulk(){
         return (this.amount.indexOf('@')!==-1 || this.flavor.indexOf('@elevation')!==-1 || this.flavor.indexOf('@moved')!==-1) ? false : true
     }
-    
+
+    get requiresSaveFail(){
+        return this.save === "N" ? false : true
+    }
+
+    get requiresSaveSuccess(){
+        return this.save === "H" ? true : false
+    }
+
     get _save(){
         return this._part.save
     } 
@@ -810,6 +1156,7 @@ class damageToken extends executable{
 
     async play(){    
         await super.play()
+        if(this._cancel) return
         this.isBulk ? await this._bulkWorkflow() : await this._individualWorkflow()
     }
 
@@ -869,6 +1216,7 @@ class flavor extends executable{
 
     async play(){
         await super.play()
+        if(this._cancel) return
         ChatMessage.create({content : this.flavor})
     }
 
@@ -910,6 +1258,7 @@ class fluidCanvas extends executable{
 
     async play(){
         await super.play()
+        if(this._cancel) return
         switch(this.type){
             case 'blur':
                 await KFC.executeAsGM(this.type, this.users, this.intensity);
@@ -992,6 +1341,7 @@ class lastingEffect extends executableWithFile{
 
     async play(){
         await super.play()
+        if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
             const tiles = this.build();
             await this.data.scene.createEmbeddedDocuments("Tile", tiles);
@@ -1082,10 +1432,6 @@ class lastingEffect extends executableWithFile{
         }
         return tile
     } 
-
-    async wipe(){
-       await super.wipe('Tile')
-    }
 }
 
 class macro extends executable{
@@ -1104,6 +1450,7 @@ class macro extends executable{
 
     async play(){
         await super.play()
+        if(this._cancel) return
         await this.macro.execute(this.data);
     }
 }
@@ -1145,7 +1492,8 @@ class mutate extends executable {
     }
 
     async play(){    
-        await super.play()            
+        await super.play()  
+        if(this._cancel) return          
         for (const token of this.targets) { 
             await warpgate.mutate(token, this.updates, {}, this.options);
         }
@@ -1154,6 +1502,10 @@ class mutate extends executable {
 
 class primaryEffect extends executableWithFile {
         
+    get hasSourcing(){
+        return this.source.enabled ? true : false
+    }
+
     get repeat(){
         return this._part.repeat
     }
@@ -1165,6 +1517,14 @@ class primaryEffect extends executableWithFile {
     get hasSources(){
         return (this.source.enabled && (this.source.name || this.data.hasSources))
     }
+    
+    get hasSourceToTarget(){
+        return this.source.enabled
+    }
+
+    get hasTargeting(){
+        return (super.hasTargeting || this.hasSourceToTarget) ? true : false
+    }
 
     get save(){
         return this.data.danger.save.fe ? parseInt(this.data.danger.save.fe) : super.save
@@ -1172,6 +1532,7 @@ class primaryEffect extends executableWithFile {
 
     async play(){
         await super.play()
+        if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
             const result = await this._build();
             if(result.play) result.sequence.play();
@@ -1181,21 +1542,21 @@ class primaryEffect extends executableWithFile {
     async _build(){
         let s = new Sequence(), play = true;
         const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
-        for (const boundary of boundaries){
+        for (const bound of boundaries){
             if(this.hasSources){
                 const tagged = this.source.name ? await getTagEntities(this.source.name, this.data.scene) : this.data.sources
                 if(tagged.length){
                     for(const document of tagged){
                         const documentName = document.documentName ? document.documentName : document.document.documentName;
-                        const source = documentBoundary(documentName, document, {retain:true});
-                        if(source.A.x === boundary.A.x && source.A.y === boundary.A.y && source.B.x === boundary.B.x && source.B.y === boundary.B.y){continue}
-                        s = this.source.swap ? await this._sequence(source, s, boundary) : await this._sequence(boundary, s, source);
+                        const source = boundary.documentBoundary(documentName, document, {retain:true});
+                        if(source.A.x === bound.A.x && source.A.y === bound.A.y && source.B.x === bound.B.x && source.B.y === bound.B.y){continue}
+                        s = this.source.swap ? await this._sequence(source, s, bound) : await this._sequence(bound, s, source);
                     }
                 } else {
                     play = false
                 }
             } else {
-                s = this._sequence(boundary, s);
+                s = this._sequence(bound, s);
             }
         }
         return {sequence: s, play: play}
@@ -1257,6 +1618,7 @@ class save extends executable{
 
     async play(){
         await super.play()
+        if(this._cancel) return
         this._initialize()
         for(const token of this.targets){ 
             if(token.actor){  
@@ -1287,6 +1649,7 @@ class secondaryEffect extends executableWithFile {
 
     async play(){
         await super.play()
+        if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
             const result = await this._build();
             result.play()
@@ -1353,6 +1716,7 @@ class spawn extends executable {
 
     async play(){
         await super.play()
+        if(this._cancel) return
         const token = await this.token();
         if(token) await warpgate.spawnAt(this.data.boundary.center, token, this.updates, {}, this.options);
     }
@@ -1392,6 +1756,7 @@ class  tokenEffect extends executableWithFile {
 
     async play(){
         await super.play()
+        if(this._cancel) return
         const result = await this._build();
         result.play()
     }
@@ -1458,6 +1823,10 @@ class tokenMove extends executable {
         return (super.has && (this.movesTargets || this.sToT)) ? true : false
     }
 
+    get hasSourceToTarget(){
+        return this.sToT
+    }
+
     get movesTargets(){
         return (this.v?.dir || this.hz?.dir || this.e?.type) ? true : false
     }
@@ -1473,12 +1842,14 @@ class tokenMove extends executable {
     }
 
     async play() {
+        await super.play()
+        if(this._cancel) return
         if(this.movesTargets || (this.sToT && this.data.hasSources)){
             for (const token of this.targets) { 
                 let amtV = this._v(), amtH = this._hz(), amtE = this._e(), e, x, y;
                 if(this.sToT && this.data.sources.find(s => s.id === token.id)){
                     let location = this.data.boundary.center;
-                    let tokenBoundary = documentBoundary("Token", token);
+                    let tokenBoundary = boundary.documentBoundary("Token", token);
                     x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
                     e = this.data.boundary.bottom;
                 } else if (this.movesTargets) {
@@ -1532,17 +1903,12 @@ class tokenSays extends executable {
         return this._part.fileType
     }
     
-    get likelihood(){
-        return this._part.likelihood ? this._part.likelihood : 100
-    }
-
     get has(){
         return (super.has && this.fileType && (this.fileName || this.fileTitle)) ? true : false
     }
 
     get options(){
         return {
-            likelihood: this.likelihood,
             type: this.fileType,
             source: this.fileName,
             compendium: this.compendiumName,
@@ -1556,6 +1922,7 @@ class tokenSays extends executable {
 
     async play() {
         await super.play()
+        if(this._cancel) return
         for (const token of this.targets) { 
             await game.modules.get("token-says").api.saysDirect(token.id, '', this.data.scene.id, this.options);
         }
@@ -1627,6 +1994,7 @@ class wall extends executable {
 
     async play(){
         await super.play()
+        if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
             const walls = this._build;
             if(walls.length) await this.data.scene.createEmbeddedDocuments("Wall",walls)
@@ -1653,8 +2021,4 @@ class wall extends executable {
         if(taggerOn && this.tag) wall.flags['tagger'] = this.taggerTag
         return wall;
     }  
-
-    async wipe(){
-        await super.wipe('Wall')
-    }
 }

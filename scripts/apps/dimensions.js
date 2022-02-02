@@ -1,5 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
-import {taggerOn} from '../index.js';
+import {circleAreaGrid, getTagEntities, rayIntersectsGrid} from './helpers.js';
 
 export class dangerZoneDimensions {
     /**
@@ -53,7 +53,8 @@ export class dangerZoneDimensions {
 
     async boundary(){
         const ex = await this._excludedTagged();
-        return new boundary(this.start, this.end, {exclude: ex})
+        const un = await this.zone.sourceArea();
+        return new boundary(this.start, this.end, {exclude: ex, limit: un})
     }
 
     async boundaryBleed(){
@@ -62,7 +63,7 @@ export class dangerZoneDimensions {
         const dim = b.dimensions;
         const [x,y] = canvas.grid.grid.getPixelsFromGridPosition(dim.y -(Math.min(dim.y, (h-1))), dim.x - (Math.min(dim.x, (w-1))));
         const p = new point({x: x, y: y, z: dim.z - (d ? d-1 : 0)})
-        return new boundary(p, b.B, {excludes: b.excludes})
+        return new boundary(p, b.B, {excludes: b.excludes, universe: b.universe})
     }
 
     async boundaryConstrained(){
@@ -70,7 +71,7 @@ export class dangerZoneDimensions {
         [w, h] = this._subDimensions(w,h);
         const b = await this.boundary();
         const dim = b.dimensions;
-        return locationToBoundary(b.A, {d: Math.abs(dim.d - (d ? d : dim.d ? dim.d : 0)), h: Math.abs(dim.h - (h-1)), w: Math.abs(dim.w - (w-1))}, {excludes: b.excludes})
+        return boundary.locationToBoundary(b.A, {d: Math.abs(dim.d - (d ? d : dim.d ? dim.d : 0)), h: Math.abs(dim.h - (h-1)), w: Math.abs(dim.w - (w-1))}, {excludes: b.excludes, universe: b.universe})
     }
 
     async grids(){
@@ -144,11 +145,13 @@ export class boundary{
             z: b.z ? Math.max(a.z ? a.z : b.z, b.z) : 0
         },
         this.excludes = options.excludes ? options.excludes : new Set(),
+        this.universe = options.universe ? options.universe : (options.limit?.target ? new Set() : ''),
         this.gridIndex = new Set();
         if('bottom' in options){this.A.z = options.bottom}
         if('top' in options){this.B.z = options.top}
         if(!('retain' in options)) this._toTopLeft();
         if(options.exclude){this._exclude(options.exclude)}
+        if(options.limit?.target){this._universe(options.limit)}
         this._setGridIndex();
     }
 
@@ -207,7 +210,7 @@ export class boundary{
         const {w,h,d,x,y,z} = this.dimensions;
         for(let j=0; (options.inclusive ? j<=w : j<w) || j===0; j++){
             for(let i=0; (options.inclusive ? i<=h: i<h) || i===0; i++){
-                if(!this.excludes.has((y+i) + '_' + (x+j))){yield[y+i, x+j, z, [i, j]]}
+                if((!this.universe || this.universe.has((y+i) + '_' + (x+j))) && !this.excludes.has((y+i) + '_' + (x+j))){yield[y+i, x+j, z, [i, j]]}
             }
         }
     } 
@@ -221,7 +224,7 @@ export class boundary{
         const h = options.range?.h ? options.range?.h : 0
         const d = options.range?.d ? options.range?.d : 0
 
-        const ops = {excludes: this.excludes}
+        const ops = {excludes: this.excludes, universe: this.universe}
         if('bottom' in options){ops.bottom = options.bottom}
         if('top' in options){ops.top = options.top}
 
@@ -242,43 +245,98 @@ export class boundary{
         }
 
     }
+
+    static documentBoundary(documentName, document, options = {}){
+        let dim;
+        switch(documentName){
+            case "Wall":
+                dim=document.object.bounds;
+                break
+            case "AmbientLight":
+                const dm = (document.object.radius*2)-1
+                dim={x:document.object.bounds.x, y:document.object.bounds.y, width: dm, height: dm} 
+                break
+            case "Tile":
+                dim={x: document.data.x, y:document.data.y, width: document.data.width - 1, height: document.data.height - 1}
+                break;
+            case "Token":
+                const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
+                const [TyPos, TxPos] = canvas.grid.grid.getGridPositionFromPixels(document.data.x, document.data.y);
+                const [Tx2, Ty2] = canvas.grid.grid.getPixelsFromGridPosition(TyPos + document.data.height, TxPos + document.data.width); 
+                const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
+                const Td = (distance * Math.max(document.data.width, document.data.height) * multiplier);
+                dim = {x:document.data.x, y:document.data.y, width: Tx2 - document.data.x, height: Ty2 - document.data.y, depth: Td,  bottom:document.data.elevation};
+                break
+            default: 
+                dim=document.data
+        }
+        const b = new boundary({x:dim.x, y:dim.y, z:dim.bottom ? dim.bottom : 0}, {x: dim.x + dim.width, y: dim.y + dim.height, z: dim.depth ? dim.bottom + dim.depth : 0}, options)
+        return b
+    }
     
-    _exclude(tagged){
-        for(let i=0; i<tagged.length; i++){
-            const document = tagged[i]
+    _exclude(documents){
+        this._indexDocuments(documents, this.excludes)
+    }
+
+    _indexDocuments(documents, indices){
+        for(const document of documents){
             const documentName = document.documentName ? document.documentName : document.document.documentName;
-            const b = documentBoundary(documentName, document);
+            const b = boundary.documentBoundary(documentName, document);
             const dim=b.dimensions
             const inclusive = documentName === "Token" ? false : true
             const grids = b.grids({inclusive:inclusive})  
             switch(documentName){
                 case "Wall":
                     for(const [yPos,xPos] of grids){
-                        if(this.excludes.has(yPos + '_' + xPos)){continue}
-                        if(rayIntersectsGrid([yPos,xPos], document.object.toRay())){this.excludes.add(yPos + '_' + xPos)}
+                        if(indices.has(yPos + '_' + xPos)){continue}
+                        if(rayIntersectsGrid([yPos,xPos], document.object.toRay())){indices.add(yPos + '_' + xPos)}
                     }
                     break
                 case "AmbientLight":
                     for(const [yPos,xPos, zPos, [xLoc, yLoc]] of grids){
-                        if(this.excludes.has(yPos + '_' + xPos)){continue}
-                        if(circleAreaGrid(xLoc,yLoc,dim.w, dim.h)){this.excludes.add(yPos + '_' + xPos)}
+                        if(indices.has(yPos + '_' + xPos)){continue}
+                        if(circleAreaGrid(xLoc,yLoc,dim.w, dim.h)){indices.add(yPos + '_' + xPos)}
                     }
                     break
                 default: 
                     for(const [yPos,xPos] of grids){
-                        if(this.excludes.has(yPos + '_' + xPos)){continue}
-                        this.excludes.add(yPos + '_' + xPos)
+                        if(indices.has(yPos + '_' + xPos)){continue}
+                        indices.add(yPos + '_' + xPos)
                     }
             }
         }
-        dangerZone.log(false, 'Tagged ', {tagged: tagged, boundary: this});
+        dangerZone.log(false, 'Tagged ', {tagged: documents, boundary: this});
+    }
+
+    _universe(limit){
+        this._indexDocuments(limit.documents, this.universe)
+        if(limit.target === 'I') return
+        const newUniv = new Set() 
+        this.universe.forEach((value) => {
+            const[yPos, xPos] = value.split('_')
+            const nghbrs = canvas.grid.grid.getNeighbors(Number(yPos), Number(xPos))
+            for(const pos of nghbrs){
+                if(limit.target === 'A') {
+                    if (!this.universe.has(pos[0] + '_' + pos[1])) newUniv.add(pos[0] + '_' + pos[1])
+                } else {
+                    newUniv.add(pos[0] + '_' + pos[1])
+                }
+            }
+        })
+        this.universe = newUniv
+    }
+
+    static locationToBoundary(point, units, options={}){
+        let [x1,y1] = canvas.grid.grid.shiftPosition(point.x, point.y, units.w, units.h)
+        dangerZone.log(false,'Location to boundary...', {point: point, units: units, options: options});
+        return new boundary(point,{x:x1, y:y1, z:(point.z + units.d)},options)
     }
 
     tokensIn(tokens){
         const multiplier = game.settings.get(dangerZone.ID, 'scene-control-button-display');
         let kept = [];
         for(let token of tokens){
-            const b = documentBoundary('Token', token);
+            const b = boundary.documentBoundary('Token', token);
             if(this.intersectsBoundary(b)){
                 kept.push(token)
             }
@@ -324,75 +382,4 @@ export class point{
         this.x = x1;
         this.y = y1;
     }
-}
-
-export function circleAreaGrid(xLoc,yLoc,w,h){
-    if((!xLoc &&!yLoc) || (yLoc===h&&!xLoc) || (xLoc===w&&!yLoc) || (xLoc===w&&yLoc===h)){return false}
-    return true
-}
-
-export function rayIntersectsGrid([yPos,xPos], r){
-    const [xl,yl] = canvas.grid.grid.getPixelsFromGridPosition(yPos, xPos);
-    const [xc,yc] = canvas.grid.grid.getCenter(xl, yl);
-    const wg = (xc - xl) * 2, hg = (yc - yl) * 2;
-    if(r.intersectSegment([xl, yl, xl+wg, yl]) || r.intersectSegment([xl, yl, xl, yl+hg])
-        || r.intersectSegment([xl, yl+hg, xl+wg, yl+hg]) || r.intersectSegment([xl+wg, yl, xl+wg, yl+hg])
-        ){
-            return true
-        }
-    return false
-}
-
-export function locationToBoundary(point, units, options={}){
-    let [x1,y1] = canvas.grid.grid.shiftPosition(point.x, point.y, units.w, units.h)
-    dangerZone.log(false,'Location to boundary...', {point: point, units: units, options: options});
-    return new boundary(point,{x:x1, y:y1, z:(point.z + units.d)},options)
-}
-
-export function documentBoundary(documentName, document, options = {}){
-    let dim;
-    switch(documentName){
-        case "Wall":
-            dim=document.object.bounds;
-            break
-        case "AmbientLight":
-            const dm = (document.object.radius*2)-1
-            dim={x:document.object.bounds.x, y:document.object.bounds.y, width: dm, height: dm} 
-            break
-        case "Token":
-            const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
-            const [TyPos, TxPos] = canvas.grid.grid.getGridPositionFromPixels(document.data.x, document.data.y);
-            const [Tx2, Ty2] = canvas.grid.grid.getPixelsFromGridPosition(TyPos + document.data.height, TxPos + document.data.width); 
-            const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
-            const Td = (distance * Math.max(document.data.width, document.data.height) * multiplier);
-            dim = {x:document.data.x, y:document.data.y, width: Tx2 - document.data.x, height: Ty2 - document.data.y, depth: Td,  bottom:document.data.elevation};
-            break
-        default: 
-            dim=document.data
-    }
-    const b = new boundary({x:dim.x, y:dim.y, z:dim.bottom ? dim.bottom : 0}, {x: dim.x + dim.width, y: dim.y + dim.height, z: dim.depth ? dim.bottom + dim.depth : 0}, options)
-    return b
-}
-
-export async function getTagEntities(tag, scene){
-    const d = scene.getEmbeddedCollection("Drawing").filter(d => d.data.text === tag);
-    if(taggerOn){
-        const t = await Tagger.getByTag(tag, {caseInsensitive: false, matchAll: false, sceneId: scene.id })
-        return d.concat(t)
-    }
-    return d
-}
-
-export function furthestShiftPosition(token, [xGrids, yGrids] = [0,0]){
-    let x = token.data.x,y = token.data.y, collisionTest = true;
-    const xSign = Math.sign(xGrids); const ySign = Math.sign(yGrids);
-    const placeable = canvas.tokens.placeables.find(t => t.id === token.id)
-    do{
-        let [xTest,yTest] = canvas.grid.grid.shiftPosition(placeable.x, placeable.y, xGrids, yGrids)
-        collisionTest = placeable.checkCollision({x: xTest,y: yTest});
-        if(!collisionTest){x = xTest,y = yTest}
-        dangerZone.log(false,'Wall Collision Test ', {"shiftPos": [x,y], token: token, placeable: placeable, test: collisionTest, grids:[xGrids,yGrids]});
-        if(xGrids > yGrids){xGrids = xGrids -(1 * xSign)} else {yGrids = yGrids -(1 * ySign)} 
-    } while (collisionTest && (!xGrids || !yGrids));
-    return [x,y]
 }

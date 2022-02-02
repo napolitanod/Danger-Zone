@@ -2,6 +2,7 @@
     "DANGERZONE": {
         "add": "Add",
         "cancel": "Cancel",
+        "clear": "Clear",
         "copy": "Copy",
         "degrees": "(Degrees)",
         "delete": "Delete",
@@ -12,9 +13,11 @@
         "location-picker": "Select the zone dimensions",
         "ms": "ms",
         "none": "None",
+        "play": "Play",
         "ratio": "(Ratio)",
         "save": "Save",
         "sec": "sec",
+        "stop": "Stop",
         "view": "View",
         "yes": "Ok",
         "zones": "Configure Zones",
@@ -26,7 +29,8 @@
             "no-trigger-if-not-on-combat-scene": "Danger Zones do not trigger while you are not active on the current combat scene.",
             "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
             "select-zone-end": "Select an end location for this zone. Selected area will snap to grid and represent the lower right corner of this zone.",
-            "select-target": "Select a location in the zone. Selected area will snap to grid and represent the top left corner of the danger's target.",
+            "select-target": "Select a location in the zone for the danger to target. Selected area will snap to grid and represent the top left corner of the danger's target.",
+            "select-warpgate-target": "Select a location in the zone for the danger to target. The top left space of non-square danger dimensions will resolve to the top left grid in the target area.",
             "user-selection-exited": "You have exited from danger location selection prematurely. Zone trigger execution stopped.",
             "zone-copied": "The zone was copied successfully! Please review the zone dimensions.",
             "zone-copy-fail": "Oops, there was an issue copying the zone."
@@ -92,14 +96,23 @@
             "single-run.description": "This section executes at most once, after the first likelihood success, and regardless of the loop count for this zone",
             "source":{
                 "actor.label": "Source Actor",
+                "area.label": "Source Area",
+                "area.description": "Defines a source area within the zone which may influence targeting",
                 "description": "The source may influence when and if a zone triggers. Many danger parts can be defined in relation to the zone's source.",
                 "label": "Source",
+                "tag":{
+                    "zone.label": "Zone",
+                    "danger.label": "Danger",
+                    "tag.label": "Tag"
+                },
+                "target.label": "Targeting Influence",
+                "target.description": "Limits targeting within zone based on the zone's source areas.\n *has no influence on aura triggered zones or ones where GM chooses target location",
                 "trigger.description": "Have source actor determine if zone triggers.\n    * Has no influence on zones triggered manually or by API.\nFor combat triggers where 'Only source can trigger zone', the source must be in the scope as a combatant.\n    Turn: the combatant equating to turn.\n    Other: must be a combatant in combat.",
                 "trigger.label": "Trigger Influence",
                 "triggers":{
-                    "any": "Zone triggers regardless of source.",
-                    "scene": "Zone only triggers if source on scene.",
-                    "source": "Only source can trigger zone."
+                    "any": "Zone triggers regardless of source",
+                    "scene": "Zone only triggers if source on scene",
+                    "source": "Only source actor can trigger zone"
                 }
             },
             "stretch.description": "Adjusts the danger's area of effect so that the stretch location remains fixed while the zone's top and bottom still constrict the possible initial target. 'Ground' uses 0 as the final bottom and 'Sky' uses 99999 as the final top. Example: Given 'rising from bottom' in a zone with bottom=2, top=10, and danger depth=3, and an initial target of bottom=5/top=8. The stretch will keep the top target = 8 but drop the bottom to 2, which equals the bottom of the zone.",
@@ -115,6 +128,95 @@
             "wall.replace.label": "Walls",
             "wall.replace.description": "Choose what to do with existing Danger Zone created walls when this zone triggers.",
             "weight.label": "Weight"
+        },
+        "executor-form":{
+            "boundary":{
+                "clear.label": "Clear boundary",
+                "label": "Target Boundary",
+                "highlight.label": "Highlight boundary location",
+                "lock.label": "Boundary will not update due to zone changes",
+                "none.label": "There is no target boundery selected.",
+                "prompt.label": "Choose boundary location",
+                "random.label": "New random boundary location",
+                "target.label": "Change boundary to scene target's location",
+                "unlock.label": "Boundary will update due to zone changes"
+            },
+            "danger":{
+                "edit.label": "Edit danger",
+                "label": "Danger"
+            },
+            "eligible":{
+                "fail.label": "Fail the saving throw for all eligible tokens in the boundary",
+                "highlight.label": "Target on the game canvas any tokens that are on this list",
+                "label": "Zone",
+                "list.label": "Boundary Eligible Tokens",
+                "none.label": "There are no eligible tokens in the target boundary.",
+                "refresh.label": "Refresh eligible boundary tokens list",
+                "succeed.label": "Succeed the saving throw for all eligible tokens in the boundary",
+                "target.label": "Move all eligible tokens in the boundary to the target list"
+            },
+            "form-name": "Danger Zone Executor",
+            "no-executor.label": "Select a zone from the dropdown.",
+            "no-play": "Play disabled due to missing required element.",
+            "play-zone.label": "Trigger zone",
+            "save":{
+                "add-success.label": "Add canvas targeted tokens to save success list",
+                "clear.label": "Clear save list",
+                "highlight.label": "Target on the game canvas any tokens that are on this list",
+                "list.label": "Saving Throw List",
+                "lock.label": "Save list will not update due to zone or boundary changes",
+                "none.label": "Saves have not been made",
+                "add-fail.label": "Add canvas targeted tokens to save fail list",
+                "requires-fail.label": "Plays only if save failed",
+                "requires-success.label": "Plays only if save succeeded",
+                "unlock.label": "Save list will update due to zone or boundary changes"
+            },
+            "scope": {
+                "boundary.label": "Plays on target boundary",
+                "scene.label": "Plays on scene",
+                "token.label": "Plays on target tokens"
+            },
+            "source":{
+                "add.label": "Add canvas targeted tokens to source list",
+                "clear.label": "Clear source list",
+                "fail.label": "Fail the saving throw for all targets in list",
+                "highlight.label": "Target on the game canvas any tokens that are on this list",
+                "list.label": "Source List",
+                "lock.label": "Source list will not update due to zone or boundary changes",
+                "none.label": "Source list is empty",
+                "replace.label": "Replace source list with scene targets",
+                "succeed.label": "Succeed the saving throw for all sources in list",
+                "unlock.label": "Source list will update due to zone or boundary changes"
+            },
+            "targets":{
+                "add.label": "Add canvas targeted tokens to target list",
+                "clear.label": "Clear target list",
+                "fail.label": "Fail the saving throw for all targets in list",
+                "highlight.label": "Target on the game canvas any tokens that are on this list",
+                "list.label": "Target List",
+                "lock.label": "Target list will not update due to zone or boundary changes",
+                "none.label": "Target list is empty",
+                "random.label": "Set targets randomly from eligible targets",
+                "replace.label": "Replace target list with scene targets",
+                "succeed.label": "Succeed the saving throw for all targets in list",
+                "unlock.label": "Target list will update due to zone or boundary changes"
+            },
+            "zone":{
+                "edit.label": "Edit zone",
+                "fail.label": "Fail the saving throw for all eligible tokens in the zone",
+                "highlight.label": "Highlight zone",
+                "label": "Zone",
+                "list.label": "Zone Eligible Tokens",
+                "none.label": "There are no eligible tokens in the zone.",
+                "options":{
+                    "scene": "Scene Zones",
+                    "world": "World Zones",
+                    "danger": "Dangers"
+                },
+                "refresh.label": "Refresh eligible zone tokens list",
+                "succeed.label": "Succeed the saving throw for all eligible tokens in the zone",
+                "target.label": "Move all eligible tokens in the zone to the target list"
+            }
         },
         "export":{
             "title": "Export Dangers"
@@ -167,6 +269,7 @@
             "delete-danger-zone": "Delete danger zone",
             "description": "Zones define where a danger can happen, when and to whom. Each zone contains a danger. Documentation at https://github.com/napolitanod/Danger-Zone/wiki/Zones.",
             "edit-danger-zone": "Edit danger zone",
+            "executor.label": "Launch Danger Zone Executor",
             "header.name": "Configure Scene Zones",
             "label": "Danger Zone",
             "random": "Random",
@@ -181,6 +284,8 @@
             "danger-zone-types-config.name": "Dangers",
             "danger-zone-types-config.label": "Configure Dangers",
             "display-danger-boundary.label": "Highlight Danger Target Area",
+            "display-executor.label": "Include Executor as Zone Button (Beta)",
+            "display-executor.description": "BETA! Adds the Danger Zone executor to the list of scene buttons. Clicking the button will launch the executor. The Danger Zone executor can be used to executor individual components of a danger or zone and sculpt some functionality on the fly.",
             "open-socket.label": "Players Can Trigger API",
             "open-socket.description": "Enabling this settings allows players to use the 'dangerZone.triggerZone' API in macros (dangerZone.triggerZone() is passed to the GM's session to execute, which requires that the GM be logged in at the time that the macro is run).",
             "display-danger-boundary.description": "Temporarily highlights the area targeted by a danger when the zone is triggered (GM's session only).",
@@ -211,13 +316,29 @@
             "zone-exclusion-tag.description": "Enter the tag that you will use to indicate that a wall, light, tile, token or drawing blocks the occupied grid from being included in the zone. Note that the 'Tagger' module is required or, for drawings, using this as the Text Label also works."
         },
         "source":{
+            "area": {
+                "none": "No source area defined",
+                "danger.placeable": "Grids containing danger created placeables",
+                "danger.tile": "Grids containing danger created tiles",
+                "tag": "Grids containing tagged placeables",
+                "actor": "Grids containing source actor",
+                "zone.placeable": "Grids containing zone created placeables",
+                "zone.tile": "Grids containing zone created tiles"
+            },
             "danger.description": "The source is an actor defined within the zone form.\nDefine how this danger part should be applied in relation to the targets and the source.",
             "label": "Source",
+            "target": {
+                "none": "Do not target based on source area",
+                "adjacent": "Adjacent to source area",
+                "in": "In source area",
+                "both": "In or adjacent to source area"
+            },
             "treatment":{
                 "none": "No special treatment",
-                "ignore": "Do not apply to source (if targeted)",
-                "also": "Apply also to source",
-                "only": "Apply to source instead of targets"
+                "ignore": "Do not apply to source actor (if targeted)",
+                "also": "Apply also to source actor",
+                "only": "Apply to source actor instead of targets",
+                "targets": "Apply to targets"
             }
         },
         "stretch": {
@@ -272,9 +393,11 @@
                 "file.label": "Audio Source",
                 "file.placeholder": "path/audio.mp3",
                 "file.find": "Browse for Audio File",
+                "playlist.label": "Playlist Name",
                 "delay.label": "Delay Start",
                 "duration.description": "If the sound file is longer than the duration (in seconds) entered, then it will stop the sound at the provided duration following start of play. If duration = 0 then the sound plays for the entire length.",
                 "duration.label": "Duration",
+                "random.label": "Random from Playlist",
                 "volume.label": "Sound Volume"
             },
             "backgroundEffect":{

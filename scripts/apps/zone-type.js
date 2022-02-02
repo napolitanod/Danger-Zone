@@ -34,6 +34,7 @@ export class dangerZoneType {
           file:'',
           delay: 0,
           duration: 0,
+          randomFile: false,
           volume: 0.5
         },
         backgroundEffect: {

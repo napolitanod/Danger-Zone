@@ -1,3 +1,16 @@
+.danger-zone-executor, .danger-zone-record, .danger-zone-type-form, .danger-part-form {
+    font-size: min(var(--font-size-14), 16px) !important;
+}
+
+.danger-zone-executor .units, .danger-zone-record .units, .danger-zone-type-form .units, .danger-part-form .units,
+.danger-zone-executor .notes, .danger-zone-record .notes, .danger-zone-type-form .notes, .danger-part-form .notes {
+    font-size: min(var(--font-size-12), 14px) !important;
+}
+
+.danger-zone-executor button, .danger-zone-record button, .danger-zone-type-form button, .danger-part-form button {
+    font-size: min(var(--font-size-14), 16px) !important;
+}
+
 .danger-zone-types footer, .danger-zone-scene footer {
     margin: 14px 0px 4px 0px;
 }
@@ -17,6 +30,7 @@
     font-size: 10px;
 }
 
+.danger-zone-executor .hidden,
 .danger-zone-record .hidden, 
 form.danger-zone-type-form .hidden, 
 .danger-part-form .hidden, 
@@ -26,6 +40,10 @@ form.danger-zone-type-form .hidden,
 
 .danger-part-form textarea {
     min-height: 100px;
+}
+
+.danger-part-form .hidden-picker button{
+    display: none !important;
 }
 
 .danger-zone-scene-trigger-button.hidden {
@@ -480,4 +498,99 @@ form ol.danger-setting-group .active:hover label {
 
 .location-picker > i {
     margin-right: 0px;
+}
+
+.dz-executable-info-list {
+    font-size: .8em;
+    padding: 4px 10px 4px 4px;
+    background: rgba(0, 0, 0, 0.1)
+}
+
+.dz-executable-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    align-content: flex-start;
+    align-items: stretch;
+    padding: 4px 10px 4px 4px;
+    background: rgba(0, 0, 0, 0.1)
+}
+
+.dz-executable-list > li {
+    display: flex;
+    flex: 1 1 100%;
+    padding: 4px 0px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.dz-executable-list > li > span {
+    display: flex;
+    flex: 1 1 auto;
+}
+
+.dz-executable-list > li > span > label {
+    width: 115px;
+}
+
+.dz-executable-list > li > span i, .dz-executable-list .no-play {
+    color: #424242;
+    width: 18px;
+    text-align: center;
+}
+
+.dz-executable-list > li > i {
+    width: 25px;
+    text-align: center;
+}
+
+.danger-zone-executor .controls {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.danger-zone-executor .controls > a {
+    margin-left: 6px;
+}
+
+.danger-zone-executor .controls > select,
+.danger-part-form select,
+.danger-zone-record select {
+    width: 100%;
+}
+
+.danger-zone-executor .form-group > label {
+    flex: 4;
+    white-space: nowrap;
+    overflow-x: hidden; 
+    flex-wrap: nowrap;
+    text-overflow: ellipsis;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+}
+
+.danger-zone-executor .main-header.form-group > label {
+    flex: 1;
+}
+
+.danger-zone-executor .form-group > label > img {
+    flex: 0 0 16px;
+    height: 16px;
+    margin-right: 6px;
+    border-width: 0;
+}
+
+.danger-zone-executor .form-group > label > i {
+    margin-right: 4px;
+}
+
+.danger-zone-executor select option:disabled {
+    color: #212121;
+    font-weight: bold;
+}
+
+.danger-zone-executor .warning{
+    color: rgba(255, 62, 65);
 }

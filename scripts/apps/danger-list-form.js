@@ -1,6 +1,6 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
-import {DangerForm} from './danger-form.js'
+import {DangerForm} from './danger-form.js';
 
 export var lastSearch = '';
 
@@ -33,12 +33,12 @@ export class DangerZoneTypesForm extends FormApplication {
     switch (action) {
       case 'add-zone-type': {
           const newType = await dangerZoneType.addZoneType();
-          new DangerForm(newType.id).render(true);
+          new DangerForm(newType.id, this).render(true);
           this.refresh();
           break;
       }
       case 'edit': {
-        new DangerForm(dangerId).render(true);
+        new DangerForm(dangerId, this).render(true);
         break;
       }
       case 'delete': {
@@ -71,7 +71,7 @@ export class DangerZoneTypesForm extends FormApplication {
         break;
       }
       default:
-        dangerZone.log(false, 'Invalid action detected', action);
+        (false, 'Invalid action detected', action);
     }
   }
 

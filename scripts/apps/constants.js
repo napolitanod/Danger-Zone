@@ -1,5 +1,5 @@
 import {daeOn} from '../index.js';
-
+import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -105,6 +105,22 @@ export const SOURCETREATMENT = {
     "I": "DANGERZONE.source.treatment.ignore",
     "S": "DANGERZONE.source.treatment.also",
     "O": "DANGERZONE.source.treatment.only"
+}
+
+//a few options are added via the setModOptions function if tagger is on
+export const SOURCEAREA = {
+    "": "DANGERZONE.source.area.none",
+    "A": "DANGERZONE.source.area.actor",
+    "D": "DANGERZONE.source.area.danger.placeable",
+    "T": "DANGERZONE.source.area.tag",
+    "Z": "DANGERZONE.source.area.zone.placeable"
+}
+
+export const SOURCEAREATARGET = {
+    "": "DANGERZONE.source.target.none",
+    "A": "DANGERZONE.source.target.adjacent",
+    "I": "DANGERZONE.source.target.in",
+    "B": "DANGERZONE.source.target.both"
 }
 
 export const STRETCH = {
@@ -276,3 +292,137 @@ export const TILESBLOCK = {
     "B" : "DANGERZONE.tiles-block.bottom.label",
     "T" : "DANGERZONE.tiles-block.top.label"
 }
+
+export function setModOptions(){
+    if(taggerOn){
+        SOURCEAREA["C"] = "DANGERZONE.source.area.danger.tile"; 
+        SOURCEAREA["Y"] = "DANGERZONE.source.area.zone.tile";  
+    }     
+}
+
+export const EXECUTABLEOPTIONS = {};
+
+export function setExecutableOptions(){
+    Object.assign(EXECUTABLEOPTIONS, {
+            'effect': {
+                title: "Active Effect", 
+                icon: "fas fa-hand-sparkles",
+                scope: "token"
+            },
+            'audio': {
+                title: "Audio", 
+                icon: "fas fa-music", 
+                modules: [{active: sequencerOn, name: "sequencer", dependent: false}],
+                scope: "scene"
+            },
+            'foregroundEffect': {
+                title: "Primary Effect", 
+                icon: "fas fa-fire", 
+                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                scope: "boundary"
+            },
+            'ambientLight': {
+                title: "Ambient Light", 
+                icon: "fas fa-lightbulb", 
+                document: "AmbientLight", 
+                wipeable: true, 
+                modules: [
+                    {active: levelsOn, name: "levels", dependent: false}, 
+                    {active: taggerOn, name: "tagger", dependent: false}
+                ],
+                scope: "boundary"
+            },
+            'fluidCanvas': {
+                title: "Canvas", 
+                icon: "fas fa-wind", 
+                modules: [{active: fluidCanvasOn, name: "kandashis-fluid-canvas", dependent: true}],
+                scope: "scene"
+            },
+            'damage': {
+                title: "Damage", 
+                icon: "fas fa-skull", 
+                modules: [{active: midiQolOn, name: "midi-qol", dependent: true}],
+                scope: "token"
+            },
+            'lastingEffect': {
+                title: "Lasting Effect", 
+                icon: "fas fa-cube", 
+                document: "Tile",  
+                wipeable: true, 
+                modules: [
+                    {active: monksActiveTilesOn, name: "monks-active-tiles", dependent: false},
+                    {active: taggerOn, name: "tagger", dependent: false},
+                    {active: levelsOn, name: "levels", dependent: false},
+                    {active: betterRoofsOn, name: "better-roofs", dependent: false}
+                ],
+                scope: "boundary"
+            },
+            'macro': {
+                title: "Macro", 
+                icon: "fas fa-file-code",
+                scope: "scene"
+            },
+            'mutate': {
+                title: "Mutate", 
+                icon: "fas fa-pastafarianism", 
+                modules:[
+                    {active: warpgateOn, name: "warpgate", dependent: true}, 
+                    {active: taggerOn, name: "tagger", dependent: false}
+                ],
+                scope: "token"
+            },
+            'backgroundEffect': {
+                title: "Secondary Effect", 
+                icon: "fas fa-bomb", 
+                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                scope: "boundary"
+            },
+            'save': {
+                title: "Save", 
+                icon: "fas fa-shield-alt",
+                scope: "token"
+            },
+            'warpgate': {
+                title: "Spawn", 
+                icon: "fas fa-circle-notch", 
+                modules:[
+                    {active: warpgateOn, name: "warpgate", dependent: true}, 
+                    {active: taggerOn, name: "tagger", dependent: false}
+                ],
+                scope: "boundary"
+            },
+            'tokenMove': {
+                title: "Token Move", 
+                icon: "fas fa-arrows-alt",
+                scope: "token"
+            },
+            'tokenEffect': {
+                title: "Token Effect", 
+                icon: "fas fa-male", 
+                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                scope: "token"
+            },
+            'tokenSays': {
+                title: "Token Says", 
+                icon: "fas fa-comment", 
+                modules: [{active: tokenSaysOn, name: "token-says", dependent: true}],
+                scope: "token"
+            },
+            'wall': {
+                title: "Wall", 
+                icon: "fas fa-university", 
+                document: "Wall",  
+                wipeable: true,
+                modules:[
+                    {active: wallHeightOn, name: "wall-height", dependent: false}, 
+                    {active: taggerOn, name: "tagger", dependent: false}
+                ],
+                scope: "boundary"
+            },
+            'flavor': {
+                title: "Flavor", 
+                icon:"fas fa-book",
+                scope: "scene"
+            } 
+        });
+  }

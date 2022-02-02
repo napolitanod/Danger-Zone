@@ -6,7 +6,6 @@ import {triggerManager} from './trigger-handler.js';
 import {DANGERZONETRIGGERS} from './constants.js';
 import {DangerZoneForm} from './zone-form.js';
 
-
 export function addTriggersToHotbar() {
     if(game.user.isGM){
         const scene = game.scenes.find(scene => scene.data.active);
@@ -43,7 +42,12 @@ function _setDangerZoneButton(html, scene, clss) {
                 }
             }
         }
-        if(zones.length > 1){
+        if(game.settings.get(dangerZone.ID, 'display-executor')){
+            let btn = $('<li>').addClass(`danger-zone-scene-trigger-button${hidden}`).append($('<i class="fas fa-list-alt"></i>')).data("data-id", {scene: scene.id}).prop('title', game.i18n.localize("DANGERZONE.scene.executor.label"))
+            btn.click(_executor);
+            btnWrap.prepend(btn);
+        }
+        if(zones.length){
             let btn = $('<li>').addClass(`danger-zone-scene-trigger-master`).append($('<i class="fas fa-radiation"></i>')).click(_handleMasterClick)
             if(dzMActive){btn.addClass('active')}
             triggerList.prepend(btn);
@@ -76,4 +80,9 @@ function _hideZoneHighlight(event){
 function _contextMenu(event){
     const data = $(event.currentTarget).data("data-id");
     new DangerZoneForm(null, data.zone, data.scene, data.dangerId).render(true);
+}
+
+async function _executor(event){
+    const data = $(event.currentTarget).data("data-id");
+    dangerZone.executorForm.renderOnScene();
 }
