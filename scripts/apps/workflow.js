@@ -478,7 +478,7 @@ export class executor {
                     be = new damageToken(this.danger.damage, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'lastingEffect': 
-                    be = new lastingEffect(this.danger.lastingEffect, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    be = new lastingEffect(this.danger.lastingEffect, this.data, name, EXECUTABLEOPTIONS[name], flags); 
                     break;
                 case 'macro': 
                     be = new macro(this.danger.macro, this.data, name, EXECUTABLEOPTIONS[name]); 

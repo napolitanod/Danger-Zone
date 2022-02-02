@@ -1,5 +1,5 @@
 import {dangerZone} from './danger-zone.js';
-import {TRIGGERDISPLAYOPTIONS, SCENEFORMICONDISPLAYOPTIONS, setExecutableOptions} from './apps/constants.js';
+import {TRIGGERDISPLAYOPTIONS, SCENEFORMICONDISPLAYOPTIONS, setExecutableOptions, setModOptions} from './apps/constants.js';
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
 import {triggerManager}  from './apps/trigger-handler.js';
@@ -45,6 +45,16 @@ Hooks.once('init', async function() {
 		config: true,
 		default: true,
 		type: Boolean,
+	});
+
+	game.settings.register(modulename, "display-executor", {
+		name: game.i18n.localize("DANGERZONE.setting.display-executor.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.display-executor.description"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+        onChange: debouncedReload
 	});
 
     game.settings.register(modulename, 'scene-header', {
@@ -196,6 +206,7 @@ Hooks.once('ready', async function() {
       });
 
 	  setExecutableOptions();
+	  setModOptions();
 });
 
 /**

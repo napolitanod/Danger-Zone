@@ -31,9 +31,11 @@ export function addTriggersToSceneNavigation() {
                     }
                 }
             }
-            let btn = $('<ol>').addClass(`danger-zone-scene-trigger-button`).append($('<i class="fas fa-list-alt"></i>')).data("data-id", {scene: scene.id}).prop('title', game.i18n.localize("DANGERZONE.scene.executor.label"))
-            btn.click(_executor);
-            triggerList.prepend(btn);
+            if(game.settings.get(dangerZone.ID, 'display-executor')){
+                let btn = $('<ol>').addClass(`danger-zone-scene-trigger-button`).append($('<i class="fas fa-list-alt"></i>')).data("data-id", {scene: scene.id}).prop('title', game.i18n.localize("DANGERZONE.scene.executor.label"))
+                btn.click(_executor);
+                triggerList.prepend(btn);
+            }
             triggerList.insertAfter(activeNav);
         }
         dangerZone.log(false,'Update scene navigation ', {"scene": scene, "nav": activeNav, "zones": zones});

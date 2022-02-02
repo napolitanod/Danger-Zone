@@ -3,7 +3,7 @@ import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
 import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
-import { WORLDZONE } from './apps/constants.js';
+import {DANGERZONETRIGGERS, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities} from './apps/helpers.js';
@@ -85,9 +85,9 @@ export class dangerZone {
     const ar = [];
     const flag = sceneId ? game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE) : ar; 
     for (var zn in flag) {
-        if((!options.enabled || flag[zn].enabled) && (!options.typeRequired || flag[zn].type) && (!options.triggerRequired || flag[zn].trigger) && flag[zn].scene?.sceneId) ar.push(this._toClass(flag[zn]));
+        if((!options.enabled || flag[zn].enabled) && (!options.triggerRequired || flag[zn].trigger) && flag[zn].scene?.sceneId) ar.push(this._toClass(flag[zn]));
     }
-    return ar
+    return ar.filter(z => !options.typeRequired || z.danger)
   }
   
   static getZoneList(sceneId){
@@ -108,7 +108,7 @@ export class dangerZone {
   }  
 
   static getExecutorZones(sceneId){
-    return this.getAllZonesFromScene(sceneId, {enabled: false}).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)})
+    return this.getAllZonesFromScene(sceneId, {enabled: false, typeRequired: true}).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)})
       .concat(this.getGlobalZones(sceneId).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)}))
       .concat(this.getAllDangersAsGlobalZones(sceneId).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)}))
   }
@@ -128,7 +128,7 @@ export class dangerZone {
    * @returns array of zones
    */
   static getTriggerZonesFromScene(sceneId) {
-      return this.getAllZonesFromScene(sceneId, {enabled: false}).filter(zn => zn.enabled || zn.trigger !== 'manual').concat(this.getGlobalZones(sceneId))
+      return this.getAllZonesFromScene(sceneId, {enabled: false, typeRequired: true}).filter(zn => zn.enabled || zn.trigger !== 'manual').concat(this.getGlobalZones(sceneId))
   }
   
   static getRandomZonesFromScene(sceneId) {
@@ -338,6 +338,10 @@ export class zone {
     return this.scene.scene.tokens.filter(t => t.actor?.id === this.source.actor) 
   }
 
+  get triggerDescription(){
+    return this.trigger ? game.i18n.localize(DANGERZONETRIGGERS[this.trigger]) : ''
+  }
+
   get triggerWithInitiative(){
     return (this.trigger === 'initiative-start' || this.trigger === 'initiative-end') ? (this.trigger + '-' + (this.initiative ? this.initiative.toString() : '0')) : this.trigger
   }
@@ -417,10 +421,10 @@ export class zone {
     const obj = {documents: [], target: this.source.target}
     switch(this.source.area){
         case 'A':
-          obj['documents'] = this.scene.scene.tokens.filter(t => t.actor?.name === this.source.actor);
+          obj['documents'] = this.scene.scene.tokens.filter(t => t.actor?.id === this.source.actor);
           break;
         case 'C':
-          obj['documents'] = this.scene.scene.tiles.filter(t => t.data.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].type === this.source.tag);
+          obj['documents'] = this.scene.scene.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.source.tag);
           break;
         case 'D':
           obj['documents'] = this.flaggablePlaceables.filter(t => t.data.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].type === this.source.tag);
@@ -429,7 +433,7 @@ export class zone {
           obj['documents'] = await getTagEntities(this.source.tag, this.scene.scene)
           break;
         case 'Y':
-          obj['documents'] = this.scene.scene.tiles.filter(t => t.data.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].zoneId === this.source.tag);
+          obj['documents'] = this.scene.scene.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.source.tag);
           break;
         case 'Z':
           obj['documents'] = this.flaggablePlaceables.filter(t => t.data.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].zoneId === this.source.tag);

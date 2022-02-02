@@ -107,13 +107,12 @@ export const SOURCETREATMENT = {
     "O": "DANGERZONE.source.treatment.only"
 }
 
+//a few options are added via the setModOptions function if tagger is on
 export const SOURCEAREA = {
     "": "DANGERZONE.source.area.none",
     "A": "DANGERZONE.source.area.actor",
-    "C": "DANGERZONE.source.area.danger.tile",
     "D": "DANGERZONE.source.area.danger.placeable",
     "T": "DANGERZONE.source.area.tag",
-    "Y": "DANGERZONE.source.area.zone.tile",
     "Z": "DANGERZONE.source.area.zone.placeable"
 }
 
@@ -292,6 +291,13 @@ export const TILESBLOCK = {
     "R" : "DANGERZONE.tiles-block.roof.label",
     "B" : "DANGERZONE.tiles-block.bottom.label",
     "T" : "DANGERZONE.tiles-block.top.label"
+}
+
+export function setModOptions(){
+    if(taggerOn){
+        SOURCEAREA["C"] = "DANGERZONE.source.area.danger.tile"; 
+        SOURCEAREA["Y"] = "DANGERZONE.source.area.zone.tile";  
+    }     
 }
 
 export const EXECUTABLEOPTIONS = {};

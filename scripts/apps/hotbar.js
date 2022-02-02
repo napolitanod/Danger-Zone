@@ -42,9 +42,11 @@ function _setDangerZoneButton(html, scene, clss) {
                 }
             }
         }
-        let btn = $('<li>').addClass(`danger-zone-scene-trigger-button${hidden}`).append($('<i class="fas fa-list-alt"></i>')).data("data-id", {scene: scene.id}).prop('title', game.i18n.localize("DANGERZONE.scene.executor.label"))
-        btn.click(_executor);
-        btnWrap.prepend(btn);
+        if(game.settings.get(dangerZone.ID, 'display-executor')){
+            let btn = $('<li>').addClass(`danger-zone-scene-trigger-button${hidden}`).append($('<i class="fas fa-list-alt"></i>')).data("data-id", {scene: scene.id}).prop('title', game.i18n.localize("DANGERZONE.scene.executor.label"))
+            btn.click(_executor);
+            btnWrap.prepend(btn);
+        }
         if(zones.length){
             let btn = $('<li>').addClass(`danger-zone-scene-trigger-master`).append($('<i class="fas fa-radiation"></i>')).click(_handleMasterClick)
             if(dzMActive){btn.addClass('active')}

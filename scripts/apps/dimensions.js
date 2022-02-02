@@ -256,6 +256,9 @@ export class boundary{
                 const dm = (document.object.radius*2)-1
                 dim={x:document.object.bounds.x, y:document.object.bounds.y, width: dm, height: dm} 
                 break
+            case "Tile":
+                dim={x: document.data.x, y:document.data.y, width: document.data.width - 1, height: document.data.height - 1}
+                break;
             case "Token":
                 const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
                 const [TyPos, TxPos] = canvas.grid.grid.getGridPositionFromPixels(document.data.x, document.data.y);
