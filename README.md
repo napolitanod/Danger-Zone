@@ -9,6 +9,7 @@
 
 ### TUTORIALS
 [Intro example - explosions sound accompanied by screen shaking](https://youtu.be/-n0MFJNj8IM)
+[Combat within a burning structure](https://youtu.be/qArHy50NNgk)
 
 ## About
 Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT module that provides GMs the ability to easily invoke localized effects within a scene. Examples of what you can do with this module:
