@@ -20,12 +20,13 @@ export function addTriggersToHotbar() {
 }
 
 function _setDangerZoneButton(html, scene, clss) {
+    const hasEx = game.settings.get(dangerZone.ID, 'display-executor');
     const zones = dangerZone.getTriggerZonesFromScene(scene.id).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)});
     if(zones.length) {
         let triggerList = $('<ol>').attr('id', 'danger-zone-hotbar-trigger').addClass(clss);
         let btnWrap = $('<ol>').append($('<li>'));
         let randomSet = 0;
-        const hidden = zones.length > 1 ? ' hidden ' : '';
+        const hidden = (hasEx ? zones.length : zones.length > 1) ? ' hidden ' : '';
         for (const zn of zones){
             const zoneType = dangerZoneType.getDanger(zn.type)
             if(zoneType){
@@ -42,12 +43,12 @@ function _setDangerZoneButton(html, scene, clss) {
                 }
             }
         }
-        if(game.settings.get(dangerZone.ID, 'display-executor')){
+        if(hasEx){
             let btn = $('<li>').addClass(`danger-zone-scene-trigger-button${hidden}`).append($('<i class="fas fa-list-alt"></i>')).data("data-id", {scene: scene.id}).prop('title', game.i18n.localize("DANGERZONE.scene.executor.label"))
             btn.click(_executor);
             btnWrap.prepend(btn);
         }
-        if(zones.length){
+        if(hasEx ? zones.length : zones.length > 1){
             let btn = $('<li>').addClass(`danger-zone-scene-trigger-master`).append($('<i class="fas fa-radiation"></i>')).click(_handleMasterClick)
             if(dzMActive){btn.addClass('active')}
             triggerList.prepend(btn);

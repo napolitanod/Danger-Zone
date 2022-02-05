@@ -81,6 +81,7 @@ export class DangerZoneForm extends FormApplication {
       case 'template-toggle': 
         const templt = document.getElementById(`dz-elevation-prompt`);
         checked ? templt.classList.remove('hidden') : templt.classList.add('hidden')
+        this.setPosition()
         break;
     }
   }
