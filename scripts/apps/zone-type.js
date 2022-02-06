@@ -19,13 +19,29 @@ export class dangerZoneType {
           active: 0,
           angle: 360,
           bright: 0,
-          dim: 0,
-          lightAnimation: {
-              speed: 5,
-              intensity: 5,
-              type: ""
+          clear: {
+            delay: 0,
+            type: ''  
           },
+          coloration: 1,
+          contrast: 0,
+          darkness: {
+            min: 0,
+            max: 1
+          },
+          dim: 0,
+          flags: {},
+          gradual: true,
+          lightAnimation: {
+            reverse: false,
+            speed: 5,
+            intensity: 5,
+            type: ""
+          },
+          luminosity: 0.5,
           rotation: 0,
+          saturation: 0,
+          shadows: 0,
           tag: "",
           tintColor: "",
           tintAlpha: 0.5

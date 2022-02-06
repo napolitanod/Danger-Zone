@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {monksActiveTilesOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn} from '../index.js';
+import {monksActiveTilesOn, sequencerOn, betterRoofsOn, levelsOn, perfectVisionOn, taggerOn, wallHeightOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {furthestShiftPosition, getFilesFromPattern, getTagEntities, stringToObj, wait} from './helpers.js';
 
@@ -977,6 +977,10 @@ class activeEffect extends executable {
 }
 
 class ambientLight extends executable{
+    constructor(...args){
+        super(...args),
+        this.lights = []
+    }
 
     get angle(){
         return this._part.angle
@@ -986,16 +990,54 @@ class ambientLight extends executable{
         return this._part.bright
     }
 
+    get coloration(){
+        return this._part.coloration
+    }
+
+    get contrast(){
+        return this._part.contrast
+    }
+
+    get darkness(){
+        return this._part.darkness
+    }
+
     get dim(){
         return this._part.dim
+    }
+
+    get flag(){
+        const flg = mergeObject({}, this.data.flag)
+        if(perfectVisionOn){
+            const pv = this._part.flags['perfect-vision']
+            if(pv?.sightLimit) flg['perfect-vision.sightLimit'] = pv.sightLimit
+            if(pv?.priority) flg['core.priority'] = pv.priority
+        }
+        return flg
+    }
+
+    get gradual(){
+        return this._part.gradual
     }
 
     get lightAnimation(){
         return this._part.lightAnimation
     }
 
+    get luminosity(){
+        return this._part.luminosity
+    }
+
     get rotation(){
         return this._part.rotation
+    }
+
+    get saturation(){
+        return this._part.saturation
+    }
+
+    get shadows(){
+        return this._part.shadows
     }
 
     get tag(){
@@ -1003,7 +1045,7 @@ class ambientLight extends executable{
     }
 
     get tintAlpha(){
-        return this._part.tintAlpha
+        return  this._part.tintAlpha//Math.pow(this._part.tintAlpha, 2).toNearest(0.01)
     }
 
     get tintColor(){
@@ -1017,24 +1059,24 @@ class ambientLight extends executable{
     get _light() {
         const light = {
             config: {
-                alpha: Math.pow(this.tintAlpha, 2).toNearest(0.01),
+                alpha: this.tintAlpha,
                 angle: this.angle,
                 animation: {
-                    reverse: false,
+                    reverse: this.lightAnimation.reverse,
                     speed: this.lightAnimation.speed,
                     intensity: this.lightAnimation.intensity,
                     type: this.lightAnimation.type
                 },
                 bright: this.bright,
                 color: this.tintColor,
-                coloration: 1,
-                contrast: 0,
-                darkness: {min:0, max:1},
+                coloration: this.coloration,
+                contrast: this.contrast,
+                darkness: this.darkness,
                 dim: this.dim,
-                gradual: true,
-                luminosity: 0.5,
-                saturation: 0,
-                shadows: 0
+                gradual: this.gradual,
+                luminosity: this.luminosity,
+                saturation: this.saturation,
+                shadows: this.shadows
             },               
             hidden: false,
             rotation: this.rotation,
@@ -1042,7 +1084,7 @@ class ambientLight extends executable{
             walls: true,
             x: this.data.boundary.center.x,
             y: this.data.boundary.center.y,
-            flags: this.data.flag
+            flags: this.flag
         }
         if(levelsOn && (this.data.boundary.bottom || this.data.boundary.top)) light.flags['levels'] = {"rangeTop": this.data.boundary.top,"rangeBottom": this.data.boundary.bottom}
         if(taggerOn && this.tag) light.flags['tagger'] = this.taggerTag
@@ -1052,7 +1094,25 @@ class ambientLight extends executable{
     async play(){
         await super.play()
         if(this._cancel) return
-        await this.data.scene.createEmbeddedDocuments("AmbientLight",[this._light]);
+        this.lights = await this.data.scene.createEmbeddedDocuments("AmbientLight",[this._light]);
+        if(this._part.clear.type) this._postEvent()
+    }
+
+    async _postEvent(){
+        if(this._part.clear.delay) await wait(this._part.clear.delay);
+        switch(this._part.clear.type){
+            case 'O':
+                const updates = this.lights.filter(l => this.data.scene.data.lights.find(lt => lt.id === l.id)).map((data) => ({
+                    _id: data.id,
+                    hidden: true,
+                  }));
+                this.data.scene.updateEmbeddedDocuments("AmbientLight", updates);
+                break;
+            case 'D':
+                await this.data.scene.deleteEmbeddedDocuments("AmbientLight",this.lights.filter(l => this.data.scene.data.lights.find(lt => lt.id === l.id)).map(l => l.id))
+                break;
+        }
+        
     }
 }   
 
