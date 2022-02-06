@@ -1,6 +1,9 @@
 {
     "DANGERZONE": {
         "add": "Add",
+        "after": "After",
+        "and": "and",
+        "between": "Between",
         "cancel": "Cancel",
         "clear": "Clear",
         "copy": "Copy",
@@ -10,6 +13,7 @@
         "edit": "Edit",
         "grids": "(Grids)",
         "gridUnits": "units",
+        "gridUnits2": "(Grid Units)",
         "location-picker": "Select the zone dimensions",
         "ms": "ms",
         "none": "None",
@@ -230,12 +234,18 @@
             "skipped": "skipped because id is duplicate of an existing danger.",
             "short-title": "Import"
         },
-        "light.replace-types": {
-            "A.label": "Clear all ambient lighting",
-            "N.label": "Retain all ambient lighting",
-            "R.label": "Clear lights that share this trigger",
-            "T.label": "Clear lights that share this danger",
-            "Z.label": "Clear lights that share this zone"
+        "light": {
+            "clear-types":{
+                "delete": "Delete light",
+                "off": "Toggle light off"
+            },
+            "replace-types": {
+                "A.label": "Clear all ambient lighting",
+                "N.label": "Retain all ambient lighting",
+                "R.label": "Clear lights that share this trigger",
+                "T.label": "Clear lights that share this danger",
+                "Z.label": "Clear lights that share this zone"
+            }
         },
         "occlusionmodes": {
             "none": "None (Always Visible)",
@@ -467,15 +477,32 @@
             "light":{
                 "animationIntensity.label": "Animation Intensity",
                 "animation.label": "Light Animation Type",
-                "brightLight.label": "Bright Light Radius",
+                "brightLight.label": "Bright",
+                "clear.label": "Post Creation Event",
                 "color.label": "Light Color",
+                "coloration.label": "Coloration Technique",
+                "contrast.label": "Background Contrast",
+                "darkness.label": "Darkness Activation Range",
                 "description": "Add ambient lighting to the targeted area.",
-                "dimLight.label": "Dim Light Radius",
+                "dimLight.label": "Dim",
                 "emission.label": "Emission Angle",
-                "intensity.label": "Light Intensity",
+                "gradual.label": "Gradual Illumination",
+                "intensity.label": "Color Intensity",
                 "label": "Ambient Local Light",
+                "luminosity.label": "Luminosity",
+                "priority.label": "Priority",
+                "radius.label": "Light Radius",
+                "reverseAnimation.label": "Reverse Direction",
                 "rotation.label": "Rotation Angle",
+                "saturation.label": "Background Saturation",
+                "shadows.label": "Background Shadows",
+                "sightLimit.label": "Sight Limit",
                 "speed.label": "Animation Speed",
+                "tab":{
+                    "basic": "Basic Configuration",
+                    "animation": "Light Animation",
+                    "advanced": "Advanced Options"
+                },
                 "tag.label": "Tag",
                 "tag.description": "Tagger tag"
             },

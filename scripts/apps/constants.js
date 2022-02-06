@@ -1,5 +1,5 @@
 import {daeOn} from '../index.js';
-import {tokenSaysOn, monksActiveTilesOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
+import {tokenSaysOn, monksActiveTilesOn, perfectVisionOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -30,6 +30,11 @@ export const WORLDZONE = {
     "flavor": "",
     "enabled": true
   }
+
+export const AMBIENTLIGHTCLEAROPS = {
+    'D': 'DANGERZONE.light.clear-types.delete',
+    'O': 'DANGERZONE.light.clear-types.off'
+}
 
 export const SCENEFORMICONDISPLAYOPTIONS = {
     'B': 'DANGERZONE.setting.scene-header.display.iconLabel', 
@@ -328,6 +333,7 @@ export function setExecutableOptions(){
                 wipeable: true, 
                 modules: [
                     {active: levelsOn, name: "levels", dependent: false}, 
+                    {active: perfectVisionOn, name: "perfect-vision", dependent: false},
                     {active: taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"

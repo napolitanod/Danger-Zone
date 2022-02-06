@@ -1,15 +1,17 @@
 <form autocomplete="off">
-    <div class="tab">
+    <nav class="sheet-tabs tabs">
+        <a class="item" data-tab="basic"><i class="fas fa-lightbulb"></i> {{localize "DANGERZONE.type-form.light.tab.basic"}}</a>
+        <a class="item" data-tab="animation"><i class="fas fa-play"></i> {{localize "DANGERZONE.type-form.light.tab.animation"}}</a>
+        <a class="item" data-tab="advanced"><i class="fas fa-cogs"></i> {{localize "DANGERZONE.type-form.light.tab.advanced"}}</a>
+    </nav>
+    <div class="tab" data-tab="basic">
         <p class="notes">{{localize "DANGERZONE.type-form.light.description"}}</p>
-        <div class="form-group">
-            <label for="dim">{{localize "DANGERZONE.type-form.light.dimLight.label"}}</label>
+        <div class="form-group slim">
+            <label>{{localize "DANGERZONE.type-form.light.radius.label"}} <span class="units">({{localize "DANGERZONE.gridUnits2"}})</span></label>
             <div class="form-fields">
+                <label for="dim">{{localize "DANGERZONE.type-form.light.dimLight.label"}}</label>
                 <input type="number" required name="dim"  min="0.00" step="0.01" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{data.dim}}>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="bright">{{localize "DANGERZONE.type-form.light.brightLight.label"}}</label>
-            <div class="form-fields">
+                <label for="bright">{{localize "DANGERZONE.type-form.light.brightLight.label"}}</label>
                 <input type="number" required name="bright"  min="0.00" step="0.01" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{data.bright}}>
             </div>
         </div>
@@ -46,6 +48,36 @@
                 <span class="range-value">{{data.tintAlpha}}</span>    
             </div>
         </div>
+        <div class="form-group slim">
+            <label>{{ localize "DANGERZONE.type-form.light.darkness.label" }}</label>
+            <div class="form-fields">
+                <label>{{localize "DANGERZONE.between"}}</label>
+                <input type="number" value={{data.darkness.min}} name="darkness.min" step="any" placeholder="0" min="0" max="1"/>
+                <label>{{localize "DANGERZONE.and"}}</label>
+                <input type="number" value={{data.darkness.max}} name="darkness.max" step="any" placeholder="1" min="0" max="1"/>
+            </div>
+        </div>
+        <hr>
+        <div class="form-group slim">
+            <label>{{ localize "DANGERZONE.type-form.light.clear.label" }}</label>
+            <div class="form-fields">
+                <label>{{localize "DANGERZONE.after"}}</label>
+                <input type="number" value={{data.clear.delay}} name="clear.delay" step="1" placeholder="0" min="0" max="600000"/>
+                <label>{{localize "DANGERZONE.ms"}}</label>
+                <select name="clear.type" value="{{data.clear.type }}"> 
+                    <option value=""></option>
+                    {{selectOptions clearOps selected=data.clear.type localize=true}}
+                </select>
+            </div>
+        </div>
+        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
+            <label for="tag">{{localize "DANGERZONE.type-form.light.tag.label"}}</label>
+            <div class="form-fields">
+                <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.light.tag.description"}}"  value="{{data.tag}}">
+            </div>
+        </div>
+    </div>
+    <div class="tab" data-tab="animation">
         <div class="form-group">
             <label for="lightAnimation.type">{{localize "DANGERZONE.type-form.light.animation.label"}}</label>
             <div class="form-fields">
@@ -55,23 +87,75 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="lightAnimation.intensity">{{localize "DANGERZONE.type-form.light.animationIntensity.label"}}</label>
-            <div class="form-fields">
-                <input type="range" data-dtype="number" name="lightAnimation.intensity" min="1" max="10" step="1" value="{{data.lightAnimation.intensity}}">
-                <span class="range-value">{{data.lightAnimation.intensity}}</span>    
-            </div>
-        </div>
-        <div class="form-group">
             <label for="lightAnimation.speed">{{localize "DANGERZONE.type-form.light.speed.label"}}</label>
             <div class="form-fields">
                 <input type="range" data-dtype="number" name="lightAnimation.speed" min="1" max="10" step="1" value="{{data.lightAnimation.speed}}">
                 <span class="range-value">{{data.lightAnimation.speed}}</span>    
             </div>
         </div>
-        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
-            <label for="tag">{{localize "DANGERZONE.type-form.light.tag.label"}}</label>
+        <div class="form-group">
+            <label for="lightAnimation.reverse">{{localize "DANGERZONE.type-form.light.reverseAnimation.label"}}</label>
             <div class="form-fields">
-                <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.light.tag.description"}}"  value="{{data.tag}}">
+                <input type="checkbox" name="lightAnimation.reverse" {{checked data.lightAnimation.reverse}}/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="lightAnimation.intensity">{{localize "DANGERZONE.type-form.light.animationIntensity.label"}}</label>
+            <div class="form-fields">
+                <input type="range" data-dtype="number" name="lightAnimation.intensity" min="1" max="10" step="1" value="{{data.lightAnimation.intensity}}">
+                <span class="range-value">{{data.lightAnimation.intensity}}</span>    
+            </div>
+        </div>
+    </div>
+    <div class="tab" data-tab="advanced">
+        <div class="form-group">
+            <label for="coloration">{{localize 'DANGERZONE.type-form.light.coloration.label'}}</label>
+            <div class="form-fields">
+                <select name="coloration" data-dtype="Number">
+                    {{selectOptions colorationOps selected=data.coloration nameAttr="id" labelAttr="label" localize=true}}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="luminosity">{{localize 'DANGERZONE.type-form.light.luminosity.label'}}</label>
+            <div class="form-fields">
+                {{rangePicker name="luminosity" value=data.luminosity min="-1" max="1" step="0.05"}}
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="gradual">{{localize 'DANGERZONE.type-form.light.gradual.label'}}</label>
+            <div class="form-fields">
+                <input type="checkbox" name="gradual" {{checked data.gradual}}/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize 'DANGERZONE.type-form.light.saturation.label'}}</label>
+            <div class="form-fields">
+                {{rangePicker name="saturation" value=data.saturation min="-1" max="1" step="0.05" }}
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize 'DANGERZONE.type-form.light.contrast.label'}}</label>
+            <div class="form-fields">
+                {{rangePicker name="contrast" value=data.contrast min="-1" max="1" step="0.05" }}
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize 'DANGERZONE.type-form.light.shadows.label'}}</label>
+            <div class="form-fields">
+                {{rangePicker name="shadows" value=data.shadows min="0" max="1" step="0.05" }}
+            </div>
+        </div>
+        <div class="form-group{{#unless hasPerfectVision}} hidden{{/unless}}">
+            <label>{{localize 'DANGERZONE.type-form.light.priority.label'}}</label>
+            <div class="form-fields">
+                <input type="number" name="flags.perfect-vision.priority" value={{data.flags.perfect-vision.priority}} placeholder="0" data-dtype="Number">
+            </div>
+        </div>
+        <div class="form-group{{#unless hasPerfectVision}} hidden{{/unless}}">
+            <label>{{localize 'DANGERZONE.type-form.light.sightLimit.label'}} <span class="units">{{localize 'DANGERZONE.gridUnits2'}}</span></label>
+            <div class="form-fields">
+                <input type="number" min="0.0" step="0.1" name="flags.perfect-vision.sightLimit" value={{data.flags.perfect-vision.sightLimit}} placeholder="Infinity" data-dtype="Number">
             </div>
         </div>
     </div>

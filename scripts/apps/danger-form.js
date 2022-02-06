@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
-import {daeOn, fluidCanvasOn, midiQolOn, monksActiveTilesOn, sequencerOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
-import {actorOps, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SENSETYPES, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK} from './constants.js';
+import {daeOn, fluidCanvasOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SENSETYPES, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -715,13 +715,19 @@ class DangerZoneDangerFormLight extends FormApplication {
           template : dangerZone.TEMPLATES.DANGERZONEDANGERLIGHT,
           height : "auto",
           width: 425,
-          closeOnSubmit: true
+          closeOnSubmit: true,
+          tabs : [
+            {navSelector: ".tabs", contentSelector: "form", initial: "basic"}
+          ]
         });
       }
 
     getData(options) {
       return {
+        clearOps: AMBIENTLIGHTCLEAROPS,
+        colorationOps: AdaptiveLightingShader.COLORATION_TECHNIQUES,
         data: this.data,
+        hasPerfectVision: perfectVisionOn,
         lightAnimations: animationTypes()
         }
     }
@@ -733,6 +739,7 @@ class DangerZoneDangerFormLight extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.light = expandedData;
+      if(expandedData.flags?.['perfect-vision']?.priority === undefined && !expandedData.flags?.['perfect-vision']?.sightLimit) this.parent.light.flags = {}
       if(expandedData.dim || expandedData.bright){this.eventParent.addClass('active')};
     }
 }
