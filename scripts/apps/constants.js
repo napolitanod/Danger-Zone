@@ -13,6 +13,7 @@ export const WORKFLOWSTATES = {
 export const WORLDZONE = {
     "options": {
         "bleed": false,
+        "delay": {"min": 0, "max": 0},
         "placeTemplate": false,
         "noPrompt": false,
         "stretch": "",
