@@ -46,6 +46,20 @@ form.danger-zone-type-form .hidden,
     display: none !important;
 }
 
+.danger-part-form .suppress {
+    flex: 1 1 100%;
+    display: flex;
+    align-items: flex-start;
+}
+
+.danger-part-form .suppress > div {
+    flex: 0 0 33%;
+    white-space: nowrap;
+    margin-bottom: 5px;
+    align-items: center;
+    display: flex;
+}
+
 .danger-zone-scene-trigger-button.hidden {
     visibility: hidden;
     opacity: 0;

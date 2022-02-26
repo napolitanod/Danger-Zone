@@ -42,9 +42,22 @@ export class workflow {
     }
 
     static async go(zone, trigger, options){
-        const flow = new workflow(zone, trigger, options);
-        const priorTrigger = await flow.next(); 
-        return priorTrigger
+        const length = zone.loop ? zone.loop : 1
+        let delay = 0;
+        for(let i=0; i < length; i++){
+            options['previouslyExecuted'] = i ? true : false
+            if(zone.delay > 0) {
+                if(zone.operation === 'T'){
+                    if(!i) delay = zone.randomDelay
+                } else {
+                    delay = zone.randomDelay
+                }
+            }
+            options['delay'] = delay;
+            dangerZone.log(false, `Workflow ${zone.title} loop ${i+1} of ${length}...`, {});
+            const flow = new workflow(zone, trigger, options);
+            zone.operation === 'Q' ? await flow.next() : flow.next()
+        }
     }
 
     async next(nextState = WORKFLOWSTATES.INITIALIZE){
@@ -136,6 +149,7 @@ class plan {
         this.manifest.set("data", [() => {return this.executor.setZoneData()}]);
         this.manifest.set("inform", [() => {return this.executor.inform()}]);
         this.manifest.set("wipe", [() => {return this.executor.wipe()}]);
+        this.manifest.set("delay", [()=> {return this.executor.delay()}])
         this._build();
         this.ongoing = this.manifest.entries();
     }
@@ -193,9 +207,11 @@ class executorData {
     constructor(zone, options){
         this.id = foundry.utils.randomID(16),
         this.boundary = options.boundary ? options.boundary : {},
+        this._delay = options.delay,
         this.eligibleTargets = [],
         this.likelihoodResult = 100,
         this.location = options.location ? new point(options.location) : {},
+        this._options = options,
         this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
         this.save = {failed: options.save?.failed ? options.save?.failed : [], succeeded: options.save?.succeeded ? options.save?.succeeded : []},
         this._sources = options.sources ? options.sources : [],
@@ -587,6 +603,10 @@ export class executor {
         return this.report('Check');
     }
 
+    async delay(){
+        if(this.data._delay) await wait(this.data._delay)
+    }
+
     async done(){
         this.data.previouslyExecuted = true;
     }
@@ -751,8 +771,9 @@ export class executor {
             for(const wipeable of this.wipeables){
                 await wipeable.wipe();
             }
+            return this.report('Wiped')
         }
-        return this.report('Wipe')
+        return this.report('Wipe Skipped')
     }
 }
 
@@ -1945,39 +1966,67 @@ class tokenMove extends executable {
     }
 }
 
-class tokenSays extends executable {   
+class tokenSays extends executable {  
 
-    get compendiumName(){
-        return this._part.compendiumName
+    get audio(){
+        return {
+            source: !this.isChat ? this._part.fileName : this._part.paired?.fileName,
+            compendium: !this.isChat ? this._part.compendiumName : this._part.paired?.compendiumName,
+            quote: !this.isChat ? this._part.fileTitle : this._part.paired?.fileTitle
+         }
     }
-    
-    get fileName(){
-        return this._part.fileName
+
+    get chat(){
+        return {
+            source: this.isChat ? this._part.fileName : this._part.paired?.fileName,
+            compendium: this.isChat ? this._part.compendiumName : this._part.paired?.compendiumName,
+            quote: this.isChat ? this._part.fileTitle : this._part.paired?.fileTitle
+         }
     }
-    
-    get fileTitle(){
-        return this._part.fileTitle
-    }
-    
+
     get fileType(){
         return this._part.fileType
     }
     
     get has(){
-        return (super.has && this.fileType && (this.fileName || this.fileTitle)) ? true : false
+        return (super.has && this.fileType && (this.chat.quote || this.chat.source || this.audio.quote || this.audio.source )) ? true : false
+    }
+
+    get isChat(){
+        return this.fileType === 'rollTable' ? true : false
     }
 
     get options(){
         return {
-            type: this.fileType,
-            source: this.fileName,
-            compendium: this.compendiumName,
-            quote: this.fileTitle
+            audio: this.audio,
+            chat: this.chat,
+            suppress: {
+                bubble: this.suppressChatbubble,
+                message: this.suppressChatMessage,
+                quotes: this.suppressQuotes
+            },
+            volume: this.volume
         }
     }
 
     get save(){
         return this.data.danger.save.ts ? parseInt(this.data.danger.save.ts) : super.save
+    }
+
+    get suppressChatbubble(){
+        return this._part.suppressChatbubble ? true : false
+    } 
+
+    get suppressChatMessage(){
+        return this._part.suppressChatMessage ? true : false
+    } 
+
+    get suppressQuotes(){
+        return this._part.suppressQuotes ? true : false
+    } 
+
+    get volume(){
+        return this._part.volume ? this._part.volume : 0.50
     }
 
     async play() {

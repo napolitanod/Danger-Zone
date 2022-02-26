@@ -3,7 +3,7 @@ import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
 import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
-import {DANGERZONETRIGGERS, WORLDZONE} from './apps/constants.js';
+import {COMBATTRIGGERS, DANGERZONETRIGGERS, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities} from './apps/helpers.js';
@@ -104,7 +104,7 @@ export class dangerZone {
    * @returns 
    */
   static getCombatZonesFromScene(sceneId) {
-    return this.getAllZonesFromScene(sceneId).filter(zn => !["manual","aura","move"].includes(zn.trigger))
+    return this.getAllZonesFromScene(sceneId).filter(zn => COMBATTRIGGERS.includes(zn.trigger))
   }  
 
   static getExecutorZones(sceneId){
@@ -289,6 +289,7 @@ export class zone {
     this.lightReplace = 'N',
     this.likelihood = 100,
     this.loop = 1,
+    this.operation = "Q",
     this.options = {
       allInArea: false,
       bleed: true,
@@ -297,6 +298,7 @@ export class zone {
       placeTemplate:false,
       runUntilTokenFound: false,
       stretch: '',
+      targetCombatant: false,
       deleteAfter: {turns: 0, rounds: 0, seconds: 0}
     },
     this.random = false,

@@ -946,6 +946,7 @@ class DangerZoneDangerFormTokenSays extends FormApplication {
     getData(options) {
       return {
         data: this.data,
+        isChat: this.data?.fileType === 'rollTable' ? true : false,
         tokenSaysOps: TOKENSAYSTYPES,
         sourceOps: SOURCETREATMENT
       }
