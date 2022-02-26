@@ -92,6 +92,9 @@ export const DANGERZONETRIGGERS = {
     "turn-end":  "DANGERZONE.trigger-types.turn-end.label"
 } 
 
+export const COMBATTRIGGERS = ["combat-start","combat-end","initiative-start","initiative-end","round-start","round-end","turn-start","turn-end"];
+export const ENDOFTURNTRIGGERS = ["combat-end","initiative-end","round-end","turn-end"]
+
 export const DANGERZONETRIGGERSORT = {
     "manual":  8,
     "aura": 21,
@@ -105,6 +108,12 @@ export const DANGERZONETRIGGERSORT = {
     "turn-start":  1,
     "turn-end":  6
 } 
+
+export const TRIGGEROPERATION = {
+    "Q": "DANGERZONE.trigger-operation.sequential",
+    "G": "DANGERZONE.trigger-operation.staggered",
+    "T": "DANGERZONE.trigger-operation.together"
+}
 
 export const SOURCETREATMENT = {
     "": "DANGERZONE.source.treatment.none",

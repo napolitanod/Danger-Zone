@@ -1,7 +1,7 @@
 <form autocomplete="off">
     <div class="tab">
         <p class="notes">{{localize "DANGERZONE.type-form.tokenSays.description"}}</p>
-        <div class="form-group">
+        <div class="form-group hidden">
             <label for="fileType">{{localize "DANGERZONE.type-form.tokenSays.rule-type.label"}}</label>
             <div class="form-fields">
                 <select name="fileType" value="{{data.fileType}}"> 
@@ -9,28 +9,71 @@
                 </select>   
             </div>
         </div>
+        <hr>
+        <h4>
+            <i class="fas fa-th-list"></i>&nbsp;
+            <span>{{localize 'DANGERZONE.type-form.tokenSays.chat.label'}}</span>
+        </h4>
         <div class="form-group">
-            <label for="compendiumName">{{localize "DANGERZONE.type-form.tokenSays.compendium.label"}}
+            <label for="{{#unless isChat}}paired.{{/unless}}compendiumName">{{localize "DANGERZONE.type-form.tokenSays.compendium.label"}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenSays.compendium.description'}}"><i class="fas fa-info-circle"></i></span>
             </label>
             <div class="form-fields">
-                <input type="text" name="compendiumName" placeholder="{{localize "DANGERZONE.type-form.tokenSays.compendium.placeholder"}}" value="{{data.compendiumName}}">
+                <input type="text" name="{{#unless isChat}}paired.{{/unless}}compendiumName" placeholder="{{localize "DANGERZONE.type-form.tokenSays.compendium.placeholder"}}" value="{{#if isChat}}{{data.compendiumName}}{{else}}{{data.paired.compendiumName}}{{/if}}">
             </div>
         </div>
         <div class="form-group">
-            <label for="fileName">{{localize "DANGERZONE.type-form.tokenSays.saying-source.label"}}</label>
+            <label for="{{#unless isChat}}paired.{{/unless}}fileName">{{localize "DANGERZONE.type-form.tokenSays.saying-source.label"}}</label>
             <div class="form-fields">
-                <input type="text" name="fileName" placeholder="{{localize "DANGERZONE.type-form.tokenSays.source.placeholder"}}" value="{{data.fileName}}">
+                <input type="text" name="{{#unless isChat}}paired.{{/unless}}fileName" placeholder="{{localize "DANGERZONE.type-form.tokenSays.source.placeholder"}}" value="{{#if isChat}}{{data.fileName}}{{else}}{{data.paired.fileName}}{{/if}}">
             </div>
         </div>
         <div class="form-group">
-            <label for="fileTitle">{{localize "DANGERZONE.type-form.tokenSays.says.label"}}
+            <label for="{{#unless isChat}}paired.{{/unless}}fileTitle">{{localize "DANGERZONE.type-form.tokenSays.says.label"}}
                  <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenSays.says.description'}}"><i class="fas fa-info-circle"></i></span>
             </label>
             <div class="form-fields">
-                <input type="text" name="fileTitle" placeholder="{{localize "DANGERZONE.type-form.tokenSays.says.placeholder"}}" value="{{data.fileTitle}}">
+                <input type="text" name="{{#unless isChat}}paired.{{/unless}}fileTitle" placeholder="{{localize "DANGERZONE.type-form.tokenSays.says.placeholder"}}" value="{{#if isChat}}{{data.fileTitle}}{{else}}{{data.paired.fileTitle}}{{/if}}">
             </div>
         </div>
+        <hr>
+        <h4>
+            <i class="fas fa-music"></i>&nbsp;
+            <span>{{localize 'DANGERZONE.type-form.tokenSays.audio.label'}}</span>
+        </h4>
+        <div class="form-group">
+            <label for="{{#if isChat}}paired.{{/if}}compendiumName">{{localize "DANGERZONE.type-form.tokenSays.audio.compendium.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenSays.audio.compendium.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="text" name="{{#if isChat}}paired.{{/if}}compendiumName" placeholder="{{localize "DANGERZONE.type-form.tokenSays.audio.compendium.placeholder"}}" value="{{#if isChat}}{{data.paired.compendiumName}}{{else}}{{data.compendiumName}}{{/if}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="{{#if isChat}}paired.{{/if}}fileName">{{localize "DANGERZONE.type-form.tokenSays.audio.saying-source.label"}}</label>
+            <div class="form-fields">
+                <input type="text" name="{{#if isChat}}paired.{{/if}}fileName" placeholder="{{localize "DANGERZONE.type-form.tokenSays.audio.source.placeholder"}}" value="{{#if isChat}}{{data.paired.fileName}}{{else}}{{data.fileName}}{{/if}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="{{#if isChat}}paired.{{/if}}fileTitle">{{localize "DANGERZONE.type-form.tokenSays.audio.says.label"}}
+                 <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenSays.audio.says.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                {{#if isChat}}{{filePicker target="paired.fileTitle" type="audio"}}{{else}}{{filePicker target="fileTitle" type="audio"}}{{/if}}
+                <input type="text" name="{{#if isChat}}paired.{{/if}}fileTitle" placeholder="{{localize "DANGERZONE.type-form.tokenSays.audio.says.placeholder"}}" value="{{#if isChat}}{{data.paired.fileTitle}}{{else}}{{data.fileTitle}}{{/if}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                <i class="volume-icon fas fa-volume-down"></i>
+            </label>
+            <div class="form-fields">
+                <input type="range" title="{{localize "DANGERZONE.type-form.tokenSays.volume.label"}}" name="volume" value="{{#unless data.volume}}0.5{{/unless}}{{#if data.volume}}{{data.volume}}{{/if}}" min="0.05" max="1.00" step="0.05"/>
+                <span class="range-value">{{#unless data.volume}}0.50{{/unless}}{{#if data.volume}}{{data.volume}}{{/if}}</span>
+            </div>
+        </div>
+        <hr>
         <div class="form-group">
             <label for="likelihood">{{localize "DANGERZONE.type-form.tokenSays.likelihood.label"}}</label>
             <div class="form-fields">
@@ -38,6 +81,32 @@
                 <span class="range-value">{{#if data.likelihood}}{{data.likelihood}}{{/if}}{{#unless data.likelihood}}100{{/unless}}</span>    
             </div>
         </div>
+        <hr>
+        <h4>
+            <i class="fas fa-comment-slash"></i>&nbsp;
+            <span>{{localize 'DANGERZONE.type-form.tokenSays.suppress.label'}}</span>
+        </h4>
+        <div class="suppress">
+            <div>
+                <input type="checkbox" name="suppressChatbubble" {{checked data.suppressChatbubble}} />
+                <label>
+                    {{localize 'DANGERZONE.type-form.tokenSays.suppressChatbubble.label'}}
+                </label>
+            </div>
+            <div>
+                <input type="checkbox" name="suppressChatMessage" {{checked data.suppressChatMessage}} />
+                <label>
+                    {{localize 'DANGERZONE.type-form.tokenSays.suppressChatMessage.label'}}
+                </label>
+            </div>
+            <div>
+                <input type="checkbox" name="suppressQuotes" {{checked data.suppressQuotes}} />
+                <label>
+                    {{localize 'DANGERZONE.type-form.tokenSays.suppressQuotes.label'}}
+                </label>
+            </div>
+        </div>
+        <hr>
         <div class="form-group">
             <label for="source">{{localize "DANGERZONE.source.label"}} 
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.source.danger.description'}}"><i class="fas fa-info-circle"></i></span>

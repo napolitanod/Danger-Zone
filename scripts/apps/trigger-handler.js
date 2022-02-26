@@ -1,8 +1,7 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneDimensions, boundary} from './dimensions.js'
 import {workflow} from './workflow.js';
-import {DANGERZONETRIGGERSORT} from './constants.js';
-import {wait} from './helpers.js';
+import {COMBATTRIGGERS, DANGERZONETRIGGERSORT, ENDOFTURNTRIGGERS} from './constants.js';
 
 export class triggerManager {
 
@@ -11,7 +10,6 @@ export class triggerManager {
         this.combatStart = false,
         this.data = data,
         this.hook = (hook === undefined) ? '' : hook,
-        this.priorTrigger,
         this.randomTriggers = new Set(),
         this.randomZones = [],
         this.roundStart = false, 
@@ -45,57 +43,45 @@ export class triggerManager {
         return this.combatant.id === this.previousCombatant.id
     }
 
+    _loadTokens(ids){
+        const arr = [];
+        for(const token of ids){
+            const t = this.scene.tokens.get(token._id ? token._id : token.id);
+            if(t) arr.push(t)
+        }
+        return arr
+    }
+
     log(message, data){
         dangerZone.log(false,`${message}... `, {triggerManager: this, data:data});
     }
 
     async next(){
         if(canvas.scene.id !== this.sceneId){ 
-           if(game.user.isGM){
-                ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.no-trigger-if-not-on-combat-scene"));
-                return
-           }
+           if(game.user.isGM) ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.no-trigger-if-not-on-combat-scene"));
+           return
         }
-        if (this.zones.length){
-            const zn = this.zones.pop();
-            const length = zn.loop ? zn.loop : 1
-            for(let i=0; i<length; i++){
-                const finalLoop = (i === length-1) ? true : false
-                const previouslyExecuted = (i ? this.priorTrigger?.previouslyExecuted : false);
-                this.log(`Trigger manager ${zn.title} loop ${i+1} of ${length}...`, {});
-                await this._next(zn, finalLoop, previouslyExecuted);
-            }
-            
-        } else {
-            this.log(`Trigger manager finished...`, {});
-            return
-        }
+        for(const zn of this.zones){
+            const options = this._options(zn)
+            await workflow.go(zn, this, options) 
+        }  
+        this.log(`Trigger manager finished...`, {});
     }
 
-    async _next(zone, finalLoop = true, previousExec = false){
-        const options = {previouslyExecuted: previousExec}
+    _options(zone){
+        const options = {}
         if(zone.trigger !== 'move'){
-            if(this.data?.options?.location && zone.trigger !== 'aura'){options['location'] = this.data.options.location}
-            if(this.data?.options?.boundary){options['boundary'] = new boundary(this.data.options.boundary.A, this.data.options.boundary.B)}
-            if(this.data?.options?.targets){
-                options.targets = [];
-                for(const token of this.data.options.targets){
-                    const t = this.scene.tokens.get(token._id ? token._id : token.id);
-                    if(t) options.targets.push(t)
-                }
-            }
-            if(this.data?.options?.sources){
-                options.sources = [];
-                for(const token of this.data.options.sources){
-                    const t = this.scene.tokens.get(token._id ? token._id : token.id);
-                    if(t) options.sources.push(t)
-                }
-            }
+            if(this.data?.options?.location && Object.keys(this.data.options.location).length && zone.trigger !== 'aura') options['location'] = this.data.options.location
+            if(this.data?.options?.boundary && Object.keys(this.data.options.boundary).length) options['boundary'] = new boundary(this.data.options.boundary.A, this.data.options.boundary.B)
+            if(this.data?.options?.targets && this.data.options.targets.length) options.targets = this._loadTokens(this.data.options.targets)
+            if(this.data?.options?.sources && this.data.options.sources.length) options.sources = this._loadTokens(this.data.options.sources)
+            if(zone.options.targetCombatant && COMBATTRIGGERS.includes(zone.trigger)){
+                const token = ENDOFTURNTRIGGERS.includes(zone.trigger) ? this.previousCombatant?.token : this.combatant?.token;
+                if(token && !options.location && !options.boundary) options['location'] = {x: token.data.x, y: token.data.y, z: token.data.elevation}
+                if(token && !options.targets) options.targets = [token];
+            } 
         }
-
-        if(zone.delay > 0) await wait(zone.randomDelay)
-        this.priorTrigger = await workflow.go(zone, this, options);
-        if(finalLoop){await this.next()}
+        return options;
     }
 
     async trigger() {

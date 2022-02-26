@@ -1,9 +1,8 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {boundary, point} from './dimensions.js';
-import {DANGERZONETRIGGERS} from './constants.js';
-import {TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, actorOps} from './constants.js';
-import { taggerOn } from '../index.js';
+import {COMBATTRIGGERS, DANGERZONETRIGGERS} from './constants.js';
+import {TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps} from './constants.js';
 
 export class DangerZoneForm extends FormApplication {
   constructor(app, zoneId, sceneId, dangerId, ...args) {
@@ -62,6 +61,12 @@ export class DangerZoneForm extends FormApplication {
     const action = $(event.currentTarget).data().action, val = event.currentTarget.value, checked = event.currentTarget.checked;
     switch (action) {
       case 'trigger-select': {
+        const targetCom = document.getElementById(`dz-target-combatant`);
+        if(COMBATTRIGGERS.includes(val)){
+           targetCom.classList.remove('hidden')
+        } else{
+          targetCom.classList.add('hidden')
+        }
         const init = document.getElementById(`dz-initiative`);
         if(['initiative-start', 'initiative-end'].includes(val)){
           init.classList.remove('hidden')
@@ -69,8 +74,14 @@ export class DangerZoneForm extends FormApplication {
           init.classList.add('hidden')
           init.children[1].children[0].value=0;
         }
+        this.setPosition()
         break;
       }
+      case 'loop-change': 
+        const op = document.getElementById(`dz-operation`);
+        val > 1 ? op.classList.remove('hidden') : op.classList.add('hidden')
+        this.setPosition()
+        break;
       case 'random-toggle': 
         const rando = document.getElementById(`dz-random-weight`);
         checked ? rando.classList.remove('hidden') : rando.classList.add('hidden')
@@ -78,6 +89,7 @@ export class DangerZoneForm extends FormApplication {
       case 'source-area':
         this._handleSourceTag(val)
         break;
+          
       case 'template-toggle': 
         const templt = document.getElementById(`dz-elevation-prompt`);
         checked ? templt.classList.remove('hidden') : templt.classList.add('hidden')
@@ -99,10 +111,13 @@ export class DangerZoneForm extends FormApplication {
       actorOps: actorOps(),
       hideElevationPrompt: !instance.options.placeTemplate,
       hideInit: ['initiative-start','initiative-end'].includes(instance.trigger) ? false : true,
+      hideOperation: instance.loop > 1 ? false : true,
+      hideTargetCombatant: COMBATTRIGGERS.includes(instance.trigger) ? false : true,
       hideWeight: !instance.random,
       hideWorld: this.dangerId ? false : true,
       replaceOps: DANGERZONEREPLACE,
       lightReplaceOps: DANGERZONELIGHTREPLACE,
+      operationOps: TRIGGEROPERATION,
       sourceAreaOps: SOURCEAREA,
       sourceTargetOps: SOURCEAREATARGET,
       sourceTriggerOps: SOURCETRIGGERS,
