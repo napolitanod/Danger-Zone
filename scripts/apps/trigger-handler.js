@@ -76,12 +76,16 @@ export class triggerManager {
             if(this.data?.options?.targets && this.data.options.targets.length) options.targets = this._loadTokens(this.data.options.targets)
             if(this.data?.options?.sources && this.data.options.sources.length) options.sources = this._loadTokens(this.data.options.sources)
             if(zone.options.targetCombatant && COMBATTRIGGERS.includes(zone.trigger)){
-                const token = ENDOFTURNTRIGGERS.includes(zone.trigger) ? this.previousCombatant?.token : this.combatant?.token;
+                const token = this.getTriggerCombatant(zone);
                 if(token && !options.location && !options.boundary) options['location'] = {x: token.data.x, y: token.data.y, z: token.data.elevation}
                 if(token && !options.targets) options.targets = [token];
             } 
         }
         return options;
+    }
+
+    getTriggerCombatant(zone){
+        return ENDOFTURNTRIGGERS.includes(zone.trigger) ? this.previousCombatant?.token : this.combatant?.token
     }
 
     async trigger() {
@@ -120,6 +124,9 @@ export class triggerManager {
     async combatTrigger(){
         this.setCombatFlags();
         for (const zn of this.sceneZones) { 
+            if(zn.options.combatantInZone){
+                if(!(await zn.tokensInZone([this.getTriggerCombatant(zn)]))) continue
+            }
             if(this.combatTriggers.indexOf(zn.trigger) !== -1){    
                 if(zn.trigger==='turn-start'){
                     if(!(await zn.sourceTrigger([this.combatant.data.actorId]))){continue}

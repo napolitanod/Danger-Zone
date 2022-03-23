@@ -180,6 +180,15 @@
                 <input type="Number" name="initiative" step="1" value="{{zone.initiative}}" placeholder="{{localize 'DANGERZONE.edit-form.initiative-count.label'}}" required>
             </div>
         </div>
+        <div class="form-group {{#if hideTargetCombatant}}hidden{{/if}}" id="dz-combatantInZone">
+            <label>
+                {{localize 'DANGERZONE.edit-form.combatantInZone.label'}}
+                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.combatantInZone.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-group">
+                <input type="checkbox" name="options.combatantInZone" {{checked zone.options.combatantInZone}}/>
+            </div>
+        </div>
         <div class="form-group">
             <label>
                 <i class="fas fa-radiation-alt"></i>

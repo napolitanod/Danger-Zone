@@ -70,6 +70,8 @@
                 "y.label": "y"
             },
             "clear.label": "Clear",
+            "combatantInZone.description": "The zone will only trigger if the current combatant is within the zone.",
+            "combatantInZone.label": "Combatant is in zone",
             "convert-global.notes": "Save a version of this global zone to this scene (the global zone will still exist).",
             "delay":{
                 "description": "Delays the danger from starting for a given amount of milliseconds.\nFor loops, the delay will be added between each loop.\nIf the maximum value exceeds the minimum value, then the delay will randomly vary each time within this range.",
