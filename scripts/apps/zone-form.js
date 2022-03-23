@@ -62,10 +62,13 @@ export class DangerZoneForm extends FormApplication {
     switch (action) {
       case 'trigger-select': {
         const targetCom = document.getElementById(`dz-target-combatant`);
+        const triggerCom = document.getElementById(`dz-combatantInZone`);
         if(COMBATTRIGGERS.includes(val)){
            targetCom.classList.remove('hidden')
+           triggerCom.classList.remove('hidden')
         } else{
           targetCom.classList.add('hidden')
+          triggerCom.classList.add('hidden')
         }
         const init = document.getElementById(`dz-initiative`);
         if(['initiative-start', 'initiative-end'].includes(val)){

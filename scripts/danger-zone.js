@@ -293,6 +293,7 @@ export class zone {
     this.options = {
       allInArea: false,
       bleed: true,
+      combatantInZone: false,
       delay: {min: 0, max: 0},
       noPrompt:false,
       placeTemplate:false,
@@ -442,6 +443,12 @@ export class zone {
           break;
     }
     return obj
+  }
+
+  async tokensInZone(tokens){
+    if(!tokens?.length) return false
+    const b = await this.scene.boundary();
+    return this.zoneEligibleTokens(b.tokensIn(tokens)).length ? true : false
   }
 
   async sourceOnScene(){
