@@ -12,6 +12,8 @@
 
 [Combat within a burning structure](https://youtu.be/qArHy50NNgk)
 
+[Tower Defense: player controlled traps and turn triggered environmental hazards](https://youtu.be/MaDAVqiS7v4)
+
 ## About
 Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT module that provides GMs the ability to easily invoke localized effects within a scene. Examples of what you can do with this module:
 * A storm where the danger of being struck by lightning is a deadly possibility.
