@@ -130,6 +130,8 @@
             "targetCombatant.label": "Target Current Combatant",
             "title.label": "Title",
             "token-targeting.label": "Target",
+            "token-condition-ex.description": "List of condition or effect names that, if active on token, will exclude that token from being a target of the danger. Separate each name with a pipe '|' to list more than one.",
+            "token-condition-ex.label": "Exclude if condition/effect",
             "token-disposition.label": "Disposition",
             "trigger.description": "The trigger defines an event that will cause the danger to be placed within the zone. Documentation at https://github.com/napolitanod/Danger-Zone/wiki/Triggers.",
             "trigger.label": "Trigger",

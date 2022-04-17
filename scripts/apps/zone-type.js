@@ -305,6 +305,16 @@ export class dangerZoneType {
     return 
   }
 
+  static async copyDanger(id) {
+    const danger = dangerZoneType.getDanger(id);
+    const newId = foundry.utils.randomID(16);
+    danger['id'] = newId;
+    danger['name'] = danger['name'] + ' (copy)';
+    await danger._update();
+    dangerZone.log(false, 'Danger copied ', {danger: danger})
+    return newId;
+  }
+
   async toggleWorldZone(){
     this.options.globalZone.enabled ? this.options.globalZone.enabled = false : this.options.globalZone.enabled = true
     await this._update();

@@ -37,6 +37,12 @@ export class DangerZoneTypesForm extends FormApplication {
           this.refresh();
           break;
       }
+      case 'copy': {
+        const copied = await dangerZoneType.copyDanger(dangerId)
+        this.refresh();
+        new DangerForm(copied, this).render(true);
+        break;
+      }
       case 'edit': {
         new DangerForm(dangerId, this).render(true);
         break;
