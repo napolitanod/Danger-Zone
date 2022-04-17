@@ -314,10 +314,15 @@ export class zone {
     },
     this.title = '',
     this.tokenDisposition = '',
+    this.tokenExCon = '',
     this.trigger = 'manual',
     this.type = '',
     this.wallReplace = 'N',
     this.weight = 1
+  }
+
+  get conditionEscape(){
+    return this.tokenExCon ? this.tokenExCon.split('|').map(n => n.trim()).filter(n => n !== "") : ''
   }
 
   get danger(){
@@ -527,14 +532,17 @@ export class zone {
 
   zoneEligibleTokens(tokens){
     let kept = [];
-    if(this.actor || this.tokenDisposition){
+    if(this.actor || this.tokenDisposition || this.tokenExCon){
       for(let token of tokens){
         let keep = 1;
         if(this.actor && token.data.actorId !== this.actor){
           keep = 0;
         }
-        if(this.tokenDisposition && parseInt(this.tokenDisposition) !== token.data.disposition){
+        else if(this.tokenDisposition && parseInt(this.tokenDisposition) !== token.data.disposition){
           keep = 0;
+        }
+        else if(this.tokenExCon && token.actor?.effects?.find(e => !e.data.disabled && this.conditionEscape.includes(e.data.label))){
+          keep = 0;      
         }
         if(keep){kept.push(token)}
       }
