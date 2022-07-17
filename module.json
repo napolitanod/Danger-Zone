@@ -17,8 +17,8 @@
             "path": "languages/fr.json"
         }    
     ],
-    "minimumCoreVersion": "9",
-    "compatibleCoreVersion": "9",
+    "minimumCoreVersion": "10",
+    "compatibleCoreVersion": "10",
     "name": "danger-zone",
     "esmodules": [
         "scripts/index.js",
@@ -29,8 +29,8 @@
         "styles/danger-zone.css"
     ],
     "title": "Danger Zone",
-    "version": "1.5.2",
+    "version": "1.6.0",
     "url": "https://github.com/napolitanod/Danger-Zone",
     "manifest": "https://raw.githubusercontent.com/napolitanod/Danger-Zone/master/module.json",
-    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/1.5.2/module.zip"
+    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/1.6.0/module.zip"
 }

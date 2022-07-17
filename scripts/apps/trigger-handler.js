@@ -28,11 +28,11 @@ export class triggerManager {
     }
 
     get currentInitiative(){
-        return this.combatant?.data?.initiative ? Math.floor(this.combatant.data.initiative) : undefined
+        return this.combatant?.initiative ? Math.floor(this.combatant.data.initiative) : undefined
     }
 
     get previousInitiative(){
-        return this.previousCombatant?.data?.initiative ? Math.floor(this.previousCombatant.data.initiative) : undefined
+        return this.previousCombatant?.initiative ? Math.floor(this.previousCombatant.initiative) : undefined
     }
 
     get scene(){
@@ -77,7 +77,7 @@ export class triggerManager {
             if(this.data?.options?.sources && this.data.options.sources.length) options.sources = this._loadTokens(this.data.options.sources)
             if(zone.options.targetCombatant && COMBATTRIGGERS.includes(zone.trigger)){
                 const token = this.getTriggerCombatant(zone);
-                if(token && !options.location && !options.boundary) options['location'] = {x: token.data.x, y: token.data.y, z: token.data.elevation}
+                if(token && !options.location && !options.boundary) options['location'] = {x: token.x, y: token.y, z: token.elevation}
                 if(token && !options.targets) options.targets = [token];
             } 
         }
@@ -129,13 +129,13 @@ export class triggerManager {
             }
             if(this.combatTriggers.indexOf(zn.trigger) !== -1){    
                 if(zn.trigger==='turn-start'){
-                    if(!(await zn.sourceTrigger([this.combatant.data.actorId]))){continue}
+                    if(!(await zn.sourceTrigger([this.combatant.actorId]))){continue}
                 }
                 else if(zn.trigger==='turn-end'){
-                    if(!(await zn.sourceTrigger([this.previousCombatant.data.actorId]))){continue}
+                    if(!(await zn.sourceTrigger([this.previousCombatant.actorId]))){continue}
                 } 
                 else {
-                    if(!(await zn.sourceTrigger(this.data.combatants.map(c => c.data.actorId)))){continue}
+                    if(!(await zn.sourceTrigger(this.data.combatants.map(c => c.actorId)))){continue}
                 }
                 if(zn.trigger==='initiative-start' || zn.trigger==='initiative-end' ){
                     let escape = true
@@ -244,7 +244,7 @@ export class triggerManager {
             const sceneZones = dangerZone.getCombatZonesFromScene(combat.scene.id);
             if(sceneZones.length){
                 const scene = game.scenes.get(combat.scene.id);
-                if(!scene?.data?.gridType){return dangerZone.log(false,'No Combat Triggers When Gridless ', {combat, hook})}
+                if(!scene?.grid?.type){return dangerZone.log(false,'No Combat Triggers When Gridless ', {combat, hook})}
 
                 const tm = new triggerManager(combat.scene.id, combat, sceneZones, hook);
                 tm.log(`Initiating combat trigger handler...`, {combat, hook});
@@ -257,7 +257,7 @@ export class triggerManager {
     static async findMovementTriggers(token, update){
         const sceneId = token.parent.id;
         const scene = game.scenes.get(sceneId);
-        if(!scene?.data?.gridType){return dangerZone.log(false,'No Movement Triggers When Gridless ', {token: token, update:update})}
+        if(!scene?.grid?.type){return dangerZone.log(false,'No Movement Triggers When Gridless ', {token: token, update:update})}
 
         const sceneZones = dangerZone.getMovementZonesFromScene(sceneId);
         const zones = []

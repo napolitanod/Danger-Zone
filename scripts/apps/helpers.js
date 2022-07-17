@@ -7,7 +7,7 @@ export function circleAreaGrid(xLoc,yLoc,w,h){
 }
 
 export function furthestShiftPosition(token, [xGrids, yGrids] = [0,0]){
-  let x = token.data.x,y = token.data.y, collisionTest = true;
+  let x = token.x,y = token.y, collisionTest = true;
   const xSign = Math.sign(xGrids); const ySign = Math.sign(yGrids);
   const placeable = canvas.tokens.placeables.find(t => t.id === token.id)
   do{

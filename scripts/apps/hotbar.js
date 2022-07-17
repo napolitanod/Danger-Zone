@@ -13,7 +13,7 @@ export function addTriggersToHotbar() {
         $('#ui-middle').find(`#${id}`).remove();
         if(game.user.viewedScene === scene?.id) {
             const html = $('#ui-middle');
-            if(!scene?.data?.gridType){return dangerZone.log(false,'No scene navigation when gridless ', {"scene": scene, "nav": html});}
+            if(!scene?.grid?.type){return dangerZone.log(false,'No scene navigation when gridless ', {"scene": scene, "nav": html});}
             _setDangerZoneButton(html, scene, id)
         }
     }

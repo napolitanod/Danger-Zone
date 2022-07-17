@@ -130,7 +130,7 @@ export class DangerZoneForm extends FormApplication {
       zoneOps: dangerZone.getZoneList(this.sceneId),
       zoneTypeOps: dangerZoneType.dangerList,
       wallReplaceOps: DANGERZONEWALLREPLACE,
-      sceneInactive: (this.scene?.data?.active && this.scene.data.gridType) ? false : true
+      sceneInactive: (this.scene?.data?.active && this.scene.grid.type) ? false : true
     } 
   }
 

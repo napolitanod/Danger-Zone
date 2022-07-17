@@ -1934,9 +1934,9 @@ class tokenMove extends executable {
                     x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
                     e = this.data.boundary.bottom;
                 } else if (this.movesTargets) {
-                    [x, y] = this.walls ? furthestShiftPosition(token, [amtH, amtV]) : canvas.grid.grid.shiftPosition(token.data.x, token.data.y, amtH, amtV)
-                    e = this.e.type === 'S' ? amtE : token.data.elevation + amtE;
-                    this.data.tokenMovement.push({tokenId: token.id, hz: Math.abs(amtH), v: Math.abs(amtV), e: Math.abs(e - token.data.elevation)})
+                    [x, y] = this.walls ? furthestShiftPosition(token, [amtH, amtV]) : canvas.grid.grid.shiftPosition(token.x, token.y, amtH, amtV)
+                    e = this.e.type === 'S' ? amtE : token.elevation + amtE;
+                    this.data.tokenMovement.push({tokenId: token.id, hz: Math.abs(amtH), v: Math.abs(amtV), e: Math.abs(e - token.elevation)})
                 }
                 this.updates.push({"_id": token.id,"x": x,"y": y, "elevation": e});
             }

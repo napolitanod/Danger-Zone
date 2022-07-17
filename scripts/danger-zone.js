@@ -408,7 +408,7 @@ export class zone {
   }
   
   async highlightZone(){
-    if(this.scene.sceneId === canvas.scene?.id && canvas.scene?.data?.gridType){
+    if(this.scene.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
       await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_tzHL', this.scene.dangerId);
       await wait(750)
@@ -535,10 +535,10 @@ export class zone {
     if(this.actor || this.tokenDisposition || this.tokenExCon){
       for(let token of tokens){
         let keep = 1;
-        if(this.actor && token.data.actorId !== this.actor){
+        if(this.actor && token.actorId !== this.actor){
           keep = 0;
         }
-        else if(this.tokenDisposition && parseInt(this.tokenDisposition) !== token.data.disposition){
+        else if(this.tokenDisposition && parseInt(this.tokenDisposition) !== token.disposition){
           keep = 0;
         }
         else if(this.tokenExCon && token.actor?.effects?.find(e => !e.data.disabled && this.conditionEscape.includes(e.data.label))){

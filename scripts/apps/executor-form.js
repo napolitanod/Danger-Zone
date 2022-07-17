@@ -490,13 +490,13 @@ export class ExecutorForm extends FormApplication {
     }
 
     _showZoneHighlight(){
-        if(this.zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.data?.gridType){
+        if(this.zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
             dangerZoneDimensions.addHighlightZone(this.zoneId, this.sceneId, '', this.worldId);
         }
     } 
     
     _hideZoneHighlight(){
-        if(this.zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.data?.gridType){
+        if(this.zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
             dangerZoneDimensions.destroyHighlightZone(this.zoneId, '', this.worldId);
         }
     }
@@ -508,7 +508,7 @@ export class ExecutorForm extends FormApplication {
     
     async renderOnScene(sceneId, zoneId, zones){
         this.sceneId = sceneId ? sceneId : canvas.scene.id;
-        if(game.user.isGM && this.scene.active && this.scene.data.gridType){
+        if(game.user.isGM && this.scene.active && this.scene.grid.type){
             this.zones = zones ? zones : dangerZone.getExecutorZones(this.sceneId);
             if(this.zones.length){
                 this.executor = zoneId ? await this.setExecutor() : await this.zones[0].executor(this.executorOptions);
