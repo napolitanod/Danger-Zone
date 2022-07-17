@@ -541,7 +541,7 @@ export class zone {
         else if(this.tokenDisposition && parseInt(this.tokenDisposition) !== token.disposition){
           keep = 0;
         }
-        else if(this.tokenExCon && token.actor?.effects?.find(e => !e.data.disabled && this.conditionEscape.includes(e.data.label))){
+        else if(this.tokenExCon && token.actor?.effects?.find(e => !e.disabled && this.conditionEscape.includes(e.label))){
           keep = 0;      
         }
         if(keep){kept.push(token)}

@@ -266,7 +266,7 @@ export function determineMacroList() {
 }
 
 export function saveTypes() {
-    switch(game.world.data.system){
+    switch(game.world.system){
         case "dnd5e":
             return game.dnd5e.config.abilities
         default:
@@ -275,7 +275,7 @@ export function saveTypes() {
 }
 
 export function damageTypes() {
-    switch(game.world.data.system){
+    switch(game.world.system){
         case "dnd5e":
             return Object.assign(game.dnd5e.config.damageTypes, game.dnd5e.config.healingTypes)
         default:

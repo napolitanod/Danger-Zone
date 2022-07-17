@@ -38,7 +38,7 @@ export async function getFilesFromPattern(pattern) {
 }
 
 export async function getTagEntities(tag, scene){
-  const d = scene.getEmbeddedCollection("Drawing").filter(d => d.data.text === tag);
+  const d = scene.getEmbeddedCollection("Drawing").filter(d => d.text === tag);
   if(taggerOn){
       const t = await Tagger.getByTag(tag, {caseInsensitive: false, matchAll: false, sceneId: scene.id })
       return d.concat(t)
