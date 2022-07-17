@@ -28,7 +28,7 @@ export class triggerManager {
     }
 
     get currentInitiative(){
-        return this.combatant?.initiative ? Math.floor(this.combatant.data.initiative) : undefined
+        return this.combatant?.initiative ? Math.floor(this.combatant.initiative) : undefined
     }
 
     get previousInitiative(){

@@ -41,11 +41,11 @@ export class ExecutorForm extends FormApplication {
     }
 
     get eligibleTargetList(){
-        return (this.hasExecutor && this.executor.eligibleTargets.length) ? this.executor.eligibleTargets.map(t => t.data.name).join(', ') : '&nbsp;'// game.i18n.localize("DANGERZONE.executor-form.eligible.none.label")
+        return (this.hasExecutor && this.executor.eligibleTargets.length) ? this.executor.eligibleTargets.map(t => t.name).join(', ') : '&nbsp;'// game.i18n.localize("DANGERZONE.executor-form.eligible.none.label")
     }
 
     get eligibleZoneList(){
-        return (this.hasExecutor && this.executor.zoneEligibleTokens.length) ? this.executor.zoneEligibleTokens.map(t => t.data.name).join(', ') : '&nbsp;'// game.i18n.localize("DANGERZONE.executor-form.zone.none.label")
+        return (this.hasExecutor && this.executor.zoneEligibleTokens.length) ? this.executor.zoneEligibleTokens.map(t => t.name).join(', ') : '&nbsp;'// game.i18n.localize("DANGERZONE.executor-form.zone.none.label")
     }
 
     get hasSave(){
@@ -89,7 +89,7 @@ export class ExecutorForm extends FormApplication {
     }
 
     get saveList(){
-        return (this.hasSaveFails || this.hasSaveSuccesses) ? this.executor.saveSucceeded.map(t => t.data.name + ' <i class="fas fa-thumbs-up"></i>').concat(this.executor.saveFailed.map(t => t.data.name + ' <i class="fas fa-thumbs-down"></i>' )).concat(this.executor.targets.filter(t=> !this.executor.saveFailed.find(s=>s.id === t.id) && !this.executor.saveSucceeded.find(s=>s.id === t.id) ).map(t => t.data.name + ' <i class="fas fa-question"></i>')).join(', ') : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.save.none.label")
+        return (this.hasSaveFails || this.hasSaveSuccesses) ? this.executor.saveSucceeded.map(t => t.name + ' <i class="fas fa-thumbs-up"></i>').concat(this.executor.saveFailed.map(t => t.name + ' <i class="fas fa-thumbs-down"></i>' )).concat(this.executor.targets.filter(t=> !this.executor.saveFailed.find(s=>s.id === t.id) && !this.executor.saveSucceeded.find(s=>s.id === t.id) ).map(t => t.name + ' <i class="fas fa-question"></i>')).join(', ') : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.save.none.label")
     }
 
     get scene(){
@@ -97,11 +97,11 @@ export class ExecutorForm extends FormApplication {
     }
 
     get sourceList(){
-        return this.hasSources ? this.executor.sources.map(t => t.data.name).join(', ') : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.source.none.label")
+        return this.hasSources ? this.executor.sources.map(t => t.name).join(', ') : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.source.none.label")
     }
 
     get targetList(){
-        return this.hasTargets ? this.executor.targets.map(t => t.data.name).join(', ') : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.targets.none.label")
+        return this.hasTargets ? this.executor.targets.map(t => t.name).join(', ') : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.targets.none.label")
     }
 
     get userTargets(){

@@ -309,9 +309,9 @@ class executorData {
                 content += `
                     <br>Target boundary start: x${this.boundary.A.x} y${this.boundary.A.y} z${this.boundary.A.z}
                     <br>Target boundary end: x${this.boundary.B.x} y${this.boundary.B.y} z${this.boundary.B.z}
-                    <br>Eligible zone tokens: ${this.zoneEligibleTokens.map(t => t.data.name)}
-                    <br>Eligible targets: ${this.eligibleTargets.map(t => t.data.name)}
-                    <br>Hit targets: ${this.targets.map(t => t.data.name)}`
+                    <br>Eligible zone tokens: ${this.zoneEligibleTokens.map(t => t.name)}
+                    <br>Eligible targets: ${this.eligibleTargets.map(t => t.name)}
+                    <br>Hit targets: ${this.targets.map(t => t.name)}`
             } 
             ChatMessage.create({
                 content: content,
@@ -1123,14 +1123,14 @@ class ambientLight extends executable{
         if(this._part.clear.delay) await wait(this._part.clear.delay);
         switch(this._part.clear.type){
             case 'O':
-                const updates = this.lights.filter(l => this.data.scene.data.lights.find(lt => lt.id === l.id)).map((data) => ({
+                const updates = this.lights.filter(l => this.data.scene.lights.find(lt => lt.id === l.id)).map((data) => ({
                     _id: data.id,
                     hidden: true,
                   }));
                 this.data.scene.updateEmbeddedDocuments("AmbientLight", updates);
                 break;
             case 'D':
-                await this.data.scene.deleteEmbeddedDocuments("AmbientLight",this.lights.filter(l => this.data.scene.data.lights.find(lt => lt.id === l.id)).map(l => l.id))
+                await this.data.scene.deleteEmbeddedDocuments("AmbientLight",this.lights.filter(l => this.data.scene.lights.find(lt => lt.id === l.id)).map(l => l.id))
                 break;
         }
         
@@ -1179,9 +1179,9 @@ class audio extends executableWithFile {
         if(!playlist) {
             this._file = ''
         } else {
-            const index = Math.floor(Math.random() * playlist.data.sounds.size)
+            const index = Math.floor(Math.random() * playlist.sounds.size)
             let i = 0; 
-            for (let key of playlist.data.sounds) {
+            for (let key of playlist.sounds) {
                 if (i++ == index) {this._file = key?.path; break;}  
             }
         }

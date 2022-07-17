@@ -257,18 +257,18 @@ export class boundary{
                 dim={x:document.object.bounds.x, y:document.object.bounds.y, width: dm, height: dm} 
                 break
             case "Tile":
-                dim={x: document.data.x, y:document.data.y, width: document.data.width - 1, height: document.data.height - 1}
+                dim={x: document.x, y:document.y, width: document.width - 1, height: document.height - 1}
                 break;
             case "Token":
                 const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
-                const [TyPos, TxPos] = canvas.grid.grid.getGridPositionFromPixels(document.data.x, document.data.y);
-                const [Tx2, Ty2] = canvas.grid.grid.getPixelsFromGridPosition(TyPos + document.data.height, TxPos + document.data.width); 
+                const [TyPos, TxPos] = canvas.grid.grid.getGridPositionFromPixels(document.x, document.y);
+                const [Tx2, Ty2] = canvas.grid.grid.getPixelsFromGridPosition(TyPos + document.height, TxPos + document.width); 
                 const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
-                const Td = (distance * Math.max(document.data.width, document.data.height) * multiplier);
-                dim = {x:document.data.x, y:document.data.y, width: Tx2 - document.data.x, height: Ty2 - document.data.y, depth: Td,  bottom:document.data.elevation};
+                const Td = (distance * Math.max(document.width, document.height) * multiplier);
+                dim = {x:document.x, y:document.y, width: Tx2 - document.x, height: Ty2 - document.y, depth: Td,  bottom:document.elevation};
                 break
             default: 
-                dim=document.data
+                dim=document
         }
         const b = new boundary({x:dim.x, y:dim.y, z:dim.bottom ? dim.bottom : 0}, {x: dim.x + dim.width, y: dim.y + dim.height, z: dim.depth ? dim.bottom + dim.depth : 0}, options)
         return b

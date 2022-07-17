@@ -8,7 +8,7 @@ import {DangerZoneForm} from './zone-form.js';
 
 export function addTriggersToHotbar() {
     if(game.user.isGM){
-        const scene = game.scenes.find(scene => scene.data.active);
+        const scene = game.scenes.find(scene => scene.active);
         const id = 'danger-zone-hotbar-trigger';
         $('#ui-middle').find(`#${id}`).remove();
         if(game.user.viewedScene === scene?.id) {

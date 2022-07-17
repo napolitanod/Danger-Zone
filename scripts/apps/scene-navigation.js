@@ -6,7 +6,7 @@ import {DANGERZONETRIGGERS} from './constants.js';
 import {DangerZoneForm} from './zone-form.js';
 
 export function addTriggersToSceneNavigation() {
-	if(game.user.isGM && game.user.viewedScene === game.scenes.find(scene => scene.data.active)?.id) {
+	if(game.user.isGM && game.user.viewedScene === game.scenes.find(scene => scene.active)?.id) {
         const activeNav = $('#scene-list > li.active');
         $('#scene-list > li.danger-zone-scene-trigger').remove();
         const scene = game.scenes.get(activeNav.data('sceneId')); 
