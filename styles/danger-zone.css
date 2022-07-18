@@ -250,8 +250,8 @@ form.danger-zone-type-form .main-danger {
 /*hotbar*/
 .danger-zone-hotbar-trigger {
     position: absolute;
-    left: 780px;
-    bottom: 12px;
+    left: 570px;
+    bottom: 11px;
     list-style: none;
     border-width: 0px;
     background-color: transparent;

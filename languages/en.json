@@ -258,8 +258,8 @@
         "occlusionmodes": {
             "none": "None (Always Visible)",
             "fade": "Fade (Entire Tile)",
-            "roof": "Roof (Blocks Vision and Lighting)",
-            "radial": "Radial (Surrounding Token)"
+            "radial": "Radial (Surrounding Token)",
+            "vision": "Vision (Token Field of Vision)"
         },
         "record": {
             "title.label": "Title",
@@ -499,7 +499,7 @@
                 "description": "Add ambient lighting to the targeted area.",
                 "dimLight.label": "Dim",
                 "emission.label": "Emission Angle",
-                "gradual.label": "Gradual Illumination",
+                "attenuation.label": "Attenuation",
                 "intensity.label": "Color Intensity",
                 "label": "Ambient Local Light",
                 "luminosity.label": "Luminosity",
@@ -577,6 +577,7 @@
                 "is-overhead.label": "Is Overhead?",
                 "loop.label": "Loop Video",
                 "randomFile.label": "Randomize Wildcard Image",
+                "roof.label": "Is a Roof?",
                 "scale.label": "Effect Scale",
                 "tab": {
                     "main.title": "Tile",

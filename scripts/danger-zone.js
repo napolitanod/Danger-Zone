@@ -598,7 +598,7 @@ export class zone {
 
   async _promptXY(){
     let currentLayer = canvas.activeLayer, xy;
-    canvas.activateLayer('grid');
+    currentLayer.deactivate();
     
     dangerZoneDimensions.destroyHighlightZone(this.id, '', this.scene.dangerId);
     await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_wf', this.scene.dangerId);

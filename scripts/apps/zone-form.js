@@ -130,7 +130,7 @@ export class DangerZoneForm extends FormApplication {
       zoneOps: dangerZone.getZoneList(this.sceneId),
       zoneTypeOps: dangerZoneType.dangerList,
       wallReplaceOps: DANGERZONEWALLREPLACE,
-      sceneInactive: (this.scene?.data?.active && this.scene.grid.type) ? false : true
+      sceneInactive: (this.scene?.active && this.scene.grid.type) ? false : true
     } 
   }
 
@@ -190,7 +190,7 @@ export class DangerZoneForm extends FormApplication {
 
   async promptSelectZoneBoundary() {
     let currentLayer = canvas.activeLayer;
-    canvas.activateLayer('grid');
+    currentLayer.deactivate();
     await this.minimizeForms();
 
     let x = new Promise(function(resolve, reject){

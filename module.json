@@ -17,6 +17,10 @@
             "path": "languages/fr.json"
         }    
     ],
+    "compatibility": {
+      "minimum": "10",
+      "verified": "10"
+    },
     "minimumCoreVersion": "10",
     "compatibleCoreVersion": "10",
     "name": "danger-zone",

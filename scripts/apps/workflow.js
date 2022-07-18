@@ -1007,6 +1007,10 @@ class ambientLight extends executable{
         return this._part.angle
     }
 
+    get attenuation(){
+        return this._part.attenuation
+    }
+
     get bright(){
         return this._part.bright
     }
@@ -1035,10 +1039,6 @@ class ambientLight extends executable{
             if(pv?.priority) flg['core.priority'] = pv.priority
         }
         return flg
-    }
-
-    get gradual(){
-        return this._part.gradual
     }
 
     get lightAnimation(){
@@ -1088,13 +1088,13 @@ class ambientLight extends executable{
                     intensity: this.lightAnimation.intensity,
                     type: this.lightAnimation.type
                 },
+                attenuation: this.attenuation ? this.attenuation : (this._part.gradual ? 0.5 : 0.0),
                 bright: this.bright,
                 color: this.tintColor,
                 coloration: this.coloration,
                 contrast: this.contrast,
                 darkness: this.darkness,
                 dim: this.dim,
-                gradual: this.gradual,
                 luminosity: this.luminosity,
                 saturation: this.saturation,
                 shadows: this.shadows
@@ -1403,6 +1403,10 @@ class lastingEffect extends executableWithFile{
         return this._part.overhead
     }
 
+    get roof(){
+        return this._part.roof ? this._part.roof : (this.occlusion.mode === 'ROOF' ? true : false)
+    }
+
     get save(){
         return this.data.danger.save.le ? parseInt(this.data.danger.save.le) : super.save
     }
@@ -1446,9 +1450,10 @@ class lastingEffect extends executableWithFile{
             height: boundary.height * this.scale,
             occlusion: {
                 alpha: this.occlusion.alpha,
-                mode: CONST.TILE_OCCLUSION_MODES[this.occlusion.mode]
+                mode: CONST.TILE_OCCLUSION_MODES[this.occlusion.mode] 
             },
             overhead: (levelsOn && boundary.bottom > 0) ? true : this.overhead,
+            roof: this.roof,
             rotation: 0,
             scale: this.scale,
             width: boundary.width * this.scale,
@@ -2061,11 +2066,11 @@ class wall extends executable {
     }
 
     get light(){
-        return this._part.light
+        return FVTTSENSETYPES[this._part.light]
     }
 
     get move(){
-        return this._part.move
+        return FVTTMOVETYPES[this._part.move]
     }
 
     get random(){
@@ -2081,11 +2086,11 @@ class wall extends executable {
     }
 
     get sense(){
-        return this._part.sense
+        return FVTTSENSETYPES[this._part.sense]
     }
 
     get sound(){
-        return this._part.sound
+        return FVTTSENSETYPES[this._part.sound]
     }
 
     get top(){
@@ -2120,10 +2125,10 @@ class wall extends executable {
             dir: this.dir,
             door: this.door,
             ds: 0,
-            light: FVTTSENSETYPES[this.light],
-            move: FVTTMOVETYPES[this.move],
-            sense: FVTTSENSETYPES[this.sense],
-            sound: FVTTSENSETYPES[this.sound],
+            move: this.move,
+            sense: this.sense,
+            sound: this.sound,
+            light: this.light,
             flags: this.data.flag
         }
         if(wallHeightOn && (this.data.boundary.bottom || this.data.boundary.top)) wall.flags['wallHeight'] = {"wallHeightTop": this.data.boundary.top-1, "wallHeightBottom": this.data.boundary.bottom}

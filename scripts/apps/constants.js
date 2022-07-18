@@ -286,8 +286,8 @@ export function damageTypes() {
 export const TILEOCCLUSIONMODES = {
     "NONE": "DANGERZONE.occlusionmodes.none",
     "FADE": "DANGERZONE.occlusionmodes.fade",
-    "ROOF": "DANGERZONE.occlusionmodes.roof",
-    "RADIAL": "DANGERZONE.occlusionmodes.radial"
+    "RADIAL": "DANGERZONE.occlusionmodes.radial",
+    "VISION": "DANGERZONE.occlusionmodes.vision"
 }
 
 export const TIMESUPMACROREPEAT = {
@@ -313,6 +313,15 @@ export function setModOptions(){
         SOURCEAREA["C"] = "DANGERZONE.source.area.danger.tile"; 
         SOURCEAREA["Y"] = "DANGERZONE.source.area.zone.tile";  
     }     
+}
+
+const TOKENSAYSFILETYPEENTITYTYPE = {
+    rollTable: "RollTable",
+    audio: "Playlist"
+  }
+
+export function getCompendiumOps(fileType){
+    return game.packs.filter((x) => x.documentName == TOKENSAYSFILETYPEENTITYTYPE[fileType]).reduce((obj, p) => {obj['']=''; obj[p.collection] = p.title; return obj;}, {})
 }
 
 export const EXECUTABLEOPTIONS = {};
