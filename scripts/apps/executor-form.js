@@ -319,8 +319,8 @@ export class ExecutorForm extends FormApplication {
 
     _handleLock(action){
         const un = action.startsWith('un') ? true : false
-        $(this.form).find(`[data-action="${action}"]`).addClass('hidden');
-        $(this.form).find(`[data-action="${un ? action.replace('unlock','lock') : 'un'+action}"]`).removeClass('hidden');
+        $(this.form).find(`[data-action="${action}"]`).addClass('dz-hidden');
+        $(this.form).find(`[data-action="${un ? action.replace('unlock','lock') : 'un'+action}"]`).removeClass('dz-hidden');
         this.locked[action.replace( un ? 'unlock-' : 'lock-', '')] = !un
     }
 
@@ -454,11 +454,11 @@ export class ExecutorForm extends FormApplication {
             (tu && !that.hasSaveSuccesses) ? color(this,'i.fa-thumbs-up', true) : color(this,'i.fa-thumbs-up', false);
 
             if(play){
-                $(this).find('.no-play').addClass('hidden') 
-                $(this).find('[data-action="play"]').removeClass('hidden') 
+                $(this).find('.no-play').addClass('dz-hidden') 
+                $(this).find('[data-action="play"]').removeClass('dz-hidden') 
             } else {
-                $(this).find('.no-play').removeClass('hidden') 
-                $(this).find('[data-action="play"]').addClass('hidden') 
+                $(this).find('.no-play').removeClass('dz-hidden') 
+                $(this).find('[data-action="play"]').addClass('dz-hidden') 
             } 
         });
     }

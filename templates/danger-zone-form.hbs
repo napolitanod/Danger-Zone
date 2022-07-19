@@ -8,11 +8,11 @@
         <a class="item" data-tab="clear"><i class="fas fa-eraser"></i>&nbsp;{{localize 'DANGERZONE.edit-form.clear.label'}}</a>
    </nav>
     <div class="tab active" data-tab="basics">
-        <p class="notes{{#if hideWorld}} hidden{{/if}}">{{localize "DANGERZONE.edit-form.convert-global.notes"}}</p>
-        <div class="hidden">
+        <p class="notes{{#if hideWorld}} dz-hidden{{/if}}">{{localize "DANGERZONE.edit-form.convert-global.notes"}}</p>
+        <div class="dz-hidden">
             <input type="text" value="{{zone.id}}" name="zoneId"/>
         </div>
-        <div class="hidden">
+        <div class="dz-hidden">
             <input type="text" value="{{zone.scene.sceneId}}" name="scene.sceneId"/>
         </div>
         <div class="form-group">
@@ -172,7 +172,7 @@
                 </select>
             </div>
         </div>
-        <div id="dz-initiative" class="form-group {{#if hideInit}}hidden{{/if}}">
+        <div id="dz-initiative" class="form-group {{#if hideInit}}dz-hidden{{/if}}">
             <label>
                 {{localize 'DANGERZONE.edit-form.initiative-count.label'}}
             </label>
@@ -180,7 +180,7 @@
                 <input type="Number" name="initiative" step="1" value="{{zone.initiative}}" placeholder="{{localize 'DANGERZONE.edit-form.initiative-count.label'}}" required>
             </div>
         </div>
-        <div class="form-group {{#if hideTargetCombatant}}hidden{{/if}}" id="dz-combatantInZone">
+        <div class="form-group {{#if hideTargetCombatant}}dz-hidden{{/if}}" id="dz-combatantInZone">
             <label>
                 {{localize 'DANGERZONE.edit-form.combatantInZone.label'}}
                  <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.combatantInZone.description'}}"><i class="fas fa-info-circle"></i></span>
@@ -199,7 +199,7 @@
                 <div class="form-group">
                     <input class="random" type="checkbox" name="random" {{checked zone.random}} data-action="random-toggle"/>
                 </div>
-                <div class="form-group {{#if hideWeight}}hidden{{/if}}" id="dz-random-weight">
+                <div class="form-group {{#if hideWeight}}dz-hidden{{/if}}" id="dz-random-weight">
                     <label>
                         {{localize 'DANGERZONE.edit-form.weight.label'}}
                     </label>
@@ -229,7 +229,7 @@
                 <span class="range-value">{{zone.loop}}</span>
             </div>
         </div>
-        <div class="form-group{{#if hideOperation}} hidden{{/if}}" id="dz-operation" >
+        <div class="form-group{{#if hideOperation}} dz-hidden{{/if}}" id="dz-operation" >
             <label>
                 {{localize 'DANGERZONE.edit-form.operation.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.operation.description'}}"><i class="fas fa-info-circle"></i></span>
@@ -368,7 +368,7 @@
                 <input type="checkbox" name="options.placeTemplate" {{checked zone.options.placeTemplate}} data-action="template-toggle"/>
             </div>
         </div>
-        <div class="form-group {{#if hideElevationPrompt}}hidden{{/if}}" id="dz-elevation-prompt">
+        <div class="form-group {{#if hideElevationPrompt}}dz-hidden{{/if}}" id="dz-elevation-prompt">
             <label>
                 {{localize 'DANGERZONE.edit-form.promptElevation.label'}}
             </label>
@@ -394,7 +394,7 @@
                 <input type="checkbox" name="options.runUntilTokenFound" {{checked zone.options.runUntilTokenFound}} />
             </div>
         </div>
-        <div class="form-group{{#if hideTargetCombatant}} hidden{{/if}}" id="dz-target-combatant">
+        <div class="form-group{{#if hideTargetCombatant}} dz-hidden{{/if}}" id="dz-target-combatant">
             <label>
                 {{localize 'DANGERZONE.edit-form.targetCombatant.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.targetCombatant.description'}}"><i class="fas fa-info-circle"></i></span>

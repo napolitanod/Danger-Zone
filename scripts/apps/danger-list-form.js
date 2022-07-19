@@ -122,10 +122,10 @@ export class DangerZoneTypesForm extends FormApplication {
     const searchBox = document.getElementById("danger-zone-type-search-input");
 
     if(lastSearch != ''){
-      clear.classList.remove('hidden');
+      clear.classList.remove('dz-hidden');
       searchBox.classList.add('outline');
     } else {
-      clear.classList.add('hidden');
+      clear.classList.add('dz-hidden');
       searchBox.classList.remove('outline');
     }
 

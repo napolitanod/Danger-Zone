@@ -64,17 +64,17 @@ export class DangerZoneForm extends FormApplication {
         const targetCom = document.getElementById(`dz-target-combatant`);
         const triggerCom = document.getElementById(`dz-combatantInZone`);
         if(COMBATTRIGGERS.includes(val)){
-           targetCom.classList.remove('hidden')
-           triggerCom.classList.remove('hidden')
+           targetCom.classList.remove('dz-hidden')
+           triggerCom.classList.remove('dz-hidden')
         } else{
-          targetCom.classList.add('hidden')
-          triggerCom.classList.add('hidden')
+          targetCom.classList.add('dz-hidden')
+          triggerCom.classList.add('dz-hidden')
         }
         const init = document.getElementById(`dz-initiative`);
         if(['initiative-start', 'initiative-end'].includes(val)){
-          init.classList.remove('hidden')
+          init.classList.remove('dz-hidden')
         } else {
-          init.classList.add('hidden')
+          init.classList.add('dz-hidden')
           init.children[1].children[0].value=0;
         }
         this.setPosition()
@@ -82,12 +82,12 @@ export class DangerZoneForm extends FormApplication {
       }
       case 'loop-change': 
         const op = document.getElementById(`dz-operation`);
-        val > 1 ? op.classList.remove('hidden') : op.classList.add('hidden')
+        val > 1 ? op.classList.remove('dz-hidden') : op.classList.add('dz-hidden')
         this.setPosition()
         break;
       case 'random-toggle': 
         const rando = document.getElementById(`dz-random-weight`);
-        checked ? rando.classList.remove('hidden') : rando.classList.add('hidden')
+        checked ? rando.classList.remove('dz-hidden') : rando.classList.add('dz-hidden')
         break;
       case 'source-area':
         this._handleSourceTag(val)
@@ -95,7 +95,7 @@ export class DangerZoneForm extends FormApplication {
           
       case 'template-toggle': 
         const templt = document.getElementById(`dz-elevation-prompt`);
-        checked ? templt.classList.remove('hidden') : templt.classList.add('hidden')
+        checked ? templt.classList.remove('dz-hidden') : templt.classList.add('dz-hidden')
         this.setPosition()
         break;
     }
@@ -142,40 +142,40 @@ export class DangerZoneForm extends FormApplication {
     switch(sourceArea){
       case 'C':
       case 'D':
-        tag.removeClass('hidden');
-        sourceD.removeClass('hidden');
+        tag.removeClass('dz-hidden');
+        sourceD.removeClass('dz-hidden');
         tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.danger.label'))
         $(this.form).find('#dz-source-tag-danger').attr('name', 'source.tag')
         break;
       case 'T':
-        tag.removeClass('hidden');
-        sourceT.removeClass('hidden');
+        tag.removeClass('dz-hidden');
+        sourceT.removeClass('dz-hidden');
         tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.tag.label'))
         $(this.form).find('#dz-source-tag-tag').attr('name', 'source.tag')
         break;
       case 'Y':
       case 'Z':
-        tag.removeClass('hidden');
-        sourceZ.removeClass('hidden');
+        tag.removeClass('dz-hidden');
+        sourceZ.removeClass('dz-hidden');
         tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.zone.label'))
         $(this.form).find('#dz-source-tag-zone').attr('name', 'source.tag')
         break;
       default:
-        tag.addClass('hidden');
+        tag.addClass('dz-hidden');
         break;
     }
     if(!['C','D'].includes(sourceArea)){
-      sourceD.addClass('hidden')
+      sourceD.addClass('dz-hidden')
       sourceD.removeAttr('name')
       sourceD.val('')
     }
     if(sourceArea !=='T'){
-      sourceT.addClass('hidden')
+      sourceT.addClass('dz-hidden')
       sourceT.removeAttr('name')
       sourceT.val('')
     }
     if(!['Y','Z'].includes(sourceArea)){
-      sourceZ.addClass('hidden')
+      sourceZ.addClass('dz-hidden')
       sourceZ.removeAttr('name')
       sourceZ.val('')
     }
