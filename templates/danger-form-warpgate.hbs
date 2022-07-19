@@ -18,14 +18,14 @@
         <div class="form-group">
             <label for="duplicates">{{localize "DANGERZONE.type-form.warpgate.duplicates.label"}}</label>
             <div class="form-fields">
-                <input type="range" data-dtype="number" name="duplicates" value="{{#if duplicates}}{{duplicates}}{{/if}}{{#unless duplicates}}1{{/unless}}" min="1" max="20" step="1">
+                <input type="range" data-dtype="Number"" name="duplicates" value="{{#if duplicates}}{{duplicates}}{{/if}}{{#unless duplicates}}1{{/unless}}" min="1" max="20" step="1">
                 <span class="range-value">{{#if duplicates}}{{duplicates}}{{/if}}{{#unless duplicates}}1{{/unless}}</span>    
             </div>
         </div>
         <div class="form-group">
             <label for="delay">{{localize "DANGERZONE.type-form.warpgate.delay.label"}}</label>
             <div class="form-fields">
-                <input type="number" required data-dtype="number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
+                <input type="number" required data-dtype="Number"" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
             </div>
         </div>
         <div class="form-group {{#if taggerOnNot}}dz-hidden{{/if}}">

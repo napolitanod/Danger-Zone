@@ -83,7 +83,7 @@
         <div class="form-group">
             <label for="likelihood">{{localize "DANGERZONE.type-form.tokenSays.likelihood.label"}}</label>
             <div class="form-fields">
-                <input type="range" data-dtype="number" name="likelihood" value="{{#if data.likelihood}}{{data.likelihood}}{{/if}}{{#unless data.likelihood}}100{{/unless}}" min="1" max="100" step="1">
+                <input type="range" data-dtype="Number"" name="likelihood" value="{{#if data.likelihood}}{{data.likelihood}}{{/if}}{{#unless data.likelihood}}100{{/unless}}" min="1" max="100" step="1">
                 <span class="range-value">{{#if data.likelihood}}{{data.likelihood}}{{/if}}{{#unless data.likelihood}}100{{/unless}}</span>    
             </div>
         </div>

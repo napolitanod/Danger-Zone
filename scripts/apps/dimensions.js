@@ -27,10 +27,10 @@ export class dangerZoneDimensions {
      */
      _init() {
         const dim = this.scene.dimensions;
-        this.start.x = dim.paddingX,
-        this.start.y = dim.paddingY,
-        this.end.x = dim.sceneWidth + dim.paddingX,
-        this.end.y = dim.sceneHeight + dim.paddingY;
+        this.start.x = dim.sceneX,
+        this.start.y = dim.sceneY,
+        this.end.x = dim.sceneWidth + dim.sceneX,
+        this.end.y = dim.sceneHeight + dim.sceneY;
     }
 
     get scene(){

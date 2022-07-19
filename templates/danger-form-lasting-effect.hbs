@@ -37,7 +37,7 @@
         <div class="form-group">
             <label for="lastingEffect.z">{{localize "DANGERZONE.type-form.tile.z.label"}}</label>
             <div class="form-fields">
-                <input type="number" required data-dtype="number" name="lastingEffect.z" step="1" value={{lastingEffect.z}}>
+                <input type="number" required data-dtype="Number" name="lastingEffect.z" step="1" value={{lastingEffect.z}}>
             </div>
         </div>
         <div class="form-group">
@@ -89,7 +89,7 @@
         <div class="form-group">
             <label for="lastingEffect.delay">{{localize "DANGERZONE.type-form.tile.delay.label"}}</label>
             <div class="form-fields">
-                <input type="number" required data-dtype="number" name="lastingEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{lastingEffect.delay}}>
+                <input type="number" required data-dtype="Number" name="lastingEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{lastingEffect.delay}}>
             </div>
         </div>
         <div class="form-group {{#if taggerOnNot}}dz-hidden{{/if}}">
