@@ -301,8 +301,20 @@ class DangerZoneActiveEffectForm extends ActiveEffectConfig {
       }
 
     getData(options) {
-      const data = super.getData(options);
-      return data
+      return {
+        data: this.object,
+        isActorEffect: true,
+        isItemEffect: false,
+        submitText: "EFFECT.Submit",
+        modes: Object.entries(CONST.ACTIVE_EFFECT_MODES).reduce((obj, e) => {
+          obj[e[1]] = game.i18n.localize("EFFECT.MODE_"+e[0]);
+          return obj;
+        }, {})
+      };
+    }
+
+    render(force=false, options={}) {
+      super.render(force, options)
     }
 
     activateListeners(html) {
@@ -409,14 +421,15 @@ class DangerZoneDangerFormActiveEffect extends FormApplication {
         }
       }
   
-      const effect = {
+      const effect = Object.assign(this.data, {
         documentName: "ActiveEffect",
-        data: this.data,
         testUserPermission: (...args) => { return true},
         parent: {documentName: "Actor"},
         apps: {},
-        isOwner: true
-      }
+        isOwner: true,
+        uuid: `ActiveEffect.${this.parent.dangerId}`
+      });
+
       new DangerZoneActiveEffectForm(this, eventParent, this.parent.dangerId, effect).render(true);
     }
 
