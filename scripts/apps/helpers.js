@@ -7,7 +7,7 @@ export function circleAreaGrid(xLoc,yLoc,w,h){
 }
 
 export function furthestShiftPosition(token, [xGrids, yGrids] = [0,0]){
-  let x = token.data.x,y = token.data.y, collisionTest = true;
+  let x = token.x,y = token.y, collisionTest = true;
   const xSign = Math.sign(xGrids); const ySign = Math.sign(yGrids);
   const placeable = canvas.tokens.placeables.find(t => t.id === token.id)
   do{
@@ -38,7 +38,7 @@ export async function getFilesFromPattern(pattern) {
 }
 
 export async function getTagEntities(tag, scene){
-  const d = scene.getEmbeddedCollection("Drawing").filter(d => d.data.text === tag);
+  const d = scene.getEmbeddedCollection("Drawing").filter(d => d.text === tag);
   if(taggerOn){
       const t = await Tagger.getByTag(tag, {caseInsensitive: false, matchAll: false, sceneId: scene.id })
       return d.concat(t)

@@ -30,11 +30,11 @@
     font-size: 10px;
 }
 
-.danger-zone-executor .hidden,
-.danger-zone-record .hidden, 
-form.danger-zone-type-form .hidden, 
-.danger-part-form .hidden, 
-#danger-zone-type-search-clear.hidden {
+.danger-zone-executor .dz-hidden,
+.danger-zone-record .dz-hidden, 
+form.danger-zone-type-form .dz-hidden, 
+.danger-part-form .dz-hidden, 
+#danger-zone-type-search-clear.dz-hidden {
     display: none !important;
 }
 
@@ -60,7 +60,7 @@ form.danger-zone-type-form .hidden,
     display: flex;
 }
 
-.danger-zone-scene-trigger-button.hidden {
+.danger-zone-scene-trigger-button.dz-hidden {
     visibility: hidden;
     opacity: 0;
     transition: visibility 0s, opacity 0.75s ease;
@@ -250,8 +250,8 @@ form.danger-zone-type-form .main-danger {
 /*hotbar*/
 .danger-zone-hotbar-trigger {
     position: absolute;
-    left: 780px;
-    bottom: 12px;
+    left: 570px;
+    bottom: 11px;
     list-style: none;
     border-width: 0px;
     background-color: transparent;
@@ -400,9 +400,9 @@ form ol.danger-setting-group .active:hover label {
     visibility: hidden;
 }
 
-.danger-zone-hotbar-trigger:hover li.hidden, 
-.danger-zone-sidebar-trigger:hover li.hidden, 
-.danger-zone-scene-trigger-master.active ~ ol > li.hidden {
+.danger-zone-hotbar-trigger:hover li.dz-hidden, 
+.danger-zone-sidebar-trigger:hover li.dz-hidden, 
+.danger-zone-scene-trigger-master.active ~ ol > li.dz-hidden {
     visibility: visible;
     opacity: 1;
     position: relative;

@@ -18,6 +18,7 @@ export class dangerZoneType {
         ambientLight: {
           active: 0,
           angle: 360,
+          attenuation: 0.5,
           bright: 0,
           clear: {
             delay: 0,
@@ -31,7 +32,6 @@ export class dangerZoneType {
           },
           dim: 0,
           flags: {},
-          gradual: true,
           lightAnimation: {
             reverse: false,
             speed: 5,
@@ -89,6 +89,7 @@ export class dangerZoneType {
           },
           overhead: false,
           randomFile: false,
+          roof: false,
           scale: 1.0,
           loop: true,
           tag: '',

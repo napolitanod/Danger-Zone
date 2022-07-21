@@ -1,5 +1,5 @@
 <form autocomplete="off">
-     <nav class="sheet-tabs tabs {{#if monksActiveTilesOnNot}}hidden{{/if}}">
+     <nav class="sheet-tabs tabs {{#if monksActiveTilesOnNot}}dz-hidden{{/if}}">
         <a class="item active" data-tab="main"><i class="fas fa-cube"></i>&nbsp;{{localize 'DANGERZONE.type-form.tile.tab.main.title'}}</a>
         <a class="item" data-tab="monks"><i class="fas fa-running"></i>&nbsp;{{localize 'DANGERZONE.type-form.tile.tab.monks.title'}}</a>
     </nav>
@@ -37,7 +37,7 @@
         <div class="form-group">
             <label for="lastingEffect.z">{{localize "DANGERZONE.type-form.tile.z.label"}}</label>
             <div class="form-fields">
-                <input type="number" required data-dtype="number" name="lastingEffect.z" step="1" value={{lastingEffect.z}}>
+                <input type="number" required data-dtype="Number" name="lastingEffect.z" step="1" value={{lastingEffect.z}}>
             </div>
         </div>
         <div class="form-group">
@@ -64,6 +64,12 @@
             </div>
         </div>
         <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.tile.roof.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" name="lastingEffect.roof" {{ checked lastingEffect.roof }}>
+            </div>
+        </div>
+        <div class="form-group">
             <label for="lastingEffect.occlusion.mode">{{localize "DANGERZONE.type-form.tile.occlusion.mode.label"}}</label>
             <div class="form-fields">
                 <select name="lastingEffect.occlusion.mode" value="{{lastingEffect.occlusion.mode}}"> 
@@ -83,17 +89,17 @@
         <div class="form-group">
             <label for="lastingEffect.delay">{{localize "DANGERZONE.type-form.tile.delay.label"}}</label>
             <div class="form-fields">
-                <input type="number" required data-dtype="number" name="lastingEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{lastingEffect.delay}}>
+                <input type="number" required data-dtype="Number" name="lastingEffect.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{lastingEffect.delay}}>
             </div>
         </div>
-        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
+        <div class="form-group {{#if taggerOnNot}}dz-hidden{{/if}}">
             <label for="lastingEffect.tag">{{localize "DANGERZONE.type-form.tile.tag.label"}}</label>
             <div class="form-fields">
                 <input type="text" name="lastingEffect.tag" placeholder="{{localize "DANGERZONE.type-form.tile.tag.description"}}"  value="{{lastingEffect.tag}}">
             </div>
         </div>
     </div>
-    <div class="tab {{#if monksActiveTilesOnNot}}hidden{{/if}}" data-tab="monks">
+    <div class="tab {{#if monksActiveTilesOnNot}}dz-hidden{{/if}}" data-tab="monks">
         <p class="notes">{{localize 'DANGERZONE.type-form.monks-active-tiles.notes'}}</p>
         <hr>
         <p class="notes">{{localize "DANGERZONE.type-form.monks-active-tiles.macro.description"}}</p>

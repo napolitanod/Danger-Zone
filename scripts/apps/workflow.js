@@ -309,9 +309,9 @@ class executorData {
                 content += `
                     <br>Target boundary start: x${this.boundary.A.x} y${this.boundary.A.y} z${this.boundary.A.z}
                     <br>Target boundary end: x${this.boundary.B.x} y${this.boundary.B.y} z${this.boundary.B.z}
-                    <br>Eligible zone tokens: ${this.zoneEligibleTokens.map(t => t.data.name)}
-                    <br>Eligible targets: ${this.eligibleTargets.map(t => t.data.name)}
-                    <br>Hit targets: ${this.targets.map(t => t.data.name)}`
+                    <br>Eligible zone tokens: ${this.zoneEligibleTokens.map(t => t.name)}
+                    <br>Eligible targets: ${this.eligibleTargets.map(t => t.name)}
+                    <br>Hit targets: ${this.targets.map(t => t.name)}`
             } 
             ChatMessage.create({
                 content: content,
@@ -1007,6 +1007,10 @@ class ambientLight extends executable{
         return this._part.angle
     }
 
+    get attenuation(){
+        return this._part.attenuation
+    }
+
     get bright(){
         return this._part.bright
     }
@@ -1035,10 +1039,6 @@ class ambientLight extends executable{
             if(pv?.priority) flg['core.priority'] = pv.priority
         }
         return flg
-    }
-
-    get gradual(){
-        return this._part.gradual
     }
 
     get lightAnimation(){
@@ -1088,13 +1088,13 @@ class ambientLight extends executable{
                     intensity: this.lightAnimation.intensity,
                     type: this.lightAnimation.type
                 },
+                attenuation: this.attenuation ? this.attenuation : (this._part.gradual ? 0.5 : 0.0),
                 bright: this.bright,
                 color: this.tintColor,
                 coloration: this.coloration,
                 contrast: this.contrast,
                 darkness: this.darkness,
                 dim: this.dim,
-                gradual: this.gradual,
                 luminosity: this.luminosity,
                 saturation: this.saturation,
                 shadows: this.shadows
@@ -1123,14 +1123,14 @@ class ambientLight extends executable{
         if(this._part.clear.delay) await wait(this._part.clear.delay);
         switch(this._part.clear.type){
             case 'O':
-                const updates = this.lights.filter(l => this.data.scene.data.lights.find(lt => lt.id === l.id)).map((data) => ({
+                const updates = this.lights.filter(l => this.data.scene.lights.find(lt => lt.id === l.id)).map((data) => ({
                     _id: data.id,
                     hidden: true,
                   }));
                 this.data.scene.updateEmbeddedDocuments("AmbientLight", updates);
                 break;
             case 'D':
-                await this.data.scene.deleteEmbeddedDocuments("AmbientLight",this.lights.filter(l => this.data.scene.data.lights.find(lt => lt.id === l.id)).map(l => l.id))
+                await this.data.scene.deleteEmbeddedDocuments("AmbientLight",this.lights.filter(l => this.data.scene.lights.find(lt => lt.id === l.id)).map(l => l.id))
                 break;
         }
         
@@ -1179,9 +1179,9 @@ class audio extends executableWithFile {
         if(!playlist) {
             this._file = ''
         } else {
-            const index = Math.floor(Math.random() * playlist.data.sounds.size)
+            const index = Math.floor(Math.random() * playlist.sounds.size)
             let i = 0; 
-            for (let key of playlist.data.sounds) {
+            for (let key of playlist.sounds) {
                 if (i++ == index) {this._file = key?.path; break;}  
             }
         }
@@ -1403,6 +1403,10 @@ class lastingEffect extends executableWithFile{
         return this._part.overhead
     }
 
+    get roof(){
+        return this._part.roof ? this._part.roof : (this.occlusion.mode === 'ROOF' ? true : false)
+    }
+
     get save(){
         return this.data.danger.save.le ? parseInt(this.data.danger.save.le) : super.save
     }
@@ -1446,9 +1450,10 @@ class lastingEffect extends executableWithFile{
             height: boundary.height * this.scale,
             occlusion: {
                 alpha: this.occlusion.alpha,
-                mode: CONST.TILE_OCCLUSION_MODES[this.occlusion.mode]
+                mode: CONST.TILE_OCCLUSION_MODES[this.occlusion.mode] 
             },
             overhead: (levelsOn && boundary.bottom > 0) ? true : this.overhead,
+            roof: this.roof,
             rotation: 0,
             scale: this.scale,
             width: boundary.width * this.scale,
@@ -1934,9 +1939,9 @@ class tokenMove extends executable {
                     x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
                     e = this.data.boundary.bottom;
                 } else if (this.movesTargets) {
-                    [x, y] = this.walls ? furthestShiftPosition(token, [amtH, amtV]) : canvas.grid.grid.shiftPosition(token.data.x, token.data.y, amtH, amtV)
-                    e = this.e.type === 'S' ? amtE : token.data.elevation + amtE;
-                    this.data.tokenMovement.push({tokenId: token.id, hz: Math.abs(amtH), v: Math.abs(amtV), e: Math.abs(e - token.data.elevation)})
+                    [x, y] = this.walls ? furthestShiftPosition(token, [amtH, amtV]) : canvas.grid.grid.shiftPosition(token.x, token.y, amtH, amtV)
+                    e = this.e.type === 'S' ? amtE : token.elevation + amtE;
+                    this.data.tokenMovement.push({tokenId: token.id, hz: Math.abs(amtH), v: Math.abs(amtV), e: Math.abs(e - token.elevation)})
                 }
                 this.updates.push({"_id": token.id,"x": x,"y": y, "elevation": e});
             }
@@ -2061,11 +2066,11 @@ class wall extends executable {
     }
 
     get light(){
-        return this._part.light
+        return FVTTSENSETYPES[this._part.light]
     }
 
     get move(){
-        return this._part.move
+        return FVTTMOVETYPES[this._part.move]
     }
 
     get random(){
@@ -2081,11 +2086,11 @@ class wall extends executable {
     }
 
     get sense(){
-        return this._part.sense
+        return FVTTSENSETYPES[this._part.sense]
     }
 
     get sound(){
-        return this._part.sound
+        return FVTTSENSETYPES[this._part.sound]
     }
 
     get top(){
@@ -2120,10 +2125,10 @@ class wall extends executable {
             dir: this.dir,
             door: this.door,
             ds: 0,
-            light: FVTTSENSETYPES[this.light],
-            move: FVTTMOVETYPES[this.move],
-            sense: FVTTSENSETYPES[this.sense],
-            sound: FVTTSENSETYPES[this.sound],
+            move: this.move,
+            sense: this.sense,
+            sound: this.sound,
+            light: this.light,
             flags: this.data.flag
         }
         if(wallHeightOn && (this.data.boundary.bottom || this.data.boundary.top)) wall.flags['wallHeight'] = {"wallHeightTop": this.data.boundary.top-1, "wallHeightBottom": this.data.boundary.bottom}

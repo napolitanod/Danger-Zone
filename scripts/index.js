@@ -377,7 +377,7 @@ function insertTileEffectsClearButton (controls, b, c) {
 				icon: "fas fa-radiation",
 				visible: game.user.isGM,
 				onClick: async () => {
-					let tileIds=canvas.scene.tiles.filter(t => t.data.flags[dangerZone.ID]).map(t => t.id);
+					let tileIds=canvas.scene.tiles.filter(t => t.flags[dangerZone.ID]).map(t => t.id);
 					await canvas.scene.deleteEmbeddedDocuments("Tile", tileIds);
 				},
 				button: true
@@ -403,7 +403,7 @@ function insertTileEffectsClearButton (controls, b, c) {
 				icon: "fas fa-radiation",
 				visible: game.user.isGM,
 				onClick: async () => {
-					let lightIds=canvas.scene.lights.filter(t => t.data.flags[dangerZone.ID]).map(t => t.id);
+					let lightIds=canvas.scene.lights.filter(t => t.flags[dangerZone.ID]).map(t => t.id);
 					await canvas.scene.deleteEmbeddedDocuments("AmbientLight", lightIds);
 				},
 				button: true
@@ -429,7 +429,7 @@ function insertWallClearButton (controls, b, c) {
 				icon: "fas fa-radiation",
 				visible: game.user.isGM,
 				onClick: async () => {
-					let lightIds=canvas.scene.walls.filter(t => t.data.flags[dangerZone.ID]).map(t => t.id);
+					let lightIds=canvas.scene.walls.filter(t => t.flags[dangerZone.ID]).map(t => t.id);
 					await canvas.scene.deleteEmbeddedDocuments("Wall", lightIds);
 				},
 				button: true

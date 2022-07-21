@@ -1,7 +1,7 @@
 <form autocomplete="off">
     <div class="tab">
         <p class="notes">{{localize "DANGERZONE.scene.copy-danger-zone"}}</p>
-        <div class="form-group {{#if sceneId}}hidden{{/if}}">
+        <div class="form-group {{#if sceneId}}dz-hidden{{/if}}">
             <label for="targetSceneId">{{localize "DANGERZONE.copy-zone.target"}}</label>
             <div class="form-fields">
                 <select name="targetSceneId" value="{{sceneId}}" required> 

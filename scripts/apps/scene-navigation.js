@@ -6,11 +6,11 @@ import {DANGERZONETRIGGERS} from './constants.js';
 import {DangerZoneForm} from './zone-form.js';
 
 export function addTriggersToSceneNavigation() {
-	if(game.user.isGM && game.user.viewedScene === game.scenes.find(scene => scene.data.active)?.id) {
+	if(game.user.isGM && game.user.viewedScene === game.scenes.find(scene => scene.active)?.id) {
         const activeNav = $('#scene-list > li.active');
         $('#scene-list > li.danger-zone-scene-trigger').remove();
         const scene = game.scenes.get(activeNav.data('sceneId')); 
-        if(!scene?.data?.gridType){return dangerZone.log(false,'No scene navigation when gridless ', {"scene": scene, "nav": activeNav});}
+        if(!scene?.grid?.type){return dangerZone.log(false,'No scene navigation when gridless ', {"scene": scene, "nav": activeNav});}
         const zones = dangerZone.getTriggerZonesFromScene(scene.id).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)});
         if (zones.length) {
             let triggerList = $('<li>').addClass('danger-zone-scene-trigger');

@@ -21,7 +21,7 @@
                 <span class="units">{{localize 'DANGERZONE.degrees'}}</span>
             </label>
             <div class="form-fields">
-                <input type="range" data-dtype="number" name="angle" min="0" max="360" step="1" value="{{#if data.angle}}{{data.angle}}{{/if}}{{#unless data.angle}}360{{/unless}}">
+                <input type="range" data-dtype="Number"" name="angle" min="0" max="360" step="1" value="{{#if data.angle}}{{data.angle}}{{/if}}{{#unless data.angle}}360{{/unless}}">
                 <span class="range-value">{{#if data.angle}}{{data.angle}}{{/if}}{{#unless data.angle}}360{{/unless}}</span>    
             </div>
         </div>
@@ -30,7 +30,7 @@
                 <span class="units">{{localize 'DANGERZONE.degrees'}}</span>
             </label>
             <div class="form-fields">
-                <input type="range" data-dtype="number" name="rotation" min="0" max="360" step="1" value="{{data.rotation}}">
+                <input type="range" data-dtype="Number"" name="rotation" min="0" max="360" step="1" value="{{data.rotation}}">
                 <span class="range-value">{{data.rotation}}</span>    
             </div>
         </div>
@@ -70,7 +70,7 @@
                 </select>
             </div>
         </div>
-        <div class="form-group {{#if taggerOnNot}}hidden{{/if}}">
+        <div class="form-group {{#if taggerOnNot}}dz-hidden{{/if}}">
             <label for="tag">{{localize "DANGERZONE.type-form.light.tag.label"}}</label>
             <div class="form-fields">
                 <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.light.tag.description"}}"  value="{{data.tag}}">
@@ -89,7 +89,7 @@
         <div class="form-group">
             <label for="lightAnimation.speed">{{localize "DANGERZONE.type-form.light.speed.label"}}</label>
             <div class="form-fields">
-                <input type="range" data-dtype="number" name="lightAnimation.speed" min="1" max="10" step="1" value="{{data.lightAnimation.speed}}">
+                <input type="range" data-dtype="Number"" name="lightAnimation.speed" min="1" max="10" step="1" value="{{data.lightAnimation.speed}}">
                 <span class="range-value">{{data.lightAnimation.speed}}</span>    
             </div>
         </div>
@@ -102,7 +102,7 @@
         <div class="form-group">
             <label for="lightAnimation.intensity">{{localize "DANGERZONE.type-form.light.animationIntensity.label"}}</label>
             <div class="form-fields">
-                <input type="range" data-dtype="number" name="lightAnimation.intensity" min="1" max="10" step="1" value="{{data.lightAnimation.intensity}}">
+                <input type="range" data-dtype="Number"" name="lightAnimation.intensity" min="1" max="10" step="1" value="{{data.lightAnimation.intensity}}">
                 <span class="range-value">{{data.lightAnimation.intensity}}</span>    
             </div>
         </div>
@@ -115,44 +115,50 @@
                     {{selectOptions colorationOps selected=data.coloration nameAttr="id" labelAttr="label" localize=true}}
                 </select>
             </div>
+            <p class="hint">{{ localize 'LIGHT.ColorationTechniqueHint' }}</p>
         </div>
         <div class="form-group">
             <label for="luminosity">{{localize 'DANGERZONE.type-form.light.luminosity.label'}}</label>
             <div class="form-fields">
                 {{rangePicker name="luminosity" value=data.luminosity min="-1" max="1" step="0.05"}}
             </div>
+            <p class="hint">{{ localize 'LIGHT.LuminosityHint' }}</p>
         </div>
         <div class="form-group">
-            <label for="gradual">{{localize 'DANGERZONE.type-form.light.gradual.label'}}</label>
+            <label for="attenuation">{{ localize 'DANGERZONE.type-form.light.attenuation.label' }}</label>
             <div class="form-fields">
-                <input type="checkbox" name="gradual" {{checked data.gradual}}/>
+                {{ rangePicker name="attenuation" value=data.attenuation min="0" max="1" step="0.05" }}
             </div>
+            <p class="hint">{{ localize 'LIGHT.AttenuationHint' }}</p>
         </div>
         <div class="form-group">
             <label>{{localize 'DANGERZONE.type-form.light.saturation.label'}}</label>
             <div class="form-fields">
                 {{rangePicker name="saturation" value=data.saturation min="-1" max="1" step="0.05" }}
             </div>
+            <p class="hint">{{ localize 'LIGHT.SaturationHint' }}</p>
         </div>
         <div class="form-group">
             <label>{{localize 'DANGERZONE.type-form.light.contrast.label'}}</label>
             <div class="form-fields">
                 {{rangePicker name="contrast" value=data.contrast min="-1" max="1" step="0.05" }}
             </div>
+            <p class="hint">{{ localize 'LIGHT.ContrastHint' }}</p>
         </div>
         <div class="form-group">
             <label>{{localize 'DANGERZONE.type-form.light.shadows.label'}}</label>
             <div class="form-fields">
                 {{rangePicker name="shadows" value=data.shadows min="0" max="1" step="0.05" }}
             </div>
+            <p class="hint">{{ localize 'LIGHT.ShadowsHint' }}</p>
         </div>
-        <div class="form-group{{#unless hasPerfectVision}} hidden{{/unless}}">
+        <div class="form-group{{#unless hasPerfectVision}} dz-hidden{{/unless}}">
             <label>{{localize 'DANGERZONE.type-form.light.priority.label'}}</label>
             <div class="form-fields">
                 <input type="number" name="flags.perfect-vision.priority" value={{data.flags.perfect-vision.priority}} placeholder="0" data-dtype="Number">
             </div>
         </div>
-        <div class="form-group{{#unless hasPerfectVision}} hidden{{/unless}}">
+        <div class="form-group{{#unless hasPerfectVision}} dz-hidden{{/unless}}">
             <label>{{localize 'DANGERZONE.type-form.light.sightLimit.label'}} <span class="units">{{localize 'DANGERZONE.gridUnits2'}}</span></label>
             <div class="form-fields">
                 <input type="number" min="0.0" step="0.1" name="flags.perfect-vision.sightLimit" value={{data.flags.perfect-vision.sightLimit}} placeholder="Infinity" data-dtype="Number">

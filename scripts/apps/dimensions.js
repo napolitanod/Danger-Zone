@@ -27,10 +27,10 @@ export class dangerZoneDimensions {
      */
      _init() {
         const dim = this.scene.dimensions;
-        this.start.x = dim.paddingX,
-        this.start.y = dim.paddingY,
-        this.end.x = dim.sceneWidth + dim.paddingX,
-        this.end.y = dim.sceneHeight + dim.paddingY;
+        this.start.x = dim.sceneX,
+        this.start.y = dim.sceneY,
+        this.end.x = dim.sceneWidth + dim.sceneX,
+        this.end.y = dim.sceneHeight + dim.sceneY;
     }
 
     get scene(){
@@ -91,19 +91,19 @@ export class dangerZoneDimensions {
     }
 
     static tokenMovement(token, update){
-        const endXPixel = update.x ? update.x : token.data.x;
-		const endYPixel = update.y ? update.y : token.data.y;
-		const [startY, startX] = canvas.grid.grid.getGridPositionFromPixels(token.data.x, token.data.y);
+        const endXPixel = update.x ? update.x : token.x;
+		const endYPixel = update.y ? update.y : token.y;
+		const [startY, startX] = canvas.grid.grid.getGridPositionFromPixels(token.x, token.y);
 		const [endY, endX] = canvas.grid.grid.getGridPositionFromPixels(endXPixel, endYPixel);
-		const endDepth = update.elevation ? update.elevation : token.data.elevation;
+		const endDepth = update.elevation ? update.elevation : token.elevation;
 		return {
-			startPos: {x: token.data.x, y: token.data.y, z: token.data.elevation},
+			startPos: {x: token.x, y: token.y, z: token.elevation},
 			endPos: {x: endXPixel, y: endYPixel, z: endDepth},
 			moveYGrids: Math.abs(startY - endY),
 			moveXGrids: Math.abs(startX - endX),
-			moveYPixels: Math.abs(token.data.y - endYPixel),
-			moveXPixels: Math.abs(token.data.x - endXPixel),
-			moveDepth: Math.abs(token.data.elevation - endDepth)
+			moveYPixels: Math.abs(token.y - endYPixel),
+			moveXPixels: Math.abs(token.x - endXPixel),
+			moveDepth: Math.abs(token.elevation - endDepth)
 		}
     }
 
@@ -257,18 +257,18 @@ export class boundary{
                 dim={x:document.object.bounds.x, y:document.object.bounds.y, width: dm, height: dm} 
                 break
             case "Tile":
-                dim={x: document.data.x, y:document.data.y, width: document.data.width - 1, height: document.data.height - 1}
+                dim={x: document.x, y:document.y, width: document.width - 1, height: document.height - 1}
                 break;
             case "Token":
                 const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
-                const [TyPos, TxPos] = canvas.grid.grid.getGridPositionFromPixels(document.data.x, document.data.y);
-                const [Tx2, Ty2] = canvas.grid.grid.getPixelsFromGridPosition(TyPos + document.data.height, TxPos + document.data.width); 
+                const [TyPos, TxPos] = canvas.grid.grid.getGridPositionFromPixels(document.x, document.y);
+                const [Tx2, Ty2] = canvas.grid.grid.getPixelsFromGridPosition(TyPos + document.height, TxPos + document.width); 
                 const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
-                const Td = (distance * Math.max(document.data.width, document.data.height) * multiplier);
-                dim = {x:document.data.x, y:document.data.y, width: Tx2 - document.data.x, height: Ty2 - document.data.y, depth: Td,  bottom:document.data.elevation};
+                const Td = (distance * Math.max(document.width, document.height) * multiplier);
+                dim = {x:document.x, y:document.y, width: Tx2 - document.x, height: Ty2 - document.y, depth: Td,  bottom:document.elevation};
                 break
             default: 
-                dim=document.data
+                dim=document
         }
         const b = new boundary({x:dim.x, y:dim.y, z:dim.bottom ? dim.bottom : 0}, {x: dim.x + dim.width, y: dim.y + dim.height, z: dim.depth ? dim.bottom + dim.depth : 0}, options)
         return b

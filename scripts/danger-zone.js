@@ -245,7 +245,7 @@ export class dangerZone {
   }
 
   static validatePreupdateZones(scene){
-    const flag = scene.data.flags?.[this.ID]?.[this.FLAGS.SCENEZONE];
+    const flag = scene.flags?.[this.ID]?.[this.FLAGS.SCENEZONE];
     let b = false;
     if(flag){
       Object.keys(flag).forEach(function(key) {
@@ -402,13 +402,13 @@ export class zone {
   }
 
   get flaggablePlaceables(){
-    return this.scene.scene.walls.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE])
-      .concat(this.scene.scene.lights.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
-      .concat(this.scene.scene.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
+    return this.scene.scene.walls.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE])
+      .concat(this.scene.scene.lights.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
+      .concat(this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
   }
   
   async highlightZone(){
-    if(this.scene.sceneId === canvas.scene?.id && canvas.scene?.data?.gridType){
+    if(this.scene.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
       await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_tzHL', this.scene.dangerId);
       await wait(750)
@@ -432,19 +432,19 @@ export class zone {
           obj['documents'] = this.scene.scene.tokens.filter(t => t.actor?.id === this.source.actor);
           break;
         case 'C':
-          obj['documents'] = this.scene.scene.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.source.tag);
+          obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.source.tag);
           break;
         case 'D':
-          obj['documents'] = this.flaggablePlaceables.filter(t => t.data.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].type === this.source.tag);
+          obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].type === this.source.tag);
           break;
         case 'T':
           obj['documents'] = await getTagEntities(this.source.tag, this.scene.scene)
           break;
         case 'Y':
-          obj['documents'] = this.scene.scene.tiles.filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.source.tag);
+          obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.source.tag);
           break;
         case 'Z':
-          obj['documents'] = this.flaggablePlaceables.filter(t => t.data.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].zoneId === this.source.tag);
+          obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].zoneId === this.source.tag);
           break;
     }
     return obj
@@ -512,16 +512,16 @@ export class zone {
       let ids = []; const data = this._wipeData(document);
       switch (replace ? replace : data.replace) {
           case 'Z':
-            ids=this.scene.scene[data.placeable].filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.id).map(t => t.id);
+            ids=this.scene.scene[data.placeable].filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.id).map(t => t.id);
               break;
           case 'T':
-            ids=this.scene.scene[data.placeable].filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.type).map(t => t.id);
+            ids=this.scene.scene[data.placeable].filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.type).map(t => t.id);
               break;
           case 'R':
-            ids=this.scene.scene[data.placeable].filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.trigger === this.trigger).map(t => t.id);
+            ids=this.scene.scene[data.placeable].filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.trigger === this.trigger).map(t => t.id);
               break;
           case 'A':
-            ids=this.scene.scene[data.placeable].filter(t => t.data.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]).map(t => t.id);
+            ids=this.scene.scene[data.placeable].filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]).map(t => t.id);
               break;
           default:
             return false;
@@ -535,13 +535,13 @@ export class zone {
     if(this.actor || this.tokenDisposition || this.tokenExCon){
       for(let token of tokens){
         let keep = 1;
-        if(this.actor && token.data.actorId !== this.actor){
+        if(this.actor && token.actorId !== this.actor){
           keep = 0;
         }
-        else if(this.tokenDisposition && parseInt(this.tokenDisposition) !== token.data.disposition){
+        else if(this.tokenDisposition && parseInt(this.tokenDisposition) !== token.disposition){
           keep = 0;
         }
-        else if(this.tokenExCon && token.actor?.effects?.find(e => !e.data.disabled && this.conditionEscape.includes(e.data.label))){
+        else if(this.tokenExCon && token.actor?.effects?.find(e => !e.disabled && this.conditionEscape.includes(e.label))){
           keep = 0;      
         }
         if(keep){kept.push(token)}
@@ -598,7 +598,7 @@ export class zone {
 
   async _promptXY(){
     let currentLayer = canvas.activeLayer, xy;
-    canvas.activateLayer('grid');
+    currentLayer.deactivate();
     
     dangerZoneDimensions.destroyHighlightZone(this.id, '', this.scene.dangerId);
     await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_wf', this.scene.dangerId);

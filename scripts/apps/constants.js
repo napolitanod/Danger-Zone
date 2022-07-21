@@ -266,7 +266,7 @@ export function determineMacroList() {
 }
 
 export function saveTypes() {
-    switch(game.world.data.system){
+    switch(game.world.system){
         case "dnd5e":
             return game.dnd5e.config.abilities
         default:
@@ -275,7 +275,7 @@ export function saveTypes() {
 }
 
 export function damageTypes() {
-    switch(game.world.data.system){
+    switch(game.world.system){
         case "dnd5e":
             return Object.assign(game.dnd5e.config.damageTypes, game.dnd5e.config.healingTypes)
         default:
@@ -286,8 +286,8 @@ export function damageTypes() {
 export const TILEOCCLUSIONMODES = {
     "NONE": "DANGERZONE.occlusionmodes.none",
     "FADE": "DANGERZONE.occlusionmodes.fade",
-    "ROOF": "DANGERZONE.occlusionmodes.roof",
-    "RADIAL": "DANGERZONE.occlusionmodes.radial"
+    "RADIAL": "DANGERZONE.occlusionmodes.radial",
+    "VISION": "DANGERZONE.occlusionmodes.vision"
 }
 
 export const TIMESUPMACROREPEAT = {
@@ -313,6 +313,15 @@ export function setModOptions(){
         SOURCEAREA["C"] = "DANGERZONE.source.area.danger.tile"; 
         SOURCEAREA["Y"] = "DANGERZONE.source.area.zone.tile";  
     }     
+}
+
+const TOKENSAYSFILETYPEENTITYTYPE = {
+    rollTable: "RollTable",
+    audio: "Playlist"
+  }
+
+export function getCompendiumOps(fileType){
+    return game.packs.filter((x) => x.documentName == TOKENSAYSFILETYPEENTITYTYPE[fileType]).reduce((obj, p) => {obj['']=''; obj[p.collection] = p.title; return obj;}, {})
 }
 
 export const EXECUTABLEOPTIONS = {};

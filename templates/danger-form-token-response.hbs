@@ -1,5 +1,5 @@
 <form autocomplete="off">
-     <nav class="sheet-tabs tabs {{#if midiQolOnNot}}hidden{{/if}}">
+     <nav class="sheet-tabs tabs {{#if midiQolOnNot}}dz-hidden{{/if}}">
         <a class="item active" data-tab="save"><i class="fas fa-shield-alt"></i>&nbsp;{{localize 'DANGERZONE.type-form.tokenResponse.tab.save.title'}}</a>
         <a class="item" data-tab="damage"><i class="fas fa-skull"></i>&nbsp;{{localize 'DANGERZONE.type-form.tokenResponse.tab.damage.title'}}</a>
     </nav>
@@ -22,7 +22,7 @@
         <div class="form-group">
             <label for="save.diff">{{localize "DANGERZONE.type-form.tokenResponse.save.diff.label"}}</label>
             <div class="form-fields">
-                <input type="range" data-dtype="number" name="save.diff" value="{{#if data.save.diff}}{{data.save.diff}}{{/if}}{{#unless data.save.diff}}10{{/unless}}" min="1" max="30" step="1">
+                <input type="range" data-dtype="Number"" name="save.diff" value="{{#if data.save.diff}}{{data.save.diff}}{{/if}}{{#unless data.save.diff}}10{{/unless}}" min="1" max="30" step="1">
                 <span class="range-value">{{#if data.save.diff}}{{data.save.diff}}{{/if}}{{#unless data.save.diff}}10{{/unless}}</span>    
             </div>
         </div>
@@ -79,7 +79,7 @@
                 </select>   
             </div>
         </div>
-        <div class="form-group {{#if sequencerOnNot}}hidden{{/if}}">
+        <div class="form-group {{#if sequencerOnNot}}dz-hidden{{/if}}">
             <label for="save.te">{{localize "DANGERZONE.type-form.tokenEffect.label"}}</label>
             <div class="form-fields">
                 <select name="save.te" value={{data.save.te}} data-dtype="Number"> 
@@ -87,7 +87,7 @@
                 </select>   
             </div>
         </div>
-        <div class="form-group {{#if tokenSaysOnNot}}hidden{{/if}}">
+        <div class="form-group {{#if tokenSaysOnNot}}dz-hidden{{/if}}">
             <label for="save.ts">{{localize "DANGERZONE.type-form.tokenSays.label"}}</label>
             <div class="form-fields">
                 <select name="save.ts" value={{data.save.ts}} data-dtype="Number"> 
@@ -157,7 +157,7 @@
         <div class="form-group">
             <label for="damage.delay">{{localize "DANGERZONE.type-form.tokenResponse.damage.delay.label"}}</label>
             <div class="form-fields">
-                <input type="number" required data-dtype="number" name="damage.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.damage.delay}}{{data.damage.delay}}{{/if}}{{#unless data.damage.delay}}0{{/unless}}>
+                <input type="number" required data-dtype="Number"" name="damage.delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.damage.delay}}{{data.damage.delay}}{{/if}}{{#unless data.damage.delay}}0{{/unless}}>
             </div>
         </div>
     </div>

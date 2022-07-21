@@ -8,12 +8,12 @@ import {DangerZoneForm} from './zone-form.js';
 
 export function addTriggersToHotbar() {
     if(game.user.isGM){
-        const scene = game.scenes.find(scene => scene.data.active);
+        const scene = game.scenes.find(scene => scene.active);
         const id = 'danger-zone-hotbar-trigger';
-        $('#ui-middle').find(`#${id}`).remove();
+        $('#ui-bottom').find(`#${id}`).remove();
         if(game.user.viewedScene === scene?.id) {
-            const html = $('#ui-middle');
-            if(!scene?.data?.gridType){return dangerZone.log(false,'No scene navigation when gridless ', {"scene": scene, "nav": html});}
+            const html = $('#ui-bottom');
+            if(!scene?.grid?.type){return dangerZone.log(false,'No scene navigation when gridless ', {"scene": scene, "nav": html});}
             _setDangerZoneButton(html, scene, id)
         }
     }
@@ -26,7 +26,7 @@ function _setDangerZoneButton(html, scene, clss) {
         let triggerList = $('<ol>').attr('id', 'danger-zone-hotbar-trigger').addClass(clss);
         let btnWrap = $('<ol>').append($('<li>'));
         let randomSet = 0;
-        const hidden = (hasEx ? zones.length : zones.length > 1) ? ' hidden ' : '';
+        const hidden = (hasEx ? zones.length : zones.length > 1) ? ' dz-hidden ' : '';
         for (const zn of zones){
             const zoneType = dangerZoneType.getDanger(zn.type)
             if(zoneType){

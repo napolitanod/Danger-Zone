@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {daeOn, fluidCanvasOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SENSETYPES, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK} from './constants.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SENSETYPES, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -301,8 +301,20 @@ class DangerZoneActiveEffectForm extends ActiveEffectConfig {
       }
 
     getData(options) {
-      const data = super.getData(options);
-      return data
+      return {
+        data: this.object,
+        isActorEffect: true,
+        isItemEffect: false,
+        submitText: "EFFECT.Submit",
+        modes: Object.entries(CONST.ACTIVE_EFFECT_MODES).reduce((obj, e) => {
+          obj[e[1]] = game.i18n.localize("EFFECT.MODE_"+e[0]);
+          return obj;
+        }, {})
+      };
+    }
+
+    render(force=false, options={}) {
+      super.render(force, options)
     }
 
     activateListeners(html) {
@@ -409,14 +421,15 @@ class DangerZoneDangerFormActiveEffect extends FormApplication {
         }
       }
   
-      const effect = {
+      const effect = Object.assign(this.data, {
         documentName: "ActiveEffect",
-        data: this.data,
         testUserPermission: (...args) => { return true},
         parent: {documentName: "Actor"},
         apps: {},
-        isOwner: true
-      }
+        isOwner: true,
+        uuid: `ActiveEffect.${this.parent.dangerId}`
+      });
+
       new DangerZoneActiveEffectForm(this, eventParent, this.parent.dangerId, effect).render(true);
     }
 
@@ -725,7 +738,7 @@ class DangerZoneDangerFormLight extends FormApplication {
     getData(options) {
       return {
         clearOps: AMBIENTLIGHTCLEAROPS,
-        colorationOps: AdaptiveLightingShader.COLORATION_TECHNIQUES,
+        colorationOps: AdaptiveLightingShader.SHADER_TECHNIQUES,
         data: this.data,
         hasPerfectVision: perfectVisionOn,
         lightAnimations: animationTypes()
@@ -948,7 +961,9 @@ class DangerZoneDangerFormTokenSays extends FormApplication {
         data: this.data,
         isChat: this.data?.fileType === 'rollTable' ? true : false,
         tokenSaysOps: TOKENSAYSTYPES,
-        sourceOps: SOURCETREATMENT
+        sourceOps: SOURCETREATMENT,
+        compendiumListRollTable: getCompendiumOps('rollTable'),
+        compendiumListAudio: getCompendiumOps('audio')
       }
     }
 
