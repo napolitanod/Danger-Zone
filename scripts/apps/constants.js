@@ -1,5 +1,5 @@
 import {daeOn} from '../index.js';
-import {tokenSaysOn, monksActiveTilesOn, perfectVisionOn, warpgateOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
+import {tokenSaysOn, monksActiveTilesOn, perfectVisionOn, warpgateOn, fxMasterOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -324,6 +324,15 @@ export function getCompendiumOps(fileType){
     return game.packs.filter((x) => x.documentName == TOKENSAYSFILETYPEENTITYTYPE[fileType]).reduce((obj, p) => {obj['']=''; obj[p.collection] = p.title; return obj;}, {})
 }
 
+export function weatherTypes() {
+    if(fxMasterOn) return Object.assign({'':''},Object.fromEntries(Object.entries(CONFIG.fxmaster.particleEffects).map(k=> [k[0],k[1].label])))
+    return {}
+}
+
+export function weatherParameters(type) {
+    if(fxMasterOn) return CONFIG.fxmaster.particleEffects[type]?.parameters
+}
+
 export const EXECUTABLEOPTIONS = {};
 
 export function setExecutableOptions(){
@@ -443,6 +452,14 @@ export function setExecutableOptions(){
                     {active: taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
+            },
+            'weather': {
+                title: "Weather", 
+                icon: "fas fa-cloud-sun-rain", 
+                modules:[
+                    {active: fxMasterOn, name: "fxmaster", dependent: true}
+                ],
+                scope: "scene"
             },
             'flavor': {
                 title: "Flavor", 

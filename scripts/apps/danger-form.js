@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
-import {daeOn, fluidCanvasOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SENSETYPES, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK} from './constants.js';
+import {daeOn, fluidCanvasOn, fxMasterOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SENSETYPES, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -25,6 +25,7 @@ export class DangerForm extends FormApplication {
     this.tokenSays = {},
     this.wall,
     this.warpgate = {},
+    this.weather = {},
     this.dangerId = dangerId;
   }
 
@@ -141,6 +142,9 @@ export class DangerForm extends FormApplication {
       case 'warpgate':
         new DangerZoneDangerFormWarpgate(this, eventParent, this.warpgate).render(true);
         break;
+      case 'weather':
+        new DangerZoneDangerFormWeather(this, eventParent, this.weather).render(true);
+        break;
     }
   }
 
@@ -194,6 +198,9 @@ export class DangerForm extends FormApplication {
       case 'warpgate':
         this.warpgate = {}
         break;
+      case 'weather':
+        this.weather = {}
+        break;
     }
     eventParent.removeClass('active')
     ui.notifications?.info(`${label} ${game.i18n.localize("DANGERZONE.type-form.cleared.info")}`);
@@ -225,6 +232,7 @@ export class DangerForm extends FormApplication {
     this.tokenSays = instance.options.flags.tokenSays ? instance.options.flags.tokenSays : {};
     this.wall = instance.options.wall;
     this.warpgate = instance.options.flags.warpgate ? instance.options.flags.warpgate : {};
+    this.weather = instance.options.flags.weather ? instance.options.flags.weather : {};
 
     const dataToSend =  {
       zone: instance,
@@ -244,10 +252,12 @@ export class DangerForm extends FormApplication {
       hasTokenSays: this.tokenSays?.fileType ? true : false,
       hasWall: (this.wall?.top || this.wall?.bottom || this.wall?.left || this.wall?.right) ? true : false,
       hasWarpgate: this.warpgate?.actor ? true : false,
+      hasWeather: this.weather.type ? true : false,
       tokenSaysOnNot: !tokenSaysOn, 
       sequencerOnNot: !sequencerOn,
       warpgateOnNot: !warpgateOn, 
       fluidCanvasOnNot: !fluidCanvasOn, 
+      fxMasterOnNot: !fxMasterOn, 
       taggerOnNot: !taggerOn,
       tokenResponseOnNot: Object.keys(saveTypes()).length ? false : true
     } 
@@ -275,6 +285,7 @@ export class DangerForm extends FormApplication {
     if(Object.keys(this.tokenSays).length) {expandedData.options.flags['tokenSays'] = this.tokenSays}
     if(Object.keys(this.mutate).length) {expandedData.options.flags['mutate'] = this.mutate}
     if(Object.keys(this.warpgate).length) {expandedData.options.flags['warpgate'] = this.warpgate}
+    if(Object.keys(this.weather).length) {expandedData.options.flags['weather'] = this.weather}
 
     await dangerZoneType.updateDangerZoneType(expandedData.id, expandedData);
     dangerZone.initializeTriggerButtons();
@@ -1055,5 +1066,74 @@ class DangerZoneDangerFormWall extends FormApplication {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.wall = expandedData;
       if(expandedData.top ||expandedData.left ||expandedData.right ||expandedData.bottom){this.eventParent.addClass('active')};
+    }
+}
+
+class DangerZoneDangerFormWeather extends FormApplication {
+  constructor(app, eventParent, data, ...args) {
+    super(...args);
+    this.data = data,
+    this.eventParent = eventParent,
+    this.parent = app;
+    }
+
+    static get defaultOptions(){
+        const defaults = super.defaultOptions;
+
+        return foundry.utils.mergeObject(defaults, {
+          title : game.i18n.localize("DANGERZONE.type-form.weather.label"),
+          id : "danger-zone-danger-weather",
+          classes: ["sheet","danger-part-form"],
+          template : dangerZone.TEMPLATES.DANGERZONEDANGERWEATHER,
+          height : "auto",
+          width: 425,
+          closeOnSubmit: true
+        });
+      }
+
+    getData(options) {
+      return {
+        data: this.data,
+        parameters: this._createParametersHTML(this.data.type, this.data),
+        typeOps: weatherTypes()
+      }
+    }
+
+    activateListeners(html) {
+      super.activateListeners(html)
+      html.on('change', "#danger-zone-weather-type", this._setParameters.bind(this));
+    }
+
+    _setParameters(event){
+      const ins = document.getElementById(`danger-zone-weather-parameters`);
+      ins.innerHTML = this._createParametersHTML(event.currentTarget.value);
+      this.setPosition();
+    }
+
+    _createParametersHTML(type, values = {}) {
+      const pObj = weatherParameters(type)
+      let finalHTML = '';
+      if (!pObj) return finalHTML;
+      if (pObj.density) finalHTML += this._buildRange('density', pObj.density, values.density);
+      if (pObj.direction) finalHTML += this._buildRange('direction', pObj.direction, values.direction);
+      if (pObj.lifetime) finalHTML += this._buildRange('lifetime', pObj.lifetime, values.lifetime);
+      if (pObj.scale) finalHTML += this._buildRange('scale', pObj.scale, values.scale);
+      if (pObj.speed) finalHTML += this._buildRange('speed', pObj.speed, values.speed);
+      if (pObj.tint) finalHTML += this._buildColor('tint', pObj.tint, values.tint);
+      return finalHTML
+    }
+
+    _buildColor(name, obj, val = ''){
+      return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><input type="text" name="${name}"  min="0.00" step="0.01"  value=${val}><input type="color" value="${val ? val : obj.value}" data-edit="tintColor"></div></div>`
+    }
+
+    _buildRange(name, obj, val = obj.value){
+      return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><input type="range" data-dtype="Number" name="${name}" min="${obj.min}" max="${obj.max}" step="${obj.step}" value="${val}"><span class="range-value">${val}</span></div></div>`
+    }
+  
+    async _updateObject(event, formData) {
+      const expandedData = foundry.utils.expandObject(formData);
+      this.parent.weather = expandedData;
+      if(expandedData.type){this.eventParent.addClass('active')};
     }
 }

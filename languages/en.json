@@ -749,6 +749,12 @@
                 "label": "Token Spawn",
                 "tag.label": "Tag",
                 "tag.description": "Tagger tag"
+            },
+            "weather": { 
+                "description": "Create screen-wide weather and other natural effects using the FXMaster module.",
+                "delay.label": "Delay Start",
+                "label": "Weather",
+                "type.label": "Type"
             }
         },
         "tiles-block":{
