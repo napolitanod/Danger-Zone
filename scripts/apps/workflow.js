@@ -2211,7 +2211,6 @@ class weather extends executable{
             type: this.type,
             options: this._options
           });
-        console.log(this._options, this.data.id, this.type)
         await this._for();
         await this.off();
     }
