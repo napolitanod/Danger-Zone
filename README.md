@@ -3,11 +3,14 @@
 [![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fdanger-zone&colorB=4aa94a)](https://forge-vtt.com/bazaar#package=danger-zone)
 [![Foundry Hub Endorsements](https://img.shields.io/endpoint?logoColor=white&url=https%3A%2F%2Fwww.foundryvtt-hub.com%2Fwp-json%2Fhubapi%2Fv1%2Fpackage%2Fdanger-zone%2Fshield%2Fendorsements)](https://www.foundryvtt-hub.com/package/danger-zone/)
 
+### New in Foundry VTT V10
+* New Weather danger part, allowing for triggering of canvas wide weather effects. Requires FXMaster module.
+* Ambient Lights: attenuation supported
 
-### WIKI
+### Wiki
 [For detailed instructions and documented examples](../../wiki) 
 
-### TUTORIALS
+### Tutorials
 [Intro example - explosions sound accompanied by screen shaking](https://youtu.be/-n0MFJNj8IM)
 
 [Combat within a burning structure](https://youtu.be/qArHy50NNgk)
