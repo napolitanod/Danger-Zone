@@ -2162,6 +2162,10 @@ class weather extends executable{
         return this._part.direction 
     }
 
+    get flagName(){
+        return this.duration ? this.data.id : this.data.zone.type
+    }
+
     get lifetime(){
         return this._part.lifetime 
     }
@@ -2197,7 +2201,7 @@ class weather extends executable{
     async off(){ 
         if(this.duration) {
             Hooks.call("fxmaster.switchParticleEffect", {
-            name: this.data.id,
+            name: this.flagName,
             type: this.type
           });
         }
@@ -2207,7 +2211,7 @@ class weather extends executable{
         await super.play()
         if(this._cancel) return
         Hooks.call("fxmaster.switchParticleEffect", {
-            name: this.data.id,
+            name: this.flagName,
             type: this.type,
             options: this._options
           });

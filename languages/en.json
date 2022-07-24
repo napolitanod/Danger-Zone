@@ -795,7 +795,8 @@
             "Z.label": "Clear walls that share this zone"
         },
         "weather.replace-types": {
-            "A.label": "Clear weather",
+            "A.label": "Clear all weather",
+            "T.label": "Clear weather that shares this danger",
             "N.label": "Retain existing weather"
         },
         "zone-active-effect-form": {

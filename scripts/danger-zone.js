@@ -513,7 +513,13 @@ export class zone {
   async wipe(document, replace = ''){
       let ids = []; const data = this._wipeData(document); const rep = replace ? replace : data.replace;
       if(document === 'fxmaster-particle'){ 
-        if(fxMasterOn && rep === 'A' ) Hooks.call("fxmaster.updateParticleEffects", []);
+        if(fxMasterOn) {
+          switch (rep) {
+            case 'A': Hooks.call("fxmaster.updateParticleEffects", []); break;
+            case 'T': Hooks.call("fxmaster.switchParticleEffect", {name: this.type, type: this.danger.weather?.type}); break;
+            default: return false
+          }
+        }
         return true
       }
       switch (rep) {

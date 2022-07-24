@@ -81,6 +81,7 @@ export const DANGERZONEWALLREPLACE = {
 
 export const DANGERZONEWEATHERREPLACE = {
     "N": "DANGERZONE.weather.replace-types.N.label", 
+    "T": "DANGERZONE.weather.replace-types.T.label",
     "A": "DANGERZONE.weather.replace-types.A.label"
 }
 
