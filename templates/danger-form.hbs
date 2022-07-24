@@ -118,6 +118,11 @@
                 <label>{{localize 'DANGERZONE.type-form.wall.label'}}</label>
                 <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
             </li>
+            <li data-id="weather" class="{{#if hasWeather}}active{{/if}}">
+                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.weather.description"}}"><i class="fas fa-cloud-rain"></i></button>   
+                <label>{{localize 'DANGERZONE.type-form.weather.label'}}</label>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            </li>
             <li data-id="global-zone" class="{{#if hasGlobalZone}}active{{/if}}">
                 <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.global-zone.description"}}"><i class="fas fa-radiation"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.global-zone.label'}}</label>

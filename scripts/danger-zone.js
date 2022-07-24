@@ -7,7 +7,7 @@ import {COMBATTRIGGERS, DANGERZONETRIGGERS, WORLDZONE} from './apps/constants.js
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities} from './apps/helpers.js';
-import { warpgateOn } from './index.js';
+import { fxMasterOn, warpgateOn } from './index.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -45,6 +45,7 @@ export class dangerZone {
     DANGERZONEDANGERTOKENMOVE: `modules/${this.ID}/templates/danger-form-token-move.hbs`,
     DANGERZONEDANGERWALL: `modules/${this.ID}/templates/danger-form-wall.hbs`,
     DANGERZONEDANGERWARPGATE: `modules/${this.ID}/templates/danger-form-warpgate.hbs`,
+    DANGERZONEDANGERWEATHER: `modules/${this.ID}/templates/danger-form-weather.hbs`,
     DANGERZONEZONECOPY: `modules/${this.ID}/templates/danger-zone-scene-zone-copy.hbs`
   }
 
@@ -318,6 +319,7 @@ export class zone {
     this.trigger = 'manual',
     this.type = '',
     this.wallReplace = 'N',
+    this.weatherReplace = 'N',
     this.weight = 1
   }
 
@@ -509,8 +511,18 @@ export class zone {
   }
 
   async wipe(document, replace = ''){
-      let ids = []; const data = this._wipeData(document);
-      switch (replace ? replace : data.replace) {
+      let ids = []; const data = this._wipeData(document); const rep = replace ? replace : data.replace;
+      if(document === 'fxmaster-particle'){ 
+        if(fxMasterOn) {
+          switch (rep) {
+            case 'A': Hooks.call("fxmaster.updateParticleEffects", []); break;
+            case 'T': Hooks.call("fxmaster.switchParticleEffect", {name: this.type, type: this.danger.weather?.type}); break;
+            default: return false
+          }
+        }
+        return true
+      }
+      switch (rep) {
           case 'Z':
             ids=this.scene.scene[data.placeable].filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.id).map(t => t.id);
               break;
@@ -558,6 +570,8 @@ export class zone {
         return {replace: this.wallReplace, placeable: 'walls'}
       case 'AmbientLight':
         return {replace: this.lightReplace, placeable: 'lights'}
+      case 'fxmaster-particle':
+        return {replace: this.weatherReplace}
     }
   }
 

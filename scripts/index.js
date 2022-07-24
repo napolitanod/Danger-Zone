@@ -10,7 +10,7 @@ import {DangerZoneSceneForm} from './apps/scene-zone-list-form.js';
 /**
  * global variables
  */
-export var timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, betterRoofsOn = false, levelsOn = false; //active modules
+export var timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, fxMasterOn = false, betterRoofsOn = false, levelsOn = false; //active modules
 export var dzMActive = false; 
 export let dangerZoneSocket; //var for socketlib
 
@@ -352,6 +352,7 @@ function setModsAvailable () {
 	if (game.modules.get("monks-scene-navigation")?.active){monksSceneOn = true}
 	if (game.modules.get("token-says")?.active){tokenSaysOn = true} ;
 	if (game.modules.get("warpgate")?.active){warpgateOn = true} ;
+	if (game.modules.get("fxmaster")?.active){fxMasterOn = true} ;
 	if (game.modules.get("kandashis-fluid-canvas")?.active){fluidCanvasOn = true} ;
 	if (game.modules.get("sequencer")?.active){sequencerOn = true} ;
 	if (game.modules.get("tagger")?.active){taggerOn = true} ;

@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {monksActiveTilesOn, sequencerOn, betterRoofsOn, levelsOn, perfectVisionOn, taggerOn, wallHeightOn} from '../index.js';
+import {monksActiveTilesOn, sequencerOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, wallHeightOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {furthestShiftPosition, getFilesFromPattern, getTagEntities, stringToObj, wait} from './helpers.js';
 
@@ -523,6 +523,9 @@ export class executor {
                 case 'wall': 
                     be = new wall(this.danger.wall, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break; 
+                case 'weather': 
+                    be = new weather(this.danger.weather, this.data, name, EXECUTABLEOPTIONS[name]);
+                    break;
             }
             if(be) this.reconcile(name, be);
         }
@@ -2135,4 +2138,88 @@ class wall extends executable {
         if(taggerOn && this.tag) wall.flags['tagger'] = this.taggerTag
         return wall;
     }  
+}
+
+class weather extends executable{
+    
+    get duration(){
+        return this._part.duration
+    }
+
+    get has(){
+        return (super.has && this.type) ? true : false
+    }
+
+    get animations(){
+        return this._part.animations ? [this._part.animations] : []
+    }
+
+    get density(){
+        return this._part.density 
+    }
+
+    get direction(){
+        return this._part.direction 
+    }
+
+    get flagName(){
+        return this.duration ? this.data.id : this.data.zone.type
+    }
+
+    get lifetime(){
+        return this._part.lifetime 
+    }
+
+    get _options(){
+        const obj = {};
+        if(this.animations.length) obj['animations'] = this.animations;
+        if(this.density !== undefined) obj['density'] = this.density;
+        if(this.direction !== undefined) obj['direction'] = this.direction;
+        if(this.lifetime !== undefined) obj['lifetime'] = this.lifetime;
+        if(this.scale !== undefined) obj['scale'] = this.scale;
+        if(this.speed !== undefined) obj['speed'] = this.speed;
+        if(this.tint !== undefined) obj['tint'] = this.tint;
+        return obj
+    }
+
+    get scale(){
+        return this._part.scale 
+    }
+
+    get speed(){
+        return this._part.speed 
+    }
+
+    get tint(){
+        return this._part.tint 
+    }
+    
+    get type(){
+        return this._part.type
+    }
+
+    async off(){ 
+        if(this.duration) {
+            Hooks.call("fxmaster.switchParticleEffect", {
+            name: this.flagName,
+            type: this.type
+          });
+        }
+    }
+
+    async play(){
+        await super.play()
+        if(this._cancel) return
+        Hooks.call("fxmaster.switchParticleEffect", {
+            name: this.flagName,
+            type: this.type,
+            options: this._options
+          });
+        await this._for();
+        await this.off();
+    }
+
+    async _for(){
+        if(this.duration) await delay(this.duration);
+    }
 }

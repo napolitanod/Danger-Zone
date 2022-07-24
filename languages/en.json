@@ -139,6 +139,8 @@
             "types.add": "View dangers",
             "wall.replace.label": "Walls",
             "wall.replace.description": "Choose what to do with existing Danger Zone created walls when this zone triggers.",
+            "weather.replace.label": "Weather",
+            "weather.replace.description": "Choose what to do with existing FXMaster weather effects.",
             "weight.label": "Weight"
         },
         "executor-form":{
@@ -749,6 +751,13 @@
                 "label": "Token Spawn",
                 "tag.label": "Tag",
                 "tag.description": "Tagger tag"
+            },
+            "weather": { 
+                "description": "Create screen-wide weather and other natural effects using the FXMaster module.",
+                "delay.label": "Delay Start",
+                "duration.label": "Duration",
+                "label": "Weather",
+                "type.label": "Type"
             }
         },
         "tiles-block":{
@@ -784,6 +793,11 @@
             "R.label": "Clear walls that share this trigger",
             "T.label": "Clear walls that share this danger",
             "Z.label": "Clear walls that share this zone"
+        },
+        "weather.replace-types": {
+            "A.label": "Clear all weather",
+            "T.label": "Clear weather that shares this danger",
+            "N.label": "Retain existing weather"
         },
         "zone-active-effect-form": {
             "form-name": "Danger Active Effect"

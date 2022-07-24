@@ -21,7 +21,7 @@
                 <span class="units">{{localize 'DANGERZONE.degrees'}}</span>
             </label>
             <div class="form-fields">
-                <input type="range" data-dtype="Number"" name="angle" min="0" max="360" step="1" value="{{#if data.angle}}{{data.angle}}{{/if}}{{#unless data.angle}}360{{/unless}}">
+                <input type="range" data-dtype="Number" name="angle" min="0" max="360" step="1" value="{{#if data.angle}}{{data.angle}}{{/if}}{{#unless data.angle}}360{{/unless}}">
                 <span class="range-value">{{#if data.angle}}{{data.angle}}{{/if}}{{#unless data.angle}}360{{/unless}}</span>    
             </div>
         </div>
@@ -30,7 +30,7 @@
                 <span class="units">{{localize 'DANGERZONE.degrees'}}</span>
             </label>
             <div class="form-fields">
-                <input type="range" data-dtype="Number"" name="rotation" min="0" max="360" step="1" value="{{data.rotation}}">
+                <input type="range" data-dtype="Number" name="rotation" min="0" max="360" step="1" value="{{data.rotation}}">
                 <span class="range-value">{{data.rotation}}</span>    
             </div>
         </div>
@@ -89,7 +89,7 @@
         <div class="form-group">
             <label for="lightAnimation.speed">{{localize "DANGERZONE.type-form.light.speed.label"}}</label>
             <div class="form-fields">
-                <input type="range" data-dtype="Number"" name="lightAnimation.speed" min="1" max="10" step="1" value="{{data.lightAnimation.speed}}">
+                <input type="range" data-dtype="Number" name="lightAnimation.speed" min="1" max="10" step="1" value="{{data.lightAnimation.speed}}">
                 <span class="range-value">{{data.lightAnimation.speed}}</span>    
             </div>
         </div>
@@ -102,7 +102,7 @@
         <div class="form-group">
             <label for="lightAnimation.intensity">{{localize "DANGERZONE.type-form.light.animationIntensity.label"}}</label>
             <div class="form-fields">
-                <input type="range" data-dtype="Number"" name="lightAnimation.intensity" min="1" max="10" step="1" value="{{data.lightAnimation.intensity}}">
+                <input type="range" data-dtype="Number" name="lightAnimation.intensity" min="1" max="10" step="1" value="{{data.lightAnimation.intensity}}">
                 <span class="range-value">{{data.lightAnimation.intensity}}</span>    
             </div>
         </div>

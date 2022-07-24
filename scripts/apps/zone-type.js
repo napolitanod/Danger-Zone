@@ -220,6 +220,10 @@ export class dangerZoneType {
     return this.options.flags.warpgate ? this.options.flags.warpgate : {}
   }
 
+  get weather(){
+    return this.options.flags.weather ? this.options.flags.weather : {}
+  }
+
   static get _allDangers() {
     const flags = game.settings.get(dangerZone.ID, 'zone-types');
     return flags ? flags : {}
