@@ -439,6 +439,17 @@
                 </select>
             </div>
         </div>
+        <div class="form-group {{#if hideWeather}} dz-hidden{{/if}}">
+            <label>
+                {{localize 'DANGERZONE.edit-form.weather.replace.label'}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.weather.replace.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <select name="weatherReplace" value="{{zone.weatherReplace}}">
+                    {{selectOptions weatherReplaceOps selected=zone.weatherReplace localize=true}}
+                </select>
+            </div>
+        </div>
     </div>
 	<footer class="sheet-footer flexrow">
 		<button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>

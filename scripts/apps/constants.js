@@ -28,6 +28,7 @@ export const WORLDZONE = {
     "replace": "N",
     "lightReplace": "N",
     "wallReplace": "N",
+    "weatherReplace": "N",
     "flavor": "",
     "enabled": true
   }
@@ -76,6 +77,11 @@ export const DANGERZONEWALLREPLACE = {
     "T": "DANGERZONE.wall.replace-types.T.label",
     "Z": "DANGERZONE.wall.replace-types.Z.label",
     "A": "DANGERZONE.wall.replace-types.A.label"
+}
+
+export const DANGERZONEWEATHERREPLACE = {
+    "N": "DANGERZONE.weather.replace-types.N.label", 
+    "A": "DANGERZONE.weather.replace-types.A.label"
 }
 
 export const DANGERZONETRIGGERS = {
@@ -455,7 +461,9 @@ export function setExecutableOptions(){
             },
             'weather': {
                 title: "Weather", 
-                icon: "fas fa-cloud-sun-rain", 
+                icon: "fas fa-cloud-rain", 
+                document: 'fxmaster-particle',
+                wipeable: true,
                 modules:[
                     {active: fxMasterOn, name: "fxmaster", dependent: true}
                 ],

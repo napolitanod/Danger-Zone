@@ -1114,6 +1114,7 @@ class DangerZoneDangerFormWeather extends FormApplication {
       const pObj = weatherParameters(type)
       let finalHTML = '';
       if (!pObj) return finalHTML;
+      if (pObj.animations) finalHTML += this._buildSelect('animations', pObj.animations, values.animations);
       if (pObj.density) finalHTML += this._buildRange('density', pObj.density, values.density);
       if (pObj.direction) finalHTML += this._buildRange('direction', pObj.direction, values.direction);
       if (pObj.lifetime) finalHTML += this._buildRange('lifetime', pObj.lifetime, values.lifetime);
@@ -1124,11 +1125,22 @@ class DangerZoneDangerFormWeather extends FormApplication {
     }
 
     _buildColor(name, obj, val = ''){
-      return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><input type="text" name="${name}"  min="0.00" step="0.01"  value=${val}><input type="color" value="${val ? val : obj.value}" data-edit="tintColor"></div></div>`
+      return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><input type="text" name="${name}"  min="0.00" step="0.01"  value=${val}><input type="color" value="${val ? val : obj.value.value}" data-edit="${name}"></div></div>`
     }
 
     _buildRange(name, obj, val = obj.value){
       return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><input type="range" data-dtype="Number" name="${name}" min="${obj.min}" max="${obj.max}" step="${obj.step}" value="${val}"><span class="range-value">${val}</span></div></div>`
+    }
+
+    _buildSelect(name, obj, val = obj.value){
+      const sortedList = Object.entries(obj.options).sort(([,a],[,b]) => a.localeCompare(b))
+      let optionList = '<option value=""></option>';
+      for(let i = 0; i < sortedList.length; i++) {
+        let selected = '';
+        if (sortedList[i][0] === val) selected = ' selected '
+        optionList += `<option value="${sortedList[i][0]}"${selected}>${game.i18n.localize(sortedList[i][1])}</option>`;
+      }
+      return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><select name="${name}" value="${val}">${optionList}</select></div></div>`    
     }
   
     async _updateObject(event, formData) {

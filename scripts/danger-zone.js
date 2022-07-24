@@ -7,7 +7,7 @@ import {COMBATTRIGGERS, DANGERZONETRIGGERS, WORLDZONE} from './apps/constants.js
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities} from './apps/helpers.js';
-import { warpgateOn } from './index.js';
+import { fxMasterOn, warpgateOn } from './index.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -319,6 +319,7 @@ export class zone {
     this.trigger = 'manual',
     this.type = '',
     this.wallReplace = 'N',
+    this.weatherReplace = 'N',
     this.weight = 1
   }
 
@@ -510,8 +511,12 @@ export class zone {
   }
 
   async wipe(document, replace = ''){
-      let ids = []; const data = this._wipeData(document);
-      switch (replace ? replace : data.replace) {
+      let ids = []; const data = this._wipeData(document); const rep = replace ? replace : data.replace;
+      if(document === 'fxmaster-particle'){ 
+        if(fxMasterOn && rep === 'A' ) Hooks.call("fxmaster.updateParticleEffects", []);
+        return true
+      }
+      switch (rep) {
           case 'Z':
             ids=this.scene.scene[data.placeable].filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.id).map(t => t.id);
               break;
@@ -559,6 +564,8 @@ export class zone {
         return {replace: this.wallReplace, placeable: 'walls'}
       case 'AmbientLight':
         return {replace: this.lightReplace, placeable: 'lights'}
+      case 'fxmaster-particle':
+        return {replace: this.weatherReplace}
     }
   }
 

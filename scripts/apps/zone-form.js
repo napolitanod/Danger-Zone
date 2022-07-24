@@ -2,7 +2,8 @@ import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {boundary, point} from './dimensions.js';
 import {COMBATTRIGGERS, DANGERZONETRIGGERS} from './constants.js';
-import {TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps} from './constants.js';
+import {TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, DANGERZONEWEATHERREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps} from './constants.js';
+import { fxMasterOn } from '../index.js';
 
 export class DangerZoneForm extends FormApplication {
   constructor(app, zoneId, sceneId, dangerId, ...args) {
@@ -117,6 +118,7 @@ export class DangerZoneForm extends FormApplication {
       hideOperation: instance.loop > 1 ? false : true,
       hideTargetCombatant: COMBATTRIGGERS.includes(instance.trigger) ? false : true,
       hideWeight: !instance.random,
+      hideWeather: !fxMasterOn,
       hideWorld: this.dangerId ? false : true,
       replaceOps: DANGERZONEREPLACE,
       lightReplaceOps: DANGERZONELIGHTREPLACE,
@@ -130,6 +132,7 @@ export class DangerZoneForm extends FormApplication {
       zoneOps: dangerZone.getZoneList(this.sceneId),
       zoneTypeOps: dangerZoneType.dangerList,
       wallReplaceOps: DANGERZONEWALLREPLACE,
+      weatherReplaceOps: DANGERZONEWEATHERREPLACE,
       sceneInactive: (this.scene?.active && this.scene.grid.type) ? false : true
     } 
   }
