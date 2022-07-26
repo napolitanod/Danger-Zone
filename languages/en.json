@@ -555,6 +555,46 @@
                 "token.description": "Updates token by passing in object data. Expects key: value pairs. This will be wrapped in {brackets} and passed as an object to the Warpgate token mutation."
             },
             "name.label": "Name",
+            "scene": {
+                "active.label": "Enable Scene Modifications",
+                "description": "Modifiy scene settings and global illumination",
+                "label": "Scene",
+                "background": {
+                    "file.label": "Background Image",
+                    "randomFile.label": "Randomize Wildcard Image",
+                    "file.placeholder":"File Path"
+                },
+                "darkness":{
+                    "enable.label": "Update Darkness Level",
+                    "value.label": "Darkness Level"
+                },
+                "delay.label": "Delay Start",
+                "foreground":{
+                    "e": {
+                        "label": "Foreground Elevation",
+                        "distance": {
+                            "label": "Elevation Range",
+                            "max.label": "Maximum",
+                            "min.label": "Minimum"
+                        },
+                        "type.label": "Elevation Change Type",
+                        "types": {
+                            "relative.label": "Change Relative to Current Elevation",
+                            "set.label": "Set to Elevation"
+                        }
+                    },
+                    "randomFile.label": "Randomize Wildcard Image",
+                    "file.label":"Foreground Image",
+                    "file.placeholder":"File Path"
+                },
+                "globalLight": {
+                    "label": "Toggle Global Illumination",
+                    "options": {
+                        "Y.label": "Turn Global Light On",
+                        "N.label": "Turn Global Light Off"
+                    }
+                }
+            },
             "tab" :{
                 "effects.title": "Effects",
                 "modules.title": "Module Integration",

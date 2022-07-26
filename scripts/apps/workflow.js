@@ -508,6 +508,9 @@ export class executor {
                 case 'save': 
                     be = new save(this.danger.save, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
+                case 'scene': 
+                    be = new scene(this.danger.scene, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
                 case 'warpgate': 
                     be = new spawn(this.danger.warpgate, this.data, name, EXECUTABLEOPTIONS[name]);
                     break;
@@ -622,7 +625,7 @@ export class executor {
 
     async load(){
         if(!sequencerOn || this.previouslyExecuted) return true
-        const promises = this.parts.filter(p => p._file).map(p => p.file);
+        const promises = this.parts.filter(p => p._file || p._fileB || p._fileF).map(p => p.file || p.fileB || p.fileF);
         const files = await Promise.all(promises).then((results) => {return results.filter(r => r)}).catch((e) => {return console.log('Danger Zone file caching failed.')});
         if(files.length) this.promises.load.push(Sequencer.Preloader.preloadForClients(files))
         return this.report('Load')
@@ -902,6 +905,10 @@ class executable {
     async play(){  
         this.setExecuted()
         if (this.hasBoundaryScope && !this.data.hasBoundary) this._cancel = true
+    }
+
+    randomize(){
+        return (!this.random || Math.random() < 0.5)
     }
 
     setExecuted(){
@@ -1718,6 +1725,108 @@ class save extends executable{
     }
 }
 
+class scene extends executable{
+    constructor(...args){
+        super(...args),
+        this._fileB,
+        this._fileF,
+        this.update = {}
+    }
+
+    get active(){
+        return this._part.active
+    }
+
+    get darkness(){
+        return this._part.darkness.enable ? this._part.darkness.value : -1
+    }
+
+    get e(){
+        return this._part.e ? this._part.e : {type: '', min: 0, max: 0}
+    }
+
+    get filePathB(){
+        return this._part.background.file ? this._part.background.file : ''
+    } 
+
+    get filePathF(){
+        return this._part.foreground.file ? this._part.foreground.file : ''
+    } 
+
+    get fileB(){
+        if(!this._fileB) return this._setFileB();
+        return this._fileB
+    }
+
+    get fileF(){
+        if(!this._fileF) return this._setFileF();
+        return this._fileF
+    }
+
+    get globalLight(){
+        return this._part.globalLight ? this._part.globalLight : ''
+    }
+
+    get randomFileB(){
+        return this._part.background.randomFile ? true : false
+    }
+
+    get randomFileF(){
+        return this._part.foreground.randomFile ? true : false
+    }
+  
+    get has(){
+        return (super.has && this.active) ? true : false
+    }
+
+    get z(){
+        return this._part.z
+    }
+
+    _build() {
+        if(this.darkness !== - 1) this.update.darkness = this.darkness;
+        if(this.globalLight) this.update.globalLight = this.globalLight === 'Y' ? true : false;
+        if(this.e.type) this.update.foregroundElevation = this.e.type === 'S' ? this._e() : this.data.scene.foregroundElevation + this._e();
+        if(this._fileB) this.update['background'] = {src: this._fileB}
+        if(this._fileF) this.update['foreground'] = {src: this._fileF}
+    }
+
+    _e(){
+        return (this.e.min + Math.floor(Math.random() * (this.e.max - this.e.min + 1))) 
+    }
+
+    async load() {
+        this._fileB = await this.fileB;
+        (this._fileB && sequencerOn) ? Sequencer.Preloader.preloadForClients(this._fileB) : true
+        this._fileF = await this.fileF;
+        return (this._fileF && sequencerOn) ? Sequencer.Preloader.preloadForClients(this._fileF) : true
+    }
+
+    async play(){
+        if(!this._fileB) await this.fileB;
+        if(!this._fileF) await this.fileF;
+        await super.play()
+        if(this._cancel) return
+        this._build()
+        await this.data.scene.update(this.update);
+    }
+
+    async _setFileB(){
+        if(!this.filePathB || !this.randomFileB) return this._fileB = this.filePathB;
+        const files = await getFilesFromPattern(this.filePathB);
+        this._fileB = files[Math.floor(Math.random() * files.length)]
+        return this._fileB
+      }
+
+    async _setFileF(){
+        if(!this.filePathF || !this.randomFileF) return this._fileF = this.filePathF;
+        const files = await getFilesFromPattern(this.filePathF);
+        this._fileF = files[Math.floor(Math.random() * files.length)]
+        return this._fileF
+    }
+
+}
+
 class secondaryEffect extends executableWithFile {
 
     get duration(){
@@ -2116,10 +2225,6 @@ class wall extends executable {
             const walls = this._build;
             if(walls.length) await this.data.scene.createEmbeddedDocuments("Wall",walls)
         }
-    }
-
-    randomize(){
-        return (!this.random || Math.random() < 0.5)
     }
 
     _wall(start, end){

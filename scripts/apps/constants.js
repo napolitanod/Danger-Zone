@@ -173,6 +173,18 @@ export const ELEVATIONMOVEMENT = {
     "S": "DANGERZONE.type-form.tokenMove.elevation-types.set.label"
 }
 
+export const SCENEFOREGROUNDELEVATIONMOVEMENT = {
+    "": "",
+    "R": "DANGERZONE.type-form.scene.foreground.e.types.relative.label",
+    "S": "DANGERZONE.type-form.scene.foreground.e.types.set.label"
+}
+
+export const SCENEGLOBALILLUMINATION = {
+    "": "",
+    "Y": "DANGERZONE.type-form.scene.globalLight.options.Y.label",
+    "N": "DANGERZONE.type-form.scene.globalLight.options.N.label"
+}
+
 export const FLUIDCANVASTYPES = {
     "black": "DANGERZONE.type-form.fluidCanvas.types.black",
     "blur": "DANGERZONE.type-form.fluidCanvas.types.blur",
@@ -422,6 +434,14 @@ export function setExecutableOptions(){
                 title: "Save", 
                 icon: "fas fa-shield-alt",
                 scope: "token"
+            },
+            'scene': {
+                title: "Scene", 
+                icon: "fas fa-map", 
+                document: 'scene',
+                wipeable: false,
+                modules:[],
+                scope: "scene"
             },
             'warpgate': {
                 title: "Spawn", 

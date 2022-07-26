@@ -83,6 +83,11 @@
                 <label>{{localize 'DANGERZONE.type-form.mutate.label'}}</label>
                 <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
             </li>
+            <li data-id="scene" class="{{#if hasScene}}active{{/if}}">
+                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.scene.description"}}"><i class="fas fa-map"></i></button>   
+                <label>{{localize 'DANGERZONE.type-form.scene.label'}}</label>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            </li>
             <li data-id="foreground-effect" class="{{#if sequencerOnNot}}dz-hidden{{/if}} {{#if hasForegroundEffect}}active{{/if}}">
                 <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.foregroundEffect.description"}}"><i class="fas fa-fire"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.foregroundEffect.label'}}</label>

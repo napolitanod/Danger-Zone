@@ -5,7 +5,7 @@
                 <div class="title">{{localize 'DANGERZONE.scene.title'}}</div>
                 <div class="type">{{localize 'DANGERZONE.scene.type'}}</div>
                 <div class="trigger">{{localize 'DANGERZONE.scene.trigger'}}</div>
-                <div class="random">{{localize 'DANGERZONE.scene.random'}}</div>
+                <div class="randomFile">{{localize 'DANGERZONE.scene.randomFile'}}</div>
             </div>
             <div class="danger-zone-controls flexrow" data-id="{{this.sceneId}}">
                 <a class="danger-zone-copy" title="{{localize 'DANGERZONE.scene.copy-danger-zone'}}" data-action="copy">
@@ -24,7 +24,7 @@
                     <div class="title">{{this.title}}</div>
                     <div class="type">{{this.danger.name}}</div>
                     <div class="trigger">{{this.triggerDescription}}</div>
-                    <div class="random">{{#if this.random}}<i class="fas fa-radiation"></i>{{/if}}</div>
+                    <div class="randomFile">{{#if this.randomFile}}<i class="fas fa-radiation"></i>{{/if}}</div>
                 </div>
                 <div class="danger-zone-controls flexrow">
                     <a class="danger-zone-edit" title="{{localize 'DANGERZONE.edit-danger-zone'}}" data-action="edit"><i class="fas fa-edit"></i></a>&nbsp;&nbsp;&nbsp;
