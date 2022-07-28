@@ -102,6 +102,7 @@ export class dangerZoneType {
             file: ''
           },
           darkness: {
+            animate: 0,
             enable: false,
             value: 0
           },

@@ -565,6 +565,7 @@
                     "file.placeholder":"File Path"
                 },
                 "darkness":{
+                    "animate.label": "Animate Over Time",
                     "enable.label": "Update Darkness Level",
                     "value.label": "Darkness Level"
                 },
@@ -593,7 +594,8 @@
                         "Y.label": "Turn Global Light On",
                         "N.label": "Turn Global Light Off"
                     }
-                }
+                },
+                "render.description": "* these modifications will cause the scene to render. They will execute before any other changes that share the same delay and Danger Zone will attempt to pause the remainder of the danger execution until rendering completes."
             },
             "tab" :{
                 "effects.title": "Effects",

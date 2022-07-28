@@ -625,7 +625,7 @@ export class executor {
 
     async load(){
         if(!sequencerOn || this.previouslyExecuted) return true
-        const promises = this.parts.filter(p => p._file || p._fileB || p._fileF).map(p => p.file || p.fileB || p.fileF);
+        const promises = this.parts.filter(p => p._file).map(p => p.file).concat(this.parts.filter(p => p._fileB).map(p => p.fileB).concat(this.parts.filter(p => p._fileF).map(p => p.fileF)));
         const files = await Promise.all(promises).then((results) => {return results.filter(r => r)}).catch((e) => {return console.log('Danger Zone file caching failed.')});
         if(files.length) this.promises.load.push(Sequencer.Preloader.preloadForClients(files))
         return this.report('Load')
@@ -1730,7 +1730,8 @@ class scene extends executable{
         super(...args),
         this._fileB,
         this._fileF,
-        this.update = {}
+        this.update = {},
+        this.renderUpdate = {}
     }
 
     get active(){
@@ -1739,6 +1740,10 @@ class scene extends executable{
 
     get darkness(){
         return this._part.darkness.enable ? this._part.darkness.value : -1
+    }
+
+    get delay(){
+        return this._part.delay ? this._part.delay - 0.5 : -0.5
     }
 
     get e(){
@@ -1754,13 +1759,11 @@ class scene extends executable{
     } 
 
     get fileB(){
-        if(!this._fileB) return this._setFileB();
-        return this._fileB
+        return this._fileB ? this._fileB : this._setFileB()  
     }
 
     get fileF(){
-        if(!this._fileF) return this._setFileF();
-        return this._fileF
+        return this._fileF ? this._fileF : this._setFileF() 
     }
 
     get globalLight(){
@@ -1779,6 +1782,20 @@ class scene extends executable{
         return (super.has && this.active) ? true : false
     }
 
+    get hasNonRenderInvokingChange(){
+        return Object.keys(this.update).length ? true : false
+    } 
+
+    get hasRenderInvokingChange(){
+        return Object.keys(this.renderUpdate).length ? true : false
+    } 
+
+    get updateOps(){
+        const ops = {};
+        if (this.darkness) ops.animateDarkness = this._part.darkness.animate
+        return ops
+    }
+
     get z(){
         return this._part.z
     }
@@ -1787,8 +1804,8 @@ class scene extends executable{
         if(this.darkness !== - 1) this.update.darkness = this.darkness;
         if(this.globalLight) this.update.globalLight = this.globalLight === 'Y' ? true : false;
         if(this.e.type) this.update.foregroundElevation = this.e.type === 'S' ? this._e() : this.data.scene.foregroundElevation + this._e();
-        if(this._fileB) this.update['background'] = {src: this._fileB}
-        if(this._fileF) this.update['foreground'] = {src: this._fileF}
+        if(this._fileB && this.data.scene.background.src !== this._fileB) this.renderUpdate['background'] = {src: this._fileB}
+        if(this._fileF && this.data.scene.foreground !== this._fileF) this.renderUpdate.foreground = this._fileF
     }
 
     _e(){
@@ -1797,18 +1814,51 @@ class scene extends executable{
 
     async load() {
         this._fileB = await this.fileB;
-        (this._fileB && sequencerOn) ? Sequencer.Preloader.preloadForClients(this._fileB) : true
         this._fileF = await this.fileF;
-        return (this._fileF && sequencerOn) ? Sequencer.Preloader.preloadForClients(this._fileF) : true
+        let ret = true
+        if(sequencerOn){
+            if(this._fileB){
+                if(this._fileF){
+                    ret = Sequencer.Preloader.preloadForClients([this._fileB, this._fileF])
+                } else  {ret = Sequencer.Preloader.preloadForClients(this._fileB)}
+            } else if(this._fileF) {ret = Sequencer.Preloader.preloadForClients(this._fileF)}
+        }
+        return ret
     }
 
     async play(){
-        if(!this._fileB) await this.fileB;
-        if(!this._fileF) await this.fileF;
+        if(this.data.previouslyExecuted) {
+            this._cancel = true;
+        } else {
+            if(!this._fileB) await this.fileB;
+            if(!this._fileF) await this.fileF;
+        }
         await super.play()
         if(this._cancel) return
         this._build()
-        await this.data.scene.update(this.update);
+        if(this.hasRenderInvokingChange) await this._updateWithRender() 
+        if(this.hasNonRenderInvokingChange) await this._update();
+    }
+
+    async _updateWithRender(){
+        let hookId;
+      
+        const render = new Promise(resolve => {
+          hookId = Hooks.once("renderApplication", rendered => {
+            resolve(rendered);
+          });
+        });
+
+        await this.data.scene.update(this.renderUpdate);
+
+        // Timeout after 5 seconds
+        const timeout = new Promise(resolve => window.setTimeout(() => {
+          Hooks.off("renderApplication", hookId);
+          console.log(hookId);
+          resolve();
+        }, 3000));
+
+        await Promise.race([render, timeout]);
     }
 
     async _setFileB(){
@@ -1823,6 +1873,10 @@ class scene extends executable{
         const files = await getFilesFromPattern(this.filePathF);
         this._fileF = files[Math.floor(Math.random() * files.length)]
         return this._fileF
+    }
+
+    async _update(){
+        await this.data.scene.update(this.update, this.updateOps);
     }
 
 }
@@ -2234,7 +2288,7 @@ class wall extends executable {
             door: this.door,
             ds: 0,
             move: this.move,
-            sense: this.sense,
+            sight: this.sense,
             sound: this.sound,
             light: this.light,
             flags: this.data.flag
