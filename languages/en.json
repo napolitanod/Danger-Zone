@@ -595,7 +595,7 @@
                         "N.label": "Turn Global Light Off"
                     }
                 },
-                "render.description": "* these modifications will cause the scene to render. They will execute before any other changes that share the same delay and Danger Zone will attempt to pause the remainder of the danger execution until rendering completes."
+                "render.description": "* Will cause the scene to re-render. Danger Zone will attempt to pause danger execution until the scene finishes rendering."
             },
             "tab" :{
                 "effects.title": "Effects",

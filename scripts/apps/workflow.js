@@ -1792,7 +1792,7 @@ class scene extends executable{
 
     get updateOps(){
         const ops = {};
-        if (this.darkness) ops.animateDarkness = this._part.darkness.animate
+        if (this.darkness !== -1) ops.animateDarkness = this._part.darkness.animate
         return ops
     }
 
