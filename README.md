@@ -5,6 +5,11 @@
 
 ### New in Foundry VTT V10
 * New Weather danger part, allowing for triggering of canvas wide weather effects. Requires FXMaster module.
+* New Scene danger part:
+  * Update foreground and background image
+  * Update foreground elevation
+  * Update darkness and optionally animate
+  * Update global illumination
 * Ambient Lights: attenuation supported
 
 ### Wiki
