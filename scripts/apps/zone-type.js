@@ -95,6 +95,25 @@ export class dangerZoneType {
           tag: '',
           z: 0
         },
+        scene:{
+          active: false,
+          background: {
+            randomFile: false,
+            file: ''
+          },
+          darkness: {
+            animate: 0,
+            enable: false,
+            value: 0
+          },
+          delay: 0,
+          foreground: {
+            e: {max:0, min:0, type: ''},
+            randomFile: false,
+            file: ''
+          },
+          globalLight: ''
+        },
         tokenEffect: {
           below: 0,
           delay: 0,
@@ -106,7 +125,7 @@ export class dangerZoneType {
         },
         tokenMove: {
           delay: 0,
-          e: {max:0, min:0},
+          e: {max:0, min:0, type: ''},
           flag: true,
           hz: {dir:'', max:0, min:0},
           source:'',
@@ -193,6 +212,10 @@ export class dangerZoneType {
 
   get save(){
     return (this.options.flags.tokenResponse?.save && Object.keys(saveTypes()).length)  ? this.options.flags.tokenResponse.save : {}
+  }
+
+  get scene(){
+    return this.options.scene
   }
 
   get tokenEffect(){
