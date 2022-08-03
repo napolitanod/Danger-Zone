@@ -25,6 +25,7 @@ export class dangerZone {
  
   static TEMPLATES = {
     DANGERZONECONFIG: `modules/${this.ID}/templates/danger-zone-form.hbs`,
+    DANGERZONEEXTENSION: `modules/${this.ID}/templates/danger-zone-extension-form.hbs`,
     DANGERZONEEXECUTOR: `modules/${this.ID}/templates/danger-zone-executor-form.hbs`,
     DANGERZONESCENE: `modules/${this.ID}/templates/danger-zone-scene-form.hbs`,
     DANGERZONETYPESCONFIG: `modules/${this.ID}/templates/danger-zone-types.hbs`,
@@ -92,10 +93,10 @@ export class dangerZone {
     return ar.filter(z => !options.typeRequired || z.danger)
   }
   
-  static getZoneList(sceneId){
+  static getZoneList(sceneId, zoneId = ''){
     const list = {};
     for (const zn of this.getAllZonesFromScene(sceneId).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)})) {
-      list[zn.id] = zn.title;
+      if(zn.id !== zoneId) list[zn.id] = zn.title;
     }
     return list;
   }
@@ -286,6 +287,7 @@ export class zone {
     this.id = foundry.utils.randomID(16);
     this.actor = '',
     this.enabled = game.settings.get('danger-zone', 'scene-enabled-default'),
+    this.extensions = [],
     this.flavor = '',
     this.initiative = 0,
     this.lightReplace = 'N',
@@ -408,6 +410,10 @@ export class zone {
     return this.scene.scene.walls.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE])
       .concat(this.scene.scene.lights.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
       .concat(this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
+  }
+
+  getExtension(extensionId){
+    return this.extensions.find(e => e.id === extensionId)
   }
   
   async highlightZone(){

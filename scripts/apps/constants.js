@@ -352,6 +352,19 @@ export function weatherParameters(type) {
     if(fxMasterOn) return CONFIG.fxmaster.particleEffects[type]?.parameters
 }
 
+export const ZONEEXTENSIONINTERACTIONOPTIONS = {
+    "A": "DANGERZONE.edit-form.extension.interaction.options.enable",
+    "D": "DANGERZONE.edit-form.extension.interaction.options.disable",
+    "G": "DANGERZONE.edit-form.extension.interaction.options.toggle",
+    "T": "DANGERZONE.edit-form.extension.interaction.options.trigger"
+}
+
+export const ZONEEXTENSIONSEQUENCEOPTIONS = {
+    "1": "DANGERZONE.edit-form.extension.sequence.options.after",
+    "-1": "DANGERZONE.edit-form.extension.sequence.options.before",
+    "0": "DANGERZONE.edit-form.extension.sequence.options.same"
+}
+
 export const EXECUTABLEOPTIONS = {};
 
 export function setExecutableOptions(){

@@ -69,6 +69,45 @@
                 "x.label": "x",
                 "y.label": "y"
             },
+            "extend": {
+                "label": "Extend",
+                "description": "Interact with other zones when this zone triggers.",
+                "zone": {
+                    "name.label": "Zone Name"
+                }
+            },
+            "extension":{
+                "add": "Add Zone Extension",
+                "boundary.description": "This extension will use the same target location as the triggering zone.",
+                "boundary.label": "Pass in Target Location",
+                "clear.label": "Bypass Clearing",
+                "clear.description": "This extension's clearing settings will be ignored",
+                "interaction.label": "Interaction",
+                "interaction.options": {
+                    "toggle": "Toggle Zone Active",
+                    "enable": "Activate Zone",
+                    "disable": "Deactivate Zone",
+                    "trigger": "Trigger Zone"
+                },
+                "likelihood.description": "Set the probability that this extension will be interacted with when the triggering zone triggers. Note that zone likelihood of this extension (as configured on the zone itself) will still be assessed in addition to what is set here.",
+                "likelihood.label": "Likelihood",
+                "once.label": "Do Once",
+                "once.description": "This extension is interacted with only once regardless of how many loops the triggering zone performs",
+                "sequence.label": "Sequencing",
+                "sequence.options": {
+                    "after": "Play After Triggering Zone Completes",
+                    "before": "Play Before Triggering Zone Plays",
+                    "same": "Play At the Same Time that Triggering Zone Plays"                    
+                },
+                "save.description": "This extension will use the same saving throw results as the triggering zone.",
+                "save.label": "Pass in Saving Throws",
+                "source.description": "This extension will use the same source as the triggering zone.",
+                "source.label": "Pass in Sources",
+                "target.description": "This extension will use the same target tokens as the triggering zone.",
+                "target.label": "Pass in Target Tokens",
+                "trigger.label": "Trigger Settings",
+                "zone.label": "Zone"
+            },
             "clear.label": "Clear",
             "combatantInZone.description": "The zone will only trigger if the current combatant is within the zone.",
             "combatantInZone.label": "Combatant is in zone",
