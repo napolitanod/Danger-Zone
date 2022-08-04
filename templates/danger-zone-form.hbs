@@ -6,6 +6,7 @@
         <a class="item" data-tab="source"><i class="fas fa-dragon"></i>&nbsp;{{localize 'DANGERZONE.edit-form.source.label'}}</a>
         <a class="item" data-tab="target"><i class="fas fa-bullseye"></i>&nbsp;{{localize 'DANGERZONE.edit-form.token-targeting.label'}}</a>
         <a class="item" data-tab="clear"><i class="fas fa-eraser"></i>&nbsp;{{localize 'DANGERZONE.edit-form.clear.label'}}</a>
+        <a class="item" data-tab="extend"><i class="fas fa-link"></i>&nbsp;{{localize 'DANGERZONE.edit-form.extend.label'}}</a>
    </nav>
     <div class="tab active" data-tab="basics">
         <p class="notes{{#if hideWorld}} dz-hidden{{/if}}">{{localize "DANGERZONE.edit-form.convert-global.notes"}}</p>
@@ -449,6 +450,24 @@
                     {{selectOptions weatherReplaceOps selected=zone.weatherReplace localize=true}}
                 </select>
             </div>
+        </div>
+    </div>
+    <div class="tab" data-tab="extend">
+        <p class="notes">{{localize 'DANGERZONE.edit-form.extend.description'}}</p>
+        <div class="danger-zone-extensions-list">
+            <div class="flexrow extension-record">
+                <div class="flexrow">
+                    <div>{{localize 'DANGERZONE.edit-form.extend.zone.name.label'}}</div>
+                </div>
+                <div class="danger-zone-controls flexrow" data-id="">
+                    <a class="danger-zone-add" title="{{localize 'DANGERZONE.edit-form.extension.add'}}" data-action="add-extension">
+                        <i class="fas fa-plus"></i> {{localize 'DANGERZONE.add'}}
+                    </a>
+                </div>
+            </div>
+            <ol class="flexrow" id="danger-zone-zone-form-extend">
+                {{{extensionsListHTML}}}
+            </ol>
         </div>
     </div>
 	<footer class="sheet-footer flexrow">

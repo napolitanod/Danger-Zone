@@ -127,7 +127,7 @@ form.danger-zone-type-form .main-danger {
 }
 
 .danger-zone-scene-list li.scene-config, 
-.danger-zone-types-list li.type-record {
+.danger-zone-types-list li.type-record  {
     flex: 1 1 100%;
     padding: 5px;
     text-overflow: ellipsis;
@@ -140,6 +140,17 @@ form.danger-zone-type-form .main-danger {
     font-family: "Signika", sans-serif;
 }
 
+.danger-zone-extensions-list .extension-record  {
+    flex: 1 1 100%;
+    padding: 5px;
+    text-overflow: ellipsis;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+    align-items: center;
+    border-bottom: 1px solid #c9c7b8;
+    font-family: "Signika", sans-serif;
+}
 .danger-zone-type-details, .danger-zone-details {
     flex: 0 0 78%;
     white-space: nowrap;
@@ -152,6 +163,13 @@ form.danger-zone-type-form .main-danger {
     flex: 0 0 70%;
 }
 
+.danger-zone-extends-details {
+    flex: 0 0 88%;
+}
+
+#danger-zone-zone-form-extend{
+    padding-left: 0;
+}
 
 .danger-zone-type-details img {
     flex: 0 0 24px;
@@ -169,7 +187,7 @@ form.danger-zone-type-form .main-danger {
     text-overflow: ellipsis;
 }
 
-
+.extension-record  .danger-zone-controls,
 .danger-zone-types-header .danger-zone-controls, 
 .danger-zone-scene .danger-zone-controls,
 .danger-zone-types-list .danger-zone-controls {
@@ -199,6 +217,13 @@ form.danger-zone-type-form .main-danger {
 }
 
 .scene-config .danger-zone-details .title {
+    flex: 0 0 40%;
+}
+
+.danger-zone-extends-details .title {
+    flex: 0 0 60%;
+}
+.danger-zone-extends-details .interaction {
     flex: 0 0 40%;
 }
 

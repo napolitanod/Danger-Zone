@@ -8,7 +8,7 @@ export class ExecutorForm extends FormApplication {
       super(...args);
       this.sceneId = sceneId,
       this.zoneId = executor?.zone?.id ? executor.zone.id : '',
-      this.zones = zones ? zones : dangerZone.getExecutorZones(sceneId),
+      this.zones = zones ? zones : dangerZone.getExtendedZones(sceneId),
       this.executor = executor,
       this.locked = {
           boundary: false,
@@ -509,7 +509,7 @@ export class ExecutorForm extends FormApplication {
     async renderOnScene(sceneId, zoneId, zones){
         this.sceneId = sceneId ? sceneId : canvas.scene.id;
         if(game.user.isGM && this.scene.active && this.scene.grid.type){
-            this.zones = zones ? zones : dangerZone.getExecutorZones(this.sceneId);
+            this.zones = zones ? zones : dangerZone.getExtendedZones(this.sceneId);
             if(this.zones.length){
                 this.executor = zoneId ? await this.setExecutor() : await this.zones[0].executor(this.executorOptions);
                 this.zoneId = zoneId ? zoneId : this.executor.zone?.id;

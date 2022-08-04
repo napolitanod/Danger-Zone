@@ -148,9 +148,12 @@ class plan {
         this.manifest.set("check", [() => {return this.executor.check()}]);
         this.manifest.set("data", [() => {return this.executor.setZoneData()}]);
         this.manifest.set("inform", [() => {return this.executor.inform()}]);
-        this.manifest.set("wipe", [() => {return this.executor.wipe()}]);
+        if(!this.executor.data.clearBypass) this.manifest.set("wipe", [() => {return this.executor.wipe()}]);
+        this.manifest.set("extension_pre", [()=> {return this.executor.extensionPre()}])
         this.manifest.set("delay", [()=> {return this.executor.delay()}])
+        this.manifest.set("extension_same", [()=> {return this.executor.extensionConcurrent()}])
         this._build();
+        this.manifest.set("extension_post", [()=> {return this.executor.extensionPost()}])
         this.ongoing = this.manifest.entries();
     }
 
@@ -207,6 +210,7 @@ class executorData {
     constructor(zone, options){
         this.id = foundry.utils.randomID(16),
         this.boundary = options.boundary ? options.boundary : {},
+        this.clearBypass = options.clearBypass ? options.clearBypass : false,
         this._delay = options.delay,
         this.eligibleTargets = [],
         this.likelihoodResult = 100,
@@ -287,7 +291,7 @@ class executorData {
 
     get sceneTokens() {
         return this.scene.tokens
-    };
+    }
 
     get sources() {
         return this._sources.length ? this._sources : this.zone.sources 
@@ -615,6 +619,75 @@ export class executor {
 
     async done(){
         this.data.previouslyExecuted = true;
+    }
+
+    async extensionPre(){
+        await this.extensionSequence('-1')
+        return this.report('Pre Extensions')
+    }
+
+    async extensionConcurrent(){
+        this.extensionSequence('0')
+        return this.report('Concurrent Extensions')
+    }
+
+    async extensionPost(){
+        await this.extensionSequence('1')
+        return this.report('Post Extensions')
+    }
+
+    async extensionSequence(stage){
+        if(!this.zone.extensions) return
+        const ar = this.zone.extensions.filter(e => e.sequence === stage);
+        const promises = [];
+        for(let ex of ar){
+            if(ex.once && this.previouslyExecuted) {
+                dangerZone.log(false,'Extension triggers only once, bypassing on triggering zone loops', {extension: ex})
+                continue;
+            }
+            const znlist = dangerZone.getExtendedZones(this.data.scene.id);
+            const zn = znlist.find(z => z.id === ex.zoneId);
+            if(!zn){
+                dangerZone.log(false,'Extension does not return a valid zone on the executor scene', {extension: ex, zones: znlist})
+                continue;
+            }
+            if(ex.once && this.previouslyExecuted) {
+                dangerZone.log(false,'Extension triggers only once, bypassing on triggering zone loops', {extension: ex})
+                continue;
+            }
+            if(ex.likelihood < 100){
+                const maybe = await new Roll(`1d100`).roll();
+                if(ex.likelihood > maybe.result) {
+                    console.log(`Zone extension likelihood of ${ex.likelihood} was not met with a roll of ${maybe.result}`)
+                    continue;
+                }
+            }
+            switch(ex.interaction){
+                case 'A':
+                    if(!zn.enabled) promises.push(zn.toggleZoneActive())
+                    break;
+                case 'D':
+                    if(zn.enabled) promises.push(zn.toggleZoneActive())
+                    break;    
+                case 'G':
+                    promises.push(zn.toggleZoneActive())
+                    break; 
+                case 'T':
+                    promises.push(this.extensionTrigger(ex, zn))
+                    break;
+            }             
+        }
+        await Promise.all(promises);
+    }
+
+    async extensionTrigger(extension, zone){
+        const ops = {};
+        if(extension.boundary) ops.boundary = this.data.boundary;
+        if(extension.target) ops.targets = this.data.targets;
+        if(extension.save) ops.save = this.data.save;
+        if(extension.source) ops.sources = this.data.sources;
+        if(extension.clear) ops.clearBypass = true;
+        await workflow.go(zone, 'zone',ops)
     }
  
     async inform(){
@@ -1854,7 +1927,6 @@ class scene extends executable{
         // Timeout after 5 seconds
         const timeout = new Promise(resolve => window.setTimeout(() => {
           Hooks.off("renderApplication", hookId);
-          console.log(hookId);
           resolve();
         }, 3000));
 
