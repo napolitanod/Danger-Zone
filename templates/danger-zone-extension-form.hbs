@@ -8,7 +8,12 @@
             <label for="zoneId">{{localize "DANGERZONE.edit-form.extension.zone.label"}}</label>
             <div class="form-fields">
                 <select name="zoneId" value="{{data.zoneId}}" required> 
+                    <option value="" disabled>{{localize 'DANGERZONE.executor-form.zone.options.scene'}}</option>
                     {{selectOptions zoneOps selected=data.zoneId localize=false}}
+                    <option value="" disabled>{{localize 'DANGERZONE.executor-form.zone.options.world'}}</option>
+                    {{selectOptions worldZoneOps selected=data.zoneId localize=false}}
+                    <option value="" disabled>{{localize 'DANGERZONE.executor-form.zone.options.danger'}}</option>
+                    {{selectOptions dangerOps selected=data.zoneId localize=false}}
                 </select>   
             </div>
         </div>

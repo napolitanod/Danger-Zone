@@ -149,8 +149,8 @@ class plan {
         this.manifest.set("data", [() => {return this.executor.setZoneData()}]);
         this.manifest.set("inform", [() => {return this.executor.inform()}]);
         if(!this.executor.data.clearBypass) this.manifest.set("wipe", [() => {return this.executor.wipe()}]);
-        this.manifest.set("delay", [()=> {return this.executor.delay()}])
         this.manifest.set("extension_pre", [()=> {return this.executor.extensionPre()}])
+        this.manifest.set("delay", [()=> {return this.executor.delay()}])
         this.manifest.set("extension_same", [()=> {return this.executor.extensionConcurrent()}])
         this._build();
         this.manifest.set("extension_post", [()=> {return this.executor.extensionPost()}])
@@ -642,16 +642,17 @@ export class executor {
         const promises = [];
         for(let ex of ar){
             if(ex.once && this.previouslyExecuted) {
-                this.log('Extension triggers only once, bypassing on triggering zone loops', {extension: ex})
+                dangerZone.log(false,'Extension triggers only once, bypassing on triggering zone loops', {extension: ex})
                 continue;
             }
-            const zn = dangerZone.getZoneFromScene(ex.zoneId, this.data.scene.id);
+            const znlist = dangerZone.getExtendedZones(this.data.scene.id);
+            const zn = znlist.find(z => z.id === ex.zoneId);
             if(!zn){
-                this.log('Extension does not return a valid zone on the executor scene', {extension: ex})
+                dangerZone.log(false,'Extension does not return a valid zone on the executor scene', {extension: ex, zones: znlist})
                 continue;
             }
             if(ex.once && this.previouslyExecuted) {
-                this.log('Extension triggers only once, bypassing on triggering zone loops', {extension: ex})
+                dangerZone.log(false,'Extension triggers only once, bypassing on triggering zone loops', {extension: ex})
                 continue;
             }
             if(ex.likelihood < 100){
@@ -1926,7 +1927,6 @@ class scene extends executable{
         // Timeout after 5 seconds
         const timeout = new Promise(resolve => window.setTimeout(() => {
           Hooks.off("renderApplication", hookId);
-          console.log(hookId);
           resolve();
         }, 3000));
 

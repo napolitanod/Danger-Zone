@@ -353,10 +353,10 @@ export function weatherParameters(type) {
 }
 
 export const ZONEEXTENSIONINTERACTIONOPTIONS = {
+    "T": "DANGERZONE.edit-form.extension.interaction.options.trigger",
     "A": "DANGERZONE.edit-form.extension.interaction.options.enable",
     "D": "DANGERZONE.edit-form.extension.interaction.options.disable",
-    "G": "DANGERZONE.edit-form.extension.interaction.options.toggle",
-    "T": "DANGERZONE.edit-form.extension.interaction.options.trigger"
+    "G": "DANGERZONE.edit-form.extension.interaction.options.toggle"
 }
 
 export const ZONEEXTENSIONSEQUENCEOPTIONS = {

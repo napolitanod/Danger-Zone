@@ -267,15 +267,15 @@ export class DangerZoneForm extends FormApplication {
 
   _createExtendsListHTML() {
     let finalHTML = ''; 
+    const znlist = dangerZone.getExtendedZones(this.sceneId)
     for(let item of this.extensions) {
-      const zone = dangerZone.getZoneFromScene(item.zoneId, this.sceneId)
+      const zone = znlist.find(z => z.id === item.zoneId)
       finalHTML += `<li class="flexrow extension-record" data-container="types" draggable="true"><div class="flexrow danger-zone-extends-details"><div class="title">${zone ? zone.title : ''}</div><div class="interaction">${game.i18n.localize(ZONEEXTENSIONINTERACTIONOPTIONS[item.interaction])}</div></div><div class="danger-zone-controls flexrow" data-id="${item.id}"><a class="danger-zone-edit" title="${game.i18n.localize('DANGERZONE.edit')}" data-action="edit-extension"><i class="fas fa-edit"></i></a>&nbsp;&nbsp;&nbsp;<a class="danger-zone-delete" title="${game.i18n.localize('DANGERZONE.delete')}" data-action="delete-extension"><i class="fas fa-trash"></i></a></div></li>`;
     }
     return finalHTML
   }
 
   updateExtension(extension){
-    console.log(extension, this.extensions)
     this.extensions.find(e => e.id === extension.id) ? this.extensions.map(e => {if(e.id === extension.id) {return Object.assign(e, extension)} return e}) : this.extensions.push(extension)
   }
   
@@ -294,6 +294,7 @@ export class DangerZoneExtensionForm extends FormApplication {
 
       this.parent = app,
       this.extension = extension;
+      this.zones = dangerZone.getExtendedZones(this.scene.id, this.triggeringZone.id);
 
       if(!this.extension.id) this.extension.id = foundry.utils.randomID(16)
   }
@@ -315,12 +316,24 @@ export class DangerZoneExtensionForm extends FormApplication {
     return mergedOptions;
   }
 
+  get dangerOps(){
+      return this.zones.filter(z => z.scene.dangerId).reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
+  }
+
   get scene(){
     return this.parent.scene
   }
 
   get triggeringZone(){
     return this.parent.zone;
+  }
+
+  get worldZoneOps(){
+      return this.zones.filter(z => z.danger.hasGlobalZone).reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
+  }
+
+  get zoneOps(){
+      return this.zones.filter(z => !z.scene.dangerId && z.id !== this.triggeringZone.id).reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
   }
 
   async _handleChange(event) {
@@ -344,7 +357,9 @@ export class DangerZoneExtensionForm extends FormApplication {
       data: this.extension,
       interactionOps: ZONEEXTENSIONINTERACTIONOPTIONS,
       sequenceOps: ZONEEXTENSIONSEQUENCEOPTIONS,
-      zoneOps: dangerZone.getZoneList(this.scene.id, this.triggeringZone.id),
+      dangerOps: this.dangerOps,
+      worldZoneOps: this.worldZoneOps,
+      zoneOps: this.zoneOps,
       isTrigger: this.extension.interaction === 'T' ? true : false
      } 
   }

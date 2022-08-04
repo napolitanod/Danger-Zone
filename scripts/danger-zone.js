@@ -110,7 +110,7 @@ export class dangerZone {
     return this.getAllZonesFromScene(sceneId).filter(zn => COMBATTRIGGERS.includes(zn.trigger))
   }  
 
-  static getExecutorZones(sceneId){
+  static getExtendedZones(sceneId){
     return this.getAllZonesFromScene(sceneId, {enabled: false, typeRequired: true}).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)})
       .concat(this.getGlobalZones(sceneId).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)}))
       .concat(this.getAllDangersAsGlobalZones(sceneId).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)}))
@@ -221,10 +221,12 @@ export class dangerZone {
 
   static _convertZoneGlobalToScene(danger, sceneId){
     const zn = danger?.options?.globalZone;
-    if(!zn)  zn = WORLDZONE;
+    let worldZone = false;
+    !zn ? zn = WORLDZONE : worldZone = true;
     zn.scene = {sceneId: sceneId, dangerId: danger.id};
     zn.type= danger.id;
     zn.title = danger.name;
+    worldZone ? zn.id = 'w_' + danger.id : zn.id = 'd_' + danger.id
     return this._toClass(zn);
   }
 
