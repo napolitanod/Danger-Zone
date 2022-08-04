@@ -4,6 +4,8 @@
 [![Foundry Hub Endorsements](https://img.shields.io/endpoint?logoColor=white&url=https%3A%2F%2Fwww.foundryvtt-hub.com%2Fwp-json%2Fhubapi%2Fv1%2Fpackage%2Fdanger-zone%2Fshield%2Fendorsements)](https://www.foundryvtt-hub.com/package/danger-zone/)
 
 ### New in Foundry VTT V10
+* Zones can now trigger other zones including world zones and generic dangers
+* Zones can activate / deactivate other zones
 * New Weather danger part, allowing for triggering of canvas wide weather effects. Requires FXMaster module.
 * New Scene danger part:
   * Update foreground and background image
