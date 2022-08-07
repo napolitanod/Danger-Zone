@@ -147,6 +147,12 @@
                 "area.description": "Defines a source area within the zone which may influence targeting",
                 "description": "The source may influence when and if a zone triggers. Many danger parts can be defined in relation to the zone's source.",
                 "label": "Source",
+                "limit": {
+                    "description": "In the event that there is more than one source, caps the total sources involved when the zone is triggered to be between the minimum and maximum. Set to 0 to ignore.",
+                    "label": "Quantity",
+                    "min.label": "Minimum",
+                    "max.label": "Maximum"
+                },
                 "tag":{
                     "zone.label": "Zone",
                     "danger.label": "Danger",

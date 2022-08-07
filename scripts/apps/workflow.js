@@ -2,7 +2,7 @@ import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
 import {monksActiveTilesOn, sequencerOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, wallHeightOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
-import {furthestShiftPosition, getFilesFromPattern, getTagEntities, stringToObj, wait} from './helpers.js';
+import {furthestShiftPosition, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait} from './helpers.js';
 
 async function delay(delay){
     if(delay) await wait(delay)
@@ -219,6 +219,7 @@ class executorData {
         this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
         this.save = {failed: options.save?.failed ? options.save?.failed : [], succeeded: options.save?.succeeded ? options.save?.succeeded : []},
         this._sources = options.sources ? options.sources : [],
+        this.sourceLimit = zone.generateSourceCount(),
         this.targets = options.targets ? options.targets : [],
         this.tokenMovement = [],
         this.twinBoundary = {},
@@ -226,7 +227,8 @@ class executorData {
         this.zone = zone,
         this.zoneBoundary,
         this.zoneEligibleTokens = [],
-        this.zoneTokens = []
+        this.zoneTokens = [];
+        this.setSources();
     }
 
     get danger(){
@@ -235,6 +237,10 @@ class executorData {
 
     get dualBoundaries(){
         return Object.keys(this.twinBoundary).length ? [this.boundary, this.twinBoundary] : [this.boundary]
+    }
+
+    get eligibleSources(){
+        return this.zone.sources.filter(s => !this.sources.find(s.id))
     }
 
     get flag(){
@@ -291,10 +297,6 @@ class executorData {
 
     get sceneTokens() {
         return this.scene.tokens
-    }
-
-    get sources() {
-        return this._sources.length ? this._sources : this.zone.sources 
     }
 
     get targetBoundary(){
@@ -383,6 +385,23 @@ class executorData {
             return
         }
         await this.randomBoundary()
+    }
+
+    setSources(fill = false){
+        if(this._sources.length) {
+            this.sources = this._sources;
+            return
+        }
+        if (!this.sourceLimit || this.zone.sources.length <= this.sourceLimit) {
+            this.sources = this.zone.sources;
+            return
+        }
+        if(!fill){
+            const srcs = shuffleArray(this.zone.sources).slice(0,this.sourceLimit);
+            return
+        } 
+        const fillCount = this.sourceLimit - this.zone.sources.length;
+        if(fillCount) this.sources = this.sources.concat(shuffleArray(this.eligibleSources).slice(0,fillCount))
     }
     
     setTargets(){
@@ -1713,7 +1732,7 @@ class primaryEffect extends executableWithFile {
         const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
         for (const bound of boundaries){
             if(this.hasSources){
-                const tagged = this.source.name ? await getTagEntities(this.source.name, this.data.scene) : this.data.sources
+                const tagged = limitArray(shuffleArray(this.source.name ? await getTagEntities(this.source.name, this.data.scene) : this.data.sources,this.data.sourceLimit,this.data.sourceLimit))
                 if(tagged.length){
                     for(const document of tagged){
                         const documentName = document.documentName ? document.documentName : document.document.documentName;
@@ -2043,6 +2062,7 @@ class spawn extends executable {
         if(this._cancel) return
         const token = await this.token();
         if(token) await warpgate.spawnAt(this.data.boundary.center, token, this.updates, {}, this.options);
+        this.data.setSources(true)
     }
 
     async token(){

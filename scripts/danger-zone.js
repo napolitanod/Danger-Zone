@@ -314,6 +314,10 @@ export class zone {
     this.source = {
       area: '',
       actor: '',
+      limit: {
+        min: 0,
+        max: 0
+      },
       tag: '',
       target: '',
       trigger: ''
@@ -459,6 +463,10 @@ export class zone {
           break;
     }
     return obj
+  }
+
+  generateSourceCount(){
+    return Math.floor(Math.random() * (this.source.limit.max - this.source.limit.min + 1))
   }
 
   async tokensInZone(tokens){

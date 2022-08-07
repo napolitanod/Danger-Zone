@@ -17,9 +17,6 @@ export let dangerZoneSocket; //var for socketlib
 Hooks.once('init', async function() {  
     
 	let modulename = "danger-zone";
-    const debouncedReload = foundry.utils.debounce(() => {
-        window.location.reload();
-      }, 100);
 
 	game.settings.registerMenu(modulename, "danger-zone-types-config", {
         name: game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.name"),
@@ -54,7 +51,7 @@ Hooks.once('init', async function() {
 		config: true,
 		default: false,
 		type: Boolean,
-        onChange: debouncedReload
+		requiresReload: true
 	});
 
     game.settings.register(modulename, 'scene-header', {
@@ -75,7 +72,7 @@ Hooks.once('init', async function() {
 		default: 'S',
         type: String,
         choices: TRIGGERDISPLAYOPTIONS,
-        onChange: debouncedReload
+		requiresReload: true
 	});
 
 	game.settings.register(modulename, "scene-control-button-display", {
@@ -85,7 +82,7 @@ Hooks.once('init', async function() {
 		config: true,
 		default: true,
 		type: Boolean,
-        onChange: debouncedReload,
+		requiresReload: true
 	});
 
 	game.settings.register(modulename, "scene-control-light-button-display", {
@@ -95,7 +92,7 @@ Hooks.once('init', async function() {
 		config: true,
 		default: false,
 		type: Boolean,
-        onChange: debouncedReload,
+		requiresReload: true
 	});
 
 	game.settings.register(modulename, "scene-control-wall-button-display", {
@@ -105,7 +102,7 @@ Hooks.once('init', async function() {
 		config: true,
 		default: false,
 		type: Boolean,
-        onChange: debouncedReload,
+		requiresReload: true
 	});
 
 	game.settings.register(modulename, "types-button-display", {
@@ -115,7 +112,7 @@ Hooks.once('init', async function() {
 		config: true,
 		default: true,
 		type: Boolean,
-        onChange: debouncedReload,
+		requiresReload: true
 	});
 
 	game.settings.register(modulename, "chat-details-to-gm", {
