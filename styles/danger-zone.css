@@ -521,9 +521,13 @@ form ol.danger-setting-group .active:hover label {
     margin: 0;
 }
   
-#danger-zone-type-search-icon i, 
-.danger-zone-type-button > i {
+#danger-zone-type-search-icon i {
     margin: 0;
+}
+
+.danger-zone-type-button > i {
+    margin: 7px 0 0 0;
+    font-size: 20px;
 }
 
 .danger-zone-type-button {

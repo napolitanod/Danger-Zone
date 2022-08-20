@@ -41,6 +41,7 @@ export class dangerZone {
     DANGERZONEDANGERLIGHT: `modules/${this.ID}/templates/danger-form-light.hbs`,
     DANGERZONEDANGERMUTATE: `modules/${this.ID}/templates/danger-form-mutate.hbs`,
     DANGERZONEDANGERSCENE: `modules/${this.ID}/templates/danger-form-scene.hbs`,
+    DANGERZONEDANGERSOURCEEFFECT: `modules/${this.ID}/templates/danger-form-source-effect.hbs`,
     DANGERZONEDANGERTOKENRESPONSE: `modules/${this.ID}/templates/danger-form-token-response.hbs`,
     DANGERZONEDANGERTOKENSAYS: `modules/${this.ID}/templates/danger-form-token-says.hbs`,
     DANGERZONEDANGERTOKENEFFECT: `modules/${this.ID}/templates/danger-form-token-effect.hbs`,
@@ -454,6 +455,7 @@ export class zone {
           break;
         case 'T':
           obj['documents'] = await getTagEntities(this.source.tag, this.scene.scene)
+          console.log(obj)
           break;
         case 'Y':
           obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.source.tag);

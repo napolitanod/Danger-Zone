@@ -60,7 +60,7 @@ export class dangerZoneType {
           scale: 1.0,
           repeat: 0,
           rotate: false,
-          duration: 30
+          duration: 0
         },
         effect: {},
         flags: {},
@@ -72,7 +72,8 @@ export class dangerZoneType {
           source: {
             enabled: false,
             name: '',
-            swap: false
+            swap: false,
+            target: ''
           },
           repeat: 0,
           duration: 0
@@ -113,6 +114,16 @@ export class dangerZoneType {
             file: ''
           },
           globalLight: ''
+        },
+        sourceEffect: {
+          delay: 0,
+          duration: 0,
+          file: '',
+          randomFile: false,
+          repeat: 0,
+          rotate: false,
+          scale: 1.0,
+          target: ''
         },
         tokenEffect: {
           below: 0,
@@ -216,6 +227,10 @@ export class dangerZoneType {
 
   get scene(){
     return this.options.scene
+  }
+
+  get sourceEffect(){
+    return this.options.sourceEffect
   }
 
   get tokenEffect(){

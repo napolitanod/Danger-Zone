@@ -398,6 +398,11 @@
                 "in": "In source area",
                 "both": "In or adjacent to source area"
             },
+            "danger.location": {
+                "actor": "Play on source actors",
+                "area": "Play on source areas",
+                "both": "Play on both source actors and areas"
+            },
             "treatment":{
                 "none": "No special treatment",
                 "ignore": "Do not apply to source actor (if targeted)",
@@ -473,7 +478,7 @@
             "backgroundEffect":{
                 "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays beneath the target area, such as an explosion or impact animation.",
-                "label": "Secondary Effect",
+                "label": "Target Effect",
                 "file.find": "Browse for Effect",
                 "file.label": "Image or Video",
                 "file.placeholder": "path/image.webm",
@@ -522,6 +527,7 @@
                     "name.label": "Override Source (Tag)",
                     "name.description": "Tagger tag",
                     "name.notes": "By default the source is the zone's source actor. If a tag is added here, then all entities in the zone with this tag are instead considered to be sources.",
+                    "target.label": "Source Location",
                     "swap.description": "Plays the effect so that it appears to come from target and towards the source.",
                     "swap.label": "Reverse Flow"
                 },
@@ -641,6 +647,20 @@
                     }
                 },
                 "render.description": "* Will cause the scene to re-render. Danger Zone will attempt to pause danger execution until the scene finishes rendering."
+            },
+            "sourceEffect":{
+                "delay.label": "Delay Start",
+                "description": "Generate a temporary effect that plays beneath the source area, such as an puff of smoke or waving wand.",
+                "label": "Source Effect",
+                "file.find": "Browse for Effect",
+                "file.label": "Image or Video",
+                "file.placeholder": "path/image.webm",
+                "randomFile.label": "Randomize Wildcard webm",
+                "rotate.label": "Random Rotation",
+                "scale.label": "Scale",
+                "repeat.label": "Number of Repeats",
+                "target.label": "Location",
+                "duration.label": "Duration"
             },
             "tab" :{
                 "effects.title": "Effects",

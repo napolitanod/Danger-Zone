@@ -219,6 +219,10 @@ class executorData {
         this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
         this.save = {failed: options.save?.failed ? options.save?.failed : [], succeeded: options.save?.succeeded ? options.save?.succeeded : []},
         this._sources = options.sources ? options.sources : [],
+        this.sources = [],
+        this._sourceAreas = options.sourceAreas ? options.sourceAreas : [],
+        this.sourceAreas = [],
+        this.sourcesBlended = [],
         this.sourceLimit = zone.generateSourceCount(),
         this.targets = options.targets ? options.targets : [],
         this.tokenMovement = [],
@@ -228,7 +232,6 @@ class executorData {
         this.zoneBoundary,
         this.zoneEligibleTokens = [],
         this.zoneTokens = [];
-        this.setSources();
     }
 
     get danger(){
@@ -265,6 +268,10 @@ class executorData {
 
     get hasSources(){
         return this.sources.length ? true : false
+    }
+
+    get hasSourceAreas(){
+        return this.sourceAreas?.length ? true : false
     }
 
     get hasSuccesses(){
@@ -334,6 +341,15 @@ class executorData {
         return this.likelihoodMet
     }
 
+    async fillSources(){
+        await this._setSources(true);
+    }
+
+    async fillSourceAreas(){
+        await this.setSourceAreas(true)
+        this.setBlendedSources(true) 
+    }
+
     async highlightBoundary(override = false){
         if(this.hasBoundary && game.user.isGM && (override || game.settings.get(dangerZone.ID, 'display-danger-boundary'))){
             this.boundary.highlight(this.id, 16711719)
@@ -370,6 +386,7 @@ class executorData {
     }
 
     async set(asRun = true){
+        await this._setSources();
         await this.setZone();
         await this.setBoundary(asRun)
         this.setTargets()
@@ -387,21 +404,49 @@ class executorData {
         await this.randomBoundary()
     }
 
-    setSources(fill = false){
-        if(this._sources.length) {
-            this.sources = this._sources;
-            return
+    async _setSources(fill = false){
+        this.setTokenSources(fill);
+        await this.setSourceAreas(fill);
+        this.setBlendedSources(fill);
+    }
+
+    setBlendedSources(fill = false){
+        const all = this.sourceAreas.concat(this.sources.filter(s => !this.sourceAreas.find(a => a.id === s.id)))
+        if (!this.sourceLimit || all.length <= this.sourceLimit) {this.sourcesBlended = all} 
+        else if(!fill){this.sourcesBlended = limitArray(shuffleArray(all),this.sourceLimit)} 
+        else {
+            const fillCount = this.sourceLimit - all.length;
+            if(fillCount) this.sourcesBlended = this.sourcesBlended.concat(limitArray(shuffleArray(all),fillCount))
         }
-        if (!this.sourceLimit || this.zone.sources.length <= this.sourceLimit) {
-            this.sources = this.zone.sources;
-            return
+    }
+
+    setTokenSources(fill = false){
+        if(this._sources.length) {this.sources = this._sources}
+        else if (!this.sourceLimit || this.zone.sources.length <= this.sourceLimit) {this.sources = this.zone.sources}
+        else if(!fill){this.sources = limitArray(shuffleArray(this.zone.sources),this.sourceLimit)} 
+        else {
+            const fillCount = this.sourceLimit - this.zone.sources.length;
+            if(fillCount) this.sources = this.sources.concat(limitArray(shuffleArray(this.eligibleSources),fillCount))
         }
-        if(!fill){
-            const srcs = shuffleArray(this.zone.sources).slice(0,this.sourceLimit);
-            return
-        } 
-        const fillCount = this.sourceLimit - this.zone.sources.length;
-        if(fillCount) this.sources = this.sources.concat(shuffleArray(this.eligibleSources).slice(0,fillCount))
+    }
+
+    async setSourceAreas(fill = false){
+        if(this._sourceAreas.length){this.sourceAreas = this._sourceAreas}
+        else {
+            let area;
+            if(this.zone.source.area === 'A') {area = this.sources}
+            else {
+                const ar = await this.zone.sourceArea();
+                area = ar.documents;
+            } 
+            if (!this.sourceLimit) {this.sourceAreas = area}
+            else if(!fill){this.sourceAreas = limitArray(shuffleArray(area),this.sourceLimit)} 
+            else {
+                const fillCount = this.sourceLimit - this.sourceAreas.length;
+                if(fillCount) this.sourceAreas = this.sourceAreas.concat(limitArray(shuffleArray(area.filter(s => !this.sourcesAreas.find(s.id))),fillCount))
+            }
+        }
+        if(!this.sourceAreas) this.sourceAreas = []
     }
     
     setTargets(){
@@ -531,6 +576,9 @@ export class executor {
                 case 'save': 
                     be = new save(this.danger.save, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
+                case 'sourceEffect': 
+                    be = new sourceEffect(this.danger.sourceEffect, this.data, name, EXECUTABLEOPTIONS[name]);
+                    break;
                 case 'scene': 
                     be = new scene(this.danger.scene, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
@@ -600,6 +648,10 @@ export class executor {
 
     get saveSucceeded(){
         return this.data.saveSucceeded
+    }
+
+    get sourceAreas(){
+        return this.data.sourceAreas
     }
 
     get sources(){
@@ -951,6 +1003,17 @@ class executable {
     get source(){
         return this._part.source ? this._part.source : ''
     }
+
+    get sourcesSelected(){
+        switch(this._part.target){
+            case 'A':
+                return this.data.sources;
+            case 'R':
+                return this.data.sourceAreas;
+            default:
+                return this.data.sourcesBlended
+        }
+    }
     
     get save(){
         return 0
@@ -1218,7 +1281,8 @@ class ambientLight extends executable{
         await super.play()
         if(this._cancel) return
         this.lights = await this.data.scene.createEmbeddedDocuments("AmbientLight",[this._light]);
-        if(this._part.clear.type) this._postEvent()
+        if(this._part.clear.type) this._postEvent() 
+        if(this._part.clear.type !== 'D') await this.data.fillSourceAreas()
     }
 
     async _postEvent(){
@@ -1533,6 +1597,7 @@ class lastingEffect extends executableWithFile{
             const tiles = this.build();
             await this.data.scene.createEmbeddedDocuments("Tile", tiles);
         }
+        await this.data.fillSourceAreas()
     }
 
     _pairedBoundary(index){
@@ -1685,6 +1750,7 @@ class mutate extends executable {
         for (const token of this.targets) { 
             await warpgate.mutate(token, this.updates, {}, this.options);
         }
+        await this.data.fillSources()
     }
 }
 
@@ -1703,7 +1769,7 @@ class primaryEffect extends executableWithFile {
     }
 
     get hasSources(){
-        return (this.source.enabled && (this.source.name || this.data.hasSources))
+        return (this.source.enabled && (this.source.name || this.sourcesSelected.length))
     }
     
     get hasSourceToTarget(){
@@ -1732,7 +1798,7 @@ class primaryEffect extends executableWithFile {
         const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
         for (const bound of boundaries){
             if(this.hasSources){
-                const tagged = limitArray(shuffleArray(this.source.name ? await getTagEntities(this.source.name, this.data.scene) : this.data.sources,this.data.sourceLimit,this.data.sourceLimit))
+                const tagged = this.source.name ? await limitArray(shuffleArray(getTagEntities(this.source.name, this.data.scene)),this.data.sourceLimit) : this.sourcesSelected
                 if(tagged.length){
                     for(const document of tagged){
                         const documentName = document.documentName ? document.documentName : document.document.documentName;
@@ -2021,6 +2087,62 @@ class secondaryEffect extends executableWithFile {
     }
 } 
 
+class sourceEffect extends executableWithFile {
+
+    get duration(){
+        return this._part.duration
+    }
+
+    get hasSourceTargets(){
+        return this.sourcesSelected.length ? true : false
+    }
+
+    get repeat(){
+        return this._part.repeat
+    }
+
+    get rotate(){
+        return this._part.rotate
+    }
+
+    get save(){
+        return this.data.danger.save.se ? parseInt(this.data.danger.save.se) : super.save
+    }
+
+    async play(){
+        if(!this._file) await this.file;
+        this.setExecuted()
+        if (!this.hasSourceTargets) this._cancel = true
+        if(this._cancel) return
+        if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
+            const result = await this._build();
+            result.play()
+        }
+    }
+
+    async _build(){
+        let s = new Sequence();
+        for (const source of this.sourcesSelected){
+            const documentName = source.documentName ? source.documentName : source.document.documentName;
+            const bound = boundary.documentBoundary(documentName, source)
+            s = this._sequence(bound, s);
+        }
+        return s
+    }
+
+    _sequence(boundary, s){
+        s = s.effect()
+            .file(this._file)
+            .zIndex(boundary.bottom)
+            .atLocation(boundary.center)
+            .scale(this.scale);
+            if(this.duration) s = s.duration(this.duration)
+            if(this.repeat) s = s.repeats(this.repeat)
+            if(this.rotate) s = s.randomRotation()
+        return s
+    }
+} 
+
 class spawn extends executable {
     constructor(...args){
         super(...args);
@@ -2062,7 +2184,7 @@ class spawn extends executable {
         if(this._cancel) return
         const token = await this.token();
         if(token) await warpgate.spawnAt(this.data.boundary.center, token, this.updates, {}, this.options);
-        this.data.setSources(true)
+        await this.data.fillSources()
     }
 
     async token(){
@@ -2371,6 +2493,7 @@ class wall extends executable {
             const walls = this._build;
             if(walls.length) await this.data.scene.createEmbeddedDocuments("Wall",walls)
         }
+        await this.data.fillSourceAreas()
     }
 
     _wall(start, end){

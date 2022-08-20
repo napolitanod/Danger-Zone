@@ -72,6 +72,14 @@
             </div>
         </div>
         <div class="form-group">
+            <label for="save.se">{{localize "DANGERZONE.type-form.sourceEffect.label"}}</label>
+            <div class="form-fields">
+                <select name="save.se" value={{data.save.se}} data-dtype="Number"> 
+                    {{selectOptions saveResultOps selected=data.save.se localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
             <label for="save.be">{{localize "DANGERZONE.type-form.backgroundEffect.label"}}</label>
             <div class="form-fields">
                 <select name="save.be" value={{data.save.be}} data-dtype="Number"> 
