@@ -147,6 +147,12 @@
                 "area.description": "Defines a source area within the zone which may influence targeting",
                 "description": "The source may influence when and if a zone triggers. Many danger parts can be defined in relation to the zone's source.",
                 "label": "Source",
+                "limit": {
+                    "description": "In the event that there is more than one source, caps the total sources involved when the zone is triggered to be between the minimum and maximum. Set to 0 to ignore.",
+                    "label": "Quantity",
+                    "min.label": "Minimum",
+                    "max.label": "Maximum"
+                },
                 "tag":{
                     "zone.label": "Zone",
                     "danger.label": "Danger",
@@ -392,6 +398,11 @@
                 "in": "In source area",
                 "both": "In or adjacent to source area"
             },
+            "danger.location": {
+                "actor": "Play on source actors",
+                "area": "Play on source areas",
+                "both": "Play on both source actors and areas"
+            },
             "treatment":{
                 "none": "No special treatment",
                 "ignore": "Do not apply to source actor (if targeted)",
@@ -465,9 +476,18 @@
                 "volume.label": "Sound Volume"
             },
             "backgroundEffect":{
+                "audio":{
+                    "label": "Audio",
+                    "file.label": "Audio Source",
+                    "file.placeholder": "path/audio.mp3",
+                    "file.find": "Browse for Audio File",
+                    "playlist.label": "Playlist Name",
+                    "random.label": "Random from Playlist",
+                    "volume.label": "Sound Volume"
+                },
                 "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays beneath the target area, such as an explosion or impact animation.",
-                "label": "Secondary Effect",
+                "label": "Target Effect",
                 "file.find": "Browse for Effect",
                 "file.label": "Image or Video",
                 "file.placeholder": "path/image.webm",
@@ -516,6 +536,7 @@
                     "name.label": "Override Source (Tag)",
                     "name.description": "Tagger tag",
                     "name.notes": "By default the source is the zone's source actor. If a tag is added here, then all entities in the zone with this tag are instead considered to be sources.",
+                    "target.label": "Source Location",
                     "swap.description": "Plays the effect so that it appears to come from target and towards the source.",
                     "swap.label": "Reverse Flow"
                 },
@@ -635,6 +656,29 @@
                     }
                 },
                 "render.description": "* Will cause the scene to re-render. Danger Zone will attempt to pause danger execution until the scene finishes rendering."
+            },
+            "sourceEffect":{
+                "audio":{
+                    "label": "Audio",
+                    "file.label": "Audio Source",
+                    "file.placeholder": "path/audio.mp3",
+                    "file.find": "Browse for Audio File",
+                    "playlist.label": "Playlist Name",
+                    "random.label": "Random from Playlist",
+                    "volume.label": "Sound Volume"
+                },
+                "delay.label": "Delay Start",
+                "description": "Generate a temporary effect that plays beneath the source area, such as an puff of smoke or waving wand.",
+                "label": "Source Effect",
+                "file.find": "Browse for Effect",
+                "file.label": "Image or Video",
+                "file.placeholder": "path/image.webm",
+                "randomFile.label": "Randomize Wildcard webm",
+                "rotate.label": "Random Rotation",
+                "scale.label": "Scale",
+                "repeat.label": "Number of Repeats",
+                "target.label": "Location",
+                "duration.label": "Duration"
             },
             "tab" :{
                 "effects.title": "Effects",
@@ -780,6 +824,14 @@
                         "none": "No Damage",
                         "half": "Half Damage",
                         "full": "Full Damage"
+                    },
+                    "secondary": {
+                        "label": "Additional Damage",
+                        "amount.description": "e.g. 1d6+1",
+                        "amount.label": "Damage Roll or Amount",
+                        "amount.title": "Include parameters for variable roll:\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",    
+                        "save.label": "If Save Success",
+                        "type.label": "Damage Type"
                     },
                     "type.label": "Damage Type"
                 },

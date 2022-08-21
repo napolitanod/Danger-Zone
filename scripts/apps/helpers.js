@@ -58,6 +58,21 @@ export function rayIntersectsGrid([yPos,xPos], r){
   return false
 }
 
+export function limitArray(array, limitAmount) {
+  return limitAmount ? array.slice(0,limitAmount) : array
+}
+
+export function shuffleArray(array) {
+  let currentIndex = array.length,  randomIndex;
+  while (currentIndex != 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+  return array;
+}
+
 export function stringToObj(string, identifier = '', notify = false) {
   let obj;
   const error = `${identifier} ${game.i18n.localize("DANGERZONE.alerts.json-invalid")}`;

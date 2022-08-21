@@ -256,6 +256,9 @@ export class boundary{
                 const dm = (document.object.radius*2)-1
                 dim={x:document.object.bounds.x, y:document.object.bounds.y, width: dm, height: dm} 
                 break
+            case "Drawing":
+                dim={x: document.x, y:document.y, width: document.shape.width, height: document.shape.height}
+                break;
             case "Tile":
                 dim={x: document.x, y:document.y, width: document.width - 1, height: document.height - 1}
                 break;

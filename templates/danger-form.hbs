@@ -89,8 +89,13 @@
                 <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
             </li>
             <li data-id="foreground-effect" class="{{#if sequencerOnNot}}dz-hidden{{/if}} {{#if hasForegroundEffect}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.foregroundEffect.description"}}"><i class="fas fa-fire"></i></button>   
+                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.foregroundEffect.description"}}"><i class="fas fa-bolt"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.foregroundEffect.label'}}</label>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            </li>
+            <li data-id="source-effect" class="{{#if sequencerOnNot}}dz-hidden{{/if}} {{#if hasSourceEffect}}active{{/if}}">
+                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.sourceEffect.description"}}"><i class="fas fa-dragon"></i></button>   
+                <label>{{localize 'DANGERZONE.type-form.sourceEffect.label'}}</label>
                 <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
             </li>
             <li data-id="background-effect" class="{{#if sequencerOnNot}}dz-hidden{{/if}} {{#if hasBackgroundEffect}}active{{/if}}">

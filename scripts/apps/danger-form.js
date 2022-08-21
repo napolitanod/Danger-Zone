@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {daeOn, fluidCanvasOn, fxMasterOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -20,6 +20,7 @@ export class DangerForm extends FormApplication {
     this.monksActiveTiles,
     this.mutate,
     this.scene,
+    this.sourceEffect,
     this.tokenEffect,
     this.tokenMove,
     this.tokenResponse = {},
@@ -128,6 +129,9 @@ export class DangerForm extends FormApplication {
       case 'scene':
         new DangerZoneDangerFormScene(this, eventParent, this.scene).render(true);
         break;
+      case 'source-effect':
+        new DangerZoneDangerFormSourceEffect(this, eventParent, this.sourceEffect).render(true);
+        break;
       case 'token-effect':
         new DangerZoneDangerFormTokenEffect(this, eventParent, this.tokenEffect).render(true);
         break;
@@ -187,6 +191,9 @@ export class DangerForm extends FormApplication {
       case 'scene':
         this.scene = Object.assign(this.scene, danger.options.scene)
         break;
+      case 'source-effect':
+        this.sourceEffect = Object.assign(this.sourceEffect, danger.options.sourceEffect);
+        break;
       case 'token-effect':
         this.tokenEffect = Object.assign(this.tokenEffect, danger.options.tokenEffect)
         break;
@@ -233,6 +240,7 @@ export class DangerForm extends FormApplication {
     this.monksActiveTiles = instance.options.flags?.['monks-active-tiles'] ? instance.options.flags['monks-active-tiles'] : {};
     this.mutate = instance.options.flags?.mutate ? instance.options.flags.mutate : {};
     this.scene = instance.options.scene;
+    this.sourceEffect = instance.options.sourceEffect;
     this.tokenSays = instance.options.flags.tokenSays ? instance.options.flags.tokenSays : {};
     this.tokenEffect = instance.options.tokenEffect;
     this.tokenMove = instance.options.tokenMove;
@@ -255,6 +263,7 @@ export class DangerForm extends FormApplication {
       hasLight: (this.light.bright || this.light.dim) ? true : false,
       hasMutate: Object.keys(this.mutate).length ? true : false,
       hasScene: this.scene.active ? true : false,
+      hasSourceEffect: this.sourceEffect?.file ? true : false,
       hasTokenEffect: this.tokenEffect?.file ? true : false,
       hasTokenMove: (this.tokenMove.v.dir || this.tokenMove.hz.dir || this.tokenMove.e.type || this.tokenMove.sToT) ? true : false,
       hasTokenResponse: (this.tokenResponse?.save?.enable || this.tokenResponse?.damage?.enable) ? true : false,
@@ -284,6 +293,7 @@ export class DangerForm extends FormApplication {
     expandedData.options.lastingEffect = this.lastingEffect;
     expandedData.options.ambientLight = this.light;
     expandedData.options.scene = this.scene;
+    expandedData.options.sourceEffect = this.sourceEffect;
     expandedData.options.tokenEffect = this.tokenEffect;
     expandedData.options.tokenMove = this.tokenMove;
     expandedData.options.wall = this.wall;
@@ -552,6 +562,31 @@ class DangerZoneDangerFormBackgroundEffect extends FormApplication {
 
     activateListeners(html) {
       super.activateListeners(html);
+      html.on('click', "[data-action]", this._handleButtonClick.bind(this));
+    }
+
+    _random(checked){
+      const group = $(this.form).find("#dz-backgroundEffect-audio-file")
+      if(checked){
+        group.addClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.backgroundEffect.audio.playlist.label"))
+        group.find('input').attr("placeholder", "")
+      } else {
+        group.removeClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.backgroundEffect.audio.file.label"))
+        group.find('input').attr("placeholder", game.i18n.localize("DANGERZONE.type-form.backgroundEffect.audio.file.placeholder"))
+      }
+    }
+
+    async _handleButtonClick(event) {
+      const clickedElement = $(event.currentTarget);
+      const action = clickedElement.data().action;  
+      switch (action) {
+        case 'audio.random': {
+          this._random(event.currentTarget.checked)
+          break;
+        }
+      }
     }
   
     async _updateObject(event, formData) {
@@ -624,7 +659,10 @@ class DangerZoneDangerFormForegroundEffect extends FormApplication {
       }
 
     getData(options) {
-      return this.data
+      return {
+        data: this.data,
+        targetOps: SOURCEDANGERLOCATION
+      }
     }
 
     activateListeners(html) {
@@ -858,6 +896,71 @@ class DangerZoneDangerFormScene extends FormApplication {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.scene = expandedData;
       if(expandedData.active){this.eventParent.addClass('active')};
+    }
+}
+
+class DangerZoneDangerFormSourceEffect extends FormApplication {
+  constructor(app, eventParent, data, ...args) {
+    super(...args);
+    this.data = data,
+    this.eventParent = eventParent,
+    this.parent = app;
+    }
+
+    static get defaultOptions(){
+        const defaults = super.defaultOptions;
+
+        return foundry.utils.mergeObject(defaults, {
+          title : game.i18n.localize("DANGERZONE.type-form.sourceEffect.label"),
+          id : "danger-zone-danger-source-effect",
+          classes: ["sheet","danger-part-form"],
+          template : dangerZone.TEMPLATES.DANGERZONEDANGERSOURCEEFFECT,
+          height : "auto",
+          width: 425,
+          closeOnSubmit: true
+        });
+      }
+
+    getData(options) {
+      return {
+        data: this.data,
+        targetOps: SOURCEDANGERLOCATION
+      }
+    }
+
+    activateListeners(html) {
+      super.activateListeners(html);
+      html.on('click', "[data-action]", this._handleButtonClick.bind(this));
+    }
+
+    _random(checked){
+      const group = $(this.form).find("#dz-sourceEffect-audio-file")
+      if(checked){
+        group.addClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.sourceEffect.audio.playlist.label"))
+        group.find('input').attr("placeholder", "")
+      } else {
+        group.removeClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.sourceEffect.audio.file.label"))
+        group.find('input').attr("placeholder", game.i18n.localize("DANGERZONE.type-form.sourceEffect.audio.file.placeholder"))
+      }
+    }
+
+    async _handleButtonClick(event) {
+      const clickedElement = $(event.currentTarget);
+      const action = clickedElement.data().action;  
+      switch (action) {
+        case 'audio.random': {
+          this._random(event.currentTarget.checked)
+          break;
+        }
+      }
+    }
+  
+    async _updateObject(event, formData) {
+      const expandedData = foundry.utils.expandObject(formData);
+      this.parent.sourceEffect = expandedData;
+      if(expandedData.file){this.eventParent.addClass('active')};
     }
 }
 

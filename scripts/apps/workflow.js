@@ -2,7 +2,7 @@ import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
 import {monksActiveTilesOn, sequencerOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, wallHeightOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
-import {furthestShiftPosition, getFilesFromPattern, getTagEntities, stringToObj, wait} from './helpers.js';
+import {furthestShiftPosition, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait} from './helpers.js';
 
 async function delay(delay){
     if(delay) await wait(delay)
@@ -219,6 +219,11 @@ class executorData {
         this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
         this.save = {failed: options.save?.failed ? options.save?.failed : [], succeeded: options.save?.succeeded ? options.save?.succeeded : []},
         this._sources = options.sources ? options.sources : [],
+        this.sources = [],
+        this._sourceAreas = options.sourceAreas ? options.sourceAreas : [],
+        this.sourceAreas = [],
+        this.sourcesBlended = [],
+        this.sourceLimit = zone.generateSourceCount(),
         this.targets = options.targets ? options.targets : [],
         this.tokenMovement = [],
         this.twinBoundary = {},
@@ -226,7 +231,7 @@ class executorData {
         this.zone = zone,
         this.zoneBoundary,
         this.zoneEligibleTokens = [],
-        this.zoneTokens = []
+        this.zoneTokens = [];
     }
 
     get danger(){
@@ -235,6 +240,10 @@ class executorData {
 
     get dualBoundaries(){
         return Object.keys(this.twinBoundary).length ? [this.boundary, this.twinBoundary] : [this.boundary]
+    }
+
+    get eligibleSources(){
+        return this.zone.sources.filter(s => !this.sources.find(s.id))
     }
 
     get flag(){
@@ -259,6 +268,10 @@ class executorData {
 
     get hasSources(){
         return this.sources.length ? true : false
+    }
+
+    get hasSourceAreas(){
+        return this.sourceAreas?.length ? true : false
     }
 
     get hasSuccesses(){
@@ -291,10 +304,6 @@ class executorData {
 
     get sceneTokens() {
         return this.scene.tokens
-    }
-
-    get sources() {
-        return this._sources.length ? this._sources : this.zone.sources 
     }
 
     get targetBoundary(){
@@ -330,6 +339,15 @@ class executorData {
             this.likelihoodResult = maybe.result;
         }
         return this.likelihoodMet
+    }
+
+    async fillSources(){
+        await this._setSources(true);
+    }
+
+    async fillSourceAreas(){
+        await this.setSourceAreas(true)
+        this.setBlendedSources(true) 
     }
 
     async highlightBoundary(override = false){
@@ -368,6 +386,7 @@ class executorData {
     }
 
     async set(asRun = true){
+        await this._setSources();
         await this.setZone();
         await this.setBoundary(asRun)
         this.setTargets()
@@ -383,6 +402,51 @@ class executorData {
             return
         }
         await this.randomBoundary()
+    }
+
+    async _setSources(fill = false){
+        this.setTokenSources(fill);
+        await this.setSourceAreas(fill);
+        this.setBlendedSources(fill);
+    }
+
+    setBlendedSources(fill = false){
+        const all = this.sourceAreas.concat(this.sources.filter(s => !this.sourceAreas.find(a => a.id === s.id)))
+        if (!this.sourceLimit || all.length <= this.sourceLimit) {this.sourcesBlended = all} 
+        else if(!fill){this.sourcesBlended = limitArray(shuffleArray(all),this.sourceLimit)} 
+        else {
+            const fillCount = this.sourceLimit - all.length;
+            if(fillCount) this.sourcesBlended = this.sourcesBlended.concat(limitArray(shuffleArray(all),fillCount))
+        }
+    }
+
+    setTokenSources(fill = false){
+        if(this._sources.length) {this.sources = this._sources}
+        else if (!this.sourceLimit || this.zone.sources.length <= this.sourceLimit) {this.sources = this.zone.sources}
+        else if(!fill){this.sources = limitArray(shuffleArray(this.zone.sources),this.sourceLimit)} 
+        else {
+            const fillCount = this.sourceLimit - this.zone.sources.length;
+            if(fillCount) this.sources = this.sources.concat(limitArray(shuffleArray(this.eligibleSources),fillCount))
+        }
+    }
+
+    async setSourceAreas(fill = false){
+        if(this._sourceAreas.length){this.sourceAreas = this._sourceAreas}
+        else {
+            let area;
+            if(this.zone.source.area === 'A') {area = this.sources}
+            else {
+                const ar = await this.zone.sourceArea();
+                area = ar.documents;
+            } 
+            if (!this.sourceLimit) {this.sourceAreas = area}
+            else if(!fill){this.sourceAreas = limitArray(shuffleArray(area),this.sourceLimit)} 
+            else {
+                const fillCount = this.sourceLimit - this.sourceAreas.length;
+                if(fillCount) this.sourceAreas = this.sourceAreas.concat(limitArray(shuffleArray(area.filter(s => !this.sourcesAreas.find(s.id))),fillCount))
+            }
+        }
+        if(!this.sourceAreas) this.sourceAreas = []
     }
     
     setTargets(){
@@ -512,6 +576,9 @@ export class executor {
                 case 'save': 
                     be = new save(this.danger.save, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
+                case 'sourceEffect': 
+                    be = new sourceEffect(this.danger.sourceEffect, this.data, name, EXECUTABLEOPTIONS[name]);
+                    break;
                 case 'scene': 
                     be = new scene(this.danger.scene, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
@@ -581,6 +648,10 @@ export class executor {
 
     get saveSucceeded(){
         return this.data.saveSucceeded
+    }
+
+    get sourceAreas(){
+        return this.data.sourceAreas
     }
 
     get sources(){
@@ -932,6 +1003,17 @@ class executable {
     get source(){
         return this._part.source ? this._part.source : ''
     }
+
+    get sourcesSelected(){
+        switch(this._part.target){
+            case 'A':
+                return this.data.sources;
+            case 'R':
+                return this.data.sourceAreas;
+            default:
+                return this.data.sourcesBlended
+        }
+    }
     
     get save(){
         return 0
@@ -1199,7 +1281,8 @@ class ambientLight extends executable{
         await super.play()
         if(this._cancel) return
         this.lights = await this.data.scene.createEmbeddedDocuments("AmbientLight",[this._light]);
-        if(this._part.clear.type) this._postEvent()
+        if(this._part.clear.type) this._postEvent() 
+        if(this._part.clear.type !== 'D') await this.data.fillSourceAreas()
     }
 
     async _postEvent(){
@@ -1277,6 +1360,13 @@ class damageToken extends executable{
     get amount(){
         return this._part.amount
     } 
+
+    get damages(){
+        const arr = [];
+        if(this.primaryDamage.amount) arr.push(this.primaryDamage)
+        if(this.secondaryDamage.amount) arr.push(this.secondaryDamage)
+        return arr
+    }
     
     get enable(){
         return this._part.enable
@@ -1294,6 +1384,14 @@ class damageToken extends executable{
         return (this.amount.indexOf('@')!==-1 || this.flavor.indexOf('@elevation')!==-1 || this.flavor.indexOf('@moved')!==-1) ? false : true
     }
 
+    get primaryDamage(){
+        return {
+            amount: this.amount,
+            save: this.save,
+            type: this.type,
+        }
+    }
+
     get requiresSaveFail(){
         return this.save === "N" ? false : true
     }
@@ -1309,6 +1407,10 @@ class damageToken extends executable{
     get save(){
         return !this.data.danger.save.enable ? "F" : this._save
     }
+
+    get secondaryDamage(){
+        return this._part.secondary ? this._part.secondary : {}
+    } 
     
     get targets(){
         return zone.sourceTreatment(this.source, this.data.targets, this.data.sources);
@@ -1325,42 +1427,50 @@ class damageToken extends executable{
     }
 
     async _bulkWorkflow(){
-        const damageRoll = await new Roll(this.amount).roll()
-        if(this.save==='F'){
-            await this._calculateDamage(false, damageRoll, this.targets, this.flavor)
-        } 
-        else { 
-            if(this.data.save.failed.length) await this._calculateDamage(false, damageRoll,  this.data.save.failed, this.flavor)
-            if(this.save === 'H' && this.data.hasSuccesses) await this._calculateDamage(true, damageRoll, this.data.save.succeeded, this.flavor)
+        let flavor =  this.flavor;
+        for (const damage of this.damages){
+            const damageRoll = await new Roll(damage.amount).roll()
+            if(damage.save==='F'){
+                await this._calculateDamage(false, damageRoll, this.targets, flavor, damage)
+            } 
+            else { 
+                if(this.data.save.failed.length) await this._calculateDamage(false, damageRoll, this.data.save.failed, flavor, damage)
+                if(damage.save === 'H' && this.data.hasSuccesses) await this._calculateDamage(true, damageRoll, this.data.save.succeeded, flavor, damage)
+            }
+            flavor = ''
         }
     }
 
     async _individualWorkflow(){
-        for (const token of this.targets){
-            if(this.save ==='N' && this.data.save.succeeded.find(t => t.id === token.id)) continue;
-            const half = (this.save === 'H' && this.data.save.succeeded.find(t => t.id === token.id)) ? true : false;
-            const mvMods = this.data.tokenMovement.find(t => t.tokenId === token.id);
-            const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.hz ? mvMods.hz : 0), (mvMods?.v ? mvMods.v : 0));
-            let dice = this.amount.replace(/@elevation/i,e).replace(/@moved/i,mv);
-            const damageRoll = await new Roll(dice).roll();     
-            let flavor = this.flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
-            await this._calculateDamage(half, damageRoll, [token], flavor)
+        let flavor =  this.flavor;
+        for (const damage of this.damages){
+            for (const token of this.targets){
+                if(damage.save ==='N' && this.data.save.succeeded.find(t => t.id === token.id)) continue;
+                const half = (damage.save === 'H' && this.data.save.succeeded.find(t => t.id === token.id)) ? true : false;
+                const mvMods = this.data.tokenMovement.find(t => t.tokenId === token.id);
+                const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.hz ? mvMods.hz : 0), (mvMods?.v ? mvMods.v : 0));
+                let dice = damage.amount.replace(/@elevation/i,e).replace(/@moved/i,mv);
+                const damageRoll = await new Roll(dice).roll();     
+                let flavor = flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
+                await this._calculateDamage(half, damageRoll, [token], flavor, damage)
+            }
+            flavor = ''
         }
     }
 
-    async _calculateDamage(half, damageRoll, tokens, flavorAdd){
+    async _calculateDamage(half, damageRoll, tokens, flavorAdd, damage){
         let roll; const types = damageTypes();
-        let flavor = `<label>${damageRoll.result} ${types[this.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}.</label><br>${flavorAdd.replace(/@alias/i, tokens.map(t => t.name).join(', '))}`;
+        let flavor = `<label>${damageRoll.result} ${types[damage.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}.</label><br>${flavorAdd.replace(/@alias/i, tokens.map(t => t.name).join(', '))}`;
         if(half){
             let hf = Math.floor(damageRoll.total/2);
             roll = await new Roll(`${hf}`).roll();
         } else {roll = damageRoll}
-        await this._applyDamage(tokens, roll, flavor)
+        await this._applyDamage(tokens, roll, damage.type, flavor)
     }
 
-    async _applyDamage(tokens, damage, flavor){
+    async _applyDamage(tokens, damage, type, flavor){
         if(!damage?.total || !tokens.length) return
-        await new MidiQOL.DamageOnlyWorkflow(null, null, damage.total, this.type, tokens, damage, {flavor: flavor}) 
+        await new MidiQOL.DamageOnlyWorkflow(null, null, damage.total, type, tokens, damage, {flavor: flavor}) 
     }
 }
 
@@ -1514,6 +1624,7 @@ class lastingEffect extends executableWithFile{
             const tiles = this.build();
             await this.data.scene.createEmbeddedDocuments("Tile", tiles);
         }
+        await this.data.fillSourceAreas()
     }
 
     _pairedBoundary(index){
@@ -1666,6 +1777,7 @@ class mutate extends executable {
         for (const token of this.targets) { 
             await warpgate.mutate(token, this.updates, {}, this.options);
         }
+        await this.data.fillSources()
     }
 }
 
@@ -1684,7 +1796,7 @@ class primaryEffect extends executableWithFile {
     }
 
     get hasSources(){
-        return (this.source.enabled && (this.source.name || this.data.hasSources))
+        return (this.source.enabled && (this.source.name || this.sourcesSelected.length))
     }
     
     get hasSourceToTarget(){
@@ -1713,7 +1825,7 @@ class primaryEffect extends executableWithFile {
         const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
         for (const bound of boundaries){
             if(this.hasSources){
-                const tagged = this.source.name ? await getTagEntities(this.source.name, this.data.scene) : this.data.sources
+                const tagged = this.source.name ? await limitArray(shuffleArray(getTagEntities(this.source.name, this.data.scene)),this.data.sourceLimit) : this.sourcesSelected
                 if(tagged.length){
                     for(const document of tagged){
                         const documentName = document.documentName ? document.documentName : document.document.documentName;
@@ -1954,9 +2066,25 @@ class scene extends executable{
 }
 
 class secondaryEffect extends executableWithFile {
+    constructor(...args){
+        super(...args);
+        this._fileB 
+    }
+
+    get audio(){
+        return this._part.audio ? this._part.audio : {}
+    }
 
     get duration(){
         return this._part.duration
+    }
+
+    get fileB(){
+        return this._fileB ? this._fileB : this._setFileB()  
+    }
+
+    get randomFileB(){
+        return this.audio.randomFile ? true : false
     }
 
     get repeat(){
@@ -1971,7 +2099,22 @@ class secondaryEffect extends executableWithFile {
         return this.data.danger.save.be ? parseInt(this.data.danger.save.be) : super.save
     }
 
+    async load() {
+        this._file = await this.file;
+        this._fileB = await this.fileB;
+        let ret = true
+        if(sequencerOn){
+            if(this._fileB){
+                if(this._file){
+                    ret = Sequencer.Preloader.preloadForClients([this._fileB, this._file])
+                } else  {ret = Sequencer.Preloader.preloadForClients(this._fileB)}
+            } else if(this._file) {ret = Sequencer.Preloader.preloadForClients(this._file)}
+        }
+        return ret
+    }
+
     async play(){
+        if(!this._fileB) await this.fileB;
         await super.play()
         if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
@@ -1998,7 +2141,134 @@ class secondaryEffect extends executableWithFile {
             if(this.duration) s = s.duration(this.duration)
             if(this.repeat) s = s.repeats(this.repeat)
             if(this.rotate) s = s.randomRotation()
+        if(this._fileB){
+            s = s.sound()
+            .file(this._fileB)
+            .volume(this.audio.volume)
+        }
         return s
+    }
+
+    async _setFileB(){
+        if(!this.audio.file || !this.audio.randomFile) return this._fileB = this.audio.file;
+        this.playlist = game.playlists.getName(this.audio.file);
+        if(!this.playlist) {
+            this._fileB = ''
+        } else {
+            const index = Math.floor(Math.random() * this.playlist.sounds.size)
+            let i = 0; 
+            for (let key of this.playlist.sounds) {
+                if (i++ == index) {this._fileB = key?.path; break;}  
+            }
+        }
+        return this._fileB
+    }
+} 
+
+class sourceEffect extends executableWithFile {
+    constructor(...args){
+        super(...args);
+        this._fileB 
+    }
+
+    get audio(){
+        return this._part.audio ? this._part.audio : {}
+    }
+
+    get duration(){
+        return this._part.duration
+    }
+
+    get fileB(){
+        return this._fileB ? this._fileB : this._setFileB()  
+    }
+
+    get hasSourceTargets(){
+        return this.sourcesSelected.length ? true : false
+    }
+
+    get randomFileB(){
+        return this.audio.randomFile ? true : false
+    }
+
+    get repeat(){
+        return this._part.repeat
+    }
+
+    get rotate(){
+        return this._part.rotate
+    }
+
+    get save(){
+        return this.data.danger.save.se ? parseInt(this.data.danger.save.se) : super.save
+    }
+
+    async load() {
+        this._file = await this.file;
+        this._fileB = await this.fileB;
+        let ret = true
+        if(sequencerOn){
+            if(this._fileB){
+                if(this._file){
+                    ret = Sequencer.Preloader.preloadForClients([this._fileB, this._file])
+                } else  {ret = Sequencer.Preloader.preloadForClients(this._fileB)}
+            } else if(this._file) {ret = Sequencer.Preloader.preloadForClients(this._file)}
+        }
+        return ret
+    }
+
+    async play(){
+        if(!this._file) await this.file;
+        if(!this._fileB) await this.fileB;
+        this.setExecuted()
+        if (!this.hasSourceTargets) this._cancel = true
+        if(this._cancel) return
+        if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
+            const result = await this._build();
+            result.play()
+        }
+    }
+
+    async _build(){
+        let s = new Sequence();
+        for (const source of this.sourcesSelected){
+            const documentName = source.documentName ? source.documentName : source.document.documentName;
+            const bound = boundary.documentBoundary(documentName, source)
+            s = this._sequence(bound, s);
+        }
+        return s
+    }
+
+    _sequence(boundary, s){
+        s = s.effect()
+            .file(this._file)
+            .zIndex(boundary.bottom)
+            .atLocation(boundary.center)
+            .scale(this.scale);
+            if(this.duration) s = s.duration(this.duration)
+            if(this.repeat) s = s.repeats(this.repeat)
+            if(this.rotate) s = s.randomRotation()
+        if(this._fileB){
+            s = s.sound()
+            .file(this._fileB)
+            .volume(this.audio.volume)
+        }
+        return s
+    }
+
+    async _setFileB(){
+        if(!this.audio.file || !this.audio.randomFile) return this._fileB = this.audio.file;
+        this.playlist = game.playlists.getName(this.audio.file);
+        if(!this.playlist) {
+            this._fileB = ''
+        } else {
+            const index = Math.floor(Math.random() * this.playlist.sounds.size)
+            let i = 0; 
+            for (let key of this.playlist.sounds) {
+                if (i++ == index) {this._fileB = key?.path; break;}  
+            }
+        }
+        return this._fileB
     }
 } 
 
@@ -2043,6 +2313,7 @@ class spawn extends executable {
         if(this._cancel) return
         const token = await this.token();
         if(token) await warpgate.spawnAt(this.data.boundary.center, token, this.updates, {}, this.options);
+        await this.data.fillSources()
     }
 
     async token(){
@@ -2351,6 +2622,7 @@ class wall extends executable {
             const walls = this._build;
             if(walls.length) await this.data.scene.createEmbeddedDocuments("Wall",walls)
         }
+        await this.data.fillSourceAreas()
     }
 
     _wall(start, end){

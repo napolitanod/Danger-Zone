@@ -145,6 +145,12 @@ export const SOURCEAREATARGET = {
     "B": "DANGERZONE.source.target.both"
 }
 
+export const SOURCEDANGERLOCATION = {
+    "A": "DANGERZONE.source.danger.location.actor",
+    "R": "DANGERZONE.source.danger.location.area",
+    "B": "DANGERZONE.source.danger.location.both"
+}
+
 export const STRETCH = {
     "": "",
     "B": "DANGERZONE.stretch.bottom.label",
@@ -382,7 +388,7 @@ export function setExecutableOptions(){
             },
             'foregroundEffect': {
                 title: "Primary Effect", 
-                icon: "fas fa-fire", 
+                icon: "fas fa-bolt", 
                 modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
@@ -455,6 +461,12 @@ export function setExecutableOptions(){
                 wipeable: false,
                 modules:[],
                 scope: "scene"
+            },
+            'sourceEffect': {
+                title: "Source Effect", 
+                icon: "fas fa-dragon", 
+                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                scope: "boundary"
             },
             'warpgate': {
                 title: "Spawn", 

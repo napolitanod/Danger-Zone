@@ -54,13 +54,18 @@ export class dangerZoneType {
           volume: 0.5
         },
         backgroundEffect: {
+          audio: {
+            file:'',
+            randomFile: false,
+            volume: 0.5
+          },
           delay: 0,
           file: '',
           randomFile: false,
           scale: 1.0,
           repeat: 0,
           rotate: false,
-          duration: 30
+          duration: 0
         },
         effect: {},
         flags: {},
@@ -72,7 +77,8 @@ export class dangerZoneType {
           source: {
             enabled: false,
             name: '',
-            swap: false
+            swap: false,
+            target: ''
           },
           repeat: 0,
           duration: 0
@@ -113,6 +119,21 @@ export class dangerZoneType {
             file: ''
           },
           globalLight: ''
+        },
+        sourceEffect: {
+          audio: {
+            file:'',
+            randomFile: false,
+            volume: 0.5
+          },
+          delay: 0,
+          duration: 0,
+          file: '',
+          randomFile: false,
+          repeat: 0,
+          rotate: false,
+          scale: 1.0,
+          target: ''
         },
         tokenEffect: {
           below: 0,
@@ -216,6 +237,10 @@ export class dangerZoneType {
 
   get scene(){
     return this.options.scene
+  }
+
+  get sourceEffect(){
+    return this.options.sourceEffect
   }
 
   get tokenEffect(){
