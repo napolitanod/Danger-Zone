@@ -455,7 +455,6 @@ export class zone {
           break;
         case 'T':
           obj['documents'] = await getTagEntities(this.source.tag, this.scene.scene)
-          console.log(obj)
           break;
         case 'Y':
           obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.source.tag);
