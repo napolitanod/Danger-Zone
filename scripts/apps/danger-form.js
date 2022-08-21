@@ -562,6 +562,31 @@ class DangerZoneDangerFormBackgroundEffect extends FormApplication {
 
     activateListeners(html) {
       super.activateListeners(html);
+      html.on('click', "[data-action]", this._handleButtonClick.bind(this));
+    }
+
+    _random(checked){
+      const group = $(this.form).find("#dz-backgroundEffect-audio-file")
+      if(checked){
+        group.addClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.backgroundEffect.audio.playlist.label"))
+        group.find('input').attr("placeholder", "")
+      } else {
+        group.removeClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.backgroundEffect.audio.file.label"))
+        group.find('input').attr("placeholder", game.i18n.localize("DANGERZONE.type-form.backgroundEffect.audio.file.placeholder"))
+      }
+    }
+
+    async _handleButtonClick(event) {
+      const clickedElement = $(event.currentTarget);
+      const action = clickedElement.data().action;  
+      switch (action) {
+        case 'audio.random': {
+          this._random(event.currentTarget.checked)
+          break;
+        }
+      }
     }
   
     async _updateObject(event, formData) {
@@ -905,6 +930,31 @@ class DangerZoneDangerFormSourceEffect extends FormApplication {
 
     activateListeners(html) {
       super.activateListeners(html);
+      html.on('click', "[data-action]", this._handleButtonClick.bind(this));
+    }
+
+    _random(checked){
+      const group = $(this.form).find("#dz-sourceEffect-audio-file")
+      if(checked){
+        group.addClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.sourceEffect.audio.playlist.label"))
+        group.find('input').attr("placeholder", "")
+      } else {
+        group.removeClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.sourceEffect.audio.file.label"))
+        group.find('input').attr("placeholder", game.i18n.localize("DANGERZONE.type-form.sourceEffect.audio.file.placeholder"))
+      }
+    }
+
+    async _handleButtonClick(event) {
+      const clickedElement = $(event.currentTarget);
+      const action = clickedElement.data().action;  
+      switch (action) {
+        case 'audio.random': {
+          this._random(event.currentTarget.checked)
+          break;
+        }
+      }
     }
   
     async _updateObject(event, formData) {

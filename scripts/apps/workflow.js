@@ -1360,6 +1360,13 @@ class damageToken extends executable{
     get amount(){
         return this._part.amount
     } 
+
+    get damages(){
+        const arr = [];
+        if(this.primaryDamage.amount) arr.push(this.primaryDamage)
+        if(this.secondaryDamage.amount) arr.push(this.secondaryDamage)
+        return arr
+    }
     
     get enable(){
         return this._part.enable
@@ -1377,6 +1384,14 @@ class damageToken extends executable{
         return (this.amount.indexOf('@')!==-1 || this.flavor.indexOf('@elevation')!==-1 || this.flavor.indexOf('@moved')!==-1) ? false : true
     }
 
+    get primaryDamage(){
+        return {
+            amount: this.amount,
+            save: this.save,
+            type: this.type,
+        }
+    }
+
     get requiresSaveFail(){
         return this.save === "N" ? false : true
     }
@@ -1392,6 +1407,10 @@ class damageToken extends executable{
     get save(){
         return !this.data.danger.save.enable ? "F" : this._save
     }
+
+    get secondaryDamage(){
+        return this._part.secondary ? this._part.secondary : {}
+    } 
     
     get targets(){
         return zone.sourceTreatment(this.source, this.data.targets, this.data.sources);
@@ -1408,42 +1427,50 @@ class damageToken extends executable{
     }
 
     async _bulkWorkflow(){
-        const damageRoll = await new Roll(this.amount).roll()
-        if(this.save==='F'){
-            await this._calculateDamage(false, damageRoll, this.targets, this.flavor)
-        } 
-        else { 
-            if(this.data.save.failed.length) await this._calculateDamage(false, damageRoll,  this.data.save.failed, this.flavor)
-            if(this.save === 'H' && this.data.hasSuccesses) await this._calculateDamage(true, damageRoll, this.data.save.succeeded, this.flavor)
+        let flavor =  this.flavor;
+        for (const damage of this.damages){
+            const damageRoll = await new Roll(damage.amount).roll()
+            if(damage.save==='F'){
+                await this._calculateDamage(false, damageRoll, this.targets, flavor, damage)
+            } 
+            else { 
+                if(this.data.save.failed.length) await this._calculateDamage(false, damageRoll, this.data.save.failed, flavor, damage)
+                if(damage.save === 'H' && this.data.hasSuccesses) await this._calculateDamage(true, damageRoll, this.data.save.succeeded, flavor, damage)
+            }
+            flavor = ''
         }
     }
 
     async _individualWorkflow(){
-        for (const token of this.targets){
-            if(this.save ==='N' && this.data.save.succeeded.find(t => t.id === token.id)) continue;
-            const half = (this.save === 'H' && this.data.save.succeeded.find(t => t.id === token.id)) ? true : false;
-            const mvMods = this.data.tokenMovement.find(t => t.tokenId === token.id);
-            const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.hz ? mvMods.hz : 0), (mvMods?.v ? mvMods.v : 0));
-            let dice = this.amount.replace(/@elevation/i,e).replace(/@moved/i,mv);
-            const damageRoll = await new Roll(dice).roll();     
-            let flavor = this.flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
-            await this._calculateDamage(half, damageRoll, [token], flavor)
+        let flavor =  this.flavor;
+        for (const damage of this.damages){
+            for (const token of this.targets){
+                if(damage.save ==='N' && this.data.save.succeeded.find(t => t.id === token.id)) continue;
+                const half = (damage.save === 'H' && this.data.save.succeeded.find(t => t.id === token.id)) ? true : false;
+                const mvMods = this.data.tokenMovement.find(t => t.tokenId === token.id);
+                const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.hz ? mvMods.hz : 0), (mvMods?.v ? mvMods.v : 0));
+                let dice = damage.amount.replace(/@elevation/i,e).replace(/@moved/i,mv);
+                const damageRoll = await new Roll(dice).roll();     
+                let flavor = flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
+                await this._calculateDamage(half, damageRoll, [token], flavor, damage)
+            }
+            flavor = ''
         }
     }
 
-    async _calculateDamage(half, damageRoll, tokens, flavorAdd){
+    async _calculateDamage(half, damageRoll, tokens, flavorAdd, damage){
         let roll; const types = damageTypes();
-        let flavor = `<label>${damageRoll.result} ${types[this.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}.</label><br>${flavorAdd.replace(/@alias/i, tokens.map(t => t.name).join(', '))}`;
+        let flavor = `<label>${damageRoll.result} ${types[damage.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}.</label><br>${flavorAdd.replace(/@alias/i, tokens.map(t => t.name).join(', '))}`;
         if(half){
             let hf = Math.floor(damageRoll.total/2);
             roll = await new Roll(`${hf}`).roll();
         } else {roll = damageRoll}
-        await this._applyDamage(tokens, roll, flavor)
+        await this._applyDamage(tokens, roll, damage.type, flavor)
     }
 
-    async _applyDamage(tokens, damage, flavor){
+    async _applyDamage(tokens, damage, type, flavor){
         if(!damage?.total || !tokens.length) return
-        await new MidiQOL.DamageOnlyWorkflow(null, null, damage.total, this.type, tokens, damage, {flavor: flavor}) 
+        await new MidiQOL.DamageOnlyWorkflow(null, null, damage.total, type, tokens, damage, {flavor: flavor}) 
     }
 }
 
@@ -2039,9 +2066,25 @@ class scene extends executable{
 }
 
 class secondaryEffect extends executableWithFile {
+    constructor(...args){
+        super(...args);
+        this._fileB 
+    }
+
+    get audio(){
+        return this._part.audio ? this._part.audio : {}
+    }
 
     get duration(){
         return this._part.duration
+    }
+
+    get fileB(){
+        return this._fileB ? this._fileB : this._setFileB()  
+    }
+
+    get randomFileB(){
+        return this.audio.randomFile ? true : false
     }
 
     get repeat(){
@@ -2056,7 +2099,22 @@ class secondaryEffect extends executableWithFile {
         return this.data.danger.save.be ? parseInt(this.data.danger.save.be) : super.save
     }
 
+    async load() {
+        this._file = await this.file;
+        this._fileB = await this.fileB;
+        let ret = true
+        if(sequencerOn){
+            if(this._fileB){
+                if(this._file){
+                    ret = Sequencer.Preloader.preloadForClients([this._fileB, this._file])
+                } else  {ret = Sequencer.Preloader.preloadForClients(this._fileB)}
+            } else if(this._file) {ret = Sequencer.Preloader.preloadForClients(this._file)}
+        }
+        return ret
+    }
+
     async play(){
+        if(!this._fileB) await this.fileB;
         await super.play()
         if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
@@ -2083,18 +2141,54 @@ class secondaryEffect extends executableWithFile {
             if(this.duration) s = s.duration(this.duration)
             if(this.repeat) s = s.repeats(this.repeat)
             if(this.rotate) s = s.randomRotation()
+        if(this._fileB){
+            s = s.sound()
+            .file(this._fileB)
+            .volume(this.audio.volume)
+        }
         return s
+    }
+
+    async _setFileB(){
+        if(!this.audio.file || !this.audio.randomFile) return this._fileB = this.audio.file;
+        this.playlist = game.playlists.getName(this.audio.file);
+        if(!this.playlist) {
+            this._fileB = ''
+        } else {
+            const index = Math.floor(Math.random() * this.playlist.sounds.size)
+            let i = 0; 
+            for (let key of this.playlist.sounds) {
+                if (i++ == index) {this._fileB = key?.path; break;}  
+            }
+        }
+        return this._fileB
     }
 } 
 
 class sourceEffect extends executableWithFile {
+    constructor(...args){
+        super(...args);
+        this._fileB 
+    }
+
+    get audio(){
+        return this._part.audio ? this._part.audio : {}
+    }
 
     get duration(){
         return this._part.duration
     }
 
+    get fileB(){
+        return this._fileB ? this._fileB : this._setFileB()  
+    }
+
     get hasSourceTargets(){
         return this.sourcesSelected.length ? true : false
+    }
+
+    get randomFileB(){
+        return this.audio.randomFile ? true : false
     }
 
     get repeat(){
@@ -2109,8 +2203,23 @@ class sourceEffect extends executableWithFile {
         return this.data.danger.save.se ? parseInt(this.data.danger.save.se) : super.save
     }
 
+    async load() {
+        this._file = await this.file;
+        this._fileB = await this.fileB;
+        let ret = true
+        if(sequencerOn){
+            if(this._fileB){
+                if(this._file){
+                    ret = Sequencer.Preloader.preloadForClients([this._fileB, this._file])
+                } else  {ret = Sequencer.Preloader.preloadForClients(this._fileB)}
+            } else if(this._file) {ret = Sequencer.Preloader.preloadForClients(this._file)}
+        }
+        return ret
+    }
+
     async play(){
         if(!this._file) await this.file;
+        if(!this._fileB) await this.fileB;
         this.setExecuted()
         if (!this.hasSourceTargets) this._cancel = true
         if(this._cancel) return
@@ -2139,7 +2248,27 @@ class sourceEffect extends executableWithFile {
             if(this.duration) s = s.duration(this.duration)
             if(this.repeat) s = s.repeats(this.repeat)
             if(this.rotate) s = s.randomRotation()
+        if(this._fileB){
+            s = s.sound()
+            .file(this._fileB)
+            .volume(this.audio.volume)
+        }
         return s
+    }
+
+    async _setFileB(){
+        if(!this.audio.file || !this.audio.randomFile) return this._fileB = this.audio.file;
+        this.playlist = game.playlists.getName(this.audio.file);
+        if(!this.playlist) {
+            this._fileB = ''
+        } else {
+            const index = Math.floor(Math.random() * this.playlist.sounds.size)
+            let i = 0; 
+            for (let key of this.playlist.sounds) {
+                if (i++ == index) {this._fileB = key?.path; break;}  
+            }
+        }
+        return this._fileB
     }
 } 
 

@@ -476,6 +476,15 @@
                 "volume.label": "Sound Volume"
             },
             "backgroundEffect":{
+                "audio":{
+                    "label": "Audio",
+                    "file.label": "Audio Source",
+                    "file.placeholder": "path/audio.mp3",
+                    "file.find": "Browse for Audio File",
+                    "playlist.label": "Playlist Name",
+                    "random.label": "Random from Playlist",
+                    "volume.label": "Sound Volume"
+                },
                 "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays beneath the target area, such as an explosion or impact animation.",
                 "label": "Target Effect",
@@ -649,6 +658,15 @@
                 "render.description": "* Will cause the scene to re-render. Danger Zone will attempt to pause danger execution until the scene finishes rendering."
             },
             "sourceEffect":{
+                "audio":{
+                    "label": "Audio",
+                    "file.label": "Audio Source",
+                    "file.placeholder": "path/audio.mp3",
+                    "file.find": "Browse for Audio File",
+                    "playlist.label": "Playlist Name",
+                    "random.label": "Random from Playlist",
+                    "volume.label": "Sound Volume"
+                },
                 "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays beneath the source area, such as an puff of smoke or waving wand.",
                 "label": "Source Effect",
@@ -806,6 +824,14 @@
                         "none": "No Damage",
                         "half": "Half Damage",
                         "full": "Full Damage"
+                    },
+                    "secondary": {
+                        "label": "Additional Damage",
+                        "amount.description": "e.g. 1d6+1",
+                        "amount.label": "Damage Roll or Amount",
+                        "amount.title": "Include parameters for variable roll:\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",    
+                        "save.label": "If Save Success",
+                        "type.label": "Damage Type"
                     },
                     "type.label": "Damage Type"
                 },

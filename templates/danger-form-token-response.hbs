@@ -143,7 +143,35 @@
                     {{selectOptions damageOnSaveOps selected=data.damage.save localize=true}}
                 </select>   
             </div>
+        </div>   
+        <hr>
+        <h4>{{localize "DANGERZONE.type-form.tokenResponse.damage.secondary.label"}}</h4>
+        <div class="form-group">
+            <label for="damage.secondary.type">{{localize "DANGERZONE.type-form.tokenResponse.damage.secondary.type.label"}}</label>
+            <div class="form-fields">
+                <select name="damage.secondary.type" value="{{data.damage.secondary.type}}"> 
+                    <option value=""></option>
+                    {{selectOptions damageOps selected=data.damage.secondary.type localize=true}}
+                </select>   
+            </div>
         </div>
+        <div class="form-group">
+            <label for="damage.secondary.amount">{{localize "DANGERZONE.type-form.tokenResponse.damage.secondary.amount.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenResponse.damage.secondary.amount.title'}}"><i class="fas fa-info-circle"></i></span>
+           </label>
+            <div class="form-fields">
+                <input type="text" name="damage.secondary.amount" placeholder="{{localize 'DANGERZONE.type-form.tokenResponse.damage.secondary.amount.description'}}" value="{{data.damage.secondary.amount}}">
+            </div>
+        </div>   
+        <div class="form-group">
+            <label for="damage.secondary.save">{{localize "DANGERZONE.type-form.tokenResponse.damage.secondary.save.label"}}</label>
+            <div class="form-fields">
+                <select name="damage.secondary.save" value="{{data.damage.secondary.save}}"> 
+                    {{selectOptions damageOnSaveOps selected=data.damage.secondary.save localize=true}}
+                </select>   
+            </div>
+        </div>
+        <hr>
         <div class="form-group">
             <label for="damage.flavor">{{localize "DANGERZONE.type-form.tokenResponse.damage.flavor.label"}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenResponse.damage.flavor.description'}}"><i class="fas fa-info-circle"></i></span>

@@ -54,6 +54,11 @@ export class dangerZoneType {
           volume: 0.5
         },
         backgroundEffect: {
+          audio: {
+            file:'',
+            randomFile: false,
+            volume: 0.5
+          },
           delay: 0,
           file: '',
           randomFile: false,
@@ -116,6 +121,11 @@ export class dangerZoneType {
           globalLight: ''
         },
         sourceEffect: {
+          audio: {
+            file:'',
+            randomFile: false,
+            volume: 0.5
+          },
           delay: 0,
           duration: 0,
           file: '',
