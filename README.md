@@ -20,6 +20,11 @@ these are not yet documented in the Wiki
   * Update global illumination
 * Ambient Lights: attenuation supported
 * 'Secondary Effect' renamed to 'Target Effect'
+* Target Effect: audio linked to effect supported
+* New Source Effect danger part:
+  * Play effect on source tokens, source areas or both
+  * Include audio timed with effect
+* Damage danger part (required MidiQol): add an additional damage type
 
 ### Wiki
 [For detailed instructions and documented examples](../../wiki) 
