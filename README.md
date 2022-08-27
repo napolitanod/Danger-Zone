@@ -10,9 +10,11 @@ these are not yet documented in the Wiki
 * Zones can now trigger other zones including world zones and generic dangers
 * Zones can activate / deactivate other zones
 * Zones can now have a variable limit set for source, in case that more than one source is on the scene. 
+* Zones can clear ambient sounds
 
 #### Dangers
 * New Weather danger part, allowing for triggering of canvas wide weather effects. Requires FXMaster module.
+* New Ambient Sound danger part, allowing for placing of ambient sounds on the canvas.
 * New Scene danger part:
   * Update foreground and background image
   * Update foreground elevation
@@ -25,6 +27,7 @@ these are not yet documented in the Wiki
   * Play effect on source tokens, source areas or both
   * Include audio timed with effect
 * Damage danger part (required MidiQol): add an additional damage type
+* Global Zone form redesigned and loop operation added
 
 ### Wiki
 [For detailed instructions and documented examples](../../wiki) 
