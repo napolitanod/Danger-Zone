@@ -590,6 +590,8 @@ export class zone {
         return {replace: this.wallReplace, placeable: 'walls'}
       case 'AmbientLight':
         return {replace: this.lightReplace, placeable: 'lights'}
+      case 'AmbientSound':
+        return {replace: this.soundReplace, placeable: 'sounds'}
       case 'fxmaster-particle':
         return {replace: this.weatherReplace}
     }

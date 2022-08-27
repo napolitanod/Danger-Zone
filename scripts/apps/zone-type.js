@@ -123,7 +123,6 @@ export class dangerZoneType {
         sound: {
           file:'',
           delay: 0,
-          duration: 0,
           easing: true,
           radius: 0,
           randomFile: false,

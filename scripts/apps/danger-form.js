@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {daeOn, fluidCanvasOn, fxMasterOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -704,6 +704,9 @@ class DangerZoneDangerFormGlobalZone extends FormApplication {
           template : dangerZone.TEMPLATES.DANGERZONEDANGERGLOBALZONE,
           height : "auto",
           width: 475,
+          tabs : [
+            {navSelector: ".tabs", contentSelector: "form", initial: "basics"}
+          ],
           closeOnSubmit: true
         });
       }
@@ -716,12 +719,27 @@ class DangerZoneDangerFormGlobalZone extends FormApplication {
         lightReplaceOps: DANGERZONELIGHTREPLACE,
         stretchOps: STRETCH,
         tokenDispositionOps: TOKENDISPOSITION,
-        wallReplaceOps: DANGERZONEWALLREPLACE
+        operationOps: TRIGGEROPERATION,
+        soundReplaceOps: DANGERZONESOUNDREPLACE,
+        wallReplaceOps: DANGERZONEWALLREPLACE,
+        weatherReplaceOps: DANGERZONEWEATHERREPLACE
       } 
     }
 
     activateListeners(html) {
       super.activateListeners(html);
+      html.on('change', "[data-action]", this._handleChange.bind(this));
+    }
+
+    async _handleChange(event) {
+      const action = $(event.currentTarget).data().action, val = event.currentTarget.value, checked = event.currentTarget.checked;
+      switch (action) {
+        case 'loop-change': 
+          const op = document.getElementById(`dz-operation`);
+          val > 1 ? op.classList.remove('dz-hidden') : op.classList.add('dz-hidden')
+          this.setPosition()
+          break;
+      }
     }
   
     async _updateObject(event, formData) {

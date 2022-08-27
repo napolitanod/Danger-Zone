@@ -1,10 +1,22 @@
 <form autocomplete="off">
-    <div class="tab">
+     <nav class="sheet-tabs tabs">
+        <a class="item active" data-tab="basics"><i class="fas fa-radiation"></i>&nbsp;{{localize 'DANGERZONE.edit-form.basics.label'}}</a>
+        <a class="item" data-tab="dimensions"><i class="fas fa-ruler"></i>&nbsp;{{localize 'DANGERZONE.edit-form.boundary.label'}}</a>
+        <a class="item" data-tab="trigger"><i class="fas fa-play"></i>&nbsp;{{localize 'DANGERZONE.edit-form.trigger.label'}}</a>
+        <a class="item" data-tab="source"><i class="fas fa-dragon"></i>&nbsp;{{localize 'DANGERZONE.edit-form.source.label'}}</a>
+        <a class="item" data-tab="target"><i class="fas fa-bullseye"></i>&nbsp;{{localize 'DANGERZONE.edit-form.token-targeting.label'}}</a>
+        <a class="item" data-tab="clear"><i class="fas fa-eraser"></i>&nbsp;{{localize 'DANGERZONE.edit-form.clear.label'}}</a>
+    </nav>
+    <div class="tab active" data-tab="basics">
         <p class="notes">{{localize "DANGERZONE.type-form.global-zone.description"}}</p>
-        <h3 style="margin-top: 10px;">
-            <i class="fas fa-ruler"></i>&nbsp;
-            <span>{{localize 'DANGERZONE.edit-form.boundary.label'}}</span>
-        </h3>
+        <div class="form-group">
+            <label for="enabled">{{localize 'DANGERZONE.edit-form.enabled.label'}}</label>
+            <div class="form-fields">
+                <input type="checkbox" name="enabled" {{checked zone.enabled}} />
+            </div>
+        </div>
+    </div>
+    <div class="tab" data-tab="dimensions">
         <div class="form-group">
             <label for="options.bleed">{{localize 'DANGERZONE.edit-form.bleed.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.bleed.description'}}"><i class="fas fa-info-circle"></i></span>
@@ -37,53 +49,26 @@
                 </select>
             </div>
         </div>
-        <hr>
-        <div class="form-group">
-            <label for="source.actor"><i class="fas fa-dragon"></i> {{localize 'DANGERZONE.edit-form.source.actor.label'}}</label>
-            <div class="form-fields">
-                <select name="source.actor" value="{{zone.source.actor}}">
-                    {{selectOptions actorOps selected=zone.source.actor}}
-                </select>
-            </div>
-        </div>
-        <hr>
-        <h3>
-            <i class="fas fa-users"></i>&nbsp;
-            <span>{{localize 'DANGERZONE.edit-form.token-targeting.label'}}</span>
-        </h3>
-        <div class="form-group">
-            <label for="tokenDisposition">{{localize 'DANGERZONE.edit-form.token-disposition.label'}}</label>
-            <div class="form-fields">
-                <select name="tokenDisposition" value="{{zone.tokenDisposition}}">
-                    <option value="">{{localize 'DANGERZONE.token-disposition.all.label'}}</option>
-                    {{selectOptions tokenDispositionOps selected=zone.tokenDisposition localize=true}}
-                </select>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="actor">{{localize 'DANGERZONE.edit-form.actor.label'}}</label>
-            <div class="form-fields">
-                <select name="actor" value="{{zone.actor}}">
-                    {{selectOptions actorOps selected=zone.actor}}
-                </select>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="options.allInArea">{{localize 'DANGERZONE.edit-form.allInArea.label'}}
-                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.allInArea.description'}}"><i class="fas fa-info-circle"></i></span>
-            </label>
-            <div class="form-fields">
-                <input type="checkbox" name="options.allInArea" {{checked zone.options.allInArea}} />
-            </div>
-        </div>
-        <hr>
+    </div>
+    <div class="tab" data-tab="trigger"> 
         <div class="form-group">
             <label for="loop">{{localize 'DANGERZONE.edit-form.loop.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.loop.description'}}"><i class="fas fa-info-circle"></i></span>
             </label>
             <div class="form-fields">
-                <input type="range" name="loop" value="{{#if zone.loop}}{{zone.loop}}{{/if}}{{#unless zone.loop}}1{{/unless}}" min="1" max="20" step="1"/>
+                <input type="range" name="loop" value="{{#if zone.loop}}{{zone.loop}}{{/if}}{{#unless zone.loop}}1{{/unless}}" min="1" max="20" step="1" data-action="loop-change"/>
                 <span class="range-value">{{#if zone.loop}}{{zone.loop}}{{/if}}{{#unless zone.loop}}1{{/unless}}</span>
+            </div>
+        </div>
+        <div class="form-group{{#if hideOperation}} dz-hidden{{/if}}" id="dz-operation" >
+            <label>
+                {{localize 'DANGERZONE.edit-form.operation.label'}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.operation.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <select name="operation" value="{{zone.operation}}">
+                    {{selectOptions operationOps selected=zone.operation localize=true}}
+                </select>
             </div>
         </div>
         <div class="form-group">
@@ -109,7 +94,46 @@
                     </div>
                 </div>
             </div>
+        </div>  
+    </div>
+    <div class="tab" data-tab="source">
+        <div class="form-group">
+            <label for="source.actor"><i class="fas fa-dragon"></i> {{localize 'DANGERZONE.edit-form.source.actor.label'}}</label>
+            <div class="form-fields">
+                <select name="source.actor" value="{{zone.source.actor}}">
+                    {{selectOptions actorOps selected=zone.source.actor}}
+                </select>
+            </div>
         </div>
+    </div>
+    <div class="tab" data-tab="target">
+        <div class="form-group">
+            <label for="tokenDisposition">{{localize 'DANGERZONE.edit-form.token-disposition.label'}}</label>
+            <div class="form-fields">
+                <select name="tokenDisposition" value="{{zone.tokenDisposition}}">
+                    <option value="">{{localize 'DANGERZONE.token-disposition.all.label'}}</option>
+                    {{selectOptions tokenDispositionOps selected=zone.tokenDisposition localize=true}}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="actor">{{localize 'DANGERZONE.edit-form.actor.label'}}</label>
+            <div class="form-fields">
+                <select name="actor" value="{{zone.actor}}">
+                    {{selectOptions actorOps selected=zone.actor}}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="options.allInArea">{{localize 'DANGERZONE.edit-form.allInArea.label'}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.allInArea.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" name="options.allInArea" {{checked zone.options.allInArea}} />
+            </div>
+        </div>
+    </div>
+    <div class="tab" data-tab="clear">
         <div class="form-group flexrow">
             <label for="replace">{{localize 'DANGERZONE.edit-form.replace.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.replace.description'}}"><i class="fas fa-info-circle"></i></span>
@@ -130,6 +154,17 @@
                 </select>
             </div>
         </div>
+        <div class="form-group">
+            <label>
+                {{localize 'DANGERZONE.edit-form.sound.replace.label'}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.sound.replace.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <select name="soundReplace" value="{{zone.soundReplace}}">
+                    {{selectOptions soundReplaceOps selected=zone.soundReplace localize=true}}
+                </select>
+            </div>
+        </div>
         <div class="form-group flexrow">
             <label for="wallReplace">{{localize 'DANGERZONE.edit-form.wall.replace.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.wall.replace.description'}}"><i class="fas fa-info-circle"></i></span>
@@ -137,6 +172,17 @@
             <div class="form-fields">
                 <select name="wallReplace" value="{{zone.wallReplace}}">
                     {{selectOptions wallReplaceOps selected=zone.wallReplace localize=true}}
+                </select>
+            </div>
+        </div>
+        <div class="form-group {{#if hideWeather}} dz-hidden{{/if}}">
+            <label>
+                {{localize 'DANGERZONE.edit-form.weather.replace.label'}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.weather.replace.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <select name="weatherReplace" value="{{zone.weatherReplace}}">
+                    {{selectOptions weatherReplaceOps selected=zone.weatherReplace localize=true}}
                 </select>
             </div>
         </div>
@@ -148,13 +194,7 @@
                 <input type="text" name="flavor" value="{{zone.flavor}}">
             </div>
         </div>
-        <div class="form-group">
-            <label for="enabled">{{localize 'DANGERZONE.edit-form.enabled.label'}}</label>
-            <div class="form-fields">
-                <input type="checkbox" name="enabled" {{checked zone.enabled}} />
-            </div>
-        </div>
-    </div> 
+    </div>
 	<footer class="sheet-footer flexrow">
 		<button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
 	</footer>

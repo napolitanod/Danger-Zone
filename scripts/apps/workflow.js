@@ -582,6 +582,9 @@ export class executor {
                 case 'scene': 
                     be = new scene(this.danger.scene, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
+                case 'sound': 
+                    be = new sound(this.danger.sound, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
                 case 'warpgate': 
                     be = new spawn(this.danger.warpgate, this.data, name, EXECUTABLEOPTIONS[name]);
                     break;
@@ -2164,6 +2167,64 @@ class secondaryEffect extends executableWithFile {
         return this._fileB
     }
 } 
+
+class sound extends executableWithFile {
+    constructor(...args){
+        super(...args);
+        this.sounds = []
+    }
+
+    get easing(){
+        return this._part.easing
+    } 
+
+    get _sound() {
+        const sound = {
+            easing: this.easing,
+            flags: this.data.flag,
+            path: this._file,
+            radius: this.radius,
+            volume: this.volume, 
+            walls: this.walls, 
+            x: this.data.boundary.center.x,
+            y: this.data.boundary.center.y
+        }
+        return sound
+    }
+
+    get radius(){
+        return this._part.radius
+    } 
+
+    get walls(){
+        return this._part.walls
+    } 
+
+    get volume(){
+        return this._part.volume ? this._part.volume : 0.5
+    } 
+
+    async play() {
+        await super.play()
+        if(this._cancel) return
+        this.sounds = await this.data.scene.createEmbeddedDocuments("AmbientSound",[this._sound]);
+    }
+
+    async _setFile(){
+        if(!this.filePath || !this.randomFile) return this._file = this.filePath;
+        const playlist = game.playlists.getName(this.filePath);
+        if(!playlist) {
+            this._file = ''
+        } else {
+            const index = Math.floor(Math.random() * playlist.sounds.size)
+            let i = 0; 
+            for (let key of playlist.sounds) {
+                if (i++ == index) {this._file = key?.path; break;}  
+            }
+        }
+        return this._file
+    }
+}
 
 class sourceEffect extends executableWithFile {
     constructor(...args){
