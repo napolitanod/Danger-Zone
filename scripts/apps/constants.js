@@ -71,6 +71,14 @@ export const DANGERZONELIGHTREPLACE = {
     "A": "DANGERZONE.light.replace-types.A.label"
 }
 
+export const DANGERZONESOUNDREPLACE = {
+    "N": "DANGERZONE.sound.replace-types.N.label", 
+    "R": "DANGERZONE.sound.replace-types.R.label",
+    "T": "DANGERZONE.sound.replace-types.T.label",
+    "Z": "DANGERZONE.sound.replace-types.Z.label",
+    "A": "DANGERZONE.sound.replace-types.A.label"
+}
+
 export const DANGERZONEWALLREPLACE = {
     "N": "DANGERZONE.wall.replace-types.N.label", 
     "R": "DANGERZONE.wall.replace-types.R.label",
@@ -461,6 +469,14 @@ export function setExecutableOptions(){
                 wipeable: false,
                 modules:[],
                 scope: "scene"
+            },
+            'sound': {
+                title: "Sound", 
+                icon: "fas fa-volume-high", 
+                document: "AmbientSound", 
+                modules:[],
+                wipeable: true, 
+                scope: "boundary"
             },
             'sourceEffect': {
                 title: "Source Effect", 

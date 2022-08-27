@@ -141,6 +141,8 @@
             "runUntilTokenFound.label": "Always Hits a Token",
             "runUntilTokenFound.description": "The danger will target an area of the zone where at least one token is present, if able.",
             "single-run.description": "This section executes at most once, after the first likelihood success, and regardless of the loop count for this zone",
+            "sound.replace.label": "Sounds",
+            "sound.replace.description": "Choose what to do with existing Danger Zone created ambient sounds when this zone triggers.",
             "source":{
                 "actor.label": "Source Actor",
                 "area.label": "Source Area",
@@ -379,6 +381,13 @@
 		    "token-depth-multiplier.description": "For purposes of zone depth targeting, set a multiplier that calculates how tall a token is in relation to the scene distance, the token's scale, and the number of grid squares that that token takes up. A token in a single grid square with a scale of 1.0, a scene distance of 5, and a multiplier of 1.2 will have a tallness of 6 (1 * 1.0 * 5 * 1.2).",
             "zone-exclusion-tag.label": "Block Zone Tag",
             "zone-exclusion-tag.description": "Enter the tag that you will use to indicate that a wall, light, tile, token or drawing blocks the occupied grid from being included in the zone. Note that the 'Tagger' module is required or, for drawings, using this as the Text Label also works."
+        },
+        "sound.replace-types": {
+            "A.label": "Clear all ambient sounds",
+            "N.label": "Retain all ambient sounds",
+            "R.label": "Clear ambient sounds that share this trigger",
+            "T.label": "Clear ambient sounds that share this danger",
+            "Z.label": "Clear ambient sounds that share this zone"
         },
         "source":{
             "area": {
@@ -656,6 +665,20 @@
                     }
                 },
                 "render.description": "* Will cause the scene to re-render. Danger Zone will attempt to pause danger execution until the scene finishes rendering."
+            },
+            "sound":{
+                "description": "Adds an ambient sound to the scene at the target location.",
+                "label": "Sound",
+                "file.label": "Audio Source",
+                "file.placeholder": "path/audio.mp3",
+                "file.find": "Browse for Audio File",
+                "playlist.label": "Playlist Name",
+                "delay.label": "Delay Start",
+                "easing.label": "Volume Easing",
+                "random.label": "Random from Playlist",
+                "walls.label": "Constrained by Walls",
+                "radius.label": "Effect Radius",
+                "volume.label": "Maximum Volume"
             },
             "sourceEffect":{
                 "audio":{

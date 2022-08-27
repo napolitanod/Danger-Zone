@@ -120,6 +120,16 @@ export class dangerZoneType {
           },
           globalLight: ''
         },
+        sound: {
+          file:'',
+          delay: 0,
+          duration: 0,
+          easing: true,
+          radius: 0,
+          randomFile: false,
+          volume: 0.5,
+          walls: true
+        },
         sourceEffect: {
           audio: {
             file:'',
@@ -237,6 +247,10 @@ export class dangerZoneType {
 
   get scene(){
     return this.options.scene
+  }
+
+  get sound(){
+    return this.options.sound
   }
 
   get sourceEffect(){

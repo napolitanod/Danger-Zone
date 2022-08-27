@@ -20,6 +20,7 @@ export class DangerForm extends FormApplication {
     this.monksActiveTiles,
     this.mutate,
     this.scene,
+    this.sound,
     this.sourceEffect,
     this.tokenEffect,
     this.tokenMove,
@@ -129,6 +130,9 @@ export class DangerForm extends FormApplication {
       case 'scene':
         new DangerZoneDangerFormScene(this, eventParent, this.scene).render(true);
         break;
+      case 'sound':
+        new DangerZoneDangerFormSound(this, eventParent, this.sound).render(true);
+        break;
       case 'source-effect':
         new DangerZoneDangerFormSourceEffect(this, eventParent, this.sourceEffect).render(true);
         break;
@@ -191,6 +195,9 @@ export class DangerForm extends FormApplication {
       case 'scene':
         this.scene = Object.assign(this.scene, danger.options.scene)
         break;
+      case 'sound':
+        this.sound = Object.assign(this.sound, danger.options.sound)
+        break;
       case 'source-effect':
         this.sourceEffect = Object.assign(this.sourceEffect, danger.options.sourceEffect);
         break;
@@ -240,6 +247,7 @@ export class DangerForm extends FormApplication {
     this.monksActiveTiles = instance.options.flags?.['monks-active-tiles'] ? instance.options.flags['monks-active-tiles'] : {};
     this.mutate = instance.options.flags?.mutate ? instance.options.flags.mutate : {};
     this.scene = instance.options.scene;
+    this.sound = instance.options.sound;
     this.sourceEffect = instance.options.sourceEffect;
     this.tokenSays = instance.options.flags.tokenSays ? instance.options.flags.tokenSays : {};
     this.tokenEffect = instance.options.tokenEffect;
@@ -263,6 +271,7 @@ export class DangerForm extends FormApplication {
       hasLight: (this.light.bright || this.light.dim) ? true : false,
       hasMutate: Object.keys(this.mutate).length ? true : false,
       hasScene: this.scene.active ? true : false,
+      hasSound: this.sound?.file ? true : false,
       hasSourceEffect: this.sourceEffect?.file ? true : false,
       hasTokenEffect: this.tokenEffect?.file ? true : false,
       hasTokenMove: (this.tokenMove.v.dir || this.tokenMove.hz.dir || this.tokenMove.e.type || this.tokenMove.sToT) ? true : false,
@@ -293,6 +302,7 @@ export class DangerForm extends FormApplication {
     expandedData.options.lastingEffect = this.lastingEffect;
     expandedData.options.ambientLight = this.light;
     expandedData.options.scene = this.scene;
+    expandedData.options.sound = this.sound;
     expandedData.options.sourceEffect = this.sourceEffect;
     expandedData.options.tokenEffect = this.tokenEffect;
     expandedData.options.tokenMove = this.tokenMove;
@@ -896,6 +906,68 @@ class DangerZoneDangerFormScene extends FormApplication {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.scene = expandedData;
       if(expandedData.active){this.eventParent.addClass('active')};
+    }
+}
+
+class DangerZoneDangerFormSound extends FormApplication {
+  constructor(app, eventParent, data, ...args) {
+    super(...args);
+    this.data = data,
+    this.eventParent = eventParent,
+    this.parent = app;
+    }
+
+    static get defaultOptions(){
+        const defaults = super.defaultOptions;
+
+        return foundry.utils.mergeObject(defaults, {
+          title : game.i18n.localize("DANGERZONE.type-form.sound.label"),
+          id : "danger-zone-danger-form-sound",
+          classes: ["sheet","danger-part-form"],
+          template : dangerZone.TEMPLATES.DANGERZONEDANGERSOUND,
+          height : "auto",
+          width: 425,
+          closeOnSubmit: true
+        });
+      }
+
+    getData(options) {
+      return this.data
+    }
+
+    activateListeners(html) {
+      super.activateListeners(html);
+      html.on('click', "[data-action]", this._handleButtonClick.bind(this));
+    }
+
+    _random(checked){
+      const group = $(this.form).find("#dz-sound-file")
+      if(checked){
+        group.addClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.sound.playlist.label"))
+        group.find('input').attr("placeholder", "")
+      } else {
+        group.removeClass('hidden-picker')
+        group.children('label').html(game.i18n.localize("DANGERZONE.type-form.sound.file.label"))
+        group.find('input').attr("placeholder", game.i18n.localize("DANGERZONE.type-form.sound.file.placeholder"))
+      }
+    }
+
+    async _handleButtonClick(event) {
+      const clickedElement = $(event.currentTarget);
+      const action = clickedElement.data().action;  
+      switch (action) {
+        case 'random': {
+          this._random(event.currentTarget.checked)
+          break;
+        }
+      }
+    }
+  
+    async _updateObject(event, formData) {
+      const expandedData = foundry.utils.expandObject(formData);
+      this.parent.sound = expandedData;
+      if(expandedData.file){this.eventParent.addClass('active')};
     }
 }
 
