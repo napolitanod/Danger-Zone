@@ -25,8 +25,10 @@ export const WORLDZONE = {
     "tokenDisposition": "",
     "actor": "",
     "loop": 1,
+    "operation": "Q",
     "replace": "N",
     "lightReplace": "N",
+    "soundReplace": "N",
     "wallReplace": "N",
     "weatherReplace": "N",
     "flavor": "",
@@ -69,6 +71,14 @@ export const DANGERZONELIGHTREPLACE = {
     "T": "DANGERZONE.light.replace-types.T.label",
     "Z": "DANGERZONE.light.replace-types.Z.label",
     "A": "DANGERZONE.light.replace-types.A.label"
+}
+
+export const DANGERZONESOUNDREPLACE = {
+    "N": "DANGERZONE.sound.replace-types.N.label", 
+    "R": "DANGERZONE.sound.replace-types.R.label",
+    "T": "DANGERZONE.sound.replace-types.T.label",
+    "Z": "DANGERZONE.sound.replace-types.Z.label",
+    "A": "DANGERZONE.sound.replace-types.A.label"
 }
 
 export const DANGERZONEWALLREPLACE = {
@@ -461,6 +471,14 @@ export function setExecutableOptions(){
                 wipeable: false,
                 modules:[],
                 scope: "scene"
+            },
+            'sound': {
+                title: "Sound", 
+                icon: "fas fa-volume-high", 
+                document: "AmbientSound", 
+                modules:[],
+                wipeable: true, 
+                scope: "boundary"
             },
             'sourceEffect': {
                 title: "Source Effect", 

@@ -41,6 +41,7 @@ export class dangerZone {
     DANGERZONEDANGERLIGHT: `modules/${this.ID}/templates/danger-form-light.hbs`,
     DANGERZONEDANGERMUTATE: `modules/${this.ID}/templates/danger-form-mutate.hbs`,
     DANGERZONEDANGERSCENE: `modules/${this.ID}/templates/danger-form-scene.hbs`,
+    DANGERZONEDANGERSOUND: `modules/${this.ID}/templates/danger-form-sound.hbs`,
     DANGERZONEDANGERSOURCEEFFECT: `modules/${this.ID}/templates/danger-form-source-effect.hbs`,
     DANGERZONEDANGERTOKENRESPONSE: `modules/${this.ID}/templates/danger-form-token-response.hbs`,
     DANGERZONEDANGERTOKENSAYS: `modules/${this.ID}/templates/danger-form-token-says.hbs`,
@@ -312,6 +313,7 @@ export class zone {
     this.random = false,
     this.replace = 'N',
     this.scene = new dangerZoneDimensions(sceneId, this.id),
+    this.soundReplace = 'N',
     this.source = {
       area: '',
       actor: '',
@@ -588,6 +590,8 @@ export class zone {
         return {replace: this.wallReplace, placeable: 'walls'}
       case 'AmbientLight':
         return {replace: this.lightReplace, placeable: 'lights'}
+      case 'AmbientSound':
+        return {replace: this.soundReplace, placeable: 'sounds'}
       case 'fxmaster-particle':
         return {replace: this.weatherReplace}
     }

@@ -1,0 +1,49 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.sound.description"}}</p>
+        <div class="form-group">
+            <label for="randomFile">{{localize "DANGERZONE.type-form.sound.random.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-action="random" data-dtype="Boolean" name="randomFile" {{checked randomFile}}>
+            </div>
+        </div>
+        <div id="dz-sound-file" class="form-group {{#if randomFile}}hidden-picker{{/if}}">
+            <label for="file">{{#if randomFile}}{{localize "DANGERZONE.type-form.sound.playlist.label"}}{{/if}}{{#unless randomFile}}{{localize "DANGERZONE.type-form.sound.file.label"}}{{/unless}}</label>
+            <div class="form-fields">
+                {{filePicker target="file" type="sound"}}
+                <input type="text" required  name="file" class="image" placeholder="{{#unless randomFile}}{{localize "DANGERZONE.type-form.sound.file.placeholder"}}{{/unless}}" value="{{file}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="volume">{{localize "DANGERZONE.type-form.sound.volume.label"}}&nbsp;&nbsp;<i class="volume-icon fas fa-volume-down"></i></label>
+            <div class="form-fields">
+                <input type="range" title="{{localize "DANGERZONE.type-form.sound.volume.label"}}" name="volume" value="{{volume}}" min="0" max="1" step="0.05">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.sound.radius.label" }} 
+                <span class="units">{{localize "DANGERZONE.gridUnits" }} </span>
+            </label>
+            <div class="form-fields">
+                <input type="number" name="radius" value="{{radius}}" step="any"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.sound.easing.label"}}</label>
+            <input type="checkbox" name="easing" {{checked easing}}/>
+        </div>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.sound.walls.label"}}</label>
+            <input type="checkbox" name="walls" {{checked walls}}/>
+        </div>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.sound.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>
