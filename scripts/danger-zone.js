@@ -600,8 +600,8 @@ export class zone {
   /*prompts the user to select the zone location point (top left grid location) and captures the location*/
   async promptTemplate() {
     const z = (this.options.noPrompt) ? 0 : await this._promptZ() 
-    const {x,y} = await this._promptXY(z);
-    return {x: x, y: y, z: z}
+    const xy = await this._promptXY(z);
+    return xy ? {x: xy.x, y: xy.y, z: z} : {}
   }
 
   async _promptZ(){
@@ -649,11 +649,19 @@ export class zone {
       xy.x = tl[0], xy.y = tl[1]
     } else {
       ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
+      
       xy = await new Promise((resolve, reject)=>{
-         canvas.app.stage.once('pointerdown', event => {
-              let selected = event.data.getLocalPosition(canvas.app.stage);
-              resolve(selected);
-          })
+        function _cancel(event){
+          ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.cancel-target-select"));
+          window.removeEventListener('auxclick', _cancel);
+          resolve(false)
+        }
+        window.addEventListener('auxclick', _cancel);
+        canvas.app.stage.once('mousedown', event => {
+          let selected = event.data.getLocalPosition(canvas.app.stage);
+          window.removeEventListener('auxclick', _cancel);
+          resolve(selected)
+        });
       });
     }
       
