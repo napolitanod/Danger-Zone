@@ -59,7 +59,8 @@ export function rayIntersectsGrid([yPos,xPos], r){
 }
 
 export function limitArray(array, limitAmount) {
-  return limitAmount ? array.slice(0,limitAmount) : array
+  if(!limitAmount) return []
+  return limitAmount !== -1 ? array.slice(0,limitAmount) : array
 }
 
 export function shuffleArray(array) {
