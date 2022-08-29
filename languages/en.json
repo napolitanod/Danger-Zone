@@ -26,6 +26,7 @@
         "yes": "Ok",
         "zones": "Configure Zones",
         "alerts": {
+            "cancel-target-select": "Target selection and zone trigger have been cancelled.",
             "danger-depth-exceeds-zone": "The danger's depth may not exceed the zone's depth nor can a danger have a depth > 0 when a zone's depth is infinite (equal to 0).",
             "input-z": "Elevation",
             "enter-z": "Enter the danger's elevation",
@@ -33,7 +34,7 @@
             "no-trigger-if-not-on-combat-scene": "Danger Zones do not trigger while you are not active on the current combat scene.",
             "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
             "select-zone-end": "Select an end location for this zone. Selected area will snap to grid and represent the lower right corner of this zone.",
-            "select-target": "Select a location in the zone for the danger to target. Selected area will snap to grid and represent the top left corner of the danger's target.",
+            "select-target": "Select a location in the zone for the danger to target. Selected area will snap to grid and represent the top left corner of the danger's target. Right click to cancel.",
             "select-warpgate-target": "Select a location in the zone for the danger to target. The top left space of non-square danger dimensions will resolve to the top left grid in the target area.",
             "user-selection-exited": "You have exited from danger location selection prematurely. Zone trigger execution stopped.",
             "zone-copied": "The zone was copied successfully! Please review the zone dimensions.",
@@ -905,6 +906,8 @@
                 "delay.label": "Delay Start",
                 "isRolltable.label": "Is Rollable Table",
                 "label": "Token Spawn",
+                "mutate.label": "Is Mutation Target",
+                "mutate.description": "If this danger includes a Mutate danger part, enabling this will apply the mutation to the spawned tokens instead of the normal zone targets. Be sure that the Mutate danger part 'Delay Start' is set to occur after this part's 'Delay Start'.",
                 "tag.label": "Tag",
                 "tag.description": "Tagger tag"
             },

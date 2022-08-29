@@ -224,6 +224,10 @@ class executorData {
         this.sourceAreas = [],
         this.sourcesBlended = [],
         this.sourceLimit = zone.generateSourceCount(),
+        this.spawn = {
+            mutate: false,
+            tokens: []
+        },
         this.targets = options.targets ? options.targets : [],
         this.tokenMovement = [],
         this.twinBoundary = {},
@@ -1759,6 +1763,10 @@ class mutate extends executable {
     get save(){
         return this.data.danger.save.mt ? parseInt(this.data.danger.save.mt) : super.save
     }
+
+    get targets(){
+        return this.data.spawn.mutate ? this.data.sceneTokens.filter(t => this.data.spawn.tokens.includes(t.id)) : super.targets
+    }
     
     get token(){
         const token = this._part.token ? stringToObj(this._part.token) : {}
@@ -2373,7 +2381,10 @@ class spawn extends executable {
         await super.play()
         if(this._cancel) return
         const token = await this.token();
-        if(token) await warpgate.spawnAt(this.data.boundary.center, token, this.updates, {}, this.options);
+        if(token) {
+            this.data.spawn.tokens = await warpgate.spawnAt(this.data.boundary.center, token, this.updates, {}, this.options);
+            if(this._part.mutate) this.data.spawn.mutate = true;
+        }
         await this.data.fillSources()
     }
 
