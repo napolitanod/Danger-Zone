@@ -469,7 +469,8 @@ export class zone {
   }
 
   generateSourceCount(){
-    return Math.floor(Math.random() * (this.source.limit.max - this.source.limit.min + 1))
+    if(!this.source.limit.max && !this.source.limit.min) return -1
+    return this.source.limit.max === this.source.limit.min ? this.source.limit.max : Math.floor(Math.random() * (this.source.limit.max - this.source.limit.min + 1))
   }
 
   async tokensInZone(tokens){

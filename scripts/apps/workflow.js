@@ -416,7 +416,7 @@ class executorData {
 
     setBlendedSources(fill = false){
         const all = this.sourceAreas.concat(this.sources.filter(s => !this.sourceAreas.find(a => a.id === s.id)))
-        if (!this.sourceLimit || all.length <= this.sourceLimit) {this.sourcesBlended = all} 
+        if (this.sourceLimit === -1 || all.length <= this.sourceLimit) {this.sourcesBlended = all} 
         else if(!fill){this.sourcesBlended = limitArray(shuffleArray(all),this.sourceLimit)} 
         else {
             const fillCount = this.sourceLimit - all.length;
@@ -426,7 +426,7 @@ class executorData {
 
     setTokenSources(fill = false){
         if(this._sources.length) {this.sources = this._sources}
-        else if (!this.sourceLimit || this.zone.sources.length <= this.sourceLimit) {this.sources = this.zone.sources}
+        else if (this.sourceLimit === -1 || this.zone.sources.length <= this.sourceLimit) {this.sources = this.zone.sources}
         else if(!fill){this.sources = limitArray(shuffleArray(this.zone.sources),this.sourceLimit)} 
         else {
             const fillCount = this.sourceLimit - this.zone.sources.length;
@@ -443,7 +443,7 @@ class executorData {
                 const ar = await this.zone.sourceArea();
                 area = ar.documents;
             } 
-            if (!this.sourceLimit) {this.sourceAreas = area}
+            if (this.sourceLimit === -1) {this.sourceAreas = area}
             else if(!fill){this.sourceAreas = limitArray(shuffleArray(area),this.sourceLimit)} 
             else {
                 const fillCount = this.sourceLimit - this.sourceAreas.length;
