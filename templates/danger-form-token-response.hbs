@@ -48,6 +48,14 @@
             </div>
         </div>
         <div class="form-group">
+            <label for="save.it">{{localize "DANGERZONE.type-form.item.label"}}</label>
+            <div class="form-fields">
+                <select name="save.it" value={{data.save.it}} data-dtype="Number"> 
+                    {{selectOptions saveResultOps selected=data.save.ti localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div class="form-group">
             <label for="save.le">{{localize "DANGERZONE.type-form.tile.label"}}</label>
             <div class="form-fields">
                 <select name="save.le" value={{data.save.le}} data-dtype="Number"> 

@@ -10,7 +10,7 @@ import {DangerZoneSceneForm} from './apps/scene-zone-list-form.js';
 /**
  * global variables
  */
-export var timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, fxMasterOn = false, betterRoofsOn = false, levelsOn = false; //active modules
+export var timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, fxMasterOn = false, betterRoofsOn = false, levelsOn = false, itemPileOn = false; //active modules
 export var dzMActive = false; 
 export let dangerZoneSocket; //var for socketlib
 
@@ -343,6 +343,7 @@ Hooks.on("updateToken", async (token, update, options, userId) => {
 function setModsAvailable () {
 	if (game.modules.get("betterroofs")?.active){betterRoofsOn = true} ;
 	if (game.modules.get("dae")?.active){daeOn = true} ;
+	if (game.modules.get("item-piles")?.active){itemPileOn = true};
 	if (game.modules.get("levels")?.active){levelsOn = true} ;
 	if (game.modules.get("midi-qol")?.active){midiQolOn = true} ;
 	if (game.modules.get("monks-active-tiles")?.active){monksActiveTilesOn = true} ;
