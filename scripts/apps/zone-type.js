@@ -84,6 +84,15 @@ export class dangerZoneType {
           duration: 0
         },
         globalZone : {},
+        item: {
+          action: '',
+          compendiumName: '',
+          delay: '',
+          name: '',
+          source: '',
+          tag: '',
+          updates: ''
+        },
         lastingEffect: {
           alpha: 1,
           delay: 0,
@@ -220,6 +229,10 @@ export class dangerZoneType {
 
   get hasTwinBoundary(){
     return (monksActiveTilesOn && this.lastingEffect.flags?.['monks-active-tiles']?.teleport) ? true : false
+  }
+
+  get item(){
+    return this.options.item
   }
 
   get lastingEffect(){

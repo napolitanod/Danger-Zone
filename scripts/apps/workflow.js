@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {monksActiveTilesOn, sequencerOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, wallHeightOn} from '../index.js';
+import {monksActiveTilesOn, sequencerOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, wallHeightOn, itemPileOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {furthestShiftPosition, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait} from './helpers.js';
 
@@ -576,6 +576,9 @@ export class executor {
                     break;
                 case 'backgroundEffect': 
                     be = new secondaryEffect(this.danger.backgroundEffect, this.data, name, EXECUTABLEOPTIONS[name]);
+                    break;
+                case 'item': 
+                    be = new item(this.danger.item, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'save': 
                     be = new save(this.danger.save, this.data, name, EXECUTABLEOPTIONS[name]); 
@@ -1567,6 +1570,113 @@ class fluidCanvas extends executable{
 
     async _for(){
         if(this.isToggle) await delay(this.duration);
+    }
+}
+
+class item extends executable {
+    constructor(...args){
+        super(...args);
+        this.items = [],
+        this.compendium
+    }
+
+    get action(){
+        return this._part.action ? this._part.action : ''
+    }
+
+    get compendiumName(){
+        return this._part.compendiumName ? this._part.compendiumName : ''
+    }
+
+    get has(){
+        return (!this.itemNames.length || !super.has) ? false : true 
+    }
+
+    get hasUpdates(){
+        return Object.keys(this.updates).length ? true : false
+    }
+
+    get pile(){
+        return this._part.pile ? true : false
+    } 
+
+    get itemNames(){
+        return this._part.name ? this._part.name.split('||').map(n => n.trim()) : []
+    }
+
+    get source(){
+        return this._part.source
+    } 
+
+    get save(){
+        return this.data.danger.save.it ? parseInt(this.data.danger.save.it) : super.save
+    }
+    
+    get updates(){
+        const updates = this._part.updates ? stringToObj(this._part.updates) : {}
+        if(this.tag) updates['flags'] = {"tagger": this.taggerTag}
+        return updates
+    }
+
+    async getCompendium(){
+        this.compendium = await game.packs.find(p=>p.collection === this.compendiumName)?.getDocuments();
+        if(!this.compendium) dangerZone.log(false, 'Compendium Not Found ', this)
+    }
+
+    getItems(){
+        for(const item of this.itemNames){
+            let found;
+            if(this.compendium) found = this.compendium.find(i => i.name === item)
+            if(!found) found = game.items.getName(item)
+            found ? this.items.push(found) : console.log(`Item ${item} not found ${this.compendium ? 'in provided compendium.' : 'in world.'}`) 
+        }
+    }
+
+    async play(){    
+        await super.play()  
+        if(this._cancel) return
+        if(!['D','E'].includes(this.action)){
+            if(this.compendiumName) await this.getCompendium() 
+            this.getItems()
+            if(!this.items.length) return 
+        }
+        if(this.pile && itemPileOn) {
+            await ItemPiles.API.createItemPile(this.data.boundary.center, {items: this.items, pileActorName: false})
+            return
+        }
+        for (const token of this.targets) { 
+            let crtdItms = []
+            if(this.action === 'A'){
+                crtdItms = await token.actor.createEmbeddedDocuments('Item', this.items)
+                if(this.hasUpdates) await this.updateTokenItem(token, crtdItms)
+            } else if(this.action === 'B'){
+                const notOn = this.items.filter(t => !token.actor.items.find(i=> i.name === t.name))
+                if(!notOn.length) return
+                crtdItms = await token.actor.createEmbeddedDocuments('Item', notOn)
+                if(this.hasUpdates) await this.updateTokenItem(token, crtdItms)
+            } else if(this.action === 'D' || this.action === 'E'){
+                let del = []
+                if(this.action === 'E') {
+                    del = token.actor.items.filter(i => this.itemNames.includes(i.name))
+                 } else{
+                    for(const item of this.itemNames){
+                        let j = token.actor.items.find(i => i.name === item)
+                        if(j) del.push(j)
+                    }
+                 }
+                if(del.length) await token.actor.deleteEmbeddedDocuments('Item', del.map(i => i.id))
+            } else {
+                const itms = token.actor.items.filter(i => this.itemNames.includes(i.name))
+                if(itms.length) await this.updateTokenItem(token, itms)
+            }
+        }
+    }
+
+    async updateTokenItem(token, arr){
+        const toUpdate = arr.filter(i => this.updates[i.name])
+        console.log(toUpdate, token)
+        console.log(toUpdate.map(i => ({_id: i.id, ...this.updates[i.name]})))
+        await token.actor.updateEmbeddedDocuments('Item', toUpdate.map(i => ({_id: i.id, ...this.updates[i.name]})));
     }
 }
 

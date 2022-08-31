@@ -1,5 +1,4 @@
-import {daeOn} from '../index.js';
-import {tokenSaysOn, monksActiveTilesOn, perfectVisionOn, warpgateOn, fxMasterOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
+import {tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, warpgateOn, fxMasterOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -236,6 +235,15 @@ export const SAVERESULT = {
     1: "DANGERZONE.type-form.tokenResponse.save.result.success"
 }
 
+export const ITEMTARGET = {
+    "A": "DANGERZONE.item.target.add",
+    "B": "DANGERZONE.item.target.add-unless",
+    "D": "DANGERZONE.item.target.delete",
+    "E": "DANGERZONE.item.target.delete-all",
+    "U": "DANGERZONE.item.target.update"
+}
+
+
 export const DAEDuration = daeOn ? DAE.daeSpecialDurations() : {}
 
 export function actorOps(){
@@ -352,7 +360,8 @@ export function setModOptions(){
 
 const TOKENSAYSFILETYPEENTITYTYPE = {
     rollTable: "RollTable",
-    audio: "Playlist"
+    audio: "Playlist",
+    item: "Item"
   }
 
 export function getCompendiumOps(fileType){
@@ -424,6 +433,12 @@ export function setExecutableOptions(){
                 title: "Damage", 
                 icon: "fas fa-skull", 
                 modules: [{active: midiQolOn, name: "midi-qol", dependent: true}],
+                scope: "token"
+            },
+            'item': {
+                title: "Item", 
+                icon: "fas fa-suitcase", 
+                modules: [{active: taggerOn, name: "tagger", dependent: false},{active: itemPileOn, name: "item-piles", dependent: false}],
                 scope: "token"
             },
             'lastingEffect': {

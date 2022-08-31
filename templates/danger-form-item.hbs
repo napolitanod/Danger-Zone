@@ -1,0 +1,70 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.item.description"}}</p>
+        <div class="form-group">
+            <label for="name">{{localize "DANGERZONE.type-form.item.name.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.item.name.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="text" required name="name" value="{{data.name}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="compendiumName">{{localize "DANGERZONE.type-form.item.compendium.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.item.compendium.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <select name="compendiumName" value="data.compendiumName" placeholder="{{localize "DANGERZONE.type-form.item.compendium.placeholder"}}" >  
+                    {{selectOptions compendiumOps selected=data.compendiumName localize=true}}
+                </select>
+             </div>
+        </div>
+        <div class="form-group  {{#if itemPileOnNot}}dz-hidden{{/if}}">
+            <label for="pile">{{localize "DANGERZONE.type-form.item.pile.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="pile" {{checked data.pile}} data-action="pile-change">
+            </div>
+        </div>
+        <div id="dz-token-fields" class="{{#if data.pile}}dz-hidden{{/if}}">
+            <div class="form-group">
+                <label for="action">{{localize "DANGERZONE.type-form.item.action.label"}} 
+                    <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.item.action.description'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <select name="action" value="{{data.action}}"> 
+                        {{selectOptions actionOps selected=data.action localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <div class="form-group stacked command">
+                <label for="updates">{{localize "DANGERZONE.type-form.item.updates.label"}}</label>
+                <textarea name="updates" placeholder="{{localize "DANGERZONE.type-form.item.updates.description"}}" value="{{updates}}">{{data.updates}}</textarea>
+            </div>
+            <div class="form-group">
+                <label for="source">{{localize "DANGERZONE.source.label"}} 
+                    <span class="dz-toolt" title="{{localize 'DANGERZONE.source.danger.description'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <select name="source" value="{{data.source}}"> 
+                        {{selectOptions sourceOps selected=data.source localize=true}}
+                    </select>   
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.item.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.delay}}{{data.delay}}{{else}}0{{/if}}>
+            </div>
+        </div>
+        <div class="form-group {{#if taggerOnNot}}dz-hidden{{/if}}">
+            <label for="tag">{{localize "DANGERZONE.type-form.item.tag.label"}}</label>
+            <div class="form-fields">
+                <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.item.tag.description"}}"  value="{{data.tag}}">
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>

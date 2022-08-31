@@ -37,6 +37,7 @@ export class dangerZone {
     DANGERZONEDANGERFLUIDCANVAS: `modules/${this.ID}/templates/danger-form-fluid-canvas.hbs`,
     DANGERZONEDANGERFOREGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-foreground-effect.hbs`,
     DANGERZONEDANGERGLOBALZONE: `modules/${this.ID}/templates/danger-form-global-zone.hbs`,
+    DANGERZONEDANGERITEM: `modules/${this.ID}/templates/danger-form-item.hbs`,
     DANGERZONEDANGERLASTINGEFFECT: `modules/${this.ID}/templates/danger-form-lasting-effect.hbs`,
     DANGERZONEDANGERLIGHT: `modules/${this.ID}/templates/danger-form-light.hbs`,
     DANGERZONEDANGERMUTATE: `modules/${this.ID}/templates/danger-form-mutate.hbs`,

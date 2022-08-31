@@ -292,6 +292,15 @@
             "skipped": "skipped because id is duplicate of an existing danger.",
             "short-title": "Import"
         },
+        "item": {
+            "target": {
+                "add": "Add items to token",
+                "add-unless": "Add items to token unless it already exists",
+                "delete": "Delete one instance of each item from token",
+                "delete-all": "Delete all instances of items from token",
+                "update": "Update items on token"
+            }
+        },
         "light": {
             "clear-types":{
                 "delete": "Delete light",
@@ -559,6 +568,25 @@
             },
             "icon.label": "Icon",
             "icon.find": "Browse for Icon",
+            "item": {
+                "action.description": "Choose whether the item will be added to token, removed from token, or updated. Note that for some game systems if you wish to reduce the quantity of the item that may require an update rather than a delete.",
+                "action.label": "Update Type",
+                "compendium":{
+                    "description": "Identify the compendium that holds the items. If 'Compendium' is left blank or the item is not found within the compendium, then the item will be sourced from this world's items.",
+                    "label": "Item Compendium",
+                    "placeholder": "compendium name"
+                },
+                "delay.label": "Delay Start",
+                "description": "Adds, removes or updates an item on the target tokens.",
+                "label": "Item",
+                "name.description": "Enter a list of item names using the name exactly as found on the item that you wish to interact with, separating each by two pipes ||",
+                "name.label": "Item Names",
+                "pile.label": "Create as Item Pile",
+                "updates.description": "Updates the token's items by passing in object update data by item name, e.g. \"Item A\": {name: 'My rename'}, \"Item B\": {name: 'My other item rename'}",
+                "updates.label": "Updates",
+                "tag.label": "Item Tag",
+                "tag.description": "Tagger tag"
+                },
             "light":{
                 "animationIntensity.label": "Animation Intensity",
                 "animation.label": "Light Animation Type",
@@ -614,7 +642,7 @@
                 "actor.label": "Token Actor Data",
                 "actor.description": "Updates token actor by passing in object data. Expects key: value pairs. This will be wrapped in {brackets} and passed as an object to the Warpgate actor mutation.",
                 "delay.label": "Delay Start",
-                "description": "Transforms targeted tokens with revertable changes using Warpgate. This is in beta and form layout / data collection is subject to change.",
+                "description": "Transforms targeted tokens with revertable changes using Warpgate.",
                 "embedded.label": "Embedded Data",
                 "embedded.description": "Updates token items or active effects by passing in object data. Expects key: value pairs. This will be wrapped in {brackets} and passed as an object to the Warpgate embedded mutation.",
                 "label": "Mutate",
