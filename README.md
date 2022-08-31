@@ -16,6 +16,7 @@ these are not yet documented in the Wiki
 #### Dangers
 * New Weather danger part, allowing for triggering of canvas wide weather effects. Requires FXMaster module.
 * New Ambient Sound danger part, allowing for placing of ambient sounds on the canvas.
+* New Item danger part - add, remove or update items on targets or, if you have Item Piles module, create an item pile in the target location.
 * New Scene danger part:
   * Update foreground and background image
   * Update foreground elevation
