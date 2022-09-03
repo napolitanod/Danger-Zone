@@ -5,6 +5,7 @@
             "name": "napolitanod"
         }
     ],
+    "changelog": "https://github.com/napolitanod/Danger-Zone/releases",
     "description": "Bring your scenes to life and add an element of danger! Danger Zone provides GMs the ability to easily invoke zone-based targeted effects within a scene either manually with provided button or in automated fashion using game events, such as token movement.",
     "languages": [
         {
@@ -17,10 +18,6 @@
             "path": "languages/fr.json"
         }    
     ],
-    "compatibility": {
-      "minimum": "10",
-      "verified": "10"
-    },
     "minimumCoreVersion": "10",
     "compatibleCoreVersion": "10",
     "name": "danger-zone",
@@ -28,13 +25,14 @@
         "scripts/index.js",
         "scripts/danger-zone.js"
     ],
+    "readme": "https://github.com/napolitanod/Danger-Zone/blob/main/README.md",
     "socket": true,
     "styles": [
         "styles/danger-zone.css"
     ],
     "title": "Danger Zone",
-    "version": "1.6.8",
+    "version": "1.6.8.1",
     "url": "https://github.com/napolitanod/Danger-Zone",
     "manifest": "https://raw.githubusercontent.com/napolitanod/Danger-Zone/master/module.json",
-    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/1.6.8/module.zip"
+    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/1.6.8.1/module.zip"
 }

@@ -59,6 +59,7 @@
     </div>
     <div class="tab" data-tab="dimensions">
         <p class="notes">{{localize 'DANGERZONE.edit-form.boundary.description'}}</p>
+        <p class="notes warning {{#unless sceneInactive}}dz-hidden{{/unless}}">{{localize 'DANGERZONE.edit-form.scene-inactive'}}</p>
         <div class="form-group">
             <label>
                 {{localize 'DANGERZONE.edit-form.boundary.choose.label'}}
