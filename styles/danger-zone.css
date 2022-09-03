@@ -634,6 +634,8 @@ form ol.danger-setting-group .active:hover label {
     font-weight: bold;
 }
 
-.danger-zone-executor .warning{
+.danger-zone-executor .warning,
+.danger-zone-record .warning
+{
     color: rgba(255, 62, 65);
 }

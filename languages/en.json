@@ -141,6 +141,7 @@
             "replace.description": "Choose what to do with existing Danger Zone created lasting effects when this zone triggers.",
             "runUntilTokenFound.label": "Always Hits a Token",
             "runUntilTokenFound.description": "The danger will target an area of the zone where at least one token is present, if able.",
+            "scene-inactive": "The location picker is disabled because the zone's scene is either not active or is gridless. To address, close this form, activate the scene, and then reopen this form. Gridless scenes are not supported.",
             "single-run.description": "This section executes at most once, after the first likelihood success, and regardless of the loop count for this zone",
             "sound.replace.label": "Sounds",
             "sound.replace.description": "Choose what to do with existing Danger Zone created ambient sounds when this zone triggers.",
