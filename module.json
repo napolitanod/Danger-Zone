@@ -23,7 +23,7 @@
         "verified": "10",
         "maximum": "10"
       },
-    "name": "danger-zone",
+    "id": "danger-zone",
     "esmodules": [
         "scripts/index.js",
         "scripts/danger-zone.js"
@@ -34,8 +34,8 @@
         "styles/danger-zone.css"
     ],
     "title": "Danger Zone",
-    "version": "1.6.8.3",
+    "version": "1.6.8.4",
     "url": "https://github.com/napolitanod/Danger-Zone",
     "manifest": "https://raw.githubusercontent.com/napolitanod/Danger-Zone/master/module.json",
-    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/1.6.8.3/module.zip"
+    "download": "https://github.com/napolitanod/Danger-Zone/releases/download/1.6.8.4/module.zip"
 }
