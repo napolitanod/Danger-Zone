@@ -634,14 +634,11 @@ export class zone {
     return z
   }
 
-  async _promptXY(){
-    let currentLayer = canvas.activeLayer, xy;
-    currentLayer.deactivate();
-    
+  async _promptXY(){ 
+    let xy
     dangerZoneDimensions.destroyHighlightZone(this.id, '', this.scene.dangerId);
     await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_wf', this.scene.dangerId);
 
-    
     if(warpgateOn){
       ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-warpgate-target"));
       const size = canvas.grid.type === 1 ? Math.max(this.danger.dimensions.units.w, this.danger.dimensions.units.h) : 1
@@ -650,6 +647,8 @@ export class zone {
       let tl = canvas.grid.grid.getPixelsFromGridPosition(tg[0]-Math.floor(size/2), tg[1]-Math.floor(size/2))
       xy.x = tl[0], xy.y = tl[1]
     } else {
+      let currentLayer = canvas.activeLayer;
+      currentLayer.deactivate();
       ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
       
       xy = await new Promise((resolve, reject)=>{
@@ -664,11 +663,11 @@ export class zone {
           window.removeEventListener('auxclick', _cancel);
           resolve(selected)
         });
-      });
+      });   
+      currentLayer.activate();
     }
       
-    dangerZoneDimensions.destroyHighlightZone(this.id, '_wf', this.scene.dangerId);    
-    currentLayer.activate();
+    dangerZoneDimensions.destroyHighlightZone(this.id, '_wf', this.scene.dangerId); 
     return xy
   }
 }
