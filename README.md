@@ -31,6 +31,7 @@ these are not yet documented in the Wiki
 * Damage danger part (required MidiQol): add an additional damage type
 * Global Zone form redesigned and loop operation added
 * Spawn danger part adds an option to apply the Mutate danger part to the spawned token rather than the zone targets
+* Dangers list now includes action to export a single danger config
 
 ### Wiki
 [For detailed instructions and documented examples](../../wiki) 
