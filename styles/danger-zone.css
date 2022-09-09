@@ -197,6 +197,10 @@ form.danger-zone-type-form .main-danger {
     padding: 0px 4px 0px 0px;
 }
 
+.danger-zone-types-list .danger-zone-controls {
+    flex: 0 0 16%;
+}
+
 .danger-zone-types-header .danger-zone-details, 
 .danger-zone-types-list .danger-zone-details,
 .danger-zone-scene .danger-zone-details {

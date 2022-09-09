@@ -11,6 +11,7 @@
         "delete": "Delete",
         "distance": "(Distance)",
         "edit": "Edit",
+        "export-danger": "Export Danger",
         "grids": "(Grids)",
         "gridUnits": "units",
         "gridUnits2": "(Grid Units)",

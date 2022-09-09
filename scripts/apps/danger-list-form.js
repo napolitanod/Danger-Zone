@@ -31,23 +31,23 @@ export class DangerZoneTypesForm extends FormApplication {
     const dangerId = clickedElement.parents('[data-id]')?.data()?.id;
 
     switch (action) {
-      case 'add-zone-type': {
+      case 'add-zone-type': 
           const newType = await dangerZoneType.addZoneType();
           new DangerForm(newType.id, this).render(true);
           this.refresh();
           break;
-      }
-      case 'copy': {
+      case 'copy': 
         const copied = await dangerZoneType.copyDanger(dangerId)
         this.refresh();
         new DangerForm(copied, this).render(true);
         break;
-      }
-      case 'edit': {
+      case 'edit': 
         new DangerForm(dangerId, this).render(true);
         break;
-      }
-      case 'delete': {
+      case 'export':
+        this.exportToJSON(event, dangerId)
+        break;
+      case 'delete':
         new Dialog({
           title: game.i18n.localize("DANGERZONE.types-form.clear"),
           content: game.i18n.localize("DANGERZONE.types-form.confirm"),
@@ -71,13 +71,9 @@ export class DangerZoneTypesForm extends FormApplication {
           width: 400
         }).render(true);
         break;
-      }
-      case 'active': {
+      case 'active':
         await this._activateWorld(dangerId);
         break;
-      }
-      default:
-        (false, 'Invalid action detected', action);
     }
   }
 
@@ -146,8 +142,8 @@ export class DangerZoneTypesForm extends FormApplication {
     this._filter();
   }
 
-  async exportToJSON() {
-    saveDataToFile(JSON.stringify(dangerZoneType._allDangers, null, 2), "text/json", `fvtt-danger-zone-dangers.json`);  
+  async exportToJSON(event, id = '') {
+    saveDataToFile(JSON.stringify(id ? {[id]: dangerZoneType._allDangers[id]} : dangerZoneType._allDangers, null, 2), "text/json", id ? `fvtt-danger-zone-danger-${id}.json`: `fvtt-danger-zone-dangers.json`);  
   }
 
   async importFromJSON(json) {
