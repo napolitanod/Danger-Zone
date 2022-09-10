@@ -3,15 +3,10 @@
 [![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fdanger-zone&colorB=4aa94a)](https://forge-vtt.com/bazaar#package=danger-zone)
 [![Foundry Hub Endorsements](https://img.shields.io/endpoint?logoColor=white&url=https%3A%2F%2Fwww.foundryvtt-hub.com%2Fwp-json%2Fhubapi%2Fv1%2Fpackage%2Fdanger-zone%2Fshield%2Fendorsements)](https://www.foundryvtt-hub.com/package/danger-zone/)
 
-#### [Discussion and Danger Configuration Sharing on JB2A Discord server](https://discord.gg/gmd8MAPX4m)
-#### [Wiki and How to Use](../../wiki) 
-#### [Detailed Examples](../../wiki/Examples)
-### Tutorials
-[Intro example - explosions sound accompanied by screen shaking](https://youtu.be/-n0MFJNj8IM)
-
-[Combat within a burning structure](https://youtu.be/qArHy50NNgk)
-
-[Tower Defense: player controlled traps and turn triggered environmental hazards](https://youtu.be/MaDAVqiS7v4)
+:biohazard: [Discussion and Danger Configuration Sharing on JB2A Discord server](https://discord.gg/gmd8MAPX4m) <br>
+:biohazard: [Wiki and How to Use](../../wiki)  <br>
+:biohazard: [Detailed Examples](../../wiki/Examples) <br>
+:biohazard: [Tutorials](../../wiki/Video-Tutorials) <br>
 
 ## About
 Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT module that provides GMs the ability to easily invoke localized effects within a scene. Examples of what you can do with this module:
