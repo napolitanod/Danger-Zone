@@ -3,12 +3,9 @@
 [![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Fdanger-zone&colorB=4aa94a)](https://forge-vtt.com/bazaar#package=danger-zone)
 [![Foundry Hub Endorsements](https://img.shields.io/endpoint?logoColor=white&url=https%3A%2F%2Fwww.foundryvtt-hub.com%2Fwp-json%2Fhubapi%2Fv1%2Fpackage%2Fdanger-zone%2Fshield%2Fendorsements)](https://www.foundryvtt-hub.com/package/danger-zone/)
 
-### Discussion and Danger Configuration Sharing
-New! Find Danger Zone on the [JB2A Discord server](https://discord.gg/gmd8MAPX4m)
-
-### Wiki
-[For detailed instructions and documented examples](../../wiki) 
-
+#### [Discussion and Danger Configuration Sharing on JB2A Discord server](https://discord.gg/gmd8MAPX4m)
+#### [Wiki and How to Use](../../wiki) 
+#### [Detailed Examples](../../wiki/Examples)
 ### Tutorials
 [Intro example - explosions sound accompanied by screen shaking](https://youtu.be/-n0MFJNj8IM)
 
