@@ -6,36 +6,6 @@
 ### Discussion and Danger Configuration Sharing
 New! Find Danger Zone on the [JB2A Discord server](https://discord.gg/gmd8MAPX4m)
 
-### New in Foundry VTT V10
-these are not yet documented in the Wiki
-
-#### Zones
-* Zones can now trigger other zones including world zones and generic dangers
-* Zones can activate / deactivate other zones
-* Zones can now have a variable limit set for source, in case that more than one source is on the scene. 
-* Zones can clear ambient sounds
-* Adds ability to cancel the selecting of targets during zone trigger workflow
-
-#### Dangers
-* New Weather danger part, allowing for triggering of canvas wide weather effects. Requires FXMaster module.
-* New Ambient Sound danger part, allowing for placing of ambient sounds on the canvas.
-* New Item danger part - add, remove or update items on targets or, if you have Item Piles module, create an item pile in the target location.
-* New Scene danger part:
-  * Update foreground and background image
-  * Update foreground elevation
-  * Update darkness and optionally animate
-  * Update global illumination
-* Ambient Lights: attenuation supported
-* 'Secondary Effect' renamed to 'Target Effect'
-* Target Effect: audio linked to effect supported
-* New Source Effect danger part:
-  * Play effect on source tokens, source areas or both
-  * Include audio timed with effect
-* Damage danger part (required MidiQol): add an additional damage type
-* Global Zone form redesigned and loop operation added
-* Spawn danger part adds an option to apply the Mutate danger part to the spawned token rather than the zone targets
-* Dangers list now includes action to export a single danger config
-
 ### Wiki
 [For detailed instructions and documented examples](../../wiki) 
 
@@ -55,25 +25,22 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 
 <img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/crumbling%20ceiling%20gif.gif" height="400">
 
-> A zone is triggered by the start of a new combat turn, causing the screen to shake and rubble to tumble down. Using Danger Zone, you can define a portion of the scene to be the zone (e.g. the hallway) within which a danger (e.g the falling rocks and screen shake) is invoked and tokens may be affected. Note that Danger Zone includes no video components and integrates with other free modules to expand functionality. In the above example, Danger Zone creates a tile in the target location and integrates with JB2A module for the rubble asset and Kandashi's Fluid Canvas for the screen shaking. Danger Zone pulls these together into a cohesive whole along with it's own trigger and zone location and targeting functionality.
+> A zone is triggered by the start of a new combat turn, and the resulting danger causes the screen to shake and shed rubble.
 
 ## What's in the module
-* Effectively turns your scene into an actor, adding defined zones to the scene within which the effects the you define generate.
-* Adds effect trigger buttons to the scene's navbar for quick execution. 
-* Allows for the association of zone effects to game events, such as combat turn change, so that effect can be triggered automatically. 
-* Adds workflow functionality that completes each effect in sequence. 
-* Adds a token targeting component, which gives you the ability to add active effects or generate macro code on tokens targetted by a zone effect. 
-* Handles the complex targetting of a 3D effect within the zone's width, height and depth dimensions, for square and hex grids.
-* Provides easy to use forms for defining zones, triggers and effects, including visual and audio components, macros, tiles, and chat messaging.
+* Add zones to a scene within which effects generate and tokens are affected.
+* Activate and trigger zones with on-screen buttons. 
+* Associate zone triggers to game events, such as combat turn change or token movement. 
+* Sequence various effects and zone triggers to perfect the overall effect experience. 
+* Target tokens within zone effects in order to do things like add active effects, update token data, or add items. 
+* Target within a zone's width, height and depth dimensions, for square and hex grids.
+* Easy to use forms for configuring dangers and zones.
 * Functionality can be expanded through other Foundry modules - see the Module Integration section below.
 * Accessible API for accessing Danger Zone functionality from another module or macro.
 
 ## What's not in the module
 * **!!!Does not include any video, image or audio components.!!!**
-* When another module can do something well, such as summoning a token (Warpgate), shaking the screen canvas (Kandashi's Fluid Canvas), or teleporting tokens (Monk's Active Tiles) then Danger Zone will integrate with that module to provide those effects rather than include them in the module itself.
-
-### Gridless scenes not supported
-* The module currently does not extend to include gridless scenes (though a gridded scene with a transparent grid is supported). This is a planned future extension of the module, the math is just much more difficult.
+* **Gridless scenes not supported** The module currently does not extend to include gridless scenes.
 
 ## Getting Started
 <img src="https://user-images.githubusercontent.com/22696153/147769650-1a095760-9c4e-4ef9-8cff-403abc049bb1.gif" height="400">
@@ -83,7 +50,7 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 ### 1. Create a Danger
 The danger is the lava bubble that bursts to the surface or the vent of poisonous gas that releases from a lava field. It defines an effect that executes within a zone. With Danger Zone, you have control over a vast array of configuration combinations, including displaying effects, creating lights and walls, spawning tokens, executing macros, playing sounds and moving tokens.
 
-<img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/r9/dangerFilled3.JPG"  height="500">
+<img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/r9/dangerFilled4.JPG"  height="400">
 
 Add dangers by going to Foundry's 'Configure Settings' > 'Module Settings', locating Danger Zone, and selecting the 'Configure Dangers' button. Or access the Dangers button from the Scenes right navigation area. See [Dangers](../../wiki/Dangers) for more info.
 
