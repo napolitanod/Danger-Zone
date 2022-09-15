@@ -437,7 +437,7 @@ function insertTileEffectsClearButton (controls, b, c) {
  * @param {*} b 
  * @param {*} c 
  */
-function insertAmbientSoundClearButton (controls, b, c) {console.log(controls)
+function insertAmbientSoundClearButton (controls, b, c) {
 	if(game.user.isGM && game.settings.get('danger-zone', 'scene-control-sound-button-display') === true){
 		const button = controls.find(b => b.name == "sounds")
 
