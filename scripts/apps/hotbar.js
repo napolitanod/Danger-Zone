@@ -21,12 +21,13 @@ export function addTriggersToHotbar() {
 
 function _setDangerZoneButton(html, scene, clss) {
     const hasEx = game.settings.get(dangerZone.ID, 'display-executor');
+    const hasClear = game.settings.get(dangerZone.ID, 'scene-control-clear-all-button-display');
     const zones = dangerZone.getTriggerZonesFromScene(scene.id).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)});
     if(zones.length) {
         let triggerList = $('<ol>').attr('id', 'danger-zone-hotbar-trigger').addClass(clss);
         let btnWrap = $('<ol>').append($('<li>'));
         let randomSet = 0;
-        const hidden = (hasEx ? zones.length : zones.length > 1) ? ' dz-hidden ' : '';
+        const hidden = ((hasEx || hasClear) ? zones.length : zones.length > 1) ? ' dz-hidden ' : '';
         for (const zn of zones){
             const zoneType = dangerZoneType.getDanger(zn.type)
             if(zoneType){
@@ -48,7 +49,12 @@ function _setDangerZoneButton(html, scene, clss) {
             btn.click(_executor);
             btnWrap.prepend(btn);
         }
-        if(hasEx ? zones.length : zones.length > 1){
+        if(hasClear){
+            let btn = $('<li>').addClass(`danger-zone-scene-trigger-button${hidden}`).append($('<i class="fas fa-trash"></i>')).prop('title', game.i18n.localize("DANGERZONE.controls.clear.label"))
+            btn.click(_handleClear);
+            btnWrap.prepend(btn);
+        }
+        if((hasEx || hasClear) ? zones.length : zones.length > 1){
             let btn = $('<li>').addClass(`danger-zone-scene-trigger-master`).append($('<i class="fas fa-radiation"></i>')).click(_handleMasterClick)
             if(dzMActive){btn.addClass('active')}
             triggerList.prepend(btn);
@@ -81,6 +87,30 @@ function _hideZoneHighlight(event){
 function _contextMenu(event){
     const data = $(event.currentTarget).data("data-id");
     new DangerZoneForm(null, data.zone, data.scene, data.dangerId).render(true);
+}
+
+
+async function _handleClear(event) {
+    new Dialog({
+        title: game.i18n.localize("DANGERZONE.controls.clear.label"),
+        content: game.i18n.localize("DANGERZONE.controls.clear.description"),
+        buttons: {
+          yes: {
+            icon: '<i class="fas fa-check"></i>',
+            label: game.i18n.localize("DANGERZONE.yes"),
+            callback: async () => {
+                await dangerZone.wipeAll();
+            }
+          },
+          no: {
+            icon: '<i class="fas fa-times"></i>',
+            label: game.i18n.localize("DANGERZONE.cancel")
+          }
+        },
+        default: "no"
+      }, {
+        width: 400
+      }).render(true);
 }
 
 async function _executor(event){

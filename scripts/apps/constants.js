@@ -9,6 +9,14 @@ export const WORKFLOWSTATES = {
     COMPLETE: 99
 }
 
+export const PLACEABLESBYDOCUMENT =  {
+    'Tile': 'tiles',
+    'Wall': 'walls',
+    'AmbientLight': 'lights',
+    'AmbientSound': 'sounds',
+    'fxmaster-particle':'fxmaster-particle'
+}
+
 export const WORLDZONE = {
     "options": {
         "bleed": false,

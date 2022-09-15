@@ -1,5 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
 import {circleAreaGrid, getTagEntities, rayIntersectsGrid} from './helpers.js';
+import { wallHeightOn } from '../index.js';
 
 export class dangerZoneDimensions {
     /**
@@ -267,7 +268,7 @@ export class boundary{
                 const [TyPos, TxPos] = canvas.grid.grid.getGridPositionFromPixels(document.x, document.y);
                 const [Tx2, Ty2] = canvas.grid.grid.getPixelsFromGridPosition(TyPos + document.height, TxPos + document.width); 
                 const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
-                const Td = (distance * Math.max(document.width, document.height) * multiplier);
+                const Td = (wallHeightOn && document.getFlag('wall-height', 'tokenHeight')) ? document.getFlag('wall-height', 'tokenHeight') : (distance * Math.max(document.width, document.height) * multiplier);
                 dim = {x:document.x, y:document.y, width: Tx2 - document.x, height: Ty2 - document.y, depth: Td,  bottom:document.elevation};
                 break
             default: 
