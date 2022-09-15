@@ -1674,8 +1674,6 @@ class item extends executable {
 
     async updateTokenItem(token, arr){
         const toUpdate = arr.filter(i => this.updates[i.name])
-        console.log(toUpdate, token)
-        console.log(toUpdate.map(i => ({_id: i.id, ...this.updates[i.name]})))
         await token.actor.updateEmbeddedDocuments('Item', toUpdate.map(i => ({_id: i.id, ...this.updates[i.name]})));
     }
 }

@@ -3,7 +3,7 @@ import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
 import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
-import {COMBATTRIGGERS, DANGERZONETRIGGERS, WORLDZONE} from './apps/constants.js';
+import {COMBATTRIGGERS, DANGERZONETRIGGERS,  PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities} from './apps/helpers.js';
@@ -277,6 +277,21 @@ export class dangerZone {
     }
   }
 
+  static async wipe(documentName){
+    const ids=canvas.scene[PLACEABLESBYDOCUMENT[documentName]].filter(t => t.flags[dangerZone.ID]).map(t => t.id);
+    if(ids.length) await canvas.scene.deleteEmbeddedDocuments(documentName, ids)
+  }
+
+  static async wipeAll(){
+    for (var documentName in PLACEABLESBYDOCUMENT) {
+      if(documentName === 'fxmaster-particle'){
+        if(fxMasterOn) await Hooks.call("fxmaster.updateParticleEffects", []); break;
+      } else {
+        await dangerZone.wipe(documentName)
+      }
+    }
+  }
+
 }
 
 /**
@@ -403,7 +418,10 @@ export class zone {
    * @returns the remaining flag data
    */
   async delete(){
-    return await game.scenes.get(this.scene.sceneId).unsetFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE + `.${this.id}`);
+    const flags = game.scenes.get(this.scene.sceneId).getFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE)
+    delete flags[this.id] 
+    await game.scenes.get(this.scene.sceneId).unsetFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE)
+    await game.scenes.get(this.scene.sceneId).setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, flags);
   }
 
   get _executor(){
@@ -587,13 +605,13 @@ export class zone {
   _wipeData(document){
     switch(document){
       case 'Tile':
-        return {replace: this.replace, placeable: 'tiles'}
+        return {replace: this.replace, placeable: PLACEABLESBYDOCUMENT[document]}
       case 'Wall':
-        return {replace: this.wallReplace, placeable: 'walls'}
+        return {replace: this.wallReplace, placeable: PLACEABLESBYDOCUMENT[document]}
       case 'AmbientLight':
-        return {replace: this.lightReplace, placeable: 'lights'}
+        return {replace: this.lightReplace, placeable: PLACEABLESBYDOCUMENT[document]}
       case 'AmbientSound':
-        return {replace: this.soundReplace, placeable: 'sounds'}
+        return {replace: this.soundReplace, placeable: PLACEABLESBYDOCUMENT[document]}
       case 'fxmaster-particle':
         return {replace: this.weatherReplace}
     }
@@ -639,9 +657,9 @@ export class zone {
     dangerZoneDimensions.destroyHighlightZone(this.id, '', this.scene.dangerId);
     await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_wf', this.scene.dangerId);
 
-    if(warpgateOn){
+    if(warpgateOn && this.danger.dimensions.units.w === this.danger.dimensions.units.h){
       ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-warpgate-target"));
-      const size = canvas.grid.type === 1 ? Math.max(this.danger.dimensions.units.w, this.danger.dimensions.units.h) : 1
+      const size = canvas.grid.type === 1 ? this.danger.dimensions.units.w : 1
       xy = await warpgate.crosshairs.show({icon: this.danger.icon, fillAlpha: 0.1, fillColor: '#000000', size: size, interval: (size % 2) > 0 ? -1 : 1 })
       let tg = canvas.grid.grid.getGridPositionFromPixels(xy.x, xy.y)
       let tl = canvas.grid.grid.getPixelsFromGridPosition(tg[0]-Math.floor(size/2), tg[1]-Math.floor(size/2))

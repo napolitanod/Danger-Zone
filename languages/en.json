@@ -42,9 +42,12 @@
             "zone-copy-fail": "Oops, there was an issue copying the zone."
         },
         "controls": {
+            "clear.label": "Clear Danger Zone Placeables",
+            "clear.description": "Clear all Danger Zone placeables?",
             "clearAmbientLight.label": "Clear Danger Zone Ambient Lighting",
+            "clearAmbientSound.label": "Clear Danger Zone Ambient Sounds",
             "clearEffectsTile.label": "Clear Danger Zone Lasting Effects",
-            "clearWalls.label": "Clear Danger Zone Walls"
+            "clearWall.label": "Clear Danger Zone Walls"
         },
         "copy-zone":{
             "label": "Copy Zone from Scene",
@@ -369,15 +372,19 @@
             "open-socket.description": "Enabling this settings allows players to use the 'dangerZone.triggerZone' API in macros (dangerZone.triggerZone() is passed to the GM's session to execute, which requires that the GM be logged in at the time that the macro is run).",
             "display-danger-boundary.description": "Temporarily highlights the area targeted by a danger when the zone is triggered (GM's session only).",
             "scene-control-button-display.label": "Display Clear Lasting Effects Button",
-            "scene-control-button-display.description": "Toggles the display of the Clear Danger Zone Lasting Effects button within the scene control buttons tiles grouping",
+            "scene-control-button-display.description": "Toggles the display of the Clear Danger Zone Lasting Effects button within the scene control buttons tiles grouping.",
+            "scene-control-clear-all-button-display.label": "Display Clear Button",
+            "scene-control-clear-all-button-display.description": "Toggles the display of the Clear button within the Danger Zone list of scene buttons.",
             "scene-control-light-button-display.label": "Display Clear Ambient Light Button",
-            "scene-control-light-button-display.description": "Toggles the display of the Clear Ambient Light button within the scene control buttons lighting control grouping",
-            "scene-control-wall-button-display.label": "Display Clear Wall Button",
-            "scene-control-wall-button-display.description": "Toggles the display of the Clear Wall button within the scene control buttons walls control grouping",
+            "scene-control-light-button-display.description": "Toggles the display of the Clear Ambient Light button within the scene control buttons lighting control grouping.",
+            "scene-control-sound-button-display.label": "Display Clear Ambient Sound Button",
+            "scene-control-sound-button-display.description": "Toggles the display of the Clear Ambient Sound button within the scene control buttons ambient sound control grouping.",
+            "scene-control-wall-button-display.label": "Display Clear Weather Button",
+            "scene-control-wall-button-display.description": "Toggles the display of the Clear Wall button within the scene control buttons walls control grouping.",
             "scene-trigger-button-display.label": "Zone Trigger Display Location",
 		    "scene-trigger-button-display.description": "Set the location where the zone triggers will display. Triggers only display for the GM when viewing the active scene.",
             "types-button-display.label": "Display Dangers Button",
-            "types-button-display.description": "Toggles the display of the Dangers button at the bottom of the scenes side bar",
+            "types-button-display.description": "Toggles the display of the Dangers button at the bottom of the scenes side bar.",
             "scene-enabled-default.label": "New Zone Active by Default",
             "scene-enabled-default.description": "Select whether or not new danger zones default to active when you first create them.",
             "scene-header":{
@@ -390,7 +397,7 @@
                 }
               },
             "token-depth-multiplier.label": "Token Depth Multiplier",
-		    "token-depth-multiplier.description": "For purposes of zone depth targeting, set a multiplier that calculates how tall a token is in relation to the scene distance, the token's scale, and the number of grid squares that that token takes up. A token in a single grid square with a scale of 1.0, a scene distance of 5, and a multiplier of 1.2 will have a tallness of 6 (1 * 1.0 * 5 * 1.2).",
+		    "token-depth-multiplier.description": "For purposes of zone depth targeting, set a multiplier that calculates how tall a token is in relation to the scene distance and the number of grid squares that that token takes up. A token in a single grid square with a scale of 1.0, a scene distance of 5, and a multiplier of 1.2 will have a tallness of 6 (1 * 1.0 * 5 * 1.2). If 'Wall Height' module is installed, this setting is ignored for tokens with a 'Token Height' > 0.",
             "zone-exclusion-tag.label": "Block Zone Tag",
             "zone-exclusion-tag.description": "Enter the tag that you will use to indicate that a wall, light, tile, token or drawing blocks the occupied grid from being included in the zone. Note that the 'Tagger' module is required or, for drawings, using this as the Text Label also works."
         },

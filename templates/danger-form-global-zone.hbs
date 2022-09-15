@@ -15,6 +15,14 @@
                 <input type="checkbox" name="enabled" {{checked zone.enabled}} />
             </div>
         </div>
+        <div class="form-group flexrow">
+            <label for="flavor">{{localize 'DANGERZONE.edit-form.flavor.label'}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.flavor.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+                <div class="form-fields">
+                <input type="text" name="flavor" value="{{zone.flavor}}">
+            </div>
+        </div>
     </div>
     <div class="tab" data-tab="dimensions">
         <div class="form-group">
@@ -184,14 +192,6 @@
                 <select name="weatherReplace" value="{{zone.weatherReplace}}">
                     {{selectOptions weatherReplaceOps selected=zone.weatherReplace localize=true}}
                 </select>
-            </div>
-        </div>
-        <div class="form-group flexrow">
-            <label for="flavor">{{localize 'DANGERZONE.edit-form.flavor.label'}}
-                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.flavor.description'}}"><i class="fas fa-info-circle"></i></span>
-            </label>
-                <div class="form-fields">
-                <input type="text" name="flavor" value="{{zone.flavor}}">
             </div>
         </div>
     </div>

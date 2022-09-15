@@ -36,10 +36,38 @@ export function addTriggersToSceneNavigation() {
                 btn.click(_executor);
                 triggerList.prepend(btn);
             }
+            if(game.settings.get(dangerZone.ID, 'scene-control-clear-all-button-display')){
+                let btn = $('<ol>').addClass(`danger-zone-scene-trigger-button`).append($('<i class="fas fa-trash"></i>')).prop('title', game.i18n.localize("DANGERZONE.controls.clear.label"))
+                btn.click(_handleClear);
+                triggerList.prepend(btn);
+            }
             triggerList.insertAfter(activeNav);
         }
         dangerZone.log(false,'Update scene navigation ', {"scene": scene, "nav": activeNav, "zones": zones});
     }
+}
+
+async function _handleClear(event) {
+    new Dialog({
+        title: game.i18n.localize("DANGERZONE.controls.clear.label"),
+        content: game.i18n.localize("DANGERZONE.controls.clear.description"),
+        buttons: {
+          yes: {
+            icon: '<i class="fas fa-check"></i>',
+            label: game.i18n.localize("DANGERZONE.yes"),
+            callback: async () => {
+                await dangerZone.wipeAll();
+            }
+          },
+          no: {
+            icon: '<i class="fas fa-times"></i>',
+            label: game.i18n.localize("DANGERZONE.cancel")
+          }
+        },
+        default: "no"
+      }, {
+        width: 400
+      }).render(true);
 }
 
 async function _handleTriggerClick(event) {

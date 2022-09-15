@@ -54,6 +54,16 @@ Hooks.once('init', async function() {
 		requiresReload: true
 	});
 
+	game.settings.register(modulename, "scene-control-clear-all-button-display", {
+		name: game.i18n.localize("DANGERZONE.setting.scene-control-clear-all-button-display.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.scene-control-clear-all-button-display.description"),
+		scope: "world",
+		config: true,
+		default: true,
+		type: Boolean,
+		requiresReload: true
+	});
+
     game.settings.register(modulename, 'scene-header', {
 		name: game.i18n.localize('DANGERZONE.setting.scene-header.display.label'),
 		hint: game.i18n.localize('DANGERZONE.setting.scene-header.display.description'),
@@ -88,6 +98,16 @@ Hooks.once('init', async function() {
 	game.settings.register(modulename, "scene-control-light-button-display", {
 		name: game.i18n.localize("DANGERZONE.setting.scene-control-light-button-display.label"),
 		hint: game.i18n.localize("DANGERZONE.setting.scene-control-light-button-display.description"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+		requiresReload: true
+	});
+
+	game.settings.register(modulename, "scene-control-sound-button-display", {
+		name: game.i18n.localize("DANGERZONE.setting.scene-control-sound-button-display.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.scene-control-sound-button-display.description"),
 		scope: "world",
 		config: true,
 		default: false,
@@ -272,8 +292,10 @@ Hooks.once("socketlib.ready", () => {
  * add zone clear button to canvas controls
  */
 Hooks.on("getSceneControlButtons", (controls, b, c) => {
+	//insertClearButton(controls, b, c);
 	insertTileEffectsClearButton(controls, b, c);
 	insertAmbientLightClearButton(controls, b, c);
+	insertAmbientSoundClearButton(controls, b, c);
 	insertWallClearButton(controls, b, c);
 });
 
@@ -376,8 +398,7 @@ function insertTileEffectsClearButton (controls, b, c) {
 				icon: "fas fa-radiation",
 				visible: game.user.isGM,
 				onClick: async () => {
-					let tileIds=canvas.scene.tiles.filter(t => t.flags[dangerZone.ID]).map(t => t.id);
-					await canvas.scene.deleteEmbeddedDocuments("Tile", tileIds);
+					dangerZone.wipe('Tile')
 				},
 				button: true
 			});
@@ -402,8 +423,32 @@ function insertTileEffectsClearButton (controls, b, c) {
 				icon: "fas fa-radiation",
 				visible: game.user.isGM,
 				onClick: async () => {
-					let lightIds=canvas.scene.lights.filter(t => t.flags[dangerZone.ID]).map(t => t.id);
-					await canvas.scene.deleteEmbeddedDocuments("AmbientLight", lightIds);
+					dangerZone.wipe('AmbientLight')
+				},
+				button: true
+			});
+		}
+	}
+}
+
+/**
+ * adds the sound clear button to the controls on the canvas
+ * @param {object} controls 
+ * @param {*} b 
+ * @param {*} c 
+ */
+function insertAmbientSoundClearButton (controls, b, c) {
+	if(game.user.isGM && game.settings.get('danger-zone', 'scene-control-sound-button-display') === true){
+		const button = controls.find(b => b.name == "sounds")
+
+		if (button) {
+			button.tools.push({
+				name: "danger-zone-sounds-clear",
+				title:  game.i18n.localize("DANGERZONE.controls.clearAmbientSound.label"),
+				icon: "fas fa-radiation",
+				visible: game.user.isGM,
+				onClick: async () => {
+					dangerZone.wipe('AmbientSound')
 				},
 				button: true
 			});
@@ -428,8 +473,7 @@ function insertWallClearButton (controls, b, c) {
 				icon: "fas fa-radiation",
 				visible: game.user.isGM,
 				onClick: async () => {
-					let lightIds=canvas.scene.walls.filter(t => t.flags[dangerZone.ID]).map(t => t.id);
-					await canvas.scene.deleteEmbeddedDocuments("Wall", lightIds);
+					dangerZone.wipe('Wall')
 				},
 				button: true
 			});
