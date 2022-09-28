@@ -47,6 +47,12 @@ export const AMBIENTLIGHTCLEAROPS = {
     'O': 'DANGERZONE.light.clear-types.off'
 }
 
+export const COMBATINITIATIVE = {
+    '': "DANGERZONE.type-form.combat.initiative.type.options.none",
+    "R": "DANGERZONE.type-form.combat.initiative.type.options.roll",
+    "S": "DANGERZONE.type-form.combat.initiative.type.options.set"
+}
+
 export const SCENEFORMICONDISPLAYOPTIONS = {
     'B': 'DANGERZONE.setting.scene-header.display.iconLabel', 
     'I': 'DANGERZONE.setting.scene-header.display.iconOnly', 
@@ -411,6 +417,12 @@ export function setExecutableOptions(){
                 title: "Audio", 
                 icon: "fas fa-music", 
                 modules: [{active: sequencerOn, name: "sequencer", dependent: false}],
+                scope: "scene"
+            },
+            'combat': {
+                title: "Combat", 
+                icon: "fas fa-swords", 
+                modules: [{active: warpgateOn, name: "warpgate", dependent: false}],
                 scope: "scene"
             },
             'foregroundEffect': {

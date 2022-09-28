@@ -25,7 +25,7 @@ export class DangerZoneForm extends FormApplication {
       id : "danger-zone",
       classes: ["sheet","danger-zone-record"],
       template : dangerZone.TEMPLATES.DANGERZONECONFIG,
-      width : 450,
+      width : 500,
       height : "auto",
       closeOnSubmit: true,
       tabs : [

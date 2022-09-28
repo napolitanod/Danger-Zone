@@ -67,6 +67,23 @@ export class dangerZoneType {
           rotate: false,
           duration: 0
         },
+        combat: {
+          targets: {
+            add: false
+          },
+          delay: 0,
+          initiative: {
+            player: false,
+            type: '',
+            value: 0 
+          },
+          new: false,
+          spawn: false,
+          source: {
+            add: false
+          },
+          start: false
+        },
         effect: {},
         flags: {},
         foregroundEffect: {
@@ -211,12 +228,20 @@ export class dangerZoneType {
     return this.options.flags.fluidCanvas ? this.options.flags.fluidCanvas : {}
   }
 
+  get combat(){
+    return this.options.combat ?? {}
+  }
+
   get damage(){
     return this.options.flags.tokenResponse?.damage ? this.options.flags.tokenResponse.damage : {}
   }
 
   get foregroundEffect(){
     return this.options.foregroundEffect
+  }
+
+  get hasCombat(){
+    return (this.combat.targets.add || this.combat.spawn || this.combat.source.add || this.combat.new || this.combat.initiative.type || this.combat.start ) ? true : false
   }
 
   get globalZone(){

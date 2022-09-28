@@ -6,6 +6,7 @@
         "between": "Between",
         "cancel": "Cancel",
         "clear": "Clear",
+        "continue": "Continue",
         "copy": "Copy",
         "degrees": "(Degrees)",
         "delete": "Delete",
@@ -32,11 +33,14 @@
             "input-z": "Elevation",
             "enter-z": "Enter the danger's elevation",
             "json-invalid": "data is not in a valid object format.",
+            "no-active-combat": "There is no active combat. The Combat danger part has been canceled.",
             "no-trigger-if-not-on-combat-scene": "Danger Zones do not trigger while you are not active on the current combat scene.",
             "select-zone-start": "Select a start location for this zone. Selected area will snap to grid and represent the top left corner of this zone.",
             "select-zone-end": "Select an end location for this zone. Selected area will snap to grid and represent the lower right corner of this zone.",
             "select-target": "Select a location in the zone for the danger to target. Selected area will snap to grid and represent the top left corner of the danger's target. Right click to cancel.",
             "select-warpgate-target": "Select a location in the zone for the danger to target. The top left space of non-square danger dimensions will resolve to the top left grid in the target area.",
+            "trigger-zone": "Trigger Zone?",
+            "trigger-zone-confirm": "Continue with triggering zone",
             "user-selection-exited": "You have exited from danger location selection prematurely. Zone trigger execution stopped.",
             "zone-copied": "The zone was copied successfully! Please review the zone dimensions.",
             "zone-copy-fail": "Oops, there was an issue copying the zone."
@@ -139,6 +143,8 @@
             "placeTemplate.label": "Choose Location",
             "placeTemplate.description": "On trigger, you will be prompted to select the scene location to target with the danger (otherwise the location is randomly selected from within the bounds of the zone and bleed). If the location that you select is fully outside of the zone, the danger effects will generate but tokens outside of the zone will not be targeted. ",
             "promptElevation.label": "Skip Elevation Prompt",
+            "promptTrigger.label": "Prompt GM Before Executing?",
+            "promptTrigger.description": "When the zone trigger is initiated, this will evoke a prompt to the GM that queries whether or not the trigger should proceed. Useful for automated triggers where you want the option to cancel.",
             "random.label": "Randomize",
             "random.description": "All zones in this scene that share the same trigger are grouped and only one is triggered at random. Assign a weight to control how often one triggers in relation to the others.",
             "replace.label": "Lasting Effects",
@@ -527,6 +533,33 @@
             },
             "clear": "Clear",
             "cleared.info": "has been deleted from this danger.",
+            "combat":{
+                "targets":{
+                    "add.label": "Add Targets to Combat"
+                },
+                "delay.label": "Delay Start",
+                "description": "Interact with the active combat or create a new combat.",
+                "initiative": {
+                    "player.label": "Roll for Player Owned",
+                    "type":{
+                        "label": "Initiative Determination",
+                        "options": {
+                            "none": "Do Nothing",
+                            "roll": "Roll Initiative",
+                            "set": "Set Initiative"
+                        }
+                    },
+                    "value.label": "Initiative Count"
+                },
+                "label": "Combat",
+                "new.label": "Create New Combat",
+                "source": {
+                    "add.label": "Add Sources to Combat"
+                },
+                "spawn.description": "This danger part will be applied to any tokens that are spawned by this danger. The Spawn danger part's 'Delay Start' must occur before this danger part's 'Delay Start'.",
+                "spawn.label": "Add Spawns to Combat",
+                "start.label": "Begin the Combat"
+            },
             "confirm": "Are you sure you want to delete this danger's",
             "dimensions.label": "Dimensions",
             "dimensions.description": "Width and height dimensions are measured in scene grids.\nIf the width or height = 0 then that dimension will default to the zone's dimension.\nFor depth, specify the difference in grid units between the top and bottom elevations.\nA depth of 0 will default to the zone's depth.",

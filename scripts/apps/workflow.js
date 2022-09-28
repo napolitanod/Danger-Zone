@@ -1,8 +1,8 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {monksActiveTilesOn, sequencerOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, wallHeightOn, itemPileOn} from '../index.js';
+import {monksActiveTilesOn, sequencerOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, warpgateOn, wallHeightOn, itemPileOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
-import {furthestShiftPosition, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait} from './helpers.js';
+import {furthestShiftPosition, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe} from './helpers.js';
 
 async function delay(delay){
     if(delay) await wait(delay)
@@ -339,7 +339,7 @@ class executorData {
 
     async checkLikelihood() {
         if(this.zone.likelihood < 100){
-            const maybe = await new Roll(`1d100`).roll();
+            const maybe = await maybe();
             this.likelihoodResult = maybe.result;
         }
         return this.likelihoodMet
@@ -553,6 +553,9 @@ export class executor {
                 case 'audio': 
                     be = new audio(part, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
+                case 'combat': 
+                    be = new combat(part, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
                 case 'foregroundEffect': 
                     be = new primaryEffect(this.danger.foregroundEffect, this.data, name, EXECUTABLEOPTIONS[name], flags); 
                     break;
@@ -737,7 +740,7 @@ export class executor {
                 continue;
             }
             if(ex.likelihood < 100){
-                const maybe = await new Roll(`1d100`).roll();
+                const maybe = await maybe();
                 if(ex.likelihood > maybe.result) {
                     console.log(`Zone extension likelihood of ${ex.likelihood} was not met with a roll of ${maybe.result}`)
                     continue;
@@ -1052,7 +1055,7 @@ class executable {
     
     async checkLikelihood() {
         if(this.likelihood < 100){
-            const maybe = await new Roll(`1d100`).roll();
+            const maybe = await maybe();
             this.likelihoodResult = maybe.result;
         }
     }
@@ -1365,6 +1368,108 @@ class audio extends executableWithFile {
     }
 }
 
+class combat extends executable {
+    constructor(...args){
+        super(...args);
+        this.initiativeTargets = []
+    }
+
+    get addSource(){
+        return this._part.source.add
+    }
+
+    get addTargets(){
+        return this._part.targets.add
+    }
+    
+    get combat(){
+        return game.combats.find(c => c.scene?.id === this.data.sceneId && c.active) ?? game.combats.find(c => c.isActive)
+    }
+
+    get has(){
+        return (super.has && this.data.danger.hasCombat) ? true : false
+    }
+
+    get initiative(){
+        return this._part.initiative.type
+    }
+
+    get initiativePlayer(){
+        return this._part.initiative.player ?? false
+    }
+
+    get initiativeValue(){
+        return this._part.initiative.value ?? 0
+    }
+
+    get newCombat(){
+        return this._part.new ?? false
+    }
+
+    get spawn(){
+        return this._part.spawn 
+    }
+    
+    get start(){
+        return this._part.start 
+    }
+
+    _checkActiveCombat(){
+        if(!this.newCombat && !this.combat) {
+            ui.notifications?.error(game.i18n.localize("DANGERZONE.alerts.no-active-combat"))
+            this._cancel = true
+        }
+    }
+    
+    async play(){    
+        await super.play()
+        this._checkActiveCombat()
+        if(this._cancel) return
+        if(this.newCombat) await this._newCombat()
+        this._setTargets()
+        if(this.initiativeTargets.length) await this._addToCombat()
+        if(this.initiative === 'R') {await this._rollInitiative()} else if(this.initiative ==='S'){await this._setInitiative()}
+        if(this.start & !this.combat.started) await this.combat.startCombat()
+    }
+
+    async _addToCombat(){
+        for(const token of this.initiativeTargets){if(!this._tokenCombatant(token)) await token._object.toggleCombat(this.combat)}
+    }
+
+    async _newCombat(){
+        await Combat.create({scene: this.data.sceneId, active: true})
+    }
+
+    _tokenCombatant(token){
+        return this.combat.combatants.find(c => c.token.id === token.id) 
+    }
+
+    _setTargets(){
+        if(this.addTargets) this.initiativeTargets = this.targets
+        if(this.addSource && this.data.hasSources) this.initiativeTargets = this.initiativeTargets.concat(this.data.sources.filter(s => !this.initiativeTargets.find(t => t.id === s.id)))
+        if(warpgateOn && this.spawn){
+            for(const tokenId of this.data.spawn.tokens){
+                if(!this.initiativeTargets.find(t => t.id === tokenId)) this.initiativeTargets.push(this.data.sceneTokens.get(tokenId))
+            }
+        }
+    }
+
+    async _rollInitiative(){
+        for(const token of this.initiativeTargets){
+            if(!this.initiativePlayer && token.hasPlayerOwner) continue
+            await this.combat.rollInitiative(this._tokenCombatant(token).id, {updateTurn: false})
+        }
+    }
+    
+    async _setInitiative(){
+        for(const token of this.initiativeTargets){
+            if(!this.initiativePlayer && token.hasPlayerOwner) continue
+            await this.combat.setInitiative(this._tokenCombatant(token).id, this.initiativeValue)
+        }
+    }
+
+}
+
 class damageToken extends executable{
     
     get amount(){
@@ -1439,7 +1544,7 @@ class damageToken extends executable{
     async _bulkWorkflow(){
         let flavor =  this.flavor;
         for (const damage of this.damages){
-            const damageRoll = await new Roll(damage.amount).roll()
+            const damageRoll = await new Roll(damage.amount).evaluate({async: true})
             if(damage.save==='F'){
                 await this._calculateDamage(false, damageRoll, this.targets, flavor, damage)
             } 
@@ -1460,7 +1565,7 @@ class damageToken extends executable{
                 const mvMods = this.data.tokenMovement.find(t => t.tokenId === token.id);
                 const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.hz ? mvMods.hz : 0), (mvMods?.v ? mvMods.v : 0));
                 let dice = damage.amount.replace(/@elevation/i,e).replace(/@moved/i,mv);
-                const damageRoll = await new Roll(dice).roll();     
+                const damageRoll = await new Roll(dice).evaluate({async: true});     
                 let flavor = flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
                 await this._calculateDamage(half, damageRoll, [token], flavor, damage)
             }
@@ -1473,7 +1578,7 @@ class damageToken extends executable{
         let flavor = `<label>${damageRoll.result} ${types[damage.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}.</label><br>${flavorAdd.replace(/@alias/i, tokens.map(t => t.name).join(', '))}`;
         if(half){
             let hf = Math.floor(damageRoll.total/2);
-            roll = await new Roll(`${hf}`).roll();
+            roll = await new Roll(`${hf}`).evaluate({async: true});
         } else {roll = damageRoll}
         await this._applyDamage(tokens, roll, damage.type, flavor)
     }

@@ -46,6 +46,11 @@ export async function getTagEntities(tag, scene){
   return d
 }
 
+export async function maybe(){
+  const roll = await new Roll(`1d100`).evaluate({async: true})
+  return roll
+}
+
 export function rayIntersectsGrid([yPos,xPos], r){
   const [xl,yl] = canvas.grid.grid.getPixelsFromGridPosition(yPos, xPos);
   const [xc,yc] = canvas.grid.grid.getCenter(xl, yl);

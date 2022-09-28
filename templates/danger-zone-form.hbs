@@ -193,6 +193,15 @@
         </div>
         <div class="form-group">
             <label>
+                {{localize 'DANGERZONE.edit-form.promptTrigger.label'}}
+                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.promptTrigger.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" name="options.promptTrigger" {{checked zone.options.promptTrigger}}/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
                 <i class="fas fa-radiation-alt"></i>
                 &nbsp;{{localize 'DANGERZONE.edit-form.random.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.random.description'}}"><i class="fas fa-info-circle"></i></span>

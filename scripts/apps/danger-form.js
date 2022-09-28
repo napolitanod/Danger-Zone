@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {daeOn, fluidCanvasOn, fxMasterOn, itemPileOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -9,6 +9,7 @@ export class DangerForm extends FormApplication {
     super(...args);
     this.parent = parent,
     this.audio,
+    this.combat,
     this.effect,
     this.backgroundEffect,
     this.system,
@@ -110,6 +111,9 @@ export class DangerForm extends FormApplication {
       case 'background-effect':
         new DangerZoneDangerFormBackgroundEffect(this, eventParent, this.backgroundEffect).render(true);
         break;
+      case 'combat':
+        new DangerZoneDangerFormCombat(this, eventParent, this.combat).render(true);
+        break;
       case 'fluid-canvas':
         new DangerZoneDangerFormFluidCanvas(this, eventParent, this.fluidCanvas).render(true);
         break;
@@ -176,6 +180,9 @@ export class DangerForm extends FormApplication {
         break;
       case 'background-effect':
         this.backgroundEffect = Object.assign(this.backgroundEffect, danger.options.backgroundEffect);
+        break;
+      case 'combat':
+        this.combat = Object.assign(this.combat, danger.options.combat)
         break;
       case 'fluid-canvas':
         this.fluidCanvas = {};
@@ -246,6 +253,7 @@ export class DangerForm extends FormApplication {
     this.effect = instance.options.effect;
     this.audio = instance.options.audio;
     this.backgroundEffect = instance.options.backgroundEffect;
+    this.combat = instance.options.combat;
     this.fluidCanvas = instance.options.flags.fluidCanvas ? instance.options.flags.fluidCanvas : {};
     this.foregroundEffect = instance.options.foregroundEffect;
     this.globalZone = instance.options.globalZone ? instance.options.globalZone : {};
@@ -272,6 +280,7 @@ export class DangerForm extends FormApplication {
       hasActiveEffect: Object.keys(this.effect).length ? true : false,
       hasAudio: this.audio?.file ? true : false,
       hasBackgroundEffect: this.backgroundEffect?.file ? true : false,
+      hasCombat: instance.hasCombat ? true : false,
       hasFluidCanvas: this.fluidCanvas?.type ? true : false,
       hasForegroundEffect: this.foregroundEffect?.file ? true : false,
       hasGlobalZone: Object.keys(this.globalZone).length ? true : false,
@@ -306,6 +315,7 @@ export class DangerForm extends FormApplication {
     expandedData.options.audio = this.audio; 
     expandedData.options.effect = this.effect; 
     expandedData.options.backgroundEffect = this.backgroundEffect;
+    expandedData.options.combat = this.combat; 
     expandedData.options.foregroundEffect = this.foregroundEffect;
     expandedData.options.globalZone = this.globalZone;
     expandedData.options.item = this.item;
@@ -550,7 +560,64 @@ class DangerZoneDangerFormAudio extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.audio = expandedData;
-      if(expandedData.file){this.eventParent.addClass('active')};
+      expandedData.file ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
+    }
+}
+
+class DangerZoneDangerFormCombat extends FormApplication {
+  constructor(app, eventParent, data, ...args) {
+    super(...args);
+    this.data = data,
+    this.eventParent = eventParent,
+    this.parent = app;
+    }
+
+    static get defaultOptions(){
+        const defaults = super.defaultOptions;
+
+        return foundry.utils.mergeObject(defaults, {
+          title : game.i18n.localize("DANGERZONE.type-form.combat.label"),
+          id : "danger-zone-danger-combat",
+          classes: ["sheet","danger-part-form"],
+          template : dangerZone.TEMPLATES.DANGERZONEDANGERCOMBAT,
+          height : "auto",
+          width: 425,
+          closeOnSubmit: true
+        });
+      }
+
+    getData(options) {
+      return {
+        data: this.data,
+        initiativeOps: COMBATINITIATIVE,
+        isInitiativeRoll: this.data.initiative.type === 'R' ? true : false,
+        isInitiativeSet: this.data.initiative.type === 'S' ? true : false,
+        warpgateOnNot: !warpgateOn
+        }
+    }
+
+    activateListeners(html) {
+      super.activateListeners(html);
+      html.on('change', "[data-action]", this._handleChange.bind(this));
+    }
+
+    async _handleChange(event) {
+      const action = $(event.currentTarget).data().action, value = event.currentTarget.value;
+      switch (action) {
+        case 'initiative-change': 
+          const op = document.getElementById(`dz-initiative-value`);
+          value === 'S' ? op.classList.remove('dz-hidden') : op.classList.add('dz-hidden')
+          const pc = document.getElementById(`dz-initiative-player`);
+          value === 'R' ? pc.classList.remove('dz-hidden') : pc.classList.add('dz-hidden')
+          this.setPosition()
+          break;
+      }
+    }
+  
+    async _updateObject(event, formData) {
+      const expandedData = foundry.utils.expandObject(formData);
+      this.parent.combat = expandedData;
+      (expandedData.targets.add || expandedData.source.add || expandedData.spawn || expandedData.new || expandedData.initiative.type || expandedData.start) ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -612,7 +679,7 @@ class DangerZoneDangerFormBackgroundEffect extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.backgroundEffect = expandedData;
-      if(expandedData.file){this.eventParent.addClass('active')};
+      expandedData.file ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -652,7 +719,7 @@ class DangerZoneDangerFormFluidCanvas extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.fluidCanvas = expandedData;
-      if(expandedData.type){this.eventParent.addClass('active')};
+      expandedData.type ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -693,7 +760,7 @@ class DangerZoneDangerFormForegroundEffect extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.foregroundEffect = expandedData;
-      if(expandedData.file){this.eventParent.addClass('active')};
+      expandedData.file ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -812,7 +879,7 @@ class DangerZoneDangerFormItem extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.item = expandedData;
-      if(expandedData.name){this.eventParent.addClass('active')};
+      expandedData.name ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -860,8 +927,7 @@ class DangerZoneDangerFormLastingEffect extends FormApplication {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.lastingEffect = expandedData.lastingEffect;
       this.parent.monksActiveTiles = (expandedData.monksActiveTiles && Object.keys(expandedData.monksActiveTiles).length) ? expandedData.monksActiveTiles : {}
-    
-      if(expandedData.lastingEffect.file){this.eventParent.addClass('active')};
+      expandedData.lastingEffect.file ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -909,7 +975,7 @@ class DangerZoneDangerFormLight extends FormApplication {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.light = expandedData;
       if(expandedData.flags?.['perfect-vision']?.priority === undefined && !expandedData.flags?.['perfect-vision']?.sightLimit) this.parent.light.flags = {}
-      if(expandedData.dim || expandedData.bright){this.eventParent.addClass('active')};
+      (expandedData.dim || expandedData.bright) ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -992,7 +1058,7 @@ class DangerZoneDangerFormScene extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.scene = expandedData;
-      if(expandedData.active){this.eventParent.addClass('active')};
+      expandedData.active ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -1054,7 +1120,7 @@ class DangerZoneDangerFormSound extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.sound = expandedData;
-      if(expandedData.file){this.eventParent.addClass('active')};
+      expandedData.file ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -1120,7 +1186,7 @@ class DangerZoneDangerFormSourceEffect extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.sourceEffect = expandedData;
-      if(expandedData.file){this.eventParent.addClass('active')};
+      expandedData.file ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -1160,7 +1226,7 @@ class DangerZoneDangerFormTokenEffect extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.tokenEffect = expandedData;
-      if(expandedData.file){this.eventParent.addClass('active')};
+      expandedData.file ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -1205,7 +1271,7 @@ class DangerZoneDangerFormTokenMove extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.tokenMove = expandedData;
-      if(expandedData.v.dir || expandedData.hz.dir || expandedData.e.type || expandedData.sToT){this.eventParent.addClass('active')};
+      (expandedData.v.dir || expandedData.hz.dir || expandedData.e.type || expandedData.sToT) ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -1255,7 +1321,7 @@ class DangerZoneDangerFormTokenResponse extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.tokenResponse = expandedData;
-      if(expandedData.save?.enable || expandedData.damage?.enable){this.eventParent.addClass('active')};
+      (expandedData.save?.enable || expandedData.damage?.enable) ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -1299,7 +1365,7 @@ class DangerZoneDangerFormTokenSays extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.tokenSays = expandedData;
-      if(expandedData.fileType){this.eventParent.addClass('active')};
+      expandedData.fileType ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -1336,7 +1402,7 @@ class DangerZoneDangerFormWarpgate extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.warpgate = expandedData;
-      if(expandedData.actor){this.eventParent.addClass('active')};
+      expandedData.actor ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -1379,7 +1445,7 @@ class DangerZoneDangerFormWall extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.wall = expandedData;
-      if(expandedData.top ||expandedData.left ||expandedData.right ||expandedData.bottom){this.eventParent.addClass('active')};
+      (expandedData.top ||expandedData.left ||expandedData.right ||expandedData.bottom) ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
@@ -1460,6 +1526,6 @@ class DangerZoneDangerFormWeather extends FormApplication {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.weather = expandedData;
-      if(expandedData.type){this.eventParent.addClass('active')};
+      expandedData.type ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }

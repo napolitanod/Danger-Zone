@@ -292,7 +292,6 @@ Hooks.once("socketlib.ready", () => {
  * add zone clear button to canvas controls
  */
 Hooks.on("getSceneControlButtons", (controls, b, c) => {
-	//insertClearButton(controls, b, c);
 	insertTileEffectsClearButton(controls, b, c);
 	insertAmbientLightClearButton(controls, b, c);
 	insertAmbientSoundClearButton(controls, b, c);
@@ -342,15 +341,22 @@ Hooks.on("renderSidebarTab", async(app, html) => {
 /**
  * in combat hook for when combat ends. Used for managing in combat zone triggers
  */
-Hooks.on('deleteCombat', async(combat, round, options, id) => {
-	triggerManager.findCombatTriggers(combat, 'deleteCombat')
+ Hooks.on('combatStart', async(combat, options) => {
+	triggerManager.findCombatTriggers(combat, 'combatStart', options)
+});
+
+/**
+ * in combat hook for when combat ends. Used for managing in combat zone triggers
+ */
+Hooks.on('deleteCombat', async(combat, options, id) => {
+	triggerManager.findCombatTriggers(combat, 'deleteCombat', options)
 });
 
 /**
  * in combat hook for when combat begins or round/turn changes. Used for managing in combat zone triggers
  */
 Hooks.on('updateCombat', async(combat, round, options, id) => {
-	triggerManager.findCombatTriggers(combat, 'updateCombat')
+	if(options.advanceTime || options.direction === 1) triggerManager.findCombatTriggers(combat, 'updateCombat', options)
 });
 
 Hooks.on("updateToken", async (token, update, options, userId) => {

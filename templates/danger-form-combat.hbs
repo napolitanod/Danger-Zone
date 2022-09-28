@@ -1,0 +1,68 @@
+<form autocomplete="off">
+    <div class="tab">
+        <p class="notes">{{localize "DANGERZONE.type-form.combat.description"}}</p>
+        <div class="form-group">
+            <label for="new">{{localize "DANGERZONE.type-form.combat.new.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="new" {{checked data.new}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="targets.add">{{localize "DANGERZONE.type-form.combat.targets.add.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="targets.add" {{checked data.targets.add}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="source.add">{{localize "DANGERZONE.type-form.combat.source.add.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="source.add" {{checked data.source.add}}>
+            </div>
+        </div>
+        <div class="form-group {{#if warpgateOnNot}}dz-hidden{{/if}}">
+            <label for="spawn">{{localize "DANGERZONE.type-form.combat.spawn.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.combat.spawn.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="spawn" {{checked data.spawn}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="initiative.type">{{localize "DANGERZONE.type-form.combat.initiative.type.label"}}</label>
+            <div class="form-fields">
+                <select name="initiative.type" value="{{data.initiative.type}}" data-action="initiative-change"> 
+                    {{selectOptions initiativeOps selected=data.initiative.type localize=true}}
+                </select>   
+            </div>
+        </div>
+        <div id="dz-initiative-player" class="form-group {{#unless isInitiativeRoll}}dz-hidden{{/unless}}">
+            <label for="initiative.player">{{localize "DANGERZONE.type-form.combat.initiative.player.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="initiative.player" {{checked initiative.player}}>
+            </div>
+        </div>
+        <div id="dz-initiative-value" class="form-group {{#unless isInitiativeSet}}dz-hidden{{/unless}}">
+            <label for="initiative.value">{{localize "DANGERZONE.type-form.combat.initiative.value.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="Number" name="initiative.value" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.initiative.value}}{{data.initiative.value}}{{else}}0{{/if}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="start">{{localize "DANGERZONE.type-form.combat.start.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.combat.start.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="start" {{checked data.start}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.combat.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.delay}}{{data.delay}}{{else}}0{{/if}}>
+            </div>
+        </div>
+    </div>
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
+    </footer>
+</form>

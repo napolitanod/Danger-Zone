@@ -5,7 +5,7 @@ import {COMBATTRIGGERS, DANGERZONETRIGGERSORT, ENDOFTURNTRIGGERS} from './consta
 
 export class triggerManager {
 
-    constructor(sceneId, data, sceneZones, hook) {
+    constructor(sceneId, data, sceneZones, hook, options = {}) {
         this.combatTriggers = [],
         this.combatStart = false,
         this.data = data,
@@ -16,6 +16,7 @@ export class triggerManager {
         this.sceneZones = (sceneZones === undefined) ? null : sceneZones,
         this.turnChange = false,
         this.sceneId = sceneId,
+        this.options = options,
         this.zones = []
     }
 
@@ -28,11 +29,11 @@ export class triggerManager {
     }
 
     get currentInitiative(){
-        return this.combatant?.initiative ? Math.floor(this.combatant.initiative) : undefined
+        return this.combatant?.initiative ? Math.floor(this.combatant.initiative) :  (this.combatStart ? Math.max(...this.data.combatants.map(t => t.initiative)) : undefined)
     }
 
     get previousInitiative(){
-        return this.previousCombatant?.initiative ? Math.floor(this.previousCombatant.initiative) : undefined
+        return this.previousCombatant?.initiative ? Math.floor(this.previousCombatant.initiative) : (this.combatStart ? 99999 : undefined)
     }
 
     get scene(){
@@ -62,8 +63,11 @@ export class triggerManager {
            return
         }
         for(const zn of this.zones){
-            const options = this._options(zn)
-            await workflow.go(zn, this, options) 
+            const proceed = await zn.triggerCheck()
+            if(proceed){
+                const options = this._options(zn)
+                await workflow.go(zn, this, options) 
+            }
         }  
         this.log(`Trigger manager finished...`, {});
     }
@@ -122,6 +126,7 @@ export class triggerManager {
     }
 
     async combatTrigger(){
+        console.log(this.currentInitiative)
         this.setCombatFlags();
         for (const zn of this.sceneZones) { 
             if(zn.options.combatantInZone){
@@ -139,7 +144,7 @@ export class triggerManager {
                 }
                 if(zn.trigger==='initiative-start' || zn.trigger==='initiative-end' ){
                     let escape = true
-                    const zi = zn.initiative ? zn.initiative : 0
+                    const zi = zn.initiative ?? 0
                     if(
                         zn.trigger==='initiative-start' && 
                             (
@@ -174,16 +179,16 @@ export class triggerManager {
     }
 
     setCombatFlags(){
-        if(this.hook==='updateCombat' && this.data.current.round > this.data.previous.round){
+        if(this.hook==='combatStart'){
+            this.combatStart = true;
+            this.addCombatTrigger('combat-start');
+        }
+        if((this.hook==='updateCombat' && this.options.advanceTime) || this.combatStart){
             this.roundStart = true;
             this.addCombatTrigger('round-start');
             if(this.data.current.round > 1){this.addCombatTrigger('round-end')}
         }
-        if(this.roundStart && this.data.previous.round===0){
-            this.combatStart = true;
-            this.addCombatTrigger('combat-start');
-        }
-        if(this.hook==='updateCombat' && this.data.current.turn > this.data.previous.turn || this.roundStart){
+        if(this.hook==='updateCombat' && this.options.direction === 1 || this.roundStart){
             this.turnChange = true;
             this.addCombatTrigger('turn-start');
             if(!this.combatStart){this.addCombatTrigger('turn-end')}
@@ -192,7 +197,7 @@ export class triggerManager {
             this.addCombatTrigger('combat-end')
         }
         if(this.turnChange){
-            if(this.currentInitiative && this.previousInitiative){
+            if(this.currentInitiative && this.previousInitiative  || this.combatStart || this.roundStart){
                 this.addCombatTrigger('initiative-start')
                 this.addCombatTrigger('initiative-end')
             }
@@ -239,15 +244,16 @@ export class triggerManager {
         return tm
     }
 
-    static async findCombatTriggers(combat, hook){
-        if(game.user.isGM && combat.scene && combat.started && !(combat.current.round === 1 && combat.current.turn === 0 && combat.combatants.find(c => c.initiative === null))) {
-            const sceneZones = dangerZone.getCombatZonesFromScene(combat.scene.id);
+    static async findCombatTriggers(combat, hook, options){
+        const sceneId = combat.scene?.id ?? canvas.scene.id
+        if(game.user.isGM && sceneId && (combat.started || hook === 'combatStart')) {
+            const sceneZones = dangerZone.getCombatZonesFromScene(sceneId);
             if(sceneZones.length){
-                const scene = game.scenes.get(combat.scene.id);
-                if(!scene?.grid?.type){return dangerZone.log(false,'No Combat Triggers When Gridless ', {combat, hook})}
+                const scene = game.scenes.get(sceneId);
+                if(!scene?.grid?.type){return dangerZone.log(false,'No Combat Triggers When Gridless ', {combat, hook, options})}
 
-                const tm = new triggerManager(combat.scene.id, combat, sceneZones, hook);
-                tm.log(`Initiating combat trigger handler...`, {combat, hook});
+                const tm = new triggerManager(sceneId, combat, sceneZones, hook, options);
+                tm.log(`Initiating combat trigger handler...`, {combat, hook, options});
                 await tm.combatTrigger();
             } 
             return
