@@ -643,3 +643,28 @@ form ol.danger-setting-group .active:hover label {
 {
     color: rgba(255, 62, 65);
 }
+
+
+.danger-zone-chat-message-title {
+    padding: 6px ;
+    background: rgba(0, 0, 0, 0.1);
+    font-weight: 500;
+}
+
+.danger-zone-chat-message-body {
+    padding: 6px;
+}
+
+.danger-zone-chat-message-body-black {
+    padding: 6px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.danger-zone-chat-message-footer {
+    padding: 2px 6px 3px;
+    font-size: var(--font-size-11);
+}
+
+.danger-zone-label {
+    font-weight: 600;
+}

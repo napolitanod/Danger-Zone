@@ -1,8 +1,8 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {monksActiveTilesOn, sequencerOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, wallHeightOn, itemPileOn} from '../index.js';
+import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, warpgateOn, wallHeightOn, itemPileOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
-import {furthestShiftPosition, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait} from './helpers.js';
+import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
 async function delay(delay){
     if(delay) await wait(delay)
@@ -317,18 +317,20 @@ class executorData {
     about() {
         if(game.user.isGM && game.settings.get(dangerZone.ID, 'chat-details-to-gm')) {   
             let content =
-                `Danger: ${this.danger.name} 
-                <br>Dimensions: w${this.danger.dimensions.units.w} h${this.danger.dimensions.units.h} d${this.danger.dimensions.units.d}
-                <br>Zone: bleed ${this.zone.options.bleed}, hit all ${this.zone.options.allInArea}, always hits ${this.zone.options.runUntilTokenFound}
-                <br>Zone Likelihood: ${this.zone.likelihood}
-                <br>Likelihood result: ${this.likelihoodResult}`;
+                `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Workflow Details</div><div class="danger-zone-chat-message-body">
+                <div><label class="danger-zone-label">Danger:</label><span> ${this.danger.name}</span></div>
+                <div><label class="danger-zone-label">Dimensions:</label><span> w${this.danger.dimensions.units.w}  h${this.danger.dimensions.units.h}  d${this.danger.dimensions.units.d}${this.zone.options.bleed ? ' (bleed)' : ''}</span></div>
+                <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => t.name)}</span></div>
+                <div><label class="danger-zone-label">Trigger:</label><span> ${this.zone.triggerDescription}</span></div>
+                <div><label class="danger-zone-label">Likelihood:</label><span> ${this.zone.likelihood}</span> <label class="danger-zone-label">Likelihood result:</label><span> ${this.likelihoodResult}</span></div>
+                <div><label class="danger-zone-label">Targeting:</label><span> ${this.zone.options.runUntilTokenFound ? 'Must target a location with a token' : 'Can target any location in zone'}. ${this.zone.options.allInArea ? 'Hits all eligible tokens' : 'Hits one eligible token'} at location.</span></div>
+                `;
             if(this.hasBoundary){
                 content += `
-                    <br>Target boundary start: x${this.boundary.A.x} y${this.boundary.A.y} z${this.boundary.A.z}
-                    <br>Target boundary end: x${this.boundary.B.x} y${this.boundary.B.y} z${this.boundary.B.z}
-                    <br>Eligible zone tokens: ${this.zoneEligibleTokens.map(t => t.name)}
-                    <br>Eligible targets: ${this.eligibleTargets.map(t => t.name)}
-                    <br>Hit targets: ${this.targets.map(t => t.name)}`
+                <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.A.z}</span></div>
+                <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.B.z}</span></div>
+                <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => t.name)}</span></div>
+                <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => t.name)}</span></div></div>`
             } 
             ChatMessage.create({
                 content: content,
@@ -339,7 +341,7 @@ class executorData {
 
     async checkLikelihood() {
         if(this.zone.likelihood < 100){
-            const maybe = await new Roll(`1d100`).roll();
+            const maybe = await maybe();
             this.likelihoodResult = maybe.result;
         }
         return this.likelihoodMet
@@ -553,6 +555,9 @@ export class executor {
                 case 'audio': 
                     be = new audio(part, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
+                case 'combat': 
+                    be = new combat(part, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
                 case 'foregroundEffect': 
                     be = new primaryEffect(this.danger.foregroundEffect, this.data, name, EXECUTABLEOPTIONS[name], flags); 
                     break;
@@ -737,7 +742,7 @@ export class executor {
                 continue;
             }
             if(ex.likelihood < 100){
-                const maybe = await new Roll(`1d100`).roll();
+                const maybe = await maybe();
                 if(ex.likelihood > maybe.result) {
                     console.log(`Zone extension likelihood of ${ex.likelihood} was not met with a roll of ${maybe.result}`)
                     continue;
@@ -1052,7 +1057,7 @@ class executable {
     
     async checkLikelihood() {
         if(this.likelihood < 100){
-            const maybe = await new Roll(`1d100`).roll();
+            const maybe = await maybe();
             this.likelihoodResult = maybe.result;
         }
     }
@@ -1365,6 +1370,111 @@ class audio extends executableWithFile {
     }
 }
 
+class combat extends executable {
+    constructor(...args){
+        super(...args);
+        this.initiativeTargets = []
+    }
+
+    get addSource(){
+        return this._part.source.add
+    }
+
+    get addTargets(){
+        return this._part.targets.add
+    }
+    
+    get combat(){
+        return game.combats.find(c => c.scene?.id === this.data.sceneId && c.active) ?? game.combats.find(c => c.isActive)
+    }
+
+    get has(){
+        return (super.has && this.data.danger.hasCombat) ? true : false
+    }
+
+    get initiative(){
+        return this._part.initiative.type
+    }
+
+    get initiativePlayer(){
+        return this._part.initiative.player ?? false
+    }
+
+    get initiativeValue(){
+        return this._part.initiative.value ?? 0
+    }
+
+    get newCombat(){
+        return this._part.new ?? false
+    }
+
+    get spawn(){
+        return this._part.spawn 
+    }
+    
+    get start(){
+        return this._part.start 
+    }
+
+    _checkActiveCombat(){
+        if(!this.newCombat && !this.combat) {
+            ui.notifications?.error(game.i18n.localize("DANGERZONE.alerts.no-active-combat"))
+            this._cancel = true
+        }
+    }
+    
+    async play(){    
+        await super.play()
+        this._checkActiveCombat()
+        if(this._cancel) return
+        if(this.newCombat) await this._newCombat()
+        this._setTargets()
+        if(this.initiativeTargets.length) await this._addToCombat()
+        if(this.initiative === 'R') {await this._rollInitiative()} else if(this.initiative ==='S'){await this._setInitiative()}
+        if(this.start & !this.combat.started) await this.combat.startCombat()
+    }
+
+    async _addToCombat(){
+        for(const token of this.initiativeTargets){if(!this._tokenCombatant(token)) await token._object.toggleCombat(this.combat)}
+    }
+
+    async _newCombat(){
+        await Combat.create({scene: this.data.sceneId, active: true})
+    }
+
+    _tokenCombatant(token){
+        return this.combat.combatants.find(c => c.token.id === token.id) 
+    }
+
+    _setTargets(){
+        if(this.addTargets) this.initiativeTargets = this.targets
+        if(this.addSource && this.data.hasSources) this.initiativeTargets = this.initiativeTargets.concat(this.data.sources.filter(s => !this.initiativeTargets.find(t => t.id === s.id)))
+        if(warpgateOn && this.spawn){
+            for(const tokenId of this.data.spawn.tokens){
+                if(!this.initiativeTargets.find(t => t.id === tokenId)) this.initiativeTargets.push(this.data.sceneTokens.get(tokenId))
+            }
+        }
+    }
+
+    async _rollInitiative(){
+        const rollIds = []
+        for(const token of this.initiativeTargets){
+            if(!this.initiativePlayer && getActorOwner(token)) continue
+            const combatantId = this._tokenCombatant(token)?.id
+            if(combatantId) rollIds.push(combatantId) 
+        }
+        if (rollIds.length) await this.combat.rollInitiative(rollIds, {updateTurn: false})
+    }
+    
+    async _setInitiative(){
+        for(const token of this.initiativeTargets){
+            if(!this.initiativePlayer && getActorOwner(token)) continue
+            if(this._tokenCombatant(token)?.id) await this.combat.setInitiative(this._tokenCombatant(token).id, this.initiativeValue)
+        }
+    }
+
+}
+
 class damageToken extends executable{
     
     get amount(){
@@ -1439,7 +1549,7 @@ class damageToken extends executable{
     async _bulkWorkflow(){
         let flavor =  this.flavor;
         for (const damage of this.damages){
-            const damageRoll = await new Roll(damage.amount).roll()
+            const damageRoll = await new Roll(damage.amount).evaluate({async: true})
             if(damage.save==='F'){
                 await this._calculateDamage(false, damageRoll, this.targets, flavor, damage)
             } 
@@ -1460,7 +1570,7 @@ class damageToken extends executable{
                 const mvMods = this.data.tokenMovement.find(t => t.tokenId === token.id);
                 const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.hz ? mvMods.hz : 0), (mvMods?.v ? mvMods.v : 0));
                 let dice = damage.amount.replace(/@elevation/i,e).replace(/@moved/i,mv);
-                const damageRoll = await new Roll(dice).roll();     
+                const damageRoll = await new Roll(dice).evaluate({async: true});     
                 let flavor = flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
                 await this._calculateDamage(half, damageRoll, [token], flavor, damage)
             }
@@ -1473,7 +1583,7 @@ class damageToken extends executable{
         let flavor = `<label>${damageRoll.result} ${types[damage.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}.</label><br>${flavorAdd.replace(/@alias/i, tokens.map(t => t.name).join(', '))}`;
         if(half){
             let hf = Math.floor(damageRoll.total/2);
-            roll = await new Roll(`${hf}`).roll();
+            roll = await new Roll(`${hf}`).evaluate({async: true});
         } else {roll = damageRoll}
         await this._applyDamage(tokens, roll, damage.type, flavor)
     }
@@ -1501,7 +1611,7 @@ class flavor extends executable{
     async play(){
         await super.play()
         if(this._cancel) return
-        ChatMessage.create({content : this.flavor})
+        ChatMessage.create({content : `<div class="danger-zone-chat-message-body-black">${this.flavor}</div>`})
     }
 
 }
@@ -1983,6 +2093,15 @@ class primaryEffect extends executableWithFile {
 }
 
 class save extends executable{
+    constructor(...args){
+        super(...args),
+        this._chatMessageResults = '',
+        this._gmChatMessageResults = '',
+        this._gmRollCount = 0,
+        this._saving = [],
+        this._saveResults = [],
+        this._playerPrompted = []
+    }
 
     get delay(){
         return -1
@@ -2003,6 +2122,9 @@ class save extends executable{
     get has(){
         return (super.has && this.enable) ? true : false
     }
+    get timeAlloted(){
+        return game.settings.get('danger-zone', 'saving-throw-delay') * 1000
+    }
 
     get type(){
         return this._part.type
@@ -2012,20 +2134,70 @@ class save extends executable{
         return this.data.save.succeeded
     }
 
+    async _applySave(){
+        let gmSaveCount = 0
+        for(const token of this.targets){ 
+            if(token.actor) this._saving.push(this._rollAbilitySave(token))  
+        } 
+        if(this._playerPrompted.length){
+            ChatMessage.create({
+                content: `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Saving Throw Prompted</div><div class="danger-zone-chat-message-body">${joinWithAnd(this._playerPrompted)} ${this._playerPrompted.length > 1 ? 'have' : 'has'} been prompted to make a DC${this.diff} ${game.dnd5e.config.abilities[this.type]} saving throw.</div><div class="danger-zone-chat-message-footer">They have ${this.timeAlloted} seconds to respond.</div>`,
+                whisper: ChatMessage.getWhisperRecipients("GM") 
+            })
+        }
+        this._saveResults = await Promise.all(this._saving).then((r) => {return {success: true, result: r}}).catch((e) => {return {success: false, result: e}})
+    }
+
     _initialize(){
         this.data["save"] = {failed: [], succeeded: []}
+    }
+
+    async _messageSave(){
+        if(this._chatMessageResults || this._gmRollCount){
+        ChatMessage.create({
+            content: `<div class="danger-zone-chat-message-title">Saving Throw Results</div><div class="danger-zone-chat-message-body">${this._chatMessageResults}` + (this._gmRollCount ? `<div>The GM rolled ${this._gmRollCount} saving throws.</div>` : '') + '</div>'
+            })
+        }
+        if(this._gmChatMessageResults){
+            ChatMessage.create({
+                content: `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> GM Rolled Saving Throws</div><div class="danger-zone-chat-message-body">${this._gmChatMessageResults}</div>`,
+                whisper: ChatMessage.getWhisperRecipients("GM") 
+            })
+        }
     }
 
     async play(){
         await super.play()
         if(this._cancel) return
         this._initialize()
-        for(const token of this.targets){ 
-            if(token.actor){  
-                const result = await token.actor.rollAbilitySave(this.type); 
-                (!result || result.total < this.diff) ? this.data.save.failed.push(token) : this.data.save.succeeded.push(token)
-            } 
+        await this._applySave()
+        this._messageSave()
+    }
+
+    async _rollAbilitySave(token){
+        let result;
+        const owner = getActorOwner(token)
+        if (socketLibOn && owner) {
+            const time = this.timeAlloted
+            if(time){ 
+                this._playerPrompted.push(`${token.name} (${owner.name})`)
+                const query = dangerZoneSocket.executeAsUser("requestSavingThrow", owner.id, token.uuid, this.type, time)
+                const race = wait(time)
+                await Promise.race([query, race]).then((value) => {result = value})
+            }
         }
+        if(!result) result = await token.actor.rollAbilitySave(this.type, {chatMessage: false}) 
+       
+        const saved = (!result || result.total < this.diff) ? false : true
+        !saved ? this.data.save.failed.push(token) : this.data.save.succeeded.push(token)
+        const text = `<div>${token.name} <span class="danger-zone-label">${saved ? 'succeeds' : 'fails'}</span> with a ${result.total}.</div>`
+        if(owner) {
+            this._chatMessageResults += text}
+        else {
+            this._gmRollCount = ++this._gmRollCount
+            this._gmChatMessageResults += text
+        } 
+        return result
     }
 }
 

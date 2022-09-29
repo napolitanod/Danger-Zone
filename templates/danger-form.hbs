@@ -68,6 +68,11 @@
                 <label>{{localize 'DANGERZONE.type-form.fluidCanvas.label'}}</label>
                 <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
             </li>
+            <li data-id="combat" {{#if hasCombat}}class="active"{{/if}}>
+                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.combat.description"}}"><i class="fas fa-swords"></i></button>   
+                <label>{{localize 'DANGERZONE.type-form.combat.label'}}</label>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            </li>
             <li data-id="item" {{#if hasItem}}class="active"{{/if}}>
                 <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.item.description"}}"><i class="fas fa-suitcase"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.item.label'}}</label>

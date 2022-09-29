@@ -34,6 +34,7 @@ export class dangerZone {
     DANGERZONEDANGERACTIVEEFFECT: `modules/${this.ID}/templates/danger-form-active-effect.hbs`,
     DANGERZONEDANGERAUDIO: `modules/${this.ID}/templates/danger-form-audio.hbs`,
     DANGERZONEDANGERBACKGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-background-effect.hbs`,
+    DANGERZONEDANGERCOMBAT: `modules/${this.ID}/templates/danger-form-combat.hbs`,
     DANGERZONEDANGERFLUIDCANVAS: `modules/${this.ID}/templates/danger-form-fluid-canvas.hbs`,
     DANGERZONEDANGERFOREGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-foreground-effect.hbs`,
     DANGERZONEDANGERGLOBALZONE: `modules/${this.ID}/templates/danger-form-global-zone.hbs`,
@@ -213,7 +214,7 @@ export class dangerZone {
   }
 
   /**
-   * unsets the given flag for this zone from a zone, effectively deleting it
+   * deletes the given flag for this zone from a zone, effectively deleting it
    * @param {string} zoneId the id of the zone class to be deleted 
    * @param {string} sceneId the id of the scene that holds the zone as a flag
    * @returns 
@@ -245,7 +246,7 @@ export class dangerZone {
     }
 
     if(!keptZones) return
-    const maybe = await new Roll(`1d${max}`).roll();
+    const maybe = await new Roll(`1d${max}`).evaluate({async: true})
     const randomResult = maybe.result;
 
     this.log(false,'Random Zone Search ', {zones:keptZones, roll: randomResult, range: {min: 1, max:max}});
@@ -321,6 +322,7 @@ export class zone {
       delay: {min: 0, max: 0},
       noPrompt:false,
       placeTemplate:false,
+      promptTrigger: false,
       runUntilTokenFound: false,
       stretch: '',
       targetCombatant: false,
@@ -414,14 +416,11 @@ export class zone {
   }
 
   /**
-   * unsets this id and zone json from the scene's module's flag
+   * deletes this id and zone json from the scene's module's flag
    * @returns the remaining flag data
    */
   async delete(){
-    const flags = game.scenes.get(this.scene.sceneId).getFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE)
-    delete flags[this.id] 
-    await game.scenes.get(this.scene.sceneId).unsetFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE)
-    await game.scenes.get(this.scene.sceneId).setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, flags);
+    await this.scene.scene.update({[`flags.${dangerZone.ID}.${dangerZone.FLAGS.SCENEZONE}.-=${this.id}`]: null})
   }
 
   get _executor(){
@@ -548,6 +547,30 @@ export class zone {
           break;
     }
     return options
+  }
+
+  async triggerCheck(){
+    if(!this.options.promptTrigger) return true
+    const choice = await new Promise((resolve, reject) => {
+        new Dialog({
+        title: game.i18n.localize("DANGERZONE.alerts.trigger-zone"),
+        content: `<p>${game.i18n.localize("DANGERZONE.alerts.trigger-zone-confirm")} ${this.title}?</p>`,
+        buttons: {
+            one: {
+                icon: '<i class="fas fa-check"></i>',
+                label: game.i18n.localize("DANGERZONE.continue"),
+                callback: () => resolve(true)
+            },
+            two: {
+                icon: '<i class="fas fa-times"></i>',
+                label: game.i18n.localize("DANGERZONE.cancel"),
+                callback: () => {resolve(false)}
+            }
+        },
+        default: "two"
+        }).render(true);
+    });
+    return choice
   }
 
   async wipe(document, replace = ''){

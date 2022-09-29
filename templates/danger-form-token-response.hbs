@@ -4,7 +4,7 @@
         <a class="item" data-tab="damage"><i class="fas fa-skull"></i>&nbsp;{{localize 'DANGERZONE.type-form.tokenResponse.tab.damage.title'}}</a>
     </nav>
     <div class="tab active" data-tab="save">
-        <p class="notes">{{localize "DANGERZONE.type-form.tokenResponse.save.description"}}</p>
+        <p class="notes">{{localize "DANGERZONE.type-form.tokenResponse.save.description"}} {{#if socketLibOn}}{{localize "DANGERZONE.type-form.tokenResponse.save.socket-on.description"}}{{else}}{{localize "DANGERZONE.type-form.tokenResponse.save.socket-off.description"}}{{/if}}</p>
         <div class="form-group">
             <label for="save.enable">{{localize "DANGERZONE.type-form.tokenResponse.save.enable.label"}}</label>
             <div class="form-fields">
