@@ -6,11 +6,12 @@ import {triggerManager}  from './apps/trigger-handler.js';
 import {api, _triggerZone} from "./apps/api.js";
 import {DangerZoneScene} from "./apps/scene-form.js";
 import {DangerZoneSceneForm} from './apps/scene-zone-list-form.js';
+import {requestSavingThrow} from './apps/helpers.js';
 
 /**
  * global variables
  */
-export var timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, fxMasterOn = false, betterRoofsOn = false, levelsOn = false, itemPileOn = false; //active modules
+export var timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, socketLibOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, fxMasterOn = false, betterRoofsOn = false, levelsOn = false, itemPileOn = false; //active modules
 export var dzMActive = false; 
 export let dangerZoneSocket; //var for socketlib
 
@@ -185,6 +186,22 @@ Hooks.once('init', async function() {
         type: Object
     }); 
 
+	if(game.world.system === 'dnd5e'){
+		game.settings.register('danger-zone', 'saving-throw-delay', {
+			name: game.i18n.localize('DANGERZONE.setting.saving-throw-delay.label'),
+			hint: game.i18n.localize('DANGERZONE.setting.saving-throw-delay.description'),
+			scope: 'world',
+			config: true,
+			default: 20,
+			type: Number,
+			range: {
+				min: 0,
+				max: 60,
+				step: 1
+			}
+		}); 
+	}
+
 	dangerZone.initialize();
 
 	Hooks.on("renderDangerZoneForm", (app, html, options) => {
@@ -286,6 +303,7 @@ Hooks.once('devModeReady', ({registerPackageDebugFlag}) => {
 Hooks.once("socketlib.ready", () => {
 	dangerZoneSocket = socketlib.registerModule(dangerZone.ID);
 	dangerZoneSocket.register("_triggerZone", _triggerZone);
+	dangerZoneSocket.register("requestSavingThrow", requestSavingThrow);
 });
 
 /**
@@ -385,6 +403,7 @@ function setModsAvailable () {
 	if (game.modules.get("wall-height")?.active){wallHeightOn = true} ;
 	if (game.modules.get("times-up")?.active){timesUpOn = true};
 	if (game.modules.get("perfect-vision")?.active) perfectVisionOn = true;
+	if (game.modules.get("socketlib")?.active) socketLibOn = true
 }
 
 /**

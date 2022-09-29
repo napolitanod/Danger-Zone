@@ -1,8 +1,8 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {monksActiveTilesOn, sequencerOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, warpgateOn, wallHeightOn, itemPileOn} from '../index.js';
+import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, warpgateOn, wallHeightOn, itemPileOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
-import {furthestShiftPosition, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe} from './helpers.js';
+import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
 async function delay(delay){
     if(delay) await wait(delay)
@@ -317,18 +317,20 @@ class executorData {
     about() {
         if(game.user.isGM && game.settings.get(dangerZone.ID, 'chat-details-to-gm')) {   
             let content =
-                `Danger: ${this.danger.name} 
-                <br>Dimensions: w${this.danger.dimensions.units.w} h${this.danger.dimensions.units.h} d${this.danger.dimensions.units.d}
-                <br>Zone: bleed ${this.zone.options.bleed}, hit all ${this.zone.options.allInArea}, always hits ${this.zone.options.runUntilTokenFound}
-                <br>Zone Likelihood: ${this.zone.likelihood}
-                <br>Likelihood result: ${this.likelihoodResult}`;
+                `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Workflow Details</div><div class="danger-zone-chat-message-body">
+                <div><label class="danger-zone-label">Danger:</label><span> ${this.danger.name}</span></div>
+                <div><label class="danger-zone-label">Dimensions:</label><span> w${this.danger.dimensions.units.w}  h${this.danger.dimensions.units.h}  d${this.danger.dimensions.units.d}${this.zone.options.bleed ? ' (bleed)' : ''}</span></div>
+                <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => t.name)}</span></div>
+                <div><label class="danger-zone-label">Trigger:</label><span> ${this.zone.triggerDescription}</span></div>
+                <div><label class="danger-zone-label">Likelihood:</label><span> ${this.zone.likelihood}</span> <label class="danger-zone-label">Likelihood result:</label><span> ${this.likelihoodResult}</span></div>
+                <div><label class="danger-zone-label">Targeting:</label><span> ${this.zone.options.runUntilTokenFound ? 'Must target a location with a token' : 'Can target any location in zone'}. ${this.zone.options.allInArea ? 'Hits all eligible tokens' : 'Hits one eligible token'} at location.</span></div>
+                `;
             if(this.hasBoundary){
                 content += `
-                    <br>Target boundary start: x${this.boundary.A.x} y${this.boundary.A.y} z${this.boundary.A.z}
-                    <br>Target boundary end: x${this.boundary.B.x} y${this.boundary.B.y} z${this.boundary.B.z}
-                    <br>Eligible zone tokens: ${this.zoneEligibleTokens.map(t => t.name)}
-                    <br>Eligible targets: ${this.eligibleTargets.map(t => t.name)}
-                    <br>Hit targets: ${this.targets.map(t => t.name)}`
+                <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.A.z}</span></div>
+                <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.B.z}</span></div>
+                <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => t.name)}</span></div>
+                <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => t.name)}</span></div></div>`
             } 
             ChatMessage.create({
                 content: content,
@@ -1455,16 +1457,19 @@ class combat extends executable {
     }
 
     async _rollInitiative(){
+        const rollIds = []
         for(const token of this.initiativeTargets){
-            if(!this.initiativePlayer && token.hasPlayerOwner) continue
-            await this.combat.rollInitiative(this._tokenCombatant(token).id, {updateTurn: false})
+            if(!this.initiativePlayer && getActorOwner(token)) continue
+            const combatantId = this._tokenCombatant(token)?.id
+            if(combatantId) rollIds.push(combatantId) 
         }
+        if (rollIds.length) await this.combat.rollInitiative(rollIds, {updateTurn: false})
     }
     
     async _setInitiative(){
         for(const token of this.initiativeTargets){
-            if(!this.initiativePlayer && token.hasPlayerOwner) continue
-            await this.combat.setInitiative(this._tokenCombatant(token).id, this.initiativeValue)
+            if(!this.initiativePlayer && getActorOwner(token)) continue
+            if(this._tokenCombatant(token)?.id) await this.combat.setInitiative(this._tokenCombatant(token).id, this.initiativeValue)
         }
     }
 
@@ -1606,7 +1611,7 @@ class flavor extends executable{
     async play(){
         await super.play()
         if(this._cancel) return
-        ChatMessage.create({content : this.flavor})
+        ChatMessage.create({content : `<div class="danger-zone-chat-message-body-black">${this.flavor}</div>`})
     }
 
 }
@@ -2088,6 +2093,15 @@ class primaryEffect extends executableWithFile {
 }
 
 class save extends executable{
+    constructor(...args){
+        super(...args),
+        this._chatMessageResults = '',
+        this._gmChatMessageResults = '',
+        this._gmRollCount = 0,
+        this._saving = [],
+        this._saveResults = [],
+        this._playerPrompted = []
+    }
 
     get delay(){
         return -1
@@ -2108,6 +2122,9 @@ class save extends executable{
     get has(){
         return (super.has && this.enable) ? true : false
     }
+    get timeAlloted(){
+        return game.settings.get('danger-zone', 'saving-throw-delay') * 1000
+    }
 
     get type(){
         return this._part.type
@@ -2117,20 +2134,70 @@ class save extends executable{
         return this.data.save.succeeded
     }
 
+    async _applySave(){
+        let gmSaveCount = 0
+        for(const token of this.targets){ 
+            if(token.actor) this._saving.push(this._rollAbilitySave(token))  
+        } 
+        if(this._playerPrompted.length){
+            ChatMessage.create({
+                content: `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Saving Throw Prompted</div><div class="danger-zone-chat-message-body">${joinWithAnd(this._playerPrompted)} ${this._playerPrompted.length > 1 ? 'have' : 'has'} been prompted to make a DC${this.diff} ${game.dnd5e.config.abilities[this.type]} saving throw.</div><div class="danger-zone-chat-message-footer">They have ${this.timeAlloted} seconds to respond.</div>`,
+                whisper: ChatMessage.getWhisperRecipients("GM") 
+            })
+        }
+        this._saveResults = await Promise.all(this._saving).then((r) => {return {success: true, result: r}}).catch((e) => {return {success: false, result: e}})
+    }
+
     _initialize(){
         this.data["save"] = {failed: [], succeeded: []}
+    }
+
+    async _messageSave(){
+        if(this._chatMessageResults || this._gmRollCount){
+        ChatMessage.create({
+            content: `<div class="danger-zone-chat-message-title">Saving Throw Results</div><div class="danger-zone-chat-message-body">${this._chatMessageResults}` + (this._gmRollCount ? `<div>The GM rolled ${this._gmRollCount} saving throws.</div>` : '') + '</div>'
+            })
+        }
+        if(this._gmChatMessageResults){
+            ChatMessage.create({
+                content: `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> GM Rolled Saving Throws</div><div class="danger-zone-chat-message-body">${this._gmChatMessageResults}</div>`,
+                whisper: ChatMessage.getWhisperRecipients("GM") 
+            })
+        }
     }
 
     async play(){
         await super.play()
         if(this._cancel) return
         this._initialize()
-        for(const token of this.targets){ 
-            if(token.actor){  
-                const result = await token.actor.rollAbilitySave(this.type); 
-                (!result || result.total < this.diff) ? this.data.save.failed.push(token) : this.data.save.succeeded.push(token)
-            } 
+        await this._applySave()
+        this._messageSave()
+    }
+
+    async _rollAbilitySave(token){
+        let result;
+        const owner = getActorOwner(token)
+        if (socketLibOn && owner) {
+            const time = this.timeAlloted
+            if(time){ 
+                this._playerPrompted.push(`${token.name} (${owner.name})`)
+                const query = dangerZoneSocket.executeAsUser("requestSavingThrow", owner.id, token.uuid, this.type, time)
+                const race = wait(time)
+                await Promise.race([query, race]).then((value) => {result = value})
+            }
         }
+        if(!result) result = await token.actor.rollAbilitySave(this.type, {chatMessage: false}) 
+       
+        const saved = (!result || result.total < this.diff) ? false : true
+        !saved ? this.data.save.failed.push(token) : this.data.save.succeeded.push(token)
+        const text = `<div>${token.name} <span class="danger-zone-label">${saved ? 'succeeds' : 'fails'}</span> with a ${result.total}.</div>`
+        if(owner) {
+            this._chatMessageResults += text}
+        else {
+            this._gmRollCount = ++this._gmRollCount
+            this._gmChatMessageResults += text
+        } 
+        return result
     }
 }
 

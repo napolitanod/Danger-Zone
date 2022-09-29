@@ -377,6 +377,8 @@
             "open-socket.label": "Players Can Trigger API",
             "open-socket.description": "Enabling this settings allows players to use the 'dangerZone.triggerZone' API in macros (dangerZone.triggerZone() is passed to the GM's session to execute, which requires that the GM be logged in at the time that the macro is run).",
             "display-danger-boundary.description": "Temporarily highlights the area targeted by a danger when the zone is triggered (GM's session only).",
+            "saving-throw-delay.label": "Player Saving Throw Wait Time",
+            "saving-throw-delay.description": "Requires socketLib module. The amount of time, in seconds, to wait for a player to fulfill a saving throw request before sending the prompt to the GM.",
             "scene-control-button-display.label": "Display Clear Lasting Effects Button",
             "scene-control-button-display.description": "Toggles the display of the Clear Danger Zone Lasting Effects button within the scene control buttons tiles grouping.",
             "scene-control-clear-all-button-display.label": "Display Clear Button",
@@ -940,6 +942,8 @@
                         "fail": "Generate on fail only",
                         "both": "Generate on success or fail"
                     },
+                    "socket-off.description": "The GM will be prompted to make all saves. If you wish to prompt players instead, please install the socketlib module.",
+                    "socket-on.description": "Players with owned tokens will be prompted for their save.",
                     "success.description": "Choose how a save success or failure affects other danger parts",
                     "success.label": "Based on Save Result",
                     "type.label": "Saving Throw Type"

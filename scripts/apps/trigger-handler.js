@@ -126,7 +126,6 @@ export class triggerManager {
     }
 
     async combatTrigger(){
-        console.log(this.currentInitiative)
         this.setCombatFlags();
         for (const zn of this.sceneZones) { 
             if(zn.options.combatantInZone){

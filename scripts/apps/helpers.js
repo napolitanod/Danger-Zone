@@ -20,6 +20,17 @@ export function furthestShiftPosition(token, [xGrids, yGrids] = [0,0]){
   return [x,y]
 }
 
+export function getActorOwner(document){
+    const actor = document.actor ?? document
+    const activePlayers = game.users?.players.filter(p => p.active)
+    if(!actor?.id || !actor?.ownership || !activePlayers || !activePlayers.length) return
+    let user;
+    if (actor.hasPlayerOwner) user = activePlayers.find(u => u.character === actor.id);
+    if (!user) user = activePlayers.find(p => actor.ownership[p.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)
+    if (!user && actor.ownership.default === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) user = activePlayers[0]
+    return user  
+}
+
 export async function getFilesFromPattern(pattern) {
     let source = "data";
     const browseOptions = { wildcard: true };
@@ -46,6 +57,11 @@ export async function getTagEntities(tag, scene){
   return d
 }
 
+export function joinWithAnd(arr){
+  if(arr?.length <= 1) return arr?.[0]
+  return [arr.slice(0, arr.length - 1).join(', '), ...arr.slice(-1)].join(' and ')
+}
+
 export async function maybe(){
   const roll = await new Roll(`1d100`).evaluate({async: true})
   return roll
@@ -61,6 +77,20 @@ export function rayIntersectsGrid([yPos,xPos], r){
           return true
       }
   return false
+}
+
+export async function requestSavingThrow(tokenUuid, saveType, time){
+  const token = await fromUuid(tokenUuid)
+  if(!token) return 
+  let dialog, result;
+  Hooks.once('renderDialog', async(app, html, options) => {
+    dialog = app
+  })
+  
+  const query = token.actor.rollAbilitySave(saveType, {chatMessage: false})
+  const race = wait(time)
+  await Promise.race([query, race]).then((value) => {result = value; dialog?.close()})
+  return result
 }
 
 export function limitArray(array, limitAmount) {
