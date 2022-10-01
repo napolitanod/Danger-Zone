@@ -1483,8 +1483,8 @@ class damageToken extends executable{
 
     get damages(){
         const arr = [];
-        if(this.primaryDamage.amount) arr.push(this.primaryDamage)
-        if(this.secondaryDamage.amount) arr.push(this.secondaryDamage)
+        if(this.primaryDamage.amount && this.primaryDamage.type) arr.push(this.primaryDamage)
+        if(this.secondaryDamage.amount && this.secondaryDamage.type) arr.push(this.secondaryDamage)
         return arr
     }
     
@@ -1590,7 +1590,7 @@ class damageToken extends executable{
 
     async _applyDamage(tokens, damage, type, flavor){
         if(!damage?.total || !tokens.length) return
-        await new MidiQOL.DamageOnlyWorkflow(null, null, damage.total, type, tokens, damage, {flavor: flavor}) 
+        await new MidiQOL.DamageOnlyWorkflow(tokens[0].actor, tokens[0], damage.total, type, tokens, damage, {flavor: flavor}) 
     }
 }
 
