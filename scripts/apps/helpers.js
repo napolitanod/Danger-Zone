@@ -109,15 +109,21 @@ export function shuffleArray(array) {
   return array;
 }
 
-export function stringToObj(string, identifier = '', notify = false) {
+export function stringToObj(string, {type = '', notify = false, document = {}}={}) {
   let obj;
-  const error = `${identifier} ${game.i18n.localize("DANGERZONE.alerts.json-invalid")}`;
+  const error = `${type} ${game.i18n.localize("DANGERZONE.alerts.json-invalid")}`;
   try {
-      obj = (new Function( "return " + `{${string}}`) )()
+      obj = (new Function( "return " + `{${interpolateString(string, document)}}`) )()
   } catch (e) {
       return notify ? ui.notifications?.error(error) : console.log(error);
   }
   return obj;
+}
+
+function interpolateString(str, obj) {
+  return str.replace(/\[\[(.+?)]]/g, function(m, orig){
+      return orig.split('.').reduce(function(obj, key){return obj[key]??'';}, obj);
+  });
 }
 
 export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));

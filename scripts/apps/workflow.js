@@ -1761,7 +1761,7 @@ class item extends executable {
     }
 
     get hasUpdates(){
-        return Object.keys(this.updates).length ? true : false
+        return this._part.updates ? true : false
     }
 
     get pile(){
@@ -1778,12 +1778,6 @@ class item extends executable {
 
     get save(){
         return this.data.danger.save.it ? parseInt(this.data.danger.save.it) : super.save
-    }
-    
-    get updates(){
-        const updates = this._part.updates ? stringToObj(this._part.updates) : {}
-        if(this.tag) updates['flags'] = {"tagger": this.taggerTag}
-        return updates
     }
 
     async getCompendium(){
@@ -1839,10 +1833,17 @@ class item extends executable {
             }
         }
     }
+    
+    updates(item){
+        const updates = this._part.updates ? stringToObj(this._part.updates, {document:item}) : {}
+        const update = updates[item.name]
+        if(update && this.tag) update['flags'] = {"tagger": this.taggerTag}
+        return update
+    }
 
     async updateTokenItem(token, arr){
-        const toUpdate = arr.filter(i => this.updates[i.name])
-        await token.actor.updateEmbeddedDocuments('Item', toUpdate.map(i => ({_id: i.id, ...this.updates[i.name]})));
+        const toUpdate = arr.map(i => ({_id: i.id, ...this.updates(i)})).filter(i => Object.keys(i).length > 1)
+        await token.actor.updateEmbeddedDocuments('Item', toUpdate);
     }
 }
 
@@ -2020,10 +2021,6 @@ class macro extends executable{
 
 class mutate extends executable {
 
-    get actor(){
-        return this._part.actor ? stringToObj(this._part.actor) : {}
-    }
-
     get embedded(){
         return this._part.embedded ? stringToObj(this._part.embedded) : {}
     }
@@ -2043,18 +2040,22 @@ class mutate extends executable {
     get targets(){
         return this.data.spawn.mutate ? this.data.sceneTokens.filter(t => this.data.spawn.tokens.includes(t.id)) : super.targets
     }
-    
-    get token(){
-        const token = this._part.token ? stringToObj(this._part.token) : {}
-        if(this.tag) token['flags'] = {"tagger":this.taggerTag}
-        return token
+
+    actor(token){
+        return this._part.actor ? stringToObj(this._part.actor, {document: token.actor}) : {}
     }
 
-    get updates(){
+    token(token){
+        const tok = this._part.token ? stringToObj(this._part.token, {document: token}) : {}
+        if(this.tag) tok['flags'] = {"tagger":this.taggerTag}
+        return tok
+    }
+
+    updates(token){
         return {
-            actor: this.actor,
+            actor: this.actor(token),
             embedded: this.embedded,
-            token: this.token
+            token: this.token(token)
         }
     }
 
@@ -2062,7 +2063,7 @@ class mutate extends executable {
         await super.play()  
         if(this._cancel) return          
         for (const token of this.targets) { 
-            await warpgate.mutate(token, this.updates, {}, this.options);
+            await warpgate.mutate(token, this.updates(token), {}, this.options);
         }
         await this.data.fillSources()
     }
