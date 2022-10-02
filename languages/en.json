@@ -911,7 +911,7 @@
                     "amount.label": "Damage Roll or Amount",
                     "amount.title": "Include parameters for variable roll:\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",
                     "delay.label": "Delay Start",
-                    "description": "Apply damage to each targeted token.",
+                    "description": "Roll damage on each targeted token. Whether or not damage is automatically applied depends on your midiQol configuration.",
                     "enable.label": "Activate Damage",
                     "flavor.label": "Flavor (Chat Card)",
                     "flavor.description": "Outputs the message to chat for each token damaged as part of the damage card.\nInclude parameters for variable text:\n@alias for token name list\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",
