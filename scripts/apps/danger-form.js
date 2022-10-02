@@ -1013,9 +1013,9 @@ class DangerZoneDangerFormMutate extends FormApplication {
   
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
-      if (expandedData.token) stringToObj(expandedData.token, 'Token', true)
-      if (expandedData.actor) stringToObj(expandedData.actor, 'Actor', true)
-      if (expandedData.embedded) stringToObj(expandedData.embedded, 'Embedded', true)
+      if (expandedData.token) stringToObj(expandedData.token, {type: 'Token', notify: true})
+      if (expandedData.actor) stringToObj(expandedData.actor, {type: 'Actor', notify: true})
+      if (expandedData.embedded) stringToObj(expandedData.embedded, {type:'Embedded', notify:true})
       this.parent.mutate = expandedData;
       this.eventParent.addClass('active');
     }

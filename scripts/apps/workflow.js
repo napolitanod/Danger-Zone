@@ -1476,6 +1476,13 @@ class combat extends executable {
 }
 
 class damageToken extends executable{
+    constructor(...args){
+        super(...args),
+        this._chatMessageResults = '',
+        this._gmChatMessageResults = '',
+        this._gmDamageCount = 0,
+        this._damageResults = {}
+    }
     
     get amount(){
         return this._part.amount
@@ -1493,8 +1500,12 @@ class damageToken extends executable{
     } 
 
     get flavor(){
-        return this._part.flavor
+        return this._part.flavor ? this._part.flavor.replace(/@alias/i,this.targetNames) : ''
     } 
+
+    get flavorIsIndividual(){
+        return (this.flavor.indexOf('@elevation')!==-1 || this.flavor.indexOf('@moved')!==-1) ? true : false
+    }
 
     get has(){
         return (super.has && this.enable && this.amount) ? true : false
@@ -1535,6 +1546,10 @@ class damageToken extends executable{
     get targets(){
         return zone.sourceTreatment(this.source, this.data.targets, this.data.sources);
     }
+
+    get targetNames(){
+        return joinWithAnd(this.targets.map(t => t.name))
+    }
     
     get type(){
         return this._part.type
@@ -1544,20 +1559,19 @@ class damageToken extends executable{
         await super.play()
         if(this._cancel) return
         this.isBulk ? await this._bulkWorkflow() : await this._individualWorkflow()
+        if(this._damageResults) this._messageDamage()
     }
 
     async _bulkWorkflow(){
-        let flavor =  this.flavor;
         for (const damage of this.damages){
             const damageRoll = await new Roll(damage.amount).evaluate({async: true})
             if(damage.save==='F'){
-                await this._calculateDamage(false, damageRoll, this.targets, flavor, damage)
+                await this._calculateDamage(false, damageRoll, this.targets, '', damage)
             } 
             else { 
-                if(this.data.save.failed.length) await this._calculateDamage(false, damageRoll, this.data.save.failed, flavor, damage)
+                if(this.data.save.failed.length) await this._calculateDamage(false, damageRoll, this.data.save.failed, '', damage)
                 if(damage.save === 'H' && this.data.hasSuccesses) await this._calculateDamage(true, damageRoll, this.data.save.succeeded, flavor, damage)
             }
-            flavor = ''
         }
     }
 
@@ -1578,19 +1592,63 @@ class damageToken extends executable{
         }
     }
 
-    async _calculateDamage(half, damageRoll, tokens, flavorAdd, damage){
+    async _calculateDamage(half, damageRoll, tokens, flavor, damage){
         let roll; const types = damageTypes();
-        let flavor = `<label>${damageRoll.result} ${types[damage.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}.</label><br>${flavorAdd.replace(/@alias/i, tokens.map(t => t.name).join(', '))}`;
+        let title = `<label>${damageRoll.result} ${types[damage.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}.</label>`;
         if(half){
             let hf = Math.floor(damageRoll.total/2);
             roll = await new Roll(`${hf}`).evaluate({async: true});
         } else {roll = damageRoll}
-        await this._applyDamage(tokens, roll, damage.type, flavor)
+        await this._applyDamage(tokens, roll, damage.type, flavor, title)
     }
 
-    async _applyDamage(tokens, damage, type, flavor){
+    async _applyDamage(tokens, damage, type, flavor, title){
         if(!damage?.total || !tokens.length) return
-        await new MidiQOL.DamageOnlyWorkflow(tokens[0].actor, tokens[0], damage.total, type, tokens, damage, {flavor: flavor}) 
+        const result = await new MidiQOL.DamageOnlyWorkflow(tokens[0].actor, tokens[0], damage.total, type, tokens, damage, {flavor: title}) 
+        for(const token of tokens){
+            const res = {token: token, flavor: flavor, name: token.name, applied: result.damageList.find(d => d.tokenId === token.id)?.appliedDamage ?? 0, damage: damage.total, type: result.defaultDamageType}
+            if (token.id in this._damageResults){
+                this._damageResults[token.id].secondary = res
+            } else {
+                this._damageResults[token.id] = {primary: res}
+            }            
+        }
+    }
+
+    async _messageDamage(){
+        for(const d in this._damageResults){
+            const damage = this._damageResults[d]
+            let text
+            const flavor = (this.flavorIsIndividual && damage.primary.flavor) ? damage.primary.flavor + '. ' : ''
+            const applied = (damage.secondary ? damage.primary.applied + damage.secondary.applied : damage.primary.applied)
+            const diffPrim = damage.primary.damage - damage.primary.applied
+            const adjPrim = (diffPrim === 0 ? '' : (diffPrim > 0 ? 'reduced' : 'increased'))
+            if(damage.secondary){
+                const diffSec = damage.secondary.damage - damage.secondary.applied
+                const adjSec = (diffSec === 0 ? '' : (diffSec > 0 ? 'reduced' : 'increased'))
+                text = `<div>${flavor}${damage.primary.name} takes <span class="danger-zone-label">${applied}</span> damage from ${damage.primary.type}${damage.primary.type === damage.secondary.type ? '' : ' and ' + damage.secondary.type}${adjPrim ? ' ('+ damage.primary.type + ' ' + adjPrim + ' to ' + damage.primary.applied + ' from ' + damage.primary.damage + ' ' + (adjSec ? ' and ' : ')') : ''}${adjSec ? (adjPrim ? '' : ' (') + damage.secondary.type + ' ' + adjSec + ' to ' + damage.secondary.applied + ' from ' + damage.secondary.damage +  ')' : ''}.<br><hr></div>`
+            } else {
+                text = `<div>${flavor}${damage.primary.name} takes <span class="danger-zone-label">${applied}</span> damage from ${damage.primary.type}${adjPrim ? ' (' + adjPrim + ' from ' + damage.primary.damage + ')' : ''}.<br><hr></div>`
+            }
+            if(getActorOwner(damage.primary.token)) {
+                this._chatMessageResults += text
+            } else {
+                this._gmDamageCount = ++this._gmDamageCount
+                this._gmChatMessageResults += text
+            } 
+        }
+
+        if(this._chatMessageResults || this._gmDamageCount){
+        ChatMessage.create({
+            content: `<div class="danger-zone-chat-message-title">${(this.flavorIsIndividual || !this.flavor) ?  'Damage Results' : this.flavor}</div><div class="danger-zone-chat-message-body">${this._chatMessageResults}` + (this._gmDamageCount ? `<div>GM applied damage to ${this._gmDamageCount} other tokens.</div>` : '') + '</div>'
+            })
+        }
+        if(this._gmChatMessageResults){
+            ChatMessage.create({
+                content: `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> GM Applied Damage</div><div class="danger-zone-chat-message-body">${this._gmChatMessageResults}</div>`,
+                whisper: ChatMessage.getWhisperRecipients("GM") 
+            })
+        }
     }
 }
 
@@ -1703,7 +1761,7 @@ class item extends executable {
     }
 
     get hasUpdates(){
-        return Object.keys(this.updates).length ? true : false
+        return this._part.updates ? true : false
     }
 
     get pile(){
@@ -1720,12 +1778,6 @@ class item extends executable {
 
     get save(){
         return this.data.danger.save.it ? parseInt(this.data.danger.save.it) : super.save
-    }
-    
-    get updates(){
-        const updates = this._part.updates ? stringToObj(this._part.updates) : {}
-        if(this.tag) updates['flags'] = {"tagger": this.taggerTag}
-        return updates
     }
 
     async getCompendium(){
@@ -1781,10 +1833,17 @@ class item extends executable {
             }
         }
     }
+    
+    updates(item){
+        const updates = this._part.updates ? stringToObj(this._part.updates, {document:item}) : {}
+        const update = updates[item.name]
+        if(update && this.tag) update['flags'] = {"tagger": this.taggerTag}
+        return update
+    }
 
     async updateTokenItem(token, arr){
-        const toUpdate = arr.filter(i => this.updates[i.name])
-        await token.actor.updateEmbeddedDocuments('Item', toUpdate.map(i => ({_id: i.id, ...this.updates[i.name]})));
+        const toUpdate = arr.map(i => ({_id: i.id, ...this.updates(i)})).filter(i => Object.keys(i).length > 1)
+        await token.actor.updateEmbeddedDocuments('Item', toUpdate);
     }
 }
 
@@ -1962,10 +2021,6 @@ class macro extends executable{
 
 class mutate extends executable {
 
-    get actor(){
-        return this._part.actor ? stringToObj(this._part.actor) : {}
-    }
-
     get embedded(){
         return this._part.embedded ? stringToObj(this._part.embedded) : {}
     }
@@ -1985,18 +2040,22 @@ class mutate extends executable {
     get targets(){
         return this.data.spawn.mutate ? this.data.sceneTokens.filter(t => this.data.spawn.tokens.includes(t.id)) : super.targets
     }
-    
-    get token(){
-        const token = this._part.token ? stringToObj(this._part.token) : {}
-        if(this.tag) token['flags'] = {"tagger":this.taggerTag}
-        return token
+
+    actor(token){
+        return this._part.actor ? stringToObj(this._part.actor, {document: token.actor}) : {}
     }
 
-    get updates(){
+    token(token){
+        const tok = this._part.token ? stringToObj(this._part.token, {document: token}) : {}
+        if(this.tag) tok['flags'] = {"tagger":this.taggerTag}
+        return tok
+    }
+
+    updates(token){
         return {
-            actor: this.actor,
+            actor: this.actor(token),
             embedded: this.embedded,
-            token: this.token
+            token: this.token(token)
         }
     }
 
@@ -2004,7 +2063,7 @@ class mutate extends executable {
         await super.play()  
         if(this._cancel) return          
         for (const token of this.targets) { 
-            await warpgate.mutate(token, this.updates, {}, this.options);
+            await warpgate.mutate(token, this.updates(token), {}, this.options);
         }
         await this.data.fillSources()
     }
