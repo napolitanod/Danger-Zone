@@ -11,7 +11,7 @@ import {requestSavingThrow} from './apps/helpers.js';
 /**
  * global variables
  */
-export var timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, socketLibOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, fxMasterOn = false, betterRoofsOn = false, levelsOn = false, itemPileOn = false; //active modules
+export var activeEffectOn = true, timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, socketLibOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, fxMasterOn = false, betterRoofsOn = false, levelsOn = false, itemPileOn = false; //active modules
 export var dzMActive = false; 
 export let dangerZoneSocket; //var for socketlib
 
@@ -404,6 +404,7 @@ function setModsAvailable () {
 	if (game.modules.get("times-up")?.active){timesUpOn = true};
 	if (game.modules.get("perfect-vision")?.active) perfectVisionOn = true;
 	if (game.modules.get("socketlib")?.active) socketLibOn = true
+	if(['pf1', 'pf2e'].includes(game.world.system)) activeEffectOn = false
 }
 
 /**
