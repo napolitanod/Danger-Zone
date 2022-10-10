@@ -48,7 +48,7 @@
     </div>
     <div class="form-group">
         <ol class="danger-setting-group flexrow">
-            <li data-id="active-effect" {{#if hasActiveEffect}}class="active"{{/if}}>
+            <li data-id="active-effect" class="{{#if hasActiveEffect}}active {{/if}}{{#if activeEffectOnNot}}dz-hidden{{/if}}">
                 <button class="danger-zone-type-button"data-action="edit" title="{{localize "DANGERZONE.type-form.active-effect.edit.title"}} {{localize 'DANGERZONE.type-form.active-effect.notes'}}"><i class="fas fa-hand-sparkles"></i></button>  
                 <label>{{localize 'DANGERZONE.type-form.active-effect.label'}}</label>
                 <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>

@@ -1,4 +1,4 @@
-import {tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, warpgateOn, fxMasterOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
+import {activeEffectOn, tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, warpgateOn, fxMasterOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -411,6 +411,7 @@ export function setExecutableOptions(){
             'effect': {
                 title: "Active Effect", 
                 icon: "fas fa-hand-sparkles",
+                modules: [{active: activeEffectOn, name: "game-system", dependent: true}],
                 scope: "token"
             },
             'audio': {
