@@ -10,13 +10,16 @@ export function furthestShiftPosition(token, [xGrids, yGrids] = [0,0]){
   let x = token.x,y = token.y, collisionTest = true;
   const xSign = Math.sign(xGrids); const ySign = Math.sign(yGrids);
   const placeable = canvas.tokens.placeables.find(t => t.id === token.id)
+  const max = (xGrids > 0 ? xGrids : xGrids * -1) * (yGrids > 0 ? yGrids : yGrids * -1)
+  let i = 0
   do{
       let [xTest,yTest] = canvas.grid.grid.shiftPosition(placeable.x, placeable.y, xGrids, yGrids)
       collisionTest = placeable.checkCollision({x: xTest,y: yTest});
       if(!collisionTest){x = xTest,y = yTest}
       dangerZone.log(false,'Wall Collision Test ', {"shiftPos": [x,y], token: token, placeable: placeable, test: collisionTest, grids:[xGrids,yGrids]});
       if(xGrids > yGrids){xGrids = xGrids -(1 * xSign)} else {yGrids = yGrids -(1 * ySign)} 
-  } while (collisionTest && (!xGrids || !yGrids));
+      i++
+  } while (collisionTest && (!xGrids || !yGrids) && i < max);
   return [x,y]
 }
 
