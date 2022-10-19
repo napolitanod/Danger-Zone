@@ -341,8 +341,8 @@ class executorData {
 
     async checkLikelihood() {
         if(this.zone.likelihood < 100){
-            const maybe = await maybe();
-            this.likelihoodResult = maybe.result;
+            const roll = await maybe();
+            this.likelihoodResult = roll.result;
         }
         return this.likelihoodMet
     }
@@ -1057,8 +1057,8 @@ class executable {
     
     async checkLikelihood() {
         if(this.likelihood < 100){
-            const maybe = await maybe();
-            this.likelihoodResult = maybe.result;
+            const roll = await maybe();
+            this.likelihoodResult = roll.result;
         }
     }
 
