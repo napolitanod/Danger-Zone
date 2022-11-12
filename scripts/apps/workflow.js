@@ -1803,7 +1803,8 @@ class item extends executable {
             if(!this.items.length) return 
         }
         if(this.pile && itemPileOn) {
-            await ItemPiles.API.createItemPile(this.data.boundary.center, {items: this.items, pileActorName: false})
+            const pilePos = canvas.grid.grid.getTopLeft(this.data.boundary.center.x, this.data.boundary.center.y)
+            await ItemPiles.API.createItemPile({position: {x: pilePos[0], y: pilePos[1]}, sceneId: this.data.scene.id, items: this.items, pileActorName: false})
             return
         }
         for (const token of this.targets) { 
