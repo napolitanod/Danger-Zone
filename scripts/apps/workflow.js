@@ -1169,7 +1169,7 @@ class activeEffect extends executable {
         await super.play() 
         if(this._cancel) return                 
         for (const token of this.targets) {
-            if(this.limit && token.actor && token.actor.effects.find(e => e.data.flags[dangerZone.ID]?.origin === this.data.danger.id)){
+            if(this.limit && token.actor && token.actor.effects.find(e => e.flags[dangerZone.ID]?.origin === this.data.danger.id)){
                 continue;
             }
             await token.actor.createEmbeddedDocuments("ActiveEffect", [this.effect]);
