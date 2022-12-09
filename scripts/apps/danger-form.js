@@ -976,7 +976,7 @@ class DangerZoneDangerFormLight extends FormApplication {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.light = expandedData;
       if(expandedData.flags?.['perfect-vision']?.priority === undefined && !expandedData.flags?.['perfect-vision']?.sightLimit) this.parent.light.flags = {}
-      (expandedData.dim || expandedData.bright) ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
+      if(expandedData.dim || expandedData.bright) {this.eventParent.addClass('active')} else {this.eventParent.removeClass('active')}
     }
 }
 

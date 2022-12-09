@@ -2114,7 +2114,13 @@ class primaryEffect extends executableWithFile {
         const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
         for (const bound of boundaries){
             if(this.hasSources){
-                const tagged = this.source.name ? await limitArray(shuffleArray(getTagEntities(this.source.name, this.data.scene)),this.data.sourceLimit) : this.sourcesSelected
+                let tagged;
+                if(this.source.name) {
+                    const taggerEntities = await getTagEntities(this.source.name, this.data.scene)
+                    tagged = limitArray(shuffleArray(taggerEntities),this.data.sourceLimit)
+                 } else {
+                    tagged = this.sourcesSelected
+                 } 
                 if(tagged.length){
                     for(const document of tagged){
                         const documentName = document.documentName ? document.documentName : document.document.documentName;
