@@ -1047,7 +1047,7 @@ class executable {
     }
     
     get targets(){
-        return zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.data.sources);
+        return this.data.zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.data.sources);
     }   
 
     async check(){
@@ -1156,10 +1156,6 @@ class activeEffect extends executable {
     get limit(){
         return this.flag.limit ? this.flag.limit : false
     }
-
-    get source(){
-        return this.flag.source ? this.flag.source : ''
-    }
     
     get save(){
         return this.data.danger.save.ae ? parseInt(this.data.danger.save.ae) : 0
@@ -1169,6 +1165,7 @@ class activeEffect extends executable {
         await super.play() 
         if(this._cancel) return                 
         for (const token of this.targets) {
+            if(!token.actor) continue
             if(this.limit && token.actor && token.actor.effects.find(e => e.flags[dangerZone.ID]?.origin === this.data.danger.id)){
                 continue;
             }
@@ -1544,7 +1541,7 @@ class damageToken extends executable{
     } 
     
     get targets(){
-        return zone.sourceTreatment(this.source, this.data.targets, this.data.sources);
+        return this.data.zone.sourceTreatment(this.source, this.data.targets, this.data.sources);
     }
 
     get targetNames(){
@@ -1808,6 +1805,7 @@ class item extends executable {
             return
         }
         for (const token of this.targets) { 
+            if(!token.actor) continue
             let crtdItms = []
             if(this.action === 'A'){
                 crtdItms = await token.actor.createEmbeddedDocuments('Item', this.items)
@@ -2759,14 +2757,13 @@ class  tokenEffect extends executableWithFile {
     }   
 
     get duration(){
-        return this._part.duration
+        return this._part.duration ?? 0
     }   
 
     get save(){
         return this.data.danger.save.te ? parseInt(this.data.danger.save.te) : super.save
     }
     
-
     async play(){
         await super.play()
         if(this._cancel) return

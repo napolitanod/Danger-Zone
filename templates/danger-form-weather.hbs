@@ -15,7 +15,7 @@
         <div class="form-group">
             <label for="duration">{{localize "DANGERZONE.type-form.weather.duration.label"}}</label>
             <div class="form-fields">
-                <input type="number" data-dtype="Number" name="duration" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.duration}}>
+                <input type="number" data-dtype="Number" name="duration" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.duration}}{{data.duration}}{{else}}0{{/if}}>
             </div>
         </div>
         <div class="form-group">
