@@ -513,7 +513,7 @@ export class zone {
     return sources.length ? sources.filter(s => s.id === token.id).length > 0 : token.actor?.id === this.source.actor
   }
 
-  static sourceTreatment(treatment, tokens, sources = []){
+  sourceTreatment(treatment, tokens, sources = []){
     if(!treatment || !sources.length) return tokens
     switch(treatment){
       case "I":
