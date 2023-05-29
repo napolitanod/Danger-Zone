@@ -194,6 +194,8 @@ export class dangerZoneType {
           bottom:false,
           dir: 0,
           door: 0,
+          doorSound: undefined,
+          ds: 0,
           left: false,
           light: 1,
           move: 1,
@@ -202,7 +204,13 @@ export class dangerZoneType {
           sense: 1,
           sound: 1,
           tag: '',
-          top: false
+          top: false,
+          threshold: {
+            attenuation: false,
+            light: null,
+            sight: null,
+            sound: null
+          }
         },
         macro: ''
       }

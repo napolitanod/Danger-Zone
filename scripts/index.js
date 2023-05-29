@@ -351,9 +351,8 @@ Hooks.on('renderSceneControls', async(app, html, options) => {
    }
 });
 
-
-Hooks.on("renderSidebarTab", async(app, html) => {
-	addQuickZonesLaunch(app, html);
+Hooks.on("changeSidebarTab", async(app) => {
+	addQuickZonesLaunch(app);
 });
 
 /**
@@ -507,14 +506,14 @@ function insertWallClearButton (controls, b, c) {
 	}
 }
 
-export function addQuickZonesLaunch(app, html) {
-	if (game.user.isGM && app.options.id == "scenes" && game.settings.get('danger-zone', 'types-button-display') === true) {
+export function addQuickZonesLaunch(app) {
+	if (game.user.isGM && app.id == "scenes" && game.settings.get('danger-zone', 'types-button-display') === true) {
 		let button = $('<div class="header-actions action-buttons flexrow"><button class="danger-zone-types-launcher"><i class="fas fa-radiation"></i> ' + game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.name")+ '</button></div>');
 	
 		button.click(async () => {
 			dangerZone.DangerZoneTypesForm.render(true);
 		});
-		$(html).find(".directory-footer").append(button);
+		if(!$(app.element).find(".danger-zone-types-launcher")?.length) {$(app.element).find(".directory-footer").append(button);}
 	}
 }
 
