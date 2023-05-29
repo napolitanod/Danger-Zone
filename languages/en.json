@@ -20,6 +20,7 @@
         "ms": "ms",
         "none": "None",
         "play": "Play",
+        "preview": "Preview",
         "ratio": "(Ratio)",
         "save": "Save",
         "sec": "sec",
@@ -58,6 +59,11 @@
             "scene": "Copy From",
             "target": "Copy To",
             "zone": "Zone"
+        },
+        "doorStates":{
+            "closed": "Closed",
+            "open": "Open",
+            "locked": "Locked"
         },
         "edit-form": {
             "actor.label": "Actor",
@@ -347,7 +353,9 @@
         "restrictions":{
             "none": "None",
             "limited": "Limited",
-            "normal": "Normal"
+            "normal": "Normal",
+            "proximity": "Proximity",
+            "distance": "Reverse Proximity"
         },
         "scene": {
             "add-danger-zone": "Add danger zone",
@@ -958,6 +966,9 @@
             "wall":{
                 "bottom.label": "Wall on Bottom",
                 "description": "Add walls or doors around the perimeter of the targeted area.",
+                "doorOptions.label": "Door Options",
+                "doorSound.label": "Door Sound",
+                "doorState.label": "Door State",
                 "direction.label": "Wall Direction",
                 "door.label": "Is Door?",
                 "label": "Walls",
@@ -971,6 +982,7 @@
                 "sight.label": "Sight Restriction",
                 "tag.label": "Tag",
                 "tag.description": "Tagger tag",
+                "thresholdAttenuation.label": "Proximity Threshold Attenuation",
                 "top.label": "Wall on Top"
             },
             "warpgate": {

@@ -1142,7 +1142,12 @@ class activeEffect extends executable {
     }
 
     get effect(){
-        return this._part
+        const obj = this._part
+        if(obj.hasOwnProperty('label')) {
+            obj.name = obj.label;
+            delete obj.label;
+          }
+        return obj
     }
 
     get flag(){
@@ -2981,6 +2986,14 @@ class wall extends executable {
         return this._part.door
     }
 
+    get doorSound(){
+        return this._part.doorSound
+    }
+
+    get ds(){
+        return this._part.ds ?? 0
+    }
+
     get has(){
         return (super.has && (this.top || this.right || this.bottom || this.left)) ? true : false
     }
@@ -3017,6 +3030,10 @@ class wall extends executable {
         return FVTTSENSETYPES[this._part.sound]
     }
 
+    get threshold(){
+        return this._part.threshold ?? {}
+    }
+
     get top(){
         return this._part.top
     }
@@ -3045,11 +3062,13 @@ class wall extends executable {
             c:[start.x, start.y, end.x, end.y],
             dir: this.dir,
             door: this.door,
-            ds: 0,
+            doorSound: this.doorSound,
+            ds: this.ds,
             move: this.move,
             sight: this.sense,
             sound: this.sound,
             light: this.light,
+            threshold: this.threshold,
             flags: this.data.flag
         }
         if(wallHeightOn && (this.data.boundary.bottom || this.data.boundary.top)) wall.flags['wallHeight'] = {"wallHeightTop": this.data.boundary.top-1, "wallHeightBottom": this.data.boundary.bottom}

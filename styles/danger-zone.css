@@ -279,7 +279,7 @@ form.danger-zone-type-form .main-danger {
 /*hotbar*/
 .danger-zone-hotbar-trigger {
     position: absolute;
-    left: 570px;
+    right: 160px;
     bottom: 11px;
     list-style: none;
     border-width: 0px;
@@ -673,3 +673,7 @@ form ol.danger-setting-group .active:hover label {
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     border-bottom: none;
   }
+
+form .form-group .form-fields input.danger-zone-proximity {
+    flex: 0 0 48px;
+}

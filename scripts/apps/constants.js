@@ -260,6 +260,18 @@ export const ITEMTARGET = {
 
 export const DAEDuration = daeOn ? DAE.daeSpecialDurations() : {}
 
+export const DOORSTATES = {
+    0: "DANGERZONE.doorStates.closed",
+    1: "DANGERZONE.doorStates.open",
+    2: "DANGERZONE.doorStates.locked"
+}
+
+export const FVTTDOORSTATES = {
+    0: 0,
+    1: 1,
+    2: 2
+}
+
 export function actorOps(){
     return game.actors.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
 }
@@ -281,13 +293,18 @@ export const FVTTMOVETYPES = {
 export const SENSETYPES = {
     0: "DANGERZONE.restrictions.none",
     2: "DANGERZONE.restrictions.limited",
-    1: "DANGERZONE.restrictions.normal"
+    1: "DANGERZONE.restrictions.normal",
+    3: "DANGERZONE.restrictions.proximity",
+    4: "DANGERZONE.restrictions.distance",
+
 }
 
 export const FVTTSENSETYPES = {
     0: 0,
     1: 20,
-    2: 10
+    2: 10,
+    3: 30,
+    4: 40
 }
 
 export function dirTypes(){ 
@@ -325,7 +342,11 @@ export function determineMacroList() {
 export function saveTypes() {
     switch(game.world.system){
         case "dnd5e":
-            return game.dnd5e.config.abilities
+            const saveEntries = {};
+            for ( let [k, v] of Object.entries(game.dnd5e.config.abilities) ) {
+                saveEntries[k] = v.label;
+            }
+            return saveEntries;
         default:
             return {}
     }

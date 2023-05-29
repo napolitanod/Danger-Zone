@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {activeEffectOn, daeOn, fluidCanvasOn, fxMasterOn, itemPileOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -357,21 +357,45 @@ class DangerZoneActiveEffectForm extends ActiveEffectConfig {
         const defaults = super.defaultOptions;
 
         return foundry.utils.mergeObject(defaults, {
-          height: "600px",
-          title : game.i18n.localize("DANGERZONE.zone-active-effect-form.form-name")
+          sheetConfig: false,
+          height: "600px"
         });
       }
 
+    get title() {
+      const reference = this.document.name ? ` ${this.document.name}` : "";
+      return `${game.i18n.localize("DANGERZONE.zone-active-effect-form.form-name")}${reference}`;
+    }
+
     getData(options) {
+      const d = this.parent.data
+      const data = {
+        changes: d.changes ?? [],
+        description: d.description ?? "",
+        disabled: d.disabled ?? false,
+        duration: d.duration ?? {},
+        flags: d.flags ?? {},
+        icon: d.icon,
+        isSuppressed: false,
+        name: d.name ?? d.label ?? "",
+        origin: this.origin,
+        tint: d.tint,
+        transfer: true
+      }
       return {
-        data: this.object,
+        cssClass: "editable",
+        data: data,
+        editable: true,
         isActorEffect: true,
         isItemEffect: false,
+        limited: false,
+        owner: true, 
         submitText: "EFFECT.Submit",
         modes: Object.entries(CONST.ACTIVE_EFFECT_MODES).reduce((obj, e) => {
           obj[e[1]] = game.i18n.localize("EFFECT.MODE_"+e[0]);
           return obj;
-        }, {})
+        }, {}),
+        title: this.title
       };
     }
 
@@ -382,6 +406,7 @@ class DangerZoneActiveEffectForm extends ActiveEffectConfig {
     activateListeners(html) {
       super.activateListeners(html);
     }
+    
 
     _onEffectControl(event) {
       event.preventDefault();
@@ -470,15 +495,10 @@ class DangerZoneDangerFormActiveEffect extends FormApplication {
     }
 
     async _activeEffectConfig(event, eventParent) {
-      if (!this.data.hasOwnProperty('label')){
-        const zoneName = $(this.parent.form).find('input[name="name"]').val();
-        const icon = $(this.parent.form).find('input[name="icon"]').val();
+      if (!this.data.hasOwnProperty('name') && !this.data.hasOwnProperty('label')){
         this.data = {
-          label: zoneName,
-          icon: icon,
-          changes: [],
-          disabled: false,
-          transfer: false,
+          name: $(this.parent.form).find('input[name="name"]').val(),
+          icon: $(this.parent.form).find('input[name="icon"]').val(),
           origin: this.parent.dangerId
         }
       }
@@ -491,7 +511,7 @@ class DangerZoneDangerFormActiveEffect extends FormApplication {
         isOwner: true,
         uuid: `ActiveEffect.${this.parent.dangerId}`
       });
-
+      
       new DangerZoneActiveEffectForm(this, eventParent, this.parent.dangerId, effect).render(true);
     }
 
@@ -1433,6 +1453,12 @@ class DangerZoneDangerFormWall extends FormApplication {
     getData(options) {
       return {
         data: this.data,
+        doorSounds: CONFIG.Wall.doorSounds,
+        doorStates: DOORSTATES,
+        suppressDoorOptions: this.data.door ? false : true,
+        suppressLightProx : this._notProximity(this.data.light),
+        suppressSenseProx : this._notProximity(this.data.sense),
+        suppressSoundProx : this._notProximity(this.data.sound),
         moveTypes: MOVETYPES,
         senseTypes: SENSETYPES,
         dirTypes: dirTypes(),
@@ -1441,9 +1467,30 @@ class DangerZoneDangerFormWall extends FormApplication {
     }
 
     activateListeners(html) {
+      html.on('change', "[data-action]", this._handleChange.bind(this));
       super.activateListeners(html);
     }
-  
+
+    async _handleChange(event) {
+      const changedElement = $(event.currentTarget);
+      const action = changedElement.data().action;
+      switch(action){
+        case "door":
+          this.form.querySelector(".door-options").classList.toggle("hidden", event.currentTarget.value === '0' ? true : false)
+          this.setPosition({height: "auto"});
+          break;
+        case "light":
+        case "sense":
+        case "sound":
+          this.form.querySelector(`.${action}-proximity`).classList.toggle("hidden", this._notProximity(event.currentTarget.value)) 
+        break;
+      }
+    }
+
+    _notProximity(test){
+      return Number(test) < 3
+    }
+
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.wall = expandedData;

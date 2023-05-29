@@ -44,25 +44,28 @@
         <div class="form-group">
             <label for="light">{{localize "DANGERZONE.type-form.wall.light.label"}}</label>
             <div class="form-fields">
-                <select name="light" value="{{data.light}}" data-dtype="Number"> 
+                <select name="light" data-action="light" value="{{data.light}}" data-dtype="Number"> 
                     {{selectOptions senseTypes selected=data.light localize=true}}
-                </select>   
+                </select>  
+                <input class="danger-zone-proximity light-proximity {{#if suppressLightProx}}hidden{{/if}}" type="number" name="threshold.light" placeholder="{{localize "DANGERZONE.gridUnits"}}" min="0" value="{{data.threshold.light}}" step="any"/> 
             </div>
         </div>
         <div class="form-group">
             <label for="sense">{{localize "DANGERZONE.type-form.wall.sight.label"}}</label>
             <div class="form-fields">
-                <select name="sense" value="{{data.sense}}" data-dtype="Number"> 
+                <select name="sense" data-action="sense" value="{{data.sense}}" data-dtype="Number"> 
                     {{selectOptions senseTypes selected=data.sense localize=true}}
-                </select>   
+                </select> 
+                <input class="danger-zone-proximity sense-proximity {{#if suppressSenseProx}}hidden{{/if}}" type="number" name="threshold.sight" placeholder="{{localize "DANGERZONE.gridUnits"}}" min="0" value="{{data.threshold.sight}}" step="any"/>    
             </div>
         </div>
         <div class="form-group">
             <label for="sound">{{localize "DANGERZONE.type-form.wall.sound.label"}}</label>
             <div class="form-fields">
-                <select name="sound" value="{{data.sound}}" data-dtype="Number"> 
+                <select name="sound" data-action="sound" value="{{data.sound}}" data-dtype="Number"> 
                     {{selectOptions senseTypes selected=data.sound localize=true}}
-                </select>   
+                </select>  
+                <input class="danger-zone-proximity sound-proximity {{#if suppressSoundProx}}hidden{{/if}}" type="number" name="threshold.sound" placeholder="{{localize "DANGERZONE.gridUnits"}}" min="0" value="{{data.threshold.sound}}" step="any"/>   
             </div>
         </div>
         <div class="form-group">
@@ -74,13 +77,36 @@
             </div>
         </div>
         <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.wall.thresholdAttenuation.label"}}</label>
+            <input type="checkbox" name="threshold.attenuation" {{checked data.threshold.attenuation}}/>
+        </div>
+        <div class="form-group">
             <label for="door">{{localize "DANGERZONE.type-form.wall.door.label"}}</label>
             <div class="form-fields">
-                <select name="door" value="{{data.door}}" data-dtype="Number"> 
-                    {{selectOptions doorTypes selected=data.door }}
+                <select name="door" data-action="door" value="{{data.door}}" data-dtype="Number"> 
+                    {{selectOptions doorTypes selected=data.door localize=true}}
                 </select>   
             </div>
         </div>
+        <fieldset class="door-options {{#if suppressDoorOptions}}hidden{{/if}}">
+            <legend>{{ localize "DANGERZONE.type-form.wall.doorOptions.label" }}</legend>
+            <div class="form-group">
+                <label>{{ localize "DANGERZONE.type-form.wall.doorState.label" }}</label>
+                <div class="form-fields">
+                    <select name="ds" data-dtype="Number" value="{{data.ds}}">
+                        {{selectOptions doorStates selected=data.ds localize=true}}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{ localize "DANGERZONE.type-form.wall.doorSound.label" }}</label>
+                <div class="form-fields">
+                    <select name="doorSound">
+                        {{selectOptions doorSounds selected=data.doorSound labelAttr="label" blank="" localize=true}}
+                    </select>
+                </div>
+            </div>
+        </fieldset>
         <div class="form-group {{#if taggerOnNot}}dz-hidden{{/if}}">
             <label for="tag">{{localize "DANGERZONE.type-form.wall.tag.label"}}</label>
             <div class="form-fields">
