@@ -214,16 +214,21 @@ export const SCENEGLOBALILLUMINATION = {
     "N": "DANGERZONE.type-form.scene.globalLight.options.N.label"
 }
 
+export const CANVASTYPES = {
+    "": "",
+    "shake": "DANGERZONE.type-form.canvas.types.shake"
+}
+
 export const FLUIDCANVASTYPES = {
-    "black": "DANGERZONE.type-form.fluidCanvas.types.black",
-    "blur": "DANGERZONE.type-form.fluidCanvas.types.blur",
-    "drug": "DANGERZONE.type-form.fluidCanvas.types.drug",
-    "earthquake": "DANGERZONE.type-form.fluidCanvas.types.earthquake",
-    "fade": "DANGERZONE.type-form.fluidCanvas.types.fade",
-    "heartbeat": "DANGERZONE.type-form.fluidCanvas.types.heartbeat",
-    "negative": "DANGERZONE.type-form.fluidCanvas.types.negative",
-    "sepia": "DANGERZONE.type-form.fluidCanvas.types.sepia",
-    "spin": "DANGERZONE.type-form.fluidCanvas.types.spin"
+    "black": "DANGERZONE.type-form.canvas.types.fluid-canvas-black",
+    "blur": "DANGERZONE.type-form.canvas.types.fluid-canvas-blur",
+    "drug": "DANGERZONE.type-form.canvas.types.fluid-canvas-drug",
+    "earthquake": "DANGERZONE.type-form.canvas.types.fluid-canvas-earthquake",
+    "fade": "DANGERZONE.type-form.canvas.types.fluid-canvas-fade",
+    "heartbeat": "DANGERZONE.type-form.canvas.types.fluid-canvas-heartbeat",
+    "negative": "DANGERZONE.type-form.canvas.types.fluid-canvas-negative",
+    "sepia": "DANGERZONE.type-form.canvas.types.fluid-canvas-sepia",
+    "spin": "DANGERZONE.type-form.canvas.types.fluid-canvas-spin"
 }
 
 export const SOURCETRIGGERS = {
@@ -465,10 +470,13 @@ export function setExecutableOptions(){
                 ],
                 scope: "boundary"
             },
-            'fluidCanvas': {
+            'canvas': {
                 title: "Canvas", 
                 icon: "fas fa-wind", 
-                modules: [{active: fluidCanvasOn, name: "kandashis-fluid-canvas", dependent: true}],
+                modules: [
+                    {active: fluidCanvasOn, name: "kandashis-fluid-canvas", dependent: false},
+                    {active: sequencerOn, name: "sequencer", dependent: true}
+                ],
                 scope: "scene"
             },
             'damage': {

@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {activeEffectOn, daeOn, fluidCanvasOn, fxMasterOn, itemPileOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -13,7 +13,7 @@ export class DangerForm extends FormApplication {
     this.effect,
     this.backgroundEffect,
     this.system,
-    this.fluidCanvas = {},
+    this.canvas = {},
     this.foregroundEffect,
     this.globalZone = {},
     this.item = {},
@@ -114,8 +114,8 @@ export class DangerForm extends FormApplication {
       case 'combat':
         new DangerZoneDangerFormCombat(this, eventParent, this.combat).render(true);
         break;
-      case 'fluid-canvas':
-        new DangerZoneDangerFormFluidCanvas(this, eventParent, this.fluidCanvas).render(true);
+      case 'canvas':
+        new DangerZoneDangerFormCanvas(this, eventParent, this.canvas).render(true);
         break;
       case 'foreground-effect':
         new DangerZoneDangerFormForegroundEffect(this, eventParent, this.foregroundEffect).render(true);
@@ -184,8 +184,8 @@ export class DangerForm extends FormApplication {
       case 'combat':
         this.combat = Object.assign(this.combat, danger.options.combat)
         break;
-      case 'fluid-canvas':
-        this.fluidCanvas = {};
+      case 'canvas':
+        this.canvas = Object.assign(this.canvas, danger.options.canvas);
         break;
       case 'foreground-effect':
         this.foregroundEffect = Object.assign(this.foregroundEffect, danger.options.foregroundEffect);
@@ -254,9 +254,9 @@ export class DangerForm extends FormApplication {
     this.audio = instance.options.audio;
     this.backgroundEffect = instance.options.backgroundEffect;
     this.combat = instance.options.combat;
-    this.fluidCanvas = instance.options.flags.fluidCanvas ? instance.options.flags.fluidCanvas : {};
+    this.canvas = instance.options.canvas;
     this.foregroundEffect = instance.options.foregroundEffect;
-    this.globalZone = instance.options.globalZone ? instance.options.globalZone : {};
+    this.globalZone = instance.options.globalZone ?? {};
     this.item = instance.options.item;
     this.lastingEffect = instance.options.lastingEffect;
     this.light = instance.options.ambientLight;
@@ -281,7 +281,7 @@ export class DangerForm extends FormApplication {
       hasAudio: this.audio?.file ? true : false,
       hasBackgroundEffect: this.backgroundEffect?.file ? true : false,
       hasCombat: instance.hasCombat ? true : false,
-      hasFluidCanvas: this.fluidCanvas?.type ? true : false,
+      hasCanvas: (this.canvas.effect.type || this.canvas.pan.active) ? true : false,
       hasForegroundEffect: this.foregroundEffect?.file ? true : false,
       hasGlobalZone: Object.keys(this.globalZone).length ? true : false,
       hasItem: this.item?.name ? true : false,
@@ -302,11 +302,13 @@ export class DangerForm extends FormApplication {
       tokenSaysOnNot: !tokenSaysOn, 
       sequencerOnNot: !sequencerOn,
       warpgateOnNot: !warpgateOn, 
-      fluidCanvasOnNot: !fluidCanvasOn, 
+      canvasOnNot: !fluidCanvasOn && !sequencerOn, 
       fxMasterOnNot: !fxMasterOn, 
       taggerOnNot: !taggerOn,
       tokenResponseOnNot: Object.keys(saveTypes()).length ? false : true
     } 
+    
+    dangerZone.log(false, 'Danger Form Rendered', this);
     return dataToSend
   }
   
@@ -316,6 +318,7 @@ export class DangerForm extends FormApplication {
     expandedData.options.audio = this.audio; 
     expandedData.options.effect = this.effect; 
     expandedData.options.backgroundEffect = this.backgroundEffect;
+    expandedData.options.canvas = this.canvas;
     expandedData.options.combat = this.combat; 
     expandedData.options.foregroundEffect = this.foregroundEffect;
     expandedData.options.globalZone = this.globalZone;
@@ -330,7 +333,6 @@ export class DangerForm extends FormApplication {
     expandedData.options.wall = this.wall;
     //set integrations
     expandedData.options['flags']={};
-    if(Object.keys(this.fluidCanvas).length) {expandedData.options.flags['fluidCanvas'] = this.fluidCanvas}
     if(Object.keys(this.monksActiveTiles).length) {expandedData.options.flags['monks-active-tiles'] = this.monksActiveTiles}
     if(Object.keys(this.tokenResponse).length) {expandedData.options.flags['tokenResponse'] = this.tokenResponse}
     if(Object.keys(this.tokenSays).length) {expandedData.options.flags['tokenSays'] = this.tokenSays}
@@ -704,7 +706,7 @@ class DangerZoneDangerFormBackgroundEffect extends FormApplication {
     }
 }
 
-class DangerZoneDangerFormFluidCanvas extends FormApplication {
+class DangerZoneDangerFormCanvas extends FormApplication {
   constructor(app, eventParent, data, ...args) {
     super(...args);
     this.data = data,
@@ -716,10 +718,10 @@ class DangerZoneDangerFormFluidCanvas extends FormApplication {
         const defaults = super.defaultOptions;
 
         return foundry.utils.mergeObject(defaults, {
-          title : game.i18n.localize("DANGERZONE.type-form.fluidCanvas.label"),
-          id : "danger-zone-danger-fluid-canvas",
+          title : game.i18n.localize("DANGERZONE.type-form.canvas.label"),
+          id : "danger-zone-danger-canvas",
           classes: ["sheet","danger-part-form"],
-          template : dangerZone.TEMPLATES.DANGERZONEDANGERFLUIDCANVAS,
+          template : dangerZone.TEMPLATES.DANGERZONEDANGERCANVAS,
           height : "auto",
           width: 425,
           closeOnSubmit: true
@@ -727,9 +729,12 @@ class DangerZoneDangerFormFluidCanvas extends FormApplication {
       }
 
     getData(options) {
+      const types = CANVASTYPES;
+      if(fluidCanvasOn) Object.assign(types, FLUIDCANVASTYPES)
       return {
         data: this.data,
-        fluidCanvasOps: FLUIDCANVASTYPES
+        canvasOps: CANVASTYPES,
+        hasSequencer: sequencerOn
       }
     }
 
@@ -739,8 +744,8 @@ class DangerZoneDangerFormFluidCanvas extends FormApplication {
   
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
-      this.parent.fluidCanvas = expandedData;
-      expandedData.type ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
+      this.parent.canvas = expandedData;
+      (expandedData.effect.type || expandedData.pan.active) ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 

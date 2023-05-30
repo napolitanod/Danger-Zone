@@ -67,6 +67,21 @@ export class dangerZoneType {
           rotate: false,
           duration: 0
         },
+        canvas: {
+          effect: {
+            type: '',
+            iteration: 0,
+            intensity: 0,
+            duration: 0
+          },
+          pan: {
+            active: false,
+            lock: 0,
+            scale: 0,
+            speed: 0
+          },
+          delay: 0
+        },
         combat: {
           targets: {
             add: false
@@ -233,7 +248,7 @@ export class dangerZoneType {
   }
 
   get canvas(){
-    return this.options.flags.fluidCanvas ? this.options.flags.fluidCanvas : {}
+    return this.options.canvas ?? {}
   }
 
   get combat(){
@@ -378,7 +393,15 @@ export class dangerZoneType {
       let type =  new dangerZoneType;
       mergeObject(type, obj, {insertKeys: false, enforceTypes: enforceTypes});
       if(obj.flags){mergeObject(type.flags, obj.flags, {insertKeys: true})}
+      dangerZoneType._cleanClass(type)
       return type;
+    }
+  }
+
+  static _cleanClass(obj){
+    if(obj.options.flags.fluidCanvas){
+      Object.assign(obj.canvas.effect,obj.options.flags.fluidCanvas);
+      delete obj.options.flags.fluidCanvas;
     }
   }
 

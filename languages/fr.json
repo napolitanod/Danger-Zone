@@ -201,12 +201,12 @@
 			},	
 			"dimensions.label": "Dimensions",	
 			"dimensions.notes": "Pour la profondeur, spécifiez la différence d'unités de grille entre les élévations du haut et du bas. Une profondeur de 0 correspondra par défaut à la profondeur de la zone.",	
-			"fluidCanvas": {	
+			"canvas": {	
 				"delay.label":"Délai",
 				"duration.label":"Durée",
 				"intensity.label":"Intensité",
 				"iteration.label":"Itération",
-				"label":"Kandashi's Fluid Canvas",
+				"label":"Canvas",
 				"type.label":"Type",
 				"notes": "Invoque les effets Fluid Canvas au début de l'effet de danger."
 			},	

@@ -35,7 +35,7 @@ export class dangerZone {
     DANGERZONEDANGERAUDIO: `modules/${this.ID}/templates/danger-form-audio.hbs`,
     DANGERZONEDANGERBACKGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-background-effect.hbs`,
     DANGERZONEDANGERCOMBAT: `modules/${this.ID}/templates/danger-form-combat.hbs`,
-    DANGERZONEDANGERFLUIDCANVAS: `modules/${this.ID}/templates/danger-form-fluid-canvas.hbs`,
+    DANGERZONEDANGERCANVAS: `modules/${this.ID}/templates/danger-form-canvas.hbs`,
     DANGERZONEDANGERFOREGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-foreground-effect.hbs`,
     DANGERZONEDANGERGLOBALZONE: `modules/${this.ID}/templates/danger-form-global-zone.hbs`,
     DANGERZONEDANGERITEM: `modules/${this.ID}/templates/danger-form-item.hbs`,
