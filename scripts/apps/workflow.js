@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, warpgateOn, wallHeightOn, itemPileOn} from '../index.js';
+import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, warpgateOn, wallHeightOn, itemPileOn, fluidCanvasOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
@@ -564,8 +564,8 @@ export class executor {
                 case 'ambientLight': 
                     be = new ambientLight(this.danger.ambientLight, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
-                case 'fluidCanvas': 
-                    be = new fluidCanvas(this.danger.canvas, this.data, name, EXECUTABLEOPTIONS[name]);
+                case 'canvas': 
+                    be = new Canvas(this.danger.canvas, this.data, name, EXECUTABLEOPTIONS[name]);
                     break;
                 case 'damage': 
                     be = new damageToken(this.danger.damage, this.data, name, EXECUTABLEOPTIONS[name]); 
@@ -1676,10 +1676,10 @@ class flavor extends executable{
 
 }
 
-class fluidCanvas extends executable{
+class Canvas extends executable{
     
     get duration(){
-        return this._part.duration ? this._part.duration : 500
+        return this._part.effect.duration ?? 500
     }
 
     get has(){
@@ -1687,15 +1687,19 @@ class fluidCanvas extends executable{
     }
 
     get intensity(){
-        return this._part.intensity ? this._part.intensity : 1
+        return this._part.effect.intensity ?? 1
     }
 
     get iteration(){
-        return this._part.iteration ? this._part.iteration : 3
+        return this._part.effect.iteration ?? 3
+    }
+
+    get pan(){
+        return this._part.pan ?? {}
     }
     
     get type(){
-        return this._part.type
+        return this._part.effect.type
     }
 
     get isToggle(){
@@ -1713,29 +1717,47 @@ class fluidCanvas extends executable{
     async play(){
         await super.play()
         if(this._cancel) return
-        switch(this.type){
-            case 'blur':
-                await KFC.executeAsGM(this.type, this.users, this.intensity);
-                break;
-            case 'drug':
-                await KFC.executeAsGM(this.type, this.users, this.intensity, this.duration, this.iteration);
-                break;
-            case 'black':
-            case 'negative':
-            case 'sepia':
-                await KFC.executeAsGM(this.type, this.users);
-                break;
-            case 'fade':
-                await KFC.executeAsGM(this.type);
-                break;
-            case 'spin':
-            case 'earthquake':
-            case 'heartbeat':
-                await KFC.executeForEveryone(this.type, this.intensity, this.duration, this.iteration);
-                break;
+        if(sequencerOn && (this.type === 'shake' || this.pan.active)){
+            let s = new Sequence().canvasPan()
+            if(this.pan.active){
+                s = s.atLocation(this.data.boundary.center)
+                    if(this.pan.speed) s = s.speed(this.pan.speed) 
+                    if(this.pan.scale) s = s.scale(this.pan.scale)
+                    if(this.pan.lock) s = s.lockView(this.pan.lock) 
+            }
+            if(this.type ==='shake')
+                s = s.shake({
+                            duration: this.duration,
+                            strength: this.intensity,
+                            frequency: this.iteration
+                        })
+            return s.play()
         }
-        await this._for();
-        await this.off();
+        if(fluidCanvasOn){
+            switch(this.type){
+                case 'blur':
+                    await KFC.executeAsGM(this.type, this.users, this.intensity);
+                    break;
+                case 'drug':
+                    await KFC.executeAsGM(this.type, this.users, this.intensity, this.duration, this.iteration);
+                    break;
+                case 'black':
+                case 'negative':
+                case 'sepia':
+                    await KFC.executeAsGM(this.type, this.users);
+                    break;
+                case 'fade':
+                    await KFC.executeAsGM(this.type);
+                    break;
+                case 'spin':
+                case 'earthquake':
+                case 'heartbeat':
+                    await KFC.executeForEveryone(this.type, this.intensity, this.duration, this.iteration);
+                    break;
+            }
+            await this._for();
+            await this.off();
+        }
     }
 
     async _for(){

@@ -573,24 +573,31 @@
             "confirm": "Are you sure you want to delete this danger's",
             "dimensions.label": "Dimensions",
             "dimensions.description": "Width and height dimensions are measured in scene grids.\nIf the width or height = 0 then that dimension will default to the zone's dimension.\nFor depth, specify the difference in grid units between the top and bottom elevations.\nA depth of 0 will default to the zone's depth.",
-            "fluidCanvas": {
+            "canvas": {
+                "active.label": "Pan to Targeted Location",
                 "delay.label":"Delay Start",
-                "description": "Invoke canvas wide effects at the start of the danger effect using Kandashi's Fluid Canvas module.",
+                "description": "Invoke canvas-wide effects and panning.",
                 "duration.label":"Duration",
+                "effect.label": "Effect",
                 "intensity.label":"Intensity",
-                "iteration.label":"Number of Repeats",
+                "iteration.label":"Frequency",
                 "label":"Canvas",
+                "lock.label": "Lock View After Pan For",
+                "pan.label": "Pan",
+                "scale.label": "Scale",
+                "speed.label": "Speed",
                 "type.label":"Effect Type",
                 "types":{
-                    "black":"Black",
-                    "blur":"Blur",
-                    "drug":"Drug",
-                    "earthquake":"Earthquake",
-                    "fade":"Fade",
-                    "heartbeat":"Heart Beat",
-                    "negative":"Negative",
-                    "sepia":"Sepia",
-                    "spin":"Spin"
+                    "shake": "Canvas Shake",
+                    "fluid-canvas-black":"Fluid Canvas: Black",
+                    "fluid-canvas-blur":"Fluid Canvas: Blur",
+                    "fluid-canvas-drug":"Fluid Canvas: Drug",
+                    "fluid-canvas-earthquake":"Fluid Canvas: Earthquake",
+                    "fluid-canvas-fade":"Fluid Canvas: Fade",
+                    "fluid-canvas-heartbeat":"Fluid Canvas: Heart Beat",
+                    "fluid-canvas-negative":"Fluid Canvas: Negative",
+                    "fluid-canvas-sepia":"Fluid Canvas: Sepia",
+                    "fluid-canvas-spin":"Fluid Canvas: Spin"
                 }
             },
             "foregroundEffect":{
