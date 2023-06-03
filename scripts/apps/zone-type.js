@@ -251,6 +251,20 @@ export class dangerZoneType {
           delay: 0,
           duration: 0,
           file: '',
+          offset: {
+            x: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            },
+            y: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            }
+          },
           randomFile: false,
           repeat: 0,
           rotate: false,
