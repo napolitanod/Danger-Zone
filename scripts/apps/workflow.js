@@ -7,6 +7,11 @@ import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntitie
 async function delay(delay){
     if(delay) await wait(delay)
 }
+
+function biRandom() {
+    return Math.random() < 0.5 ? true : false
+}
+
 export class workflow {
 
     constructor(zone, trigger, options = {}) {
@@ -215,6 +220,16 @@ class executorData {
         this.eligibleTargets = [],
         this.likelihoodResult = 100,
         this.location = options.location ? new point(options.location) : {},
+        this.offset = {
+            x:{
+                random: Math.random(),
+                flipLocation: biRandom()
+            },
+            y:{
+                random: Math.random(),
+                flipLocation: biRandom()
+            }
+        },
         this._options = options,
         this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
         this.save = {failed: options.save?.failed ? options.save?.failed : [], succeeded: options.save?.succeeded ? options.save?.succeeded : []},
@@ -991,6 +1006,10 @@ class executable {
         return this.targets.length ? true : false
     }
 
+    get offset(){
+        return this._part.offset
+    }
+
     get likelihood(){
         return this._part.likelihood ? this._part.likelihood : 100
     }
@@ -1050,6 +1069,10 @@ class executable {
         return this.data.zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.data.sources);
     }   
 
+    _setBoundary(){
+        this.boundary = !this.offset ? this.data.boundary : boundary.offsetBoundary(this.data.boundary, this.data.offset, this.offset, this.data.scene)
+    }
+
     async check(){
         await this.checkLikelihood()
         if(!this.likelihoodMet) this.informLikelihood();
@@ -1060,6 +1083,13 @@ class executable {
             const roll = await maybe();
             this.likelihoodResult = roll.result;
         }
+    }
+
+    flipContent(axis){
+        if (typeof this.offset[axis].flip == "boolean") {
+            return false
+        }
+        return ((this.offset[axis].flip === 'A' || (this.offset[axis].flip === 'N' && biRandom()) || (['B','S'].includes(this.offset[axis].flip) && this.data.offset[axis].flipLocation)) ? true : false)
     }
 
     informLikelihood(){
@@ -1074,7 +1104,7 @@ class executable {
 
     async play(){  
         this.setExecuted()
-        if (this.hasBoundaryScope && !this.data.hasBoundary) this._cancel = true
+        if (this.hasBoundaryScope && !this.data.hasBoundary) {this._cancel = true} else {this._setBoundary()}
     }
 
     randomize(){
@@ -1282,14 +1312,14 @@ class ambientLight extends executable{
                 shadows: this.shadows
             },               
             hidden: false,
-            rotation: this.rotation,
+            rotation: this._flipRotation(),
             vision: false,
             walls: true,
-            x: this.data.boundary.center.x,
-            y: this.data.boundary.center.y,
+            x: this.boundary.center.x,
+            y: this.boundary.center.y,
             flags: this.flag
         }
-        if(levelsOn && (this.data.boundary.bottom || this.data.boundary.top)) light.flags['levels'] = {"rangeTop": this.data.boundary.top,"rangeBottom": this.data.boundary.bottom}
+        if(levelsOn && (this.boundary.bottom || this.boundary.top)) light.flags['levels'] = {"rangeTop": this.boundary.top,"rangeBottom": this.boundary.bottom}
         if(taggerOn && this.tag) light.flags['tagger'] = this.taggerTag
         return light
     }
@@ -1300,6 +1330,19 @@ class ambientLight extends executable{
         this.lights = await this.data.scene.createEmbeddedDocuments("AmbientLight",[this._light]);
         if(this._part.clear.type) this._postEvent() 
         if(this._part.clear.type !== 'D') await this.data.fillSourceAreas()
+    }
+
+    _flipRotation(){
+        const xFlip = this.flipContent('x');
+        const yFlip = this.flipContent('y');
+        let flipAmt = 0
+        if(xFlip){
+            if(yFlip) {flipAmt = 180} else {flipAmt = this.offset.x.adj}
+        } else if(yFlip) {flipAmt = this.offset.y.adj}
+        let ang = this.rotation + flipAmt;
+        if(ang < 0){ang = 360 + ang} 
+        else if (ang >= 360) {ang = 360 - ang}
+        return ang
     }
 
     async _postEvent(){
@@ -1720,7 +1763,7 @@ class Canvas extends executable{
         if(sequencerOn && (this.type === 'shake' || this.pan.active)){
             let s = new Sequence().canvasPan()
             if(this.pan.active){
-                s = s.atLocation(this.data.boundary.center)
+                s = s.atLocation(this.boundary.center)
                     if(this.pan.speed) s = s.speed(this.pan.speed) 
                     if(this.pan.scale) s = s.scale(this.pan.scale)
                     if(this.pan.lock) s = s.lockView(this.pan.lock) 
@@ -1827,7 +1870,7 @@ class item extends executable {
             if(!this.items.length) return 
         }
         if(this.pile && itemPileOn) {
-            const pilePos = canvas.grid.grid.getTopLeft(this.data.boundary.center.x, this.data.boundary.center.y)
+            const pilePos = canvas.grid.grid.getTopLeft(this.boundary.center.x, this.boundary.center.y)
             await ItemPiles.API.createItemPile({position: {x: pilePos[0], y: pilePos[1]}, sceneId: this.data.scene.id, items: this.items, pileActorName: false})
             return
         }
@@ -1920,7 +1963,7 @@ class lastingEffect extends executableWithFile{
 
     build(){
         const tiles = [];
-        const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
+        const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.boundary]
         for(let i = 0; i < boundaries.length; i++){
             tiles.push(this._tile(boundaries[i], i))
         }
@@ -1938,7 +1981,7 @@ class lastingEffect extends executableWithFile{
     }
 
     _pairedBoundary(index){
-        if(!this.data.hasDualBoundaries) return this.data.boundary
+        if(!this.data.hasDualBoundaries) return this.boundary
         if(index % 2 && this.data.dualBoundaries.length >= index) return this.data.dualBoundaries[index-1]
         if(this.data.dualBoundaries.length >= index+1) return this.data.dualBoundaries[index+1]
         return this.data.dualBoundaries[index]
@@ -1958,8 +2001,11 @@ class lastingEffect extends executableWithFile{
             },
             overhead: (levelsOn && boundary.bottom > 0) ? true : this.overhead,
             roof: this.roof,
-            rotation: 0,
-            scale: this.scale,
+            texture: {
+                rotation: 0,
+                scaleX: this.flipContent('x') ? this.scale * -1 : this.scale,
+                scaleY: this.flipContent('y') ? this.scale * -1 : this.scale
+            },
             width: boundary.width * this.scale,
             video: {autoplay: true, loop: this.loop, volume: 0},
             x: boundary.A.x - ((this.scale - 1) *  (boundary.width/2)),
@@ -2136,7 +2182,7 @@ class primaryEffect extends executableWithFile {
     
     async _build(){
         let s = new Sequence(), play = true;
-        const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
+        const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.boundary]
         for (const bound of boundaries){
             if(this.hasSources){
                 let tagged;
@@ -2167,6 +2213,8 @@ class primaryEffect extends executableWithFile {
         s = s.effect()
             .file(this._file)
             .zIndex(boundary.top)
+            .mirrorX(this.flipContent('x'))
+            .mirrorY(this.flipContent('y'))
             if(source.center){
                 s = s.atLocation(source.center)
                     .stretchTo(boundary.center)
@@ -2175,7 +2223,6 @@ class primaryEffect extends executableWithFile {
             } else {
                 s = s.atLocation(boundary.center)
                     .scale(this.scale)
-                    .randomizeMirrorX();
                     if(this.duration) s = s.duration(this.duration)
             }
             if(this.repeat) s = s.repeats(this.repeat)
@@ -2507,7 +2554,7 @@ class secondaryEffect extends executableWithFile {
 
     async _build(){
         let s = new Sequence();
-        const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.data.boundary]
+        const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.boundary]
         for (const boundary of boundaries){
             s = this._sequence(boundary, s);
         }
@@ -2519,6 +2566,8 @@ class secondaryEffect extends executableWithFile {
             .file(this._file)
             .zIndex(boundary.bottom)
             .atLocation(boundary.center)
+            .mirrorX(this.flipContent('x'))
+            .mirrorY(this.flipContent('y'))
             .scale(this.scale);
             if(this.duration) s = s.duration(this.duration)
             if(this.repeat) s = s.repeats(this.repeat)
@@ -2565,8 +2614,8 @@ class sound extends executableWithFile {
             radius: this.radius,
             volume: this.volume, 
             walls: this.walls, 
-            x: this.data.boundary.center.x,
-            y: this.data.boundary.center.y
+            x: this.boundary.center.x,
+            y: this.boundary.center.y
         }
         return sound
     }
@@ -2743,7 +2792,7 @@ class spawn extends executable {
     }
 
     get updates(){
-        const updates = {token: {elevation: this.data.boundary.bottom}}
+        const updates = {token: {elevation: this.boundary.bottom}}
         if(this.tag) updates.token['flags'] = {"tagger":this.taggerTag}
         return updates
     }
@@ -2753,7 +2802,7 @@ class spawn extends executable {
         if(this._cancel) return
         const token = await this.token();
         if(token) {
-            this.data.spawn.tokens = await warpgate.spawnAt(this.data.boundary.center, token, this.updates, {}, this.options);
+            this.data.spawn.tokens = await warpgate.spawnAt(this.boundary.center, token, this.updates, {}, this.options);
             if(this._part.mutate) this.data.spawn.mutate = true;
         }
         await this.data.fillSources()
@@ -2885,10 +2934,10 @@ class tokenMove extends executable {
             for (const token of this.targets) { 
                 let amtV = this._v(), amtH = this._hz(), amtE = this._e(), e, x, y;
                 if(this.sToT && this.data.sources.find(s => s.id === token.id)){
-                    let location = this.data.boundary.center;
+                    let location = this.boundary.center;
                     let tokenBoundary = boundary.documentBoundary("Token", token);
                     x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
-                    e = this.data.boundary.bottom;
+                    e = this.boundary.bottom;
                 } else if (this.movesTargets) {
                     [x, y] = this.walls ? furthestShiftPosition(token, [amtH, amtV]) : canvas.grid.grid.shiftPosition(token.x, token.y, amtH, amtV)
                     e = this.e.type === 'S' ? amtE : token.elevation + amtE;
@@ -3062,10 +3111,10 @@ class wall extends executable {
 
     get _build(){
         const walls = [];
-        if(this.top && this.randomize()) walls.push(this._wall(this.data.boundary.A, {x: this.data.boundary.B.x, y: this.data.boundary.A.y}))
-        if(this.right && this.randomize()) walls.push(this._wall({x: this.data.boundary.B.x, y: this.data.boundary.A.y}, this.data.boundary.B))
-        if(this.bottom && this.randomize()) walls.push(this._wall(this.data.boundary.B, {x: this.data.boundary.A.x, y: this.data.boundary.B.y}))
-        if(this.left && this.randomize()) walls.push(this._wall({x: this.data.boundary.A.x, y: this.data.boundary.B.y}, this.data.boundary.A))
+        if(this.top && this.randomize()) walls.push(this._wall(this.boundary.A, {x: this.boundary.B.x, y: this.boundary.A.y}))
+        if(this.right && this.randomize()) walls.push(this._wall({x: this.boundary.B.x, y: this.boundary.A.y}, this.boundary.B))
+        if(this.bottom && this.randomize()) walls.push(this._wall(this.boundary.B, {x: this.boundary.A.x, y: this.boundary.B.y}))
+        if(this.left && this.randomize()) walls.push(this._wall({x: this.boundary.A.x, y: this.boundary.B.y}, this.boundary.A))
         return walls
     }
 
@@ -3093,7 +3142,7 @@ class wall extends executable {
             threshold: this.threshold,
             flags: this.data.flag
         }
-        if(wallHeightOn && (this.data.boundary.bottom || this.data.boundary.top)) wall.flags['wallHeight'] = {"wallHeightTop": this.data.boundary.top-1, "wallHeightBottom": this.data.boundary.bottom}
+        if(wallHeightOn && (this.boundary.bottom || this.boundary.top)) wall.flags['wallHeight'] = {"wallHeightTop": this.boundary.top-1, "wallHeightBottom": this.boundary.bottom}
         if(taggerOn && this.tag) wall.flags['tagger'] = this.taggerTag
         return wall;
     }  

@@ -70,6 +70,79 @@
                 </select>
             </div>
         </div>
+        <hr>
+        <fieldset>
+            <legend>{{localize "DANGERZONE.type-form.offset.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.offset.description'}}"><i class="fas fa-info-circle"></i></span>
+            </legend>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.x.label"}}</label>
+                <div class="form-fields">
+                    <select name="offset.x.type" value="{{data.offset.x.type}}"> 
+                        {{selectOptions offsetOps selected=data.offset.x.type localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <div class="form-fields">  
+                    <label for="offset.x.min">{{localize "DANGERZONE.type-form.offset.min.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="offset.x.min" step="1" value={{#if data.offset.x.min}}{{data.offset.x.min}}{{else}}0{{/if}}>
+                    <label for="offset.x.max">{{localize "DANGERZONE.type-form.offset.max.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="offset.x.max" step="1" value={{#if data.offset.x.max}}{{data.offset.x.max}}{{else}}0{{/if}}>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.flip.label"}}
+                    <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.offset.flip.description-rotation'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <select name="offset.x.flip" value="{{data.offset.x.flip}}"> 
+                        {{selectOptions mirrorOps selected=data.offset.x.flip localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.adj.label"}}</label>
+                <div class="form-fields">  
+                    <input type="number" required data-dtype="Number" name="offset.x.adj" step="1" value={{#if data.offset.x.adj}}{{data.offset.x.adj}}{{else}}0{{/if}}>
+                </div>
+            </div>
+            <hr>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.y.label"}}</label>
+                <div class="form-fields">
+                    <select name="offset.y.type" value="{{data.offset.y.type}}"> 
+                        {{selectOptions offsetOps selected=data.offset.y.type localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <div class="form-fields">  
+                    <label for="offset.y.min">{{localize "DANGERZONE.type-form.offset.min.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="offset.y.min" step="1" value={{#if data.offset.y.min}}{{data.offset.y.min}}{{else}}0{{/if}}>
+                    <label for="offset.y.max">{{localize "DANGERZONE.type-form.offset.max.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="offset.y.max" step="1" value={{#if data.offset.y.max}}{{data.offset.y.max}}{{else}}0{{/if}}>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.flip.label"}}
+                    <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.offset.flip.description-rotation'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <select name="offset.y.flip" value="{{data.offset.y.flip}}"> 
+                        {{selectOptions mirrorOps selected=data.offset.y.flip localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.adj.label"}}</label>
+                <div class="form-fields">  
+                    <input type="number" required data-dtype="Number" name="offset.y.adj" step="1" value={{#if data.offset.y.adj}}{{data.offset.y.adj}}{{else}}0{{/if}}>
+                </div>
+            </div>
+        </fieldset>
         <div class="form-group {{#if taggerOnNot}}dz-hidden{{/if}}">
             <label for="tag">{{localize "DANGERZONE.type-form.light.tag.label"}}</label>
             <div class="form-fields">

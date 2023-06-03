@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {activeEffectOn, daeOn, fluidCanvasOn, fxMasterOn, itemPileOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MOVETYPES, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MIRRORIMAGEOPTIONS, MIRRORROTATIONOPTIONS, MOVETYPES, OFFSETOPTIONS, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -667,7 +667,11 @@ class DangerZoneDangerFormBackgroundEffect extends FormApplication {
       }
 
     getData(options) {
-      return this.data
+      return {
+        data: this.data,
+        offsetOps: OFFSETOPTIONS,
+        mirrorOps: MIRRORIMAGEOPTIONS
+      }
     }
 
     activateListeners(html) {
@@ -775,7 +779,9 @@ class DangerZoneDangerFormForegroundEffect extends FormApplication {
       return {
         data: this.data,
         taggerOnNot: !taggerOn,
-        targetOps: SOURCEDANGERLOCATION
+        targetOps: SOURCEDANGERLOCATION,
+        offsetOps: OFFSETOPTIONS,
+        mirrorOps: MIRRORIMAGEOPTIONS
       }
     }
 
@@ -941,7 +947,9 @@ class DangerZoneDangerFormLastingEffect extends FormApplication {
         monksActiveTiles: this.data.monksActiveTiles,
         monksActiveTilesOnNot: !monksActiveTilesOn,
         occlusionModesOps: TILEOCCLUSIONMODES,
-        taggerOnNot: !taggerOn
+        taggerOnNot: !taggerOn,
+        offsetOps: OFFSETOPTIONS,
+        mirrorOps: MIRRORIMAGEOPTIONS
       }
     }
 
@@ -989,7 +997,9 @@ class DangerZoneDangerFormLight extends FormApplication {
         data: this.data,
         hasPerfectVision: perfectVisionOn,
         lightAnimations: animationTypes(),
-        taggerOnNot: !taggerOn
+        taggerOnNot: !taggerOn,
+        offsetOps: OFFSETOPTIONS,
+        mirrorOps: MIRRORROTATIONOPTIONS
         }
     }
 
@@ -1111,7 +1121,10 @@ class DangerZoneDangerFormSound extends FormApplication {
       }
 
     getData(options) {
-      return this.data
+      return {
+        data: this.data,
+        offsetOps: OFFSETOPTIONS
+       }
     }
 
     activateListeners(html) {
@@ -1467,7 +1480,9 @@ class DangerZoneDangerFormWall extends FormApplication {
         moveTypes: MOVETYPES,
         senseTypes: SENSETYPES,
         dirTypes: dirTypes(),
-        doorTypes: doorTypes()
+        doorTypes: doorTypes(),
+        offsetOps: OFFSETOPTIONS,
+        mirrorOps: MIRRORIMAGEOPTIONS
         }
     }
 

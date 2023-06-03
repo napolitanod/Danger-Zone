@@ -231,6 +231,30 @@ export const FLUIDCANVASTYPES = {
     "spin": "DANGERZONE.type-form.canvas.types.fluid-canvas-spin"
 }
 
+export const OFFSETOPTIONS = {
+    "": "DANGERZONE.type-form.offset.type.options.non.label",
+    "pct": "DANGERZONE.type-form.offset.type.options.pct.label",
+    "pxl": "DANGERZONE.type-form.offset.type.options.pxl.label"
+}
+
+export const MIRRORIMAGEOPTIONS = {
+    "": "DANGERZONE.type-form.offset.flip.options.none.label",
+    "L": "DANGERZONE.type-form.offset.flip.options.location.label",
+    "A": "DANGERZONE.type-form.offset.flip.options.image-always.label",
+    "S": "DANGERZONE.type-form.offset.flip.options.image-sometimes.label",
+    "B": "DANGERZONE.type-form.offset.flip.options.both.label",
+    "N": "DANGERZONE.type-form.offset.flip.options.any.label"
+}
+
+export const MIRRORROTATIONOPTIONS = {
+    "": "DANGERZONE.type-form.offset.flip.options.none.label",
+    "L": "DANGERZONE.type-form.offset.flip.options.location.label",
+    "A": "DANGERZONE.type-form.offset.flip.options.rotation-always.label",
+    "S": "DANGERZONE.type-form.offset.flip.options.rotation-sometimes.label",
+    "B": "DANGERZONE.type-form.offset.flip.options.both.label",
+    "N": "DANGERZONE.type-form.offset.flip.options.any.label"
+}
+
 export const SOURCETRIGGERS = {
     "": "DANGERZONE.edit-form.source.triggers.any",
     "C": "DANGERZONE.edit-form.source.triggers.scene",

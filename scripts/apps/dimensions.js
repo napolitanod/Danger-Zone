@@ -145,6 +145,7 @@ export class boundary{
             y: b.y ? Math.max(a.y ? a.y : b.y, b.y) : 0,
             z: b.z ? Math.max(a.z ? a.z : b.z, b.z) : 0
         },
+        this.offset = options.offset,
         this.excludes = options.excludes ? options.excludes : new Set(),
         this.universe = options.universe ? options.universe : (options.limit?.target ? new Set() : ''),
         this.gridIndex = new Set();
@@ -334,6 +335,38 @@ export class boundary{
         let [x1,y1] = canvas.grid.grid.shiftPosition(point.x, point.y, units.w, units.h)
         dangerZone.log(false,'Location to boundary...', {point: point, units: units, options: options});
         return new boundary(point,{x:x1, y:y1, z:(point.z + units.d)},options)
+    }
+
+    static offsetBoundary(bndry, globalOffset, offset, scene = canvas.scene){
+        function flip(flip, flipLocation){
+            if (typeof flip == "boolean") {
+                return ((flip && flipLocation) ? -1 : 1)
+            }
+            return ((['N', 'L', 'B'].includes(flip) && flipLocation) ? -1 : 1 )
+        }
+        const obj = {A: {x: 0, y: 0, z: 0}, B: {x: 0, y: 0, z: 0}, options: {offset: {x: {flip: 0, amt: 0}, y: {flip: 0, amt: 0}}, retain: true}};
+        obj.options.offset.x.flip = flip(offset.x.flip, globalOffset.x.flipLocation)
+        obj.options.offset.y.flip = flip(offset.y.flip, globalOffset.y.flipLocation)
+        obj.options.offset.x.amt = boundary.offsetAxis(offset.x, obj.options.offset.x.flip, scene, globalOffset.x.random)
+        obj.options.offset.y.amt = boundary.offsetAxis(offset.y, obj.options.offset.y.flip, scene, globalOffset.y.random)
+        Object.assign(obj.A, {x: bndry.A.x + obj.options.offset.x.amt, y:bndry.A.y + obj.options.offset.y.amt, z: bndry.A.z})
+        Object.assign(obj.B, {x: bndry.B.x + obj.options.offset.x.amt, y:bndry.B.y + obj.options.offset.y.amt, z: bndry.B.z})
+        return new boundary(obj.A, obj.B, obj.options)
+    }
+
+    static offsetAxis(offsetAxis, flip, scene, random){
+        function randomRange(min, max, random){
+            if(min === max) return min
+            return (Math.floor(random * (max - min + 1)) + min)
+        }
+        switch(offsetAxis.type){
+            case "pxl":
+                return (randomRange(offsetAxis.min, offsetAxis.max, random) * flip)
+            case "pct":
+                return (Math.floor((randomRange(offsetAxis.min, offsetAxis.max, random)/100) * scene.dimensions.size) * flip)
+            default:
+                return 0
+        }
     }
 
     tokensIn(tokens){
