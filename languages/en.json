@@ -720,7 +720,7 @@
                     "flip": {
                         "description": "Mirrors the location offset randomly.",
                         "description-image": "Mirrors the image either randomly or always and mirrors the location offset. Selecting 'both' will mirror the location and image always while selecting 'any' will mirror each randomnly.",
-                        "description-rotation": "Moves the rotation degrees (180 degrees if both x and y are mirrored) either randomly or always and mirrors the location offset. Selecting 'both' will mirror the location and adjust rotation always while selecting 'any' will mirror/adjust each randomnly.",
+                        "description-rotation": "Moves the rotation degrees either randomly or always and mirrors the location offset. Selecting 'both' will mirror the location and adjust rotation always while selecting 'any' will mirror/adjust each randomnly.",
                         "label": "Mirror",
                         "options": {
                             "image-sometimes.label": "Image (sometimes)",

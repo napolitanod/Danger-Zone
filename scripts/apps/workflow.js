@@ -1337,7 +1337,7 @@ class ambientLight extends executable{
         const yFlip = this.flipContent('y');
         let flipAmt = 0
         if(xFlip){
-            if(yFlip) {flipAmt = 180} else {flipAmt = this.offset.x.adj}
+            if(yFlip) {flipAmt = this.offset.x.adj + this.offset.y.adj} else {flipAmt = this.offset.x.adj}
         } else if(yFlip) {flipAmt = this.offset.y.adj}
         let ang = this.rotation + flipAmt;
         if(ang < 0){ang = 360 + ang} 
