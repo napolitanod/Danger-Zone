@@ -1189,7 +1189,9 @@ class DangerZoneDangerFormSourceEffect extends FormApplication {
       return {
         data: this.data,
         taggerOnNot: !taggerOn,
-        targetOps: SOURCEDANGERLOCATION
+        targetOps: SOURCEDANGERLOCATION,
+        offsetOps: OFFSETOPTIONS,
+        mirrorOps: MIRRORIMAGEOPTIONS
       }
     }
 

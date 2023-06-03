@@ -959,6 +959,7 @@ export class executor {
 
 class executable {
     constructor(part = {}, data = executorData, id, options = {}, flags = {}){
+        this.boundary = {},
         this._cancel = false,
         this.data = data,
         this._document = options.document,
@@ -971,11 +972,16 @@ class executable {
         this._flags = flags,
         this._part = part,
         this.scope = options.scope,
+        this.twinBoundary = {},
         this.wipeable = options.wipeable ? true : false
     }
 
     get delay(){
         return this._part.delay ? this._part.delay : 0
+    }
+
+    get dualBoundaries(){
+        return Object.keys(this.twinBoundary).length ? [this.boundary, this.twinBoundary] : [this.boundary]
     }
 
     get has(){
@@ -1070,7 +1076,14 @@ class executable {
     }   
 
     _setBoundary(){
-        this.boundary = !this.offset ? this.data.boundary : boundary.offsetBoundary(this.data.boundary, this.data.offset, this.offset, this.data.scene)
+        if(!this.offset){
+            this.boundary = this.data.boundary;
+            this.twinBoundary = this.data.twinBoundary
+        } else {
+            this.boundary = boundary.offsetBoundary(this.data.boundary, this.data.offset, this.offset, this.data.scene)
+            if(this.data.danger.hasTwinBoundary) this.twinBoundary = boundary.offsetBoundary(this.data.twinBoundary, this.data.offset, this.offset, this.data.scene)
+        }
+       
     }
 
     async check(){
@@ -1963,7 +1976,7 @@ class lastingEffect extends executableWithFile{
 
     build(){
         const tiles = [];
-        const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.boundary]
+        const boundaries = this.data.twinDanger ? this.dualBoundaries : [this.boundary]
         for(let i = 0; i < boundaries.length; i++){
             tiles.push(this._tile(boundaries[i], i))
         }
@@ -1982,9 +1995,9 @@ class lastingEffect extends executableWithFile{
 
     _pairedBoundary(index){
         if(!this.data.hasDualBoundaries) return this.boundary
-        if(index % 2 && this.data.dualBoundaries.length >= index) return this.data.dualBoundaries[index-1]
-        if(this.data.dualBoundaries.length >= index+1) return this.data.dualBoundaries[index+1]
-        return this.data.dualBoundaries[index]
+        if(index % 2 && this.dualBoundaries.length >= index) return this.dualBoundaries[index-1]
+        if(this.dualBoundaries.length >= index+1) return this.dualBoundaries[index+1]
+        return this.dualBoundaries[index]
     }
 
     _tile(boundary, index = 0){
@@ -2722,7 +2735,8 @@ class sourceEffect extends executableWithFile {
         let s = new Sequence();
         for (const source of this.sourcesSelected){
             const documentName = source.documentName ? source.documentName : source.document.documentName;
-            const bound = boundary.documentBoundary(documentName, source)
+            const docBound = boundary.documentBoundary(documentName, source)
+            const bound = !this.offset ? docBound : boundary.offsetBoundary(docBound, this.data.offset, this.offset, this.data.scene)
             s = this._sequence(bound, s);
         }
         return s
@@ -2733,6 +2747,8 @@ class sourceEffect extends executableWithFile {
             .file(this._file)
             .zIndex(boundary.bottom)
             .atLocation(boundary.center)
+            .mirrorX(this.flipContent('x'))
+            .mirrorY(this.flipContent('y'))
             .scale(this.scale);
             if(this.duration) s = s.duration(this.duration)
             if(this.repeat) s = s.repeats(this.repeat)
