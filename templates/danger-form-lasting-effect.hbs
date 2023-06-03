@@ -86,6 +86,66 @@
             </div>
         </div>
         <hr>
+        <fieldset>
+            <legend>{{localize "DANGERZONE.type-form.offset.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.offset.description'}}"><i class="fas fa-info-circle"></i></span>
+            </legend>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.x.label"}}</label>
+                <div class="form-fields">
+                    <select name="lastingEffect.offset.x.type" value="{{lastingEffect.offset.x.type}}"> 
+                        {{selectOptions offsetOps selected=lastingEffect.offset.x.type localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <div class="form-fields">  
+                    <label for="offset.x.min">{{localize "DANGERZONE.type-form.offset.min.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="lastingEffect.offset.x.min" step="1" value={{#if lastingEffect.offset.x.min}}{{lastingEffect.offset.x.min}}{{else}}0{{/if}}>
+                    <label for="offset.x.max">{{localize "DANGERZONE.type-form.offset.max.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="lastingEffect.offset.x.max" step="1" value={{#if lastingEffect.offset.x.max}}{{lastingEffect.offset.x.max}}{{else}}0{{/if}}>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.flip.label"}}
+                    <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.offset.flip.description-image'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <select name="lastingEffect.offset.x.flip" value="{{lastingEffect.offset.x.flip}}"> 
+                        {{selectOptions mirrorOps selected=lastingEffect.offset.x.flip localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <hr>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.y.label"}}</label>
+                <div class="form-fields">
+                    <select name="lastingEffect.offset.y.type" value="{{lastingEffect.offset.y.type}}"> 
+                        {{selectOptions offsetOps selected=lastingEffect.offset.y.type localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <div class="form-fields">  
+                    <label for="offset.y.min">{{localize "DANGERZONE.type-form.offset.min.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="lastingEffect.offset.y.min" step="1" value={{#if lastingEffect.offset.y.min}}{{lastingEffect.offset.y.min}}{{else}}0{{/if}}>
+                    <label for="offset.y.max">{{localize "DANGERZONE.type-form.offset.max.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="lastingEffect.offset.y.max" step="1" value={{#if lastingEffect.offset.y.max}}{{lastingEffect.offset.y.max}}{{else}}0{{/if}}>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.flip.label"}}
+                    <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.offset.flip.description-image'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <select name="lastingEffect.offset.y.flip" value="{{lastingEffect.offset.y.flip}}"> 
+                        {{selectOptions mirrorOps selected=lastingEffect.offset.y.flip localize=true}}
+                    </select>   
+                </div>
+            </div>
+        </fieldset>
         <div class="form-group">
             <label for="lastingEffect.delay">{{localize "DANGERZONE.type-form.tile.delay.label"}}</label>
             <div class="form-fields">

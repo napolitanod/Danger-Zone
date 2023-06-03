@@ -5,13 +5,13 @@
             <label for="file">{{localize "DANGERZONE.type-form.backgroundEffect.file.label"}}</label>
             <div class="form-fields">
                 {{filePicker target="file" type="imagevideo"}}
-                <input type="text" required name="file" class="image" placeholder="{{localize "DANGERZONE.type-form.backgroundEffect.file.placeholder"}}" value="{{file}}">
+                <input type="text" required name="file" class="image" placeholder="{{localize "DANGERZONE.type-form.backgroundEffect.file.placeholder"}}" value="{{data.file}}">
             </div>
         </div>
         <div class="form-group">
             <label for="randomFile">{{localize "DANGERZONE.type-form.backgroundEffect.randomFile.label"}}</label>
             <div class="form-fields">
-                <input type="checkbox" data-dtype="Boolean" name="randomFile" {{checked randomFile}}>
+                <input type="checkbox" data-dtype="Boolean" name="randomFile" {{checked data.randomFile}}>
             </div>
         </div>
         <div class="form-group">
@@ -19,26 +19,26 @@
                 <span class="units">{{localize 'DANGERZONE.ratio'}}</span>
             </label>
             <div class="form-fields">
-                <input type="number" required name="scale" min="0.01" max="50" step="0.01" value={{scale}}>
+                <input type="number" required name="scale" min="0.01" max="50" step="0.01" value={{data.scale}}>
             </div>
         </div>
         <div class="form-group">
             <label for="rotate">{{localize "DANGERZONE.type-form.backgroundEffect.rotate.label"}}</label>
             <div class="form-fields">
-                <input type="checkbox" data-dtype="Boolean" name="rotate" {{checked rotate}}>
+                <input type="checkbox" data-dtype="Boolean" name="rotate" {{checked data.rotate}}>
             </div>
         </div>
         <div class="form-group">
             <label for="repeat">{{localize "DANGERZONE.type-form.backgroundEffect.repeat.label"}}</label>
             <div class="form-fields">
-                <input type="range" data-dtype="Number" name="repeat" value="{{repeat}}" min="0" max="20" step="1">
-                <span class="range-value">{{repeat}}</span>    
+                <input type="range" data-dtype="Number" name="repeat" value="{{data.repeat}}" min="0" max="20" step="1">
+                <span class="range-value">{{data.repeat}}</span>    
             </div>
         </div>
         <div class="form-group">
             <label for="duration">{{localize "DANGERZONE.type-form.backgroundEffect.duration.label"}}</label>
             <div class="form-fields">
-                <input type="number" required data-dtype="Number" name="duration" placeholder="{{localize "DANGERZONE.ms"}}" step="1" value={{duration}}>
+                <input type="number" required data-dtype="Number" name="duration" placeholder="{{localize "DANGERZONE.ms"}}" step="1" value={{data.duration}}>
             </div>
         </div>
         <hr>
@@ -46,27 +46,87 @@
         <div class="form-group">
             <label for="audio.randomFile">{{localize "DANGERZONE.type-form.backgroundEffect.audio.random.label"}}</label>
             <div class="form-fields">
-                <input type="checkbox" data-action="audio.random" data-dtype="Boolean" name="audio.randomFile" {{checked audio.randomFile}}>
+                <input type="checkbox" data-action="audio.random" data-dtype="Boolean" name="audio.randomFile" {{checked data.audio.randomFile}}>
             </div>
         </div>
         <div id="dz-backgroundEffect-audio-file" class="form-group {{#if audio.randomFile}}hidden-picker{{/if}}">
-            <label for="audio.file">{{#if randomFile}}{{localize "DANGERZONE.type-form.backgroundEffect.audio.playlist.label"}}{{/if}}{{#unless audio.randomFile}}{{localize "DANGERZONE.type-form.backgroundEffect.audio.file.label"}}{{/unless}}</label>
+            <label for="audio.file">{{#if randomFile}}{{localize "DANGERZONE.type-form.backgroundEffect.audio.playlist.label"}}{{/if}}{{#unless data.audio.randomFile}}{{localize "DANGERZONE.type-form.backgroundEffect.audio.file.label"}}{{/unless}}</label>
             <div class="form-fields">
                 {{filePicker target="audio.file" type="audio"}}
-                <input type="text"  name="audio.file" class="image" placeholder="{{#unless audio.randomFile}}{{localize "DANGERZONE.type-form.backgroundEffect.audio.file.placeholder"}}{{/unless}}" value="{{audio.file}}">
+                <input type="text"  name="audio.file" class="image" placeholder="{{#unless audio.randomFile}}{{localize "DANGERZONE.type-form.backgroundEffect.audio.file.placeholder"}}{{/unless}}" value="{{data.audio.file}}">
             </div>
         </div>
         <div class="form-group">
             <label for="audio.volume">{{localize "DANGERZONE.type-form.backgroundEffect.audio.volume.label"}}&nbsp;&nbsp;<i class="volume-icon fas fa-volume-down"></i></label>
             <div class="form-fields">
-                <input type="range" title="{{localize "DANGERZONE.type-form.backgroundEffect.audio.volume.label"}}" name="audio.volume" value="{{audio.volume}}" min="0" max="1" step="0.05">
+                <input type="range" title="{{localize "DANGERZONE.type-form.backgroundEffect.audio.volume.label"}}" name="audio.volume" value="{{data.audio.volume}}" min="0" max="1" step="0.05">
             </div>
         </div>
         <hr>
+        <fieldset>
+            <legend>{{localize "DANGERZONE.type-form.offset.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.offset.description'}}"><i class="fas fa-info-circle"></i></span>
+            </legend>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.x.label"}}</label>
+                <div class="form-fields">
+                    <select name="offset.x.type" value="{{data.offset.x.type}}"> 
+                        {{selectOptions offsetOps selected=data.offset.x.type localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <div class="form-fields">  
+                    <label for="offset.x.min">{{localize "DANGERZONE.type-form.offset.min.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="offset.x.min" step="1" value={{#if data.offset.x.min}}{{data.offset.x.min}}{{else}}0{{/if}}>
+                    <label for="offset.x.max">{{localize "DANGERZONE.type-form.offset.max.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="offset.x.max" step="1" value={{#if data.offset.x.max}}{{data.offset.x.max}}{{else}}0{{/if}}>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.flip.label"}}
+                    <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.offset.flip.description-image'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <select name="offset.x.flip" value="{{data.offset.x.flip}}"> 
+                        {{selectOptions mirrorOps selected=data.offset.x.flip localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <hr>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.y.label"}}</label>
+                <div class="form-fields">
+                    <select name="offset.y.type" value="{{data.offset.y.type}}"> 
+                        {{selectOptions offsetOps selected=data.offset.y.type localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <div class="form-group">
+                <label>&nbsp;</label>
+                <div class="form-fields">  
+                    <label for="offset.y.min">{{localize "DANGERZONE.type-form.offset.min.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="offset.y.min" step="1" value={{#if data.offset.y.min}}{{data.offset.y.min}}{{else}}0{{/if}}>
+                    <label for="offset.y.max">{{localize "DANGERZONE.type-form.offset.max.label"}}</label>
+                    <input type="number" required data-dtype="Number" name="offset.y.max" step="1" value={{#if data.offset.y.max}}{{data.offset.y.max}}{{else}}0{{/if}}>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.offset.flip.label"}}
+                    <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.offset.flip.description-image'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <select name="offset.y.flip" value="{{data.offset.y.flip}}"> 
+                        {{selectOptions mirrorOps selected=data.offset.y.flip localize=true}}
+                    </select>   
+                </div>
+            </div>
+        </fieldset>
         <div class="form-group">
             <label for="delay">{{localize "DANGERZONE.type-form.backgroundEffect.delay.label"}}</label>
             <div class="form-fields">
-                <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
+                <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
             </div>
         </div>
     </div>

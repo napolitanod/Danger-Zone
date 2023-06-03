@@ -714,6 +714,39 @@
                 "token.description": "Updates token by passing in object data. Expects key: value pairs. This will be wrapped in {brackets} and passed as an object to the Warpgate token mutation."
             },
             "name.label": "Name",
+            "offset": {
+                    "adj.label": "Degrees Rotated",
+                    "description": "Offsets the danger part's location on the canvas by this amount in relation to the targeted location.",
+                    "flip": {
+                        "description": "Mirrors the location offset randomly.",
+                        "description-image": "Mirrors the image either randomly or always and mirrors the location offset. Selecting 'both' will mirror the location and image always while selecting 'any' will mirror each randomnly.",
+                        "description-rotation": "Moves the rotation degrees either randomly or always and mirrors the location offset. Selecting 'both' will mirror the location and adjust rotation always while selecting 'any' will mirror/adjust each randomnly.",
+                        "label": "Mirror",
+                        "options": {
+                            "image-sometimes.label": "Image (sometimes)",
+                            "image-always.label": "Image (always)",
+                            "none.label": "None",
+                            "both.label": "Both (sometimes)",
+                            "any.label": "Any (sometimes)",
+                            "location.label": "Location",
+                            "rotation-sometimes.label": "Radius (sometimes)",
+                            "rotation-always.label": "Radius (always)"
+                        }
+                    },
+                    "label": "Location Offset",
+                    "x.label": "X Offset",
+                    "min.label": "Min.",
+                    "max.label": "Max.",
+                    "type": {
+                        "label": "Measure",
+                        "options": {
+                            "non.label": "None",
+                            "pct.label": "Percent (of grid distance)",
+                            "pxl.label": "Pixels"
+                        }
+                    },
+                    "y.label": "Y Offset"
+            },
             "scene": {
                 "active.label": "Enable Scene Modifications",
                 "description": "Modifiy scene settings and global illumination",

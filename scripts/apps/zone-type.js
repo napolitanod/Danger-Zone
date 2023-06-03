@@ -39,6 +39,22 @@ export class dangerZoneType {
             type: ""
           },
           luminosity: 0.5,
+          offset: {
+            x: {
+              adj: 0,
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            },
+            y: {
+              adj: 0,
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            }
+          },
           rotation: 0,
           saturation: 0,
           shadows: 0,
@@ -61,6 +77,20 @@ export class dangerZoneType {
           },
           delay: 0,
           file: '',
+          offset: {
+            x: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            },
+            y: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            }
+          },
           randomFile: false,
           scale: 1.0,
           repeat: 0,
@@ -104,6 +134,20 @@ export class dangerZoneType {
         foregroundEffect: {
           delay: 0,
           file: '',
+          offset: {
+            x: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            },
+            y: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            }
+          },
           randomFile: false,
           scale: 1.0,
           source: {
@@ -133,6 +177,20 @@ export class dangerZoneType {
           occlusion: {
             alpha: 0,
             mode: 'FADE'
+          },
+          offset: {
+            x: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            },
+            y: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            }
           },
           overhead: false,
           randomFile: false,
@@ -165,6 +223,20 @@ export class dangerZoneType {
           file:'',
           delay: 0,
           easing: true,
+          offset: {
+            x: {
+              flip: false,
+              min: 0,
+              max: 0,
+              type: ''
+            },
+            y: {
+              flip: false,
+              min: 0,
+              max: 0,
+              type: ''
+            }
+          },
           radius: 0,
           randomFile: false,
           volume: 0.5,
@@ -213,6 +285,20 @@ export class dangerZoneType {
           ds: 0,
           left: false,
           light: 1,
+          offset: {
+            x: {
+              flip: false,
+              min: 0,
+              max: 0,
+              type: ''
+            },
+            y: {
+              flip: false,
+              min: 0,
+              max: 0,
+              type: ''
+            }
+          },
           move: 1,
           random: false,
           right: false,
