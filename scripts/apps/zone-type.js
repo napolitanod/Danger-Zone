@@ -446,6 +446,11 @@ export class dangerZoneType {
     return this.options.flags.weather ? this.options.flags.weather : {}
   }
 
+  get weatherIsFoundry(){
+    if(!this.weather.type) return false
+    return this.weather.type.includes('foundry.') ? true : false
+  }
+
   static get _allDangers() {
     const flags = game.settings.get(dangerZone.ID, 'zone-types');
     return flags ? flags : {}

@@ -2406,7 +2406,7 @@ class scene extends executable{
     }
   
     get has(){
-        return (super.has && this.active) ? true : false
+        return (super.has && (this.active || this.weather)) ? true : false
     }
 
     get hasNonRenderInvokingChange(){
@@ -2416,6 +2416,10 @@ class scene extends executable{
     get hasRenderInvokingChange(){
         return Object.keys(this.renderUpdate).length ? true : false
     } 
+
+    get weather(){
+        return (this.data.danger.weatherIsFoundry && !this.data.danger.weather.duration) ? this.data.danger.weather.type.replace('foundry.', '') : ''
+    }
 
     get updateOps(){
         const ops = {};
@@ -2428,11 +2432,14 @@ class scene extends executable{
     }
 
     _build() {
-        if(this.darkness !== - 1) this.update.darkness = this.darkness;
-        if(this.globalLight) this.update.globalLight = this.globalLight === 'Y' ? true : false;
-        if(this.e.type) this.update.foregroundElevation = this.e.type === 'S' ? this._e() : this.data.scene.foregroundElevation + this._e();
-        if(this._fileB && this.data.scene.background.src !== this._fileB) this.renderUpdate['background'] = {src: this._fileB}
-        if(this._fileF && this.data.scene.foreground !== this._fileF) this.renderUpdate.foreground = this._fileF
+        if(this.active){
+            if(this.darkness !== - 1) this.update.darkness = this.darkness;
+            if(this.globalLight) this.update.globalLight = this.globalLight === 'Y' ? true : false;
+            if(this.e.type) this.update.foregroundElevation = this.e.type === 'S' ? this._e() : this.data.scene.foregroundElevation + this._e();
+            if(this._fileB && this.data.scene.background.src !== this._fileB) this.renderUpdate['background'] = {src: this._fileB}
+            if(this._fileF && this.data.scene.foreground !== this._fileF) this.renderUpdate.foreground = this._fileF
+        }
+        if(this.weather) this.renderUpdate.weather = this.weather
     }
 
     _e(){
@@ -2456,7 +2463,7 @@ class scene extends executable{
     async play(){
         if(this.data.previouslyExecuted) {
             this._cancel = true;
-        } else {
+        } else if(this.active) {
             if(!this._fileB) await this.fileB;
             if(!this._fileF) await this.fileF;
         }
@@ -3190,6 +3197,15 @@ class weather extends executable{
         return this.duration ? this.data.id : this.data.zone.type
     }
 
+    get fxEffect(){
+        const currentEffects = this.data.scene.getFlag('fxmaster', "effects") ?? {}
+        return currentEffects[this.flagName]
+    }
+
+    get isFoundryType(){
+        return this._part.type.includes('foundry.') ? true : false
+    }
+
     get lifetime(){
         return this._part.lifetime 
     }
@@ -3219,26 +3235,41 @@ class weather extends executable{
     }
     
     get type(){
-        return this._part.type
+        return this._part.type.replace('foundry.','')
     }
 
     async off(){ 
         if(this.duration) {
-            Hooks.call("fxmaster.switchParticleEffect", {
-            name: this.flagName,
-            type: this.type
-          });
+            if(this.isFoundryType){       
+                game.socket.emit('module.danger-zone', {weather: {stop: true}})
+                game.canvas.weather.clearEffects()
+            }
+            else if(fxMasterOn) {
+                if(this.fxEffect) {
+                    Hooks.call("fxmaster.switchParticleEffect", {
+                        name: this.flagName,
+                        type: this.type
+                    });
+                }
+            }
         }
     }
 
     async play(){
         await super.play()
         if(this._cancel) return
-        Hooks.call("fxmaster.switchParticleEffect", {
-            name: this.flagName,
-            type: this.type,
-            options: this._options
-          });
+        if(this.isFoundryType && this.duration) {
+            game.canvas.weather.initializeEffects(CONFIG.weatherEffects[this.type])
+            game.socket.emit('module.danger-zone', {weather: {sceneId: this.data.scene.id, play: this.type}})
+        } else if(fxMasterOn) {
+            if(!this.fxEffect)  {
+                    Hooks.call("fxmaster.switchParticleEffect", {
+                    name: this.flagName,
+                    type: this.type,
+                    options: this._options
+                });
+            }
+        }
         await this._for();
         await this.off();
     }
