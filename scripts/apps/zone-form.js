@@ -2,7 +2,6 @@ import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {boundary, point} from './dimensions.js';
 import {COMBATTRIGGERS, DANGERZONETRIGGERS, TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, DANGERZONEWEATHERREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps, ZONEEXTENSIONINTERACTIONOPTIONS, ZONEEXTENSIONSEQUENCEOPTIONS} from './constants.js';
-import { fxMasterOn } from '../index.js';
 
 export class DangerZoneForm extends FormApplication {
   constructor(app, zoneId, sceneId, dangerId, ...args) {
@@ -55,7 +54,6 @@ export class DangerZoneForm extends FormApplication {
       hideOperation: instance.loop > 1 ? false : true,
       hideTargetCombatant: COMBATTRIGGERS.includes(instance.trigger) ? false : true,
       hideWeight: !instance.random,
-      hideWeather: !fxMasterOn,
       hideWorld: this.dangerId ? false : true,
       replaceOps: DANGERZONEREPLACE,
       lightReplaceOps: DANGERZONELIGHTREPLACE,

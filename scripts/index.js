@@ -236,7 +236,10 @@ Hooks.once('ready', async function() {
                     break;
                 }
             }
-        }
+        } else if(request.weather && (!request.weather.sceneId || request.weather.sceneId === canvas.scene.id)){
+			if(request.weather.stop){canvas.weather.clearEffects()}
+			if(request.weather.play){canvas.weather.initializeEffects(CONFIG.weatherEffects[request.weather.play])}
+		}
       });
 
 	  setExecutableOptions();

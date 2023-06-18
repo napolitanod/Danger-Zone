@@ -1,6 +1,6 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
-import {activeEffectOn, daeOn, fluidCanvasOn, fxMasterOn, itemPileOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
+import {activeEffectOn, daeOn, fluidCanvasOn, itemPileOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
 import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MIRRORIMAGEOPTIONS, MIRRORROTATIONOPTIONS, MOVETYPES, OFFSETOPTIONS, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
 import {stringToObj} from './helpers.js';
 
@@ -303,7 +303,6 @@ export class DangerForm extends FormApplication {
       sequencerOnNot: !sequencerOn,
       warpgateOnNot: !warpgateOn, 
       canvasOnNot: !fluidCanvasOn && !sequencerOn, 
-      fxMasterOnNot: !fxMasterOn, 
       taggerOnNot: !taggerOn,
       tokenResponseOnNot: Object.keys(saveTypes()).length ? false : true
     } 

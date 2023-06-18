@@ -433,8 +433,10 @@ export function getCompendiumOps(fileType){
 }
 
 export function weatherTypes() {
-    if(fxMasterOn) return Object.assign({'':''},Object.fromEntries(Object.entries(CONFIG.fxmaster.particleEffects).map(k=> [k[0],k[1].label])))
-    return {}
+    const obj = {'':''}
+    Object.assign(obj, Object.fromEntries(Object.entries(CONFIG.weatherEffects).filter(w => !w[1].id.includes('fxmaster')).map(k=> [`foundry.${k[0]}`,`${game.i18n.localize(k[1].label)} (Foundry)`])))
+    if(fxMasterOn) Object.assign(obj,Object.fromEntries(Object.entries(CONFIG.fxmaster.particleEffects).map(k=> [k[0],`${k[1].name.replace('ParticleEffect','')} (FXMaster)`])))
+    return obj
 }
 
 export function weatherParameters(type) {
@@ -618,7 +620,7 @@ export function setExecutableOptions(){
                 document: 'fxmaster-particle',
                 wipeable: true,
                 modules:[
-                    {active: fxMasterOn, name: "fxmaster", dependent: true}
+                    {active: fxMasterOn, name: "fxmaster", dependent: false}
                 ],
                 scope: "scene"
             },

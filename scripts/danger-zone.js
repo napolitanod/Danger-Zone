@@ -395,6 +395,40 @@ export class zone {
     return updt
   }
 
+  async clearWeather({includeFXMaster = false, includeFoundry = false, effect = ''} = {}){     
+    dangerZone.log(false,'Clearing Weather ', {includeFXMaster: includeFXMaster, includeFoundry: includeFoundry, effect: effect, scene: this.scene.scene})
+    if(!this.scene?.scene || (!includeFXMaster && !includeFoundry)) return
+
+    if(includeFXMaster) {
+      if(!effect){
+        await this.scene.scene.unsetFlag('fxmaster', "effects");
+      } else{
+        const currentEffects = this.scene.scene.getFlag('fxmaster', "effects") ?? {}
+        delete currentEffects[effect]
+        await this.scene.scene.setFlag('fxmaster', 'effects', currentEffects);
+      }
+    }
+    
+    if(includeFoundry){
+      let hookId;
+      const render = new Promise(resolve => {
+        hookId = Hooks.once("renderApplication", rendered => {
+          resolve(rendered);
+        });
+      });
+  
+      await this.scene.scene.update({weather: ''});
+  
+      // Timeout after 5 seconds
+      const timeout = new Promise(resolve => window.setTimeout(() => {
+        Hooks.off("renderApplication", hookId);
+        resolve();
+      }, 3000));
+  
+      await Promise.race([render, timeout]);
+    }
+  }
+
   /**
    * public method to save the zone data
    * @param {object} updateData 
@@ -576,12 +610,14 @@ export class zone {
   async wipe(document, replace = ''){
       let ids = []; const data = this._wipeData(document); const rep = replace ? replace : data.replace;
       if(document === 'fxmaster-particle'){ 
-        if(fxMasterOn) {
-          switch (rep) {
-            case 'A': Hooks.call("fxmaster.updateParticleEffects", []); break;
-            case 'T': Hooks.call("fxmaster.switchParticleEffect", {name: this.type, type: this.danger.weather?.type}); break;
-            default: return false
-          }
+        switch (rep) {
+          case 'A': 
+              await this.clearWeather({includeFXMaster: fxMasterOn, includeFoundry: !this.danger.weatherIsFoundry})
+          break;
+          case 'T': 
+              await this.clearWeather({includeFXMaster: fxMasterOn, includeFoundry: false, effect: this.type})
+          break;
+          default: return false
         }
         return true
       }
