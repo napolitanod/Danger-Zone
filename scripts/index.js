@@ -187,6 +187,15 @@ Hooks.once('init', async function() {
     }); 
 
 	if(game.world.system === 'dnd5e'){
+		game.settings.register('danger-zone', 'saving-throw-fast-forward', {
+			name: game.i18n.localize('DANGERZONE.setting.saving-throw-fast-forward.label'),
+			hint: game.i18n.localize('DANGERZONE.setting.saving-throw-fast-forward.description'),
+			scope: 'world',
+			config: true,
+			default: false,
+			type: Boolean
+		}); 
+
 		game.settings.register('danger-zone', 'saving-throw-delay', {
 			name: game.i18n.localize('DANGERZONE.setting.saving-throw-delay.label'),
 			hint: game.i18n.localize('DANGERZONE.setting.saving-throw-delay.description'),
