@@ -1739,7 +1739,7 @@ class Canvas extends executable{
     }
 
     get has(){
-        return (super.has && this.type) ? true : false
+        return (super.has && (this.type || this.pan.active)) ? true : false
     }
 
     get intensity(){
@@ -2327,8 +2327,8 @@ class save extends executable{
 
     async _rollAbilitySave(token){
         let result;
-        const owner = getActorOwner(token)
-        if (socketLibOn && owner) {
+        const owner = getActorOwner(token), fastforward = game.settings.get(dangerZone.ID, 'saving-throw-fast-forward');
+        if (!fastforward && socketLibOn && owner) {
             const time = this.timeAlloted
             if(time){ 
                 this._playerPrompted.push(`${token.name} (${owner.name})`)
@@ -2337,7 +2337,7 @@ class save extends executable{
                 await Promise.race([query, race]).then((value) => {result = value})
             }
         }
-        if(!result) result = await token.actor.rollAbilitySave(this.type, {chatMessage: false}) 
+        if(!result) result = await token.actor.rollAbilitySave(this.type, {chatMessage: false, fastForward: fastforward}) 
        
         const saved = (!result || result.total < this.diff) ? false : true
         !saved ? this.data.save.failed.push(token) : this.data.save.succeeded.push(token)
@@ -3270,11 +3270,11 @@ class weather extends executable{
                 });
             }
         }
-        await this._for();
-        await this.off();
+        this._for();
     }
 
     async _for(){
         if(this.duration) await delay(this.duration);
+        await this.off();
     }
 }
