@@ -143,6 +143,12 @@
                 </div>
             </div>
         </fieldset>
+        <div class="form-group">
+            <label for="delay">{{localize "DANGERZONE.type-form.light.delay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
+            </div>
+        </div>
         <div class="form-group {{#if taggerOnNot}}dz-hidden{{/if}}">
             <label for="tag">{{localize "DANGERZONE.type-form.light.tag.label"}}</label>
             <div class="form-fields">
