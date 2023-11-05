@@ -658,6 +658,7 @@
                 "coloration.label": "Coloration Technique",
                 "contrast.label": "Background Contrast",
                 "darkness.label": "Darkness Activation Range",
+                "delay.label": "Delay Start",
                 "description": "Add ambient lighting to the targeted area.",
                 "dimLight.label": "Dim",
                 "emission.label": "Emission Angle",

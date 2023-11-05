@@ -30,6 +30,7 @@ export class dangerZoneType {
             min: 0,
             max: 1
           },
+          delay: 0,
           dim: 0,
           flags: {},
           lightAnimation: {
