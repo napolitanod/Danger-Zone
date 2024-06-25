@@ -47,9 +47,9 @@ export class dangerZoneDimensions {
     }
 
     _subDimensions(w,h){
-		const [startY, startX] = canvas.grid.grid.getGridPositionFromPixels(this.start.x, this.start.y);
-		const [endY, endX] = canvas.grid.grid.getGridPositionFromPixels(this.end.x, this.end.y);
-        return [w ? w : endX-startX, h ? h : endY-startY]
+		const start = canvas.grid.getOffset(this.start);
+		const end = canvas.grid.getOffset(this.end);
+        return [w ? w : end.i-start.i, h ? h : end.j-this.start.j]
     }
 
     async boundary(){
@@ -62,8 +62,9 @@ export class dangerZoneDimensions {
         const {w,h,d} = this.danger.dimensions.units; 
         const b = await this.boundary();
         const dim = b.dimensions;
-        const [x,y] = canvas.grid.grid.getPixelsFromGridPosition(dim.y -(Math.min(dim.y, (h-1))), dim.x - (Math.min(dim.x, (w-1))));
-        const p = new point({x: x, y: y, z: dim.z - (d ? d-1 : 0)})
+        const topLeft = canvas.grid.getTopLeftPoint({j:dim.j -(Math.min(dim.j, (h-1))), i:dim.i - (Math.min(dim.i, (w-1)))});
+        topLeft.z = dim.z - (d ? d-1 : 0);
+        const p = new point(topLeft)
         return new boundary(p, b.B, {excludes: b.excludes, universe: b.universe})
     }
 
@@ -92,16 +93,16 @@ export class dangerZoneDimensions {
     }
 
     static tokenMovement(token, update){
-        const endXPixel = update.x ? update.x : token.x;
+        const endXPixel = update.x ? update.x : token.x; 
 		const endYPixel = update.y ? update.y : token.y;
-		const [startY, startX] = canvas.grid.grid.getGridPositionFromPixels(token.x, token.y);
-		const [endY, endX] = canvas.grid.grid.getGridPositionFromPixels(endXPixel, endYPixel);
+		const start = canvas.grid.getOffset(token);
+		const end= canvas.grid.getOffset({x:endXPixel, y:endYPixel});
 		const endDepth = update.elevation ? update.elevation : token.elevation;
 		return {
 			startPos: {x: token.x, y: token.y, z: token.elevation},
 			endPos: {x: endXPixel, y: endYPixel, z: endDepth},
-			moveYGrids: Math.abs(startY - endY),
-			moveXGrids: Math.abs(startX - endX),
+			moveYGrids: Math.abs(start.j - end.j),
+			moveXGrids: Math.abs(start.i - end.i),
 			moveYPixels: Math.abs(token.y - endYPixel),
 			moveXPixels: Math.abs(token.x - endXPixel),
 			moveDepth: Math.abs(token.elevation - endDepth)
@@ -120,12 +121,12 @@ export class dangerZoneDimensions {
 
     static destroyHighlightZone(zoneId, nameModifier = '', dangerId = ''){
         const name = 'dz-' + (dangerId ? dangerId : zoneId) + nameModifier;
-        if(canvas.grid.highlightLayers[name]) canvas.grid.destroyHighlightLayer(name)
+        if(canvas.interface.grid.highlightLayers[name]) canvas.interface.grid.destroyHighlightLayer(name)
     }
 
     destroyHighlightZone(nameModifier = ''){
         const name = 'dz-'+ (this.dangerId ? this.dangerId : this.zoneId) + nameModifier;
-        if(canvas.grid.highlightLayers[name]) canvas.grid.destroyHighlightLayer(name)
+        if(canvas.interface.grid.highlightLayers[name]) canvas.interface.grid.destroyHighlightLayer(name)
     }
 
     async _excludedTagged(){
@@ -182,37 +183,37 @@ export class boundary{
     }
 
     get dimensions(){
-        const [topY, topX] = canvas.grid.grid.getGridPositionFromPixels(this.A.x, this.A.y);
-        const [leftY, leftX] = canvas.grid.grid.getGridPositionFromPixels(this.A.x, this.B.y);
-        const [rightY, rightX] = canvas.grid.grid.getGridPositionFromPixels(this.B.x, this.A.y);
-        const [bottomY, bottomX] = canvas.grid.grid.getGridPositionFromPixels(this.B.x, this.B.y);
-        const w = Math.max(rightX,bottomX) - Math.min(topX,leftX);
-        const h = Math.max(leftY,bottomY) - Math.min(topY,rightY);
+        const top = canvas.grid.getOffset(this.A);
+        const left = canvas.grid.getOffset({x:this.A.x, y:this.B.y});
+        const right = canvas.grid.getOffset({x:this.B.x, y:this.A.y});
+        const bottom = canvas.grid.getOffset(this.B);
+        const w = Math.max(right.j,bottom.j) - Math.min(top.j,left.j);
+        const h = Math.max(left.i,bottom.i) - Math.min(top.i,right.i);
         const d = this.B.z - this.A.z;
-        return {w: w, h: h, d:d, x:topX, y:topY, z:this.A.z}
+        return {w: w, h: h, d:d, j:top.j, i:top.i, z:this.A.z}
     }
 
     _setGridIndex(){
         const grids = this.grids();
-        for(const [yPos, xPos] of grids){
-            this.gridIndex.add(yPos + '_' + xPos)
+        for(const grid of grids){
+            this.gridIndex.add(boundary.makeIndex(grid))
         }
     }
 
     _toTopLeft(){    
-        const [x1, y1] = canvas.grid.getTopLeft(this.A.x, this.A.y);
-        const [x2, y2] = canvas.grid.getTopLeft(this.B.x, this.B.y);
-        this.A.x = x1;
-        this.A.y = y1;
-        this.B.x = x2;
-        this.B.y = y2;
+        const A = canvas.grid.getTopLeftPoint(this.A);
+        const B = canvas.grid.getTopLeftPoint(this.B);
+        this.A.x = A.x;
+        this.A.y = A.y;
+        this.B.x = B.x;
+        this.B.y = B.y;
     }
 
     * grids(options={}){
-        const {w,h,d,x,y,z} = this.dimensions;
-        for(let j=0; (options.inclusive ? j<=w : j<w) || j===0; j++){
-            for(let i=0; (options.inclusive ? i<=h: i<h) || i===0; i++){
-                if((!this.universe || this.universe.has((y+i) + '_' + (x+j))) && !this.excludes.has((y+i) + '_' + (x+j))){yield[y+i, x+j, z, [i, j]]}
+        const dim = this.dimensions; 
+        for(let m=0; (options.inclusive ? m<=dim.w : m<dim.w) || m===0; m++){
+            for(let n=0; (options.inclusive ? n<=dim.h: n<dim.h) || n===0; n++){
+                if((!this.universe || this.universe.has((dim.i+n) + '_' + (dim.j+m))) && !this.excludes.has((dim.i+n) + '_' + (dim.j+m))){yield {i:dim.i+n, j:dim.j+m, e:dim.z, shift: {w:n, h:m}}}
             }
         }
     } 
@@ -220,10 +221,12 @@ export class boundary{
     * randomBoundary (options={}){
         const grids = this.grids(options);
         const all = []
-        for(const [y,x,z] of grids){all.push([y,x, z])}
+        for(const grid of grids){
+            all.push(grid)
+        }
         const dim = this.dimensions;
-        const w = options.range?.w ? options.range?.w : 0
-        const h = options.range?.h ? options.range?.h : 0
+        const w = options.range?.w ? options.range?.w : 1
+        const h = options.range?.h ? options.range?.h : 1
         const d = options.range?.d ? options.range?.d : 0
 
         const ops = {excludes: this.excludes, universe: this.universe}
@@ -239,11 +242,13 @@ export class boundary{
         const zAdj = dim.d ? d ? d : dim.d-1 : 0 
 
         while(true){
-            const [posY, posX, posZ] = all[Math.floor(Math.random() * all.length)]
-            const [x1,y1] = canvas.grid.grid.getPixelsFromGridPosition(posY, posX);
-            const [x2,y2] = canvas.grid.grid.shiftPosition(x1, y1, w, h)
-            const z1 = posZ + Math.floor(Math.random() * dim.d);
-            yield new boundary({x:x1, y:y1, z:z1}, {x:x2, y:y2, z:z1 + zAdj}, ops)
+            const test = all[Math.floor(Math.random() * all.length)]
+            const topLeft = canvas.grid.getTopLeftPoint(test); 
+            let bottomRight = point.shiftPoint(topLeft, {w:w, h:h});
+            const e = test.e + Math.floor(Math.random() * dim.d);
+            topLeft.z = e;
+            bottomRight.z = e + zAdj;
+            yield new boundary(topLeft, bottomRight, ops)
         }
 
     }
@@ -266,11 +271,11 @@ export class boundary{
                 break;
             case "Token":
                 const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
-                const [TyPos, TxPos] = canvas.grid.grid.getGridPositionFromPixels(document.x, document.y);
-                const [Tx2, Ty2] = canvas.grid.grid.getPixelsFromGridPosition(TyPos + document.height, TxPos + document.width); 
+                const position = canvas.grid.getOffset(document);
+                const topLeft = canvas.grid.getTopLeftPoint({j:position.j + document.height, i:position.i + document.width}); 
                 const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
                 const Td = (wallHeightOn && document.getFlag('wall-height', 'tokenHeight')) ? document.getFlag('wall-height', 'tokenHeight') : (distance * Math.max(document.width, document.height) * multiplier);
-                dim = {x:document.x, y:document.y, width: Tx2 - document.x, height: Ty2 - document.y, depth: Td,  bottom:document.elevation};
+                dim = {x:document.x, y:document.y, width: topLeft.x - document.x, height: topLeft.y - document.y, depth: Td,  bottom:document.elevation};
                 break
             default: 
                 dim=document
@@ -292,21 +297,22 @@ export class boundary{
             const grids = b.grids({inclusive:inclusive})  
             switch(documentName){
                 case "Wall":
-                    for(const [yPos,xPos] of grids){
+                    for(const grid of grids){
                         if(indices.has(yPos + '_' + xPos)){continue}
-                        if(rayIntersectsGrid([yPos,xPos], document.object.toRay())){indices.add(yPos + '_' + xPos)}
+                        if(rayIntersectsGrid(grid, document.object.toRay())){indices.add(boundary.makeIndex(grid))}
                     }
                     break
                 case "AmbientLight":
-                    for(const [yPos,xPos, zPos, [xLoc, yLoc]] of grids){
-                        if(indices.has(yPos + '_' + xPos)){continue}
-                        if(circleAreaGrid(xLoc,yLoc,dim.w, dim.h)){indices.add(yPos + '_' + xPos)}
+                    for(const grid of grids){
+                        if(indices.has(grid.i + '_' + grid.j)){continue}
+                        if(circleAreaGrid(grid.shift.w,grid.shift.h,dim.w, dim.h)){indices.add(boundary.makeIndex(grid))}
                     }
                     break
                 default: 
-                    for(const [yPos,xPos] of grids){
-                        if(indices.has(yPos + '_' + xPos)){continue}
-                        indices.add(yPos + '_' + xPos)
+                    for(const grid of grids){
+                        let index = boundary.makeIndex(grid);
+                        if(indices.has(index)){continue}
+                        indices.add(index)
                     }
             }
         }
@@ -319,7 +325,7 @@ export class boundary{
         const newUniv = new Set() 
         this.universe.forEach((value) => {
             const[yPos, xPos] = value.split('_')
-            const nghbrs = canvas.grid.grid.getNeighbors(Number(yPos), Number(xPos))
+            const nghbrs = canvas.grid.getNeighbors(Number(yPos), Number(xPos))
             for(const pos of nghbrs){
                 if(limit.target === 'A') {
                     if (!this.universe.has(pos[0] + '_' + pos[1])) newUniv.add(pos[0] + '_' + pos[1])
@@ -331,10 +337,10 @@ export class boundary{
         this.universe = newUniv
     }
 
-    static locationToBoundary(point, units, options={}){
-        let [x1,y1] = canvas.grid.grid.shiftPosition(point.x, point.y, units.w, units.h)
-        dangerZone.log(false,'Location to boundary...', {point: point, units: units, options: options});
-        return new boundary(point,{x:x1, y:y1, z:(point.z + units.d)},options)
+    static locationToBoundary(coords, units, options={}){
+        let position = point.shiftPoint(coords, units)
+        dangerZone.log(false,'Location to boundary...', {point: coords, units: units, options: options});
+        return new boundary(coords,{x:position.x, y:position.y, z:(coords.z + units.d)},options)
     }
 
     static offsetBoundary(bndry, globalOffset, offset, scene = canvas.scene){
@@ -354,6 +360,10 @@ export class boundary{
         return new boundary(obj.A, obj.B, obj.options)
     }
 
+    static makeIndex(coords) {
+        return coords.i + '_' + coords.j
+    }
+
     static offsetAxis(offsetAxis, flip, scene, random){
         function randomRange(min, max, random){
             if(min === max) return min
@@ -370,7 +380,6 @@ export class boundary{
     }
 
     tokensIn(tokens){
-        const multiplier = game.settings.get(dangerZone.ID, 'scene-control-button-display');
         let kept = [];
         for(let token of tokens){
             const b = boundary.documentBoundary('Token', token);
@@ -381,11 +390,11 @@ export class boundary{
         return kept
     } 
 
-    intersectsBoundary(boundary){
-        if(!this.depth || (this.bottom <= boundary.top) && (this.top > boundary.bottom)) {
-            const grids = boundary.grids()
-            for(const [yPos,xPos] of grids){
-                if(this.gridIndex.has(yPos + '_' + xPos)){return true}
+    intersectsBoundary(bound = boundary){
+        if(!this.depth || ((this.bottom <= bound.top && this.top > bound.bottom))) {
+            const grids = bound.grids()
+            for(const grid of grids){
+                if(this.gridIndex.has(boundary.makeIndex(grid))){return true}
             }
         }
         return false
@@ -393,16 +402,16 @@ export class boundary{
 
     highlight(name, color = 16737280){
         let hId = 'dz-' + name;
-        canvas.grid.addHighlightLayer(hId);
+        canvas.interface.grid.addHighlightLayer(hId);
         const grids = this.grids();
-        for(const [yPos,xPos] of grids){
-            let [x, y] = canvas.grid.grid.getPixelsFromGridPosition(yPos, xPos);
-            canvas.grid.highlightPosition(hId, {x: x, y: y, color:color});
+        for(const grid of grids){ 
+            let position = canvas.grid.getTopLeftPoint(grid); 
+            canvas.interface.grid.highlightPosition(hId, {x: position.x, y: position.y, color:color});
         }
     }
 
     destroyHighlight(name){
-        canvas.grid.destroyHighlightLayer('dz-' + name)
+        canvas.interface.grid.destroyHighlightLayer('dz-' + name)
     }
 }
 
@@ -415,8 +424,16 @@ export class point{
     }
     
     _toTopLeft(){    
-        const [x1, y1] = canvas.grid.getTopLeft(this.x, this.y);
-        this.x = x1;
-        this.y = y1;
+        const position = canvas.grid.getTopLeftPoint({x:this.x, y:this.y});
+        this.x = position.x;
+        this.y = position.y;
+    }
+
+    static shiftPoint(reference = {}, shift = {}){
+        let shifted = reference;
+        for(let i=0;i<Math.abs(shift.w);i++){shifted = canvas.grid.getShiftedPoint(shifted, shift.w > 0 ? CONST.MOVEMENT_DIRECTIONS.RIGHT : CONST.MOVEMENT_DIRECTIONS.LEFT)}
+        for(let i=0;i<Math.abs(shift.h);i++){shifted = canvas.grid.getShiftedPoint(shifted, shift.h > 0 ? CONST.MOVEMENT_DIRECTIONS.DOWN : CONST.MOVEMENT_DIRECTIONS.UP)}
+        shifted.z = reference.z
+        return shifted
     }
 }

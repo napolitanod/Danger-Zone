@@ -376,7 +376,7 @@ class DangerZoneActiveEffectForm extends ActiveEffectConfig {
         disabled: d.disabled ?? false,
         duration: d.duration ?? {},
         flags: d.flags ?? {},
-        icon: d.icon,
+        img: d.icon,
         isSuppressed: false,
         name: d.name ?? d.label ?? "",
         origin: this.origin,
@@ -441,6 +441,7 @@ class DangerZoneActiveEffectForm extends ActiveEffectConfig {
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.data = expandedData;
+      this.parent.data['icon'] = this.parent.data['img']; delete this.parent.data['img'];//v12 compat
     }
 }
 
@@ -940,6 +941,10 @@ class DangerZoneDangerFormLastingEffect extends FormApplication {
       }
 
     getData(options) {
+      if(this.data.lastingEffect.roof) {//FvTT 11 and backwards compat
+        this.data.lastingEffect.restrictions = {light: true, weather: true}
+      }
+
       return {
         lastingEffect: this.data.lastingEffect,
         macroOps: determineMacroList(),

@@ -853,7 +853,8 @@
                 "is-overhead.label": "Is Overhead?",
                 "loop.label": "Loop Video",
                 "randomFile.label": "Randomize Wildcard Image",
-                "roof.label": "Is a Roof?",
+                "restrictsLight.label": "Restricts Light",
+                "restrictsWeather.label": "Restricts Weather",
                 "scale.label": "Effect Scale",
                 "tab": {
                     "main.title": "Tile",
@@ -861,7 +862,7 @@
                 },
                 "tag.label": "Tile Tag",
                 "tag.description": "Tagger tag",
-                "z.label": "Z-Index"
+                "z.label": "Sort"
             },
             "tokenSays": {
                 "audio":{

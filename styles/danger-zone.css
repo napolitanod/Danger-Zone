@@ -351,7 +351,7 @@ form.danger-zone-type-form .main-danger {
 }
 
 .danger-zone-scene-trigger-button  > .fas {
-    line-height: 34px;
+    line-height: 33px;
 }
 
 .danger-zone-scene-trigger-button {
@@ -361,12 +361,12 @@ form.danger-zone-type-form .main-danger {
     background-color: rgba(0, 0, 0, 0.5);
     box-shadow: 0 0 10px #000;
     color: #FFF;
-    width: 34px;
-    height: 34px;
+    width: 33px;
+    height: 33px;
     border-radius: 5px;
     cursor: pointer;
     text-align: center;
-    font-size: 26px;
+    font-size: 24px;
     padding: 0;
 }
 

@@ -1,4 +1,4 @@
-import {activeEffectOn, tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, warpgateOn, fxMasterOn, fluidCanvasOn, sequencerOn, betterRoofsOn, levelsOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
+import {activeEffectOn, tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, warpgateOn, fxMasterOn, fluidCanvasOn, sequencerOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -490,7 +490,6 @@ export function setExecutableOptions(){
                 document: "AmbientLight", 
                 wipeable: true, 
                 modules: [
-                    {active: levelsOn, name: "levels", dependent: false}, 
                     {active: perfectVisionOn, name: "perfect-vision", dependent: false},
                     {active: taggerOn, name: "tagger", dependent: false}
                 ],
@@ -524,9 +523,7 @@ export function setExecutableOptions(){
                 wipeable: true, 
                 modules: [
                     {active: monksActiveTilesOn, name: "monks-active-tiles", dependent: false},
-                    {active: taggerOn, name: "tagger", dependent: false},
-                    {active: levelsOn, name: "levels", dependent: false},
-                    {active: betterRoofsOn, name: "better-roofs", dependent: false}
+                    {active: taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
             },

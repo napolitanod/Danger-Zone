@@ -11,7 +11,7 @@ import {requestSavingThrow} from './apps/helpers.js';
 /**
  * global variables
  */
-export var activeEffectOn = true, timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, socketLibOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, fxMasterOn = false, betterRoofsOn = false, levelsOn = false, itemPileOn = false; //active modules
+export var activeEffectOn = true, timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, socketLibOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, fxMasterOn = false, itemPileOn = false; //active modules
 export var dzMActive = false; 
 export let dangerZoneSocket; //var for socketlib
 
@@ -348,7 +348,7 @@ Hooks.on('preUpdateScene', (scene, change, options, userId) => {
 /**
  * Hook for the rendering of the scene list at top of canvas display. Adds zone trigger buttons to scene navigation bar on canvas
  */
-Hooks.on('renderSceneNavigation', async(app, html, options) => {
+Hooks.on('renderSceneDirectory', async(app, html, options) => {
 	dangerZone.initializeTriggerButtons()
 });
 
@@ -398,10 +398,8 @@ Hooks.on("updateToken", async (token, update, options, userId) => {
  * sets global variables that indicate which modules that danger zone integrates with are available
  */
 function setModsAvailable () {
-	if (game.modules.get("betterroofs")?.active){betterRoofsOn = true} ;
 	if (game.modules.get("dae")?.active){daeOn = true} ;
 	if (game.modules.get("item-piles")?.active){itemPileOn = true};
-	if (game.modules.get("levels")?.active){levelsOn = true} ;
 	if (game.modules.get("midi-qol")?.active){midiQolOn = true} ;
 	if (game.modules.get("monks-active-tiles")?.active){monksActiveTilesOn = true} ;
 	if (game.modules.get("monks-scene-navigation")?.active){monksSceneOn = true}
