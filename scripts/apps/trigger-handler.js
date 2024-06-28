@@ -182,7 +182,7 @@ export class triggerManager {
             this.combatStart = true;
             this.addCombatTrigger('combat-start');
         }
-        if((this.hook==='updateCombat' && this.options.advanceTime) || this.combatStart){
+        if((this.hook==='updateCombat' && !this.data.current?.turn) || this.combatStart){
             this.roundStart = true;
             this.addCombatTrigger('round-start');
             if(this.data.current.round > 1){this.addCombatTrigger('round-end')}

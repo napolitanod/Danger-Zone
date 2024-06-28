@@ -56,20 +56,6 @@
         <hr>
         <h4>{{localize "DANGERZONE.type-form.tile.overhead.label"}}</h4>
         <div class="form-group">
-            <label for="lastingEffect.overhead">{{localize "DANGERZONE.type-form.tile.is-overhead.label"}} 
-                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tile.overhead.description'}}"><i class="fas fa-info-circle"></i></span>
-            </label>
-            <div class="form-fields">
-                <input type="checkbox" data-dtype="Boolean" name="lastingEffect.overhead" {{checked lastingEffect.overhead}}>
-            </div>
-        </div>
-        <div class="form-group">
-            <label>{{localize "DANGERZONE.type-form.tile.roof.label"}}</label>
-            <div class="form-fields">
-                <input type="checkbox" name="lastingEffect.roof" {{ checked lastingEffect.roof }}>
-            </div>
-        </div>
-        <div class="form-group">
             <label for="lastingEffect.occlusion.mode">{{localize "DANGERZONE.type-form.tile.occlusion.mode.label"}}</label>
             <div class="form-fields">
                 <select name="lastingEffect.occlusion.mode" value="{{lastingEffect.occlusion.mode}}"> 
@@ -83,6 +69,18 @@
             <div class="form-fields">
                 <input type="range" name="lastingEffect.occlusion.alpha" min="0" max="1" step="0.05" value={{lastingEffect.occlusion.alpha}}>
                 <span class="range-value">{{lastingEffect.occlusion.alpha}}</span>    
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.tile.restrictsLight.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" name="lastingEffect.restrictions.light" {{ checked lastingEffect.restrictions.light }}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.tile.restrictsWeather.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" name="lastingEffect.restrictions.weather" {{ checked lastingEffect.restrictions.weather }}>
             </div>
         </div>
         <hr>

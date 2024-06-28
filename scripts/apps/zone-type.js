@@ -193,9 +193,11 @@ export class dangerZoneType {
               type: ''
             }
           },
-          overhead: false,
           randomFile: false,
-          roof: false,
+          restrictions: {
+            light: false,
+            weather: false
+          },
           scale: 1.0,
           loop: true,
           tag: '',
@@ -497,8 +499,8 @@ export class dangerZoneType {
   static _toClass(obj, enforceTypes = false){
     if(obj){
       let type =  new dangerZoneType;
-      mergeObject(type, obj, {insertKeys: false, enforceTypes: enforceTypes});
-      if(obj.flags){mergeObject(type.flags, obj.flags, {insertKeys: true})}
+      foundry.utils.mergeObject(type, obj, {insertKeys: false, enforceTypes: enforceTypes});
+      if(obj.flags){foundry.utils.mergeObject(type.flags, obj.flags, {insertKeys: true})}
       dangerZoneType._cleanClass(type)
       return type;
     }

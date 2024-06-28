@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, betterRoofsOn, fxMasterOn, levelsOn, perfectVisionOn, taggerOn, warpgateOn, wallHeightOn, itemPileOn, fluidCanvasOn} from '../index.js';
+import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, warpgateOn, wallHeightOn, itemPileOn, fluidCanvasOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
@@ -323,6 +323,10 @@ class executorData {
 
     get sceneTokens() {
         return this.scene.tokens
+    }
+
+    get range(){
+        return this.scene.dimensions.distance * Math.max(this.danger.dimensions.units.w, this.danger.dimensions.units.h)
     }
 
     get targetBoundary(){
@@ -1257,7 +1261,7 @@ class ambientLight extends executable{
     }
 
     get flag(){
-        const flg = mergeObject({}, this.data.flag)
+        const flg = foundry.utils.mergeObject({}, this.data.flag)
         if(perfectVisionOn){
             const pv = this._part.flags['perfect-vision']
             if(pv?.sightLimit) flg['perfect-vision.sightLimit'] = pv.sightLimit
@@ -1321,9 +1325,12 @@ class ambientLight extends executable{
                 darkness: this.darkness,
                 dim: this.dim,
                 luminosity: this.luminosity,
+                negative: this.luminosity >= 0 ? false : true,
+                priority: 0,
                 saturation: this.saturation,
                 shadows: this.shadows
-            },               
+            },   
+            elevation: this.boundary.bottom,            
             hidden: false,
             rotation: this._flipRotation(),
             vision: false,
@@ -1332,7 +1339,6 @@ class ambientLight extends executable{
             y: this.boundary.center.y,
             flags: this.flag
         }
-        if(levelsOn && (this.boundary.bottom || this.boundary.top)) light.flags['levels'] = {"rangeTop": this.boundary.top,"rangeBottom": this.boundary.bottom}
         if(taggerOn && this.tag) light.flags['tagger'] = this.taggerTag
         return light
     }
@@ -1393,7 +1399,7 @@ class audio extends executableWithFile {
     async play() {
         await super.play()
         if(this._cancel) return
-        this.sound = await AudioHelper.play({src: this.file, volume: this.volume, loop: false, autoplay: true}, true)
+        this.sound = await foundry.audio.AudioHelper.play({src: this.file, volume: this.volume, loop: false, autoplay: true}, true)
         this._schedule();
     }
 
@@ -1431,6 +1437,7 @@ class audio extends executableWithFile {
 class combat extends executable {
     constructor(...args){
         super(...args);
+        this._combat,
         this.initiativeTargets = []
     }
 
@@ -1443,7 +1450,7 @@ class combat extends executable {
     }
     
     get combat(){
-        return game.combats.find(c => c.scene?.id === this.data.sceneId && c.active) ?? game.combats.find(c => c.isActive)
+        return this._combat ?? game.combats.find(c => c.scene?.id === this.data.sceneId && c.active) ?? game.combats.find(c => c.isActive)
     }
 
     get has(){
@@ -1493,11 +1500,12 @@ class combat extends executable {
     }
 
     async _addToCombat(){
-        for(const token of this.initiativeTargets){if(!this._tokenCombatant(token)) await token._object.toggleCombat(this.combat)}
+        for(const token of this.initiativeTargets){if(!this._tokenCombatant(token)) await token.toggleCombatant(this.combat)}
     }
 
     async _newCombat(){
-        await Combat.create({scene: this.data.sceneId, active: true})
+        this._combat = await Combat.create({scene: this.data.sceneId})
+        await this._combat.activate()
     }
 
     _tokenCombatant(token){
@@ -1622,7 +1630,7 @@ class damageToken extends executable{
 
     async _bulkWorkflow(){
         for (const damage of this.damages){
-            const damageRoll = await new Roll(damage.amount).evaluate({async: true})
+            const damageRoll = await new Roll(damage.amount).evaluate()
             if(damage.save==='F'){
                 await this._calculateDamage(false, damageRoll, this.targets, '', damage)
             } 
@@ -1642,7 +1650,7 @@ class damageToken extends executable{
                 const mvMods = this.data.tokenMovement.find(t => t.tokenId === token.id);
                 const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.hz ? mvMods.hz : 0), (mvMods?.v ? mvMods.v : 0));
                 let dice = damage.amount.replace(/@elevation/i,e).replace(/@moved/i,mv);
-                const damageRoll = await new Roll(dice).evaluate({async: true});     
+                const damageRoll = await new Roll(dice).evaluate();     
                 let flavor = flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
                 await this._calculateDamage(half, damageRoll, [token], flavor, damage)
             }
@@ -1652,10 +1660,10 @@ class damageToken extends executable{
 
     async _calculateDamage(half, damageRoll, tokens, flavor, damage){
         let roll; const types = damageTypes();
-        let title = `<label>${damageRoll.result} ${types[damage.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}.</label>`;
+        let title = `${damageRoll.result} ${types[damage.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}`;
         if(half){
             let hf = Math.floor(damageRoll.total/2);
-            roll = await new Roll(`${hf}`).evaluate({async: true});
+            roll = await new Roll(`${hf}`).evaluate();
         } else {roll = damageRoll}
         await this._applyDamage(tokens, roll, damage.type, flavor, title)
     }
@@ -1663,6 +1671,7 @@ class damageToken extends executable{
     async _applyDamage(tokens, damage, type, flavor, title){
         if(!damage?.total || !tokens.length) return
         const result = await new MidiQOL.DamageOnlyWorkflow(tokens[0].actor, tokens[0], damage.total, type, tokens, damage, {flavor: title}) 
+        await wait(1000)
         for(const token of tokens){
             const res = {token: token, flavor: flavor, name: token.name, applied: result.damageList.find(d => d.tokenId === token.id)?.appliedDamage ?? 0, damage: damage.total, type: result.defaultDamageType}
             if (token.id in this._damageResults){
@@ -1883,8 +1892,8 @@ class item extends executable {
             if(!this.items.length) return 
         }
         if(this.pile && itemPileOn) {
-            const pilePos = canvas.grid.grid.getTopLeft(this.boundary.center.x, this.boundary.center.y)
-            await ItemPiles.API.createItemPile({position: {x: pilePos[0], y: pilePos[1]}, sceneId: this.data.scene.id, items: this.items, pileActorName: false})
+            const pilePos = canvas.grid.getTopLeftPoint({x:this.boundary.center.x, y:this.boundary.center.y})
+            await ItemPiles.API.createItemPile({position: {x: pilePos.x, y: pilePos.y}, sceneId: this.data.scene.id, items: this.items, pileActorName: false})
             return
         }
         for (const token of this.targets) { 
@@ -1930,6 +1939,11 @@ class item extends executable {
 }
 
 class lastingEffect extends executableWithFile{
+    constructor(...args){
+        super(...args);
+        this._tiles = []
+    }
+
     get activeTiles(){
         return this.flags["monks-active-tiles"] ? this.flags["monks-active-tiles"] : {}
     }
@@ -1958,12 +1972,11 @@ class lastingEffect extends executableWithFile{
         return this._part.occlusion
     }
 
-    get overhead(){
-        return this._part.overhead
-    }
-
-    get roof(){
-        return this._part.roof ? this._part.roof : (this.occlusion.mode === 'ROOF' ? true : false)
+    get restrictions(){
+        return {
+            light: this._part.roof ? this._part.roof : this._part.restrictions.light,
+            weather: this._part.roof ? this._part.roof : this._part.restrictions.weather
+        }
     }
 
     get save(){
@@ -1975,20 +1988,18 @@ class lastingEffect extends executableWithFile{
     }
 
     build(){
-        const tiles = [];
         const boundaries = this.data.twinDanger ? this.dualBoundaries : [this.boundary]
         for(let i = 0; i < boundaries.length; i++){
-            tiles.push(this._tile(boundaries[i], i))
+            this._tiles.push(this._tile(boundaries[i], i))
         }
-        return tiles
     }
 
     async play(){
         await super.play()
         if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
-            const tiles = this.build();
-            await this.data.scene.createEmbeddedDocuments("Tile", tiles);
+            this.build();
+            await this.data.scene.createEmbeddedDocuments("Tile", this._tiles);
         }
         await this.data.fillSourceAreas()
     }
@@ -2003,39 +2014,28 @@ class lastingEffect extends executableWithFile{
     _tile(boundary, index = 0){
         const tile = {
             alpha: this.alpha,
+            elevation: boundary.bottom, 
             flags: this.data.flag,
             hidden: this.hidden,
-            img: this._file,
             locked: false,
-            height: boundary.height * this.scale,
+            height: boundary.height,
             occlusion: {
                 alpha: this.occlusion.alpha,
                 mode: CONST.TILE_OCCLUSION_MODES[this.occlusion.mode] 
             },
-            overhead: (levelsOn && boundary.bottom > 0) ? true : this.overhead,
-            roof: this.roof,
+            restrictions: this.restrictions,
+            sort: this.z,
             texture: {
                 rotation: 0,
+                src: this._file,
                 scaleX: this.flipContent('x') ? this.scale * -1 : this.scale,
                 scaleY: this.flipContent('y') ? this.scale * -1 : this.scale
             },
-            width: boundary.width * this.scale,
+            width: boundary.width,
             video: {autoplay: true, loop: this.loop, volume: 0},
-            x: boundary.A.x - ((this.scale - 1) *  (boundary.width/2)),
-            y: boundary.A.y - ((this.scale - 1) *  (boundary.height/2)),
-            z: this.z
+            x: boundary.A.x,
+            y: boundary.A.y
         };
-        if(betterRoofsOn && boundary.bottom) tile.flags['betterroofs'] = {brMode: 3}
-        if(levelsOn && boundary.bottom){
-            tile.flags['levels'] = {
-                "rangeTop": boundary.top,
-                "rangeBottom": boundary.bottom,
-                "showIfAbove": false,
-                "showAboveRange": null,
-                "isBasement": false,
-                "noFogHide": false
-            }
-        }
         if(taggerOn && this.tag) tile.flags['tagger'] = this.taggerTag
         if(monksActiveTilesOn && this.hasActiveTiles){
             tile.flags["monks-active-tiles"] = {
@@ -2811,11 +2811,15 @@ class spawn extends executable {
     }
 
     get options(){
-        return this.duplicates ? {"duplicates": this.duplicates} : {}
+        return this.duplicates ? {"count": this.duplicates} : {"count": 1}
+    }
+
+    get location(){
+        return {x:this.boundary.center.x, y:this.boundary.center.y, elevation: this.boundary.bottom}
     }
 
     get updates(){
-        const updates = {token: {elevation: this.boundary.bottom}}
+        const updates = {token: {}}
         if(this.tag) updates.token['flags'] = {"tagger":this.taggerTag}
         return updates
     }
@@ -2825,7 +2829,8 @@ class spawn extends executable {
         if(this._cancel) return
         const token = await this.token();
         if(token) {
-            this.data.spawn.tokens = await warpgate.spawnAt(this.boundary.center, token, this.updates, {}, this.options);
+            const obj = Object.assign(this.options, {updateData: this.updates});
+            this.data.spawn.tokens = await new Portal().addCreature(this.actor, obj).origin(this.location).range(this.data.range).spawn();
             if(this._part.mutate) this.data.spawn.mutate = true;
         }
         await this.data.fillSources()
@@ -2833,7 +2838,7 @@ class spawn extends executable {
 
     async token(){
         if(!this.hasActor) await this._setActor();
-        const token = this.hasActor ? await game.actors.getName(this.actor).getTokenData() : ''
+        const token = this.hasActor ? await game.actors.getName(this.actor).getTokenDocument() : ''
         return token
     }
     
@@ -2955,16 +2960,17 @@ class tokenMove extends executable {
         if(this._cancel) return
         if(this.movesTargets || (this.sToT && this.data.hasSources)){
             for (const token of this.targets) { 
-                let amtV = this._v(), amtH = this._hz(), amtE = this._e(), e, x, y;
+                let h = this._v(), w = this._hz(), amtE = this._e(), e, x, y;
                 if(this.sToT && this.data.sources.find(s => s.id === token.id)){
                     let location = this.boundary.center;
                     let tokenBoundary = boundary.documentBoundary("Token", token);
                     x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
                     e = this.boundary.bottom;
                 } else if (this.movesTargets) {
-                    [x, y] = this.walls ? furthestShiftPosition(token, [amtH, amtV]) : canvas.grid.grid.shiftPosition(token.x, token.y, amtH, amtV)
+                    const shift = this.walls ? furthestShiftPosition(token, [w, h]) : point.shiftPoint(token, {w: w, h: h})
+                    x = shift.x; y = shift.y;
                     e = this.e.type === 'S' ? amtE : token.elevation + amtE;
-                    this.data.tokenMovement.push({tokenId: token.id, hz: Math.abs(amtH), v: Math.abs(amtV), e: Math.abs(e - token.elevation)})
+                    this.data.tokenMovement.push({tokenId: token.id, hz: Math.abs(w), v: Math.abs(h), e: Math.abs(e - token.elevation)})
                 }
                 this.updates.push({"_id": token.id,"x": x,"y": y, "elevation": e});
             }

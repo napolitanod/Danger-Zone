@@ -652,10 +652,13 @@
             "light":{
                 "animationIntensity.label": "Animation Intensity",
                 "animation.label": "Light Animation Type",
+                "attenuation.description": "Transition illumination gradually between bright, dim, and dark.",
                 "brightLight.label": "Bright",
                 "clear.label": "Post Creation Event",
                 "color.label": "Light Color",
                 "coloration.label": "Coloration Technique",
+                "coloration.description":"The coloration technique applied to the light source contributes additive blending to the resulting appearance.",
+                "contrast.description": "Adjust the contrast of surfaces that are illuminated by this light source. The default value for a standard light source is 0.",
                 "contrast.label": "Background Contrast",
                 "darkness.label": "Darkness Activation Range",
                 "delay.label": "Delay Start",
@@ -666,11 +669,14 @@
                 "intensity.label": "Color Intensity",
                 "label": "Ambient Local Light",
                 "luminosity.label": "Luminosity",
+                "luminosity.description": "Adjust the brightness of this light source. More luminous lights are less diminished by darkness. The default value for a standard light source is 0.5.",
                 "priority.label": "Priority",
                 "radius.label": "Light Radius",
                 "reverseAnimation.label": "Reverse Direction",
                 "rotation.label": "Rotation Angle",
+                "saturation.description": "Adjust the saturation of surfaces that are illuminated by this light source. The default value for a standard light source is 0.",
                 "saturation.label": "Background Saturation",
+                "shadows.description": "Enhance or the intensity of dark colors illuminated by this light source. The default value for a standard light source is 0.",
                 "shadows.label": "Background Shadows",
                 "sightLimit.label": "Sight Limit",
                 "speed.label": "Animation Speed",
@@ -853,7 +859,8 @@
                 "is-overhead.label": "Is Overhead?",
                 "loop.label": "Loop Video",
                 "randomFile.label": "Randomize Wildcard Image",
-                "roof.label": "Is a Roof?",
+                "restrictsLight.label": "Restricts Light",
+                "restrictsWeather.label": "Restricts Weather",
                 "scale.label": "Effect Scale",
                 "tab": {
                     "main.title": "Tile",
@@ -861,7 +868,7 @@
                 },
                 "tag.label": "Tile Tag",
                 "tag.description": "Tagger tag",
-                "z.label": "Z-Index"
+                "z.label": "Sort"
             },
             "tokenSays": {
                 "audio":{
@@ -1029,7 +1036,7 @@
                 "top.label": "Wall on Top"
             },
             "warpgate": {
-                "description": "Spawn new tokens to the target area using the Warp Gate module.",
+                "description": "Spawn new tokens to the target area using the Portal module.",
                 "actor.description": "Spawn creatures using the actor name or, if 'Is Rollable Table' is checked, spawn will be a random actor matching the name rolled from the specified rollable table in this world.",
                 "actor.label": "Name",
                 "actor.placeholder": "actor or rollable table name",

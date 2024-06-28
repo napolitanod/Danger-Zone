@@ -66,9 +66,9 @@ export class dangerZone {
    * @param  {...any} args - what to log
   */
   static log(force, ...args) {  
-      const shouldLog = force || game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.ID);
+     // const shouldLog = force || game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.ID);
   
-      if (shouldLog) {
+      if (true) {
         console.log(this.ID, '|', ...args);
       }
   }
@@ -81,7 +81,7 @@ export class dangerZone {
   static _toClass(flag){
     if(!flag.scene?.sceneId){return {}}
     let zn =  new zone(flag.scene.sceneId);
-    return mergeObject(zn, flag, {insertKeys: false, enforceTypes: true})
+    return foundry.utils.mergeObject(zn, flag, {insertKeys: false, enforceTypes: true})
   }
 
   static sceneHasZone(sceneId){
@@ -193,11 +193,12 @@ export class dangerZone {
   } 
 
   static async copyZone(sourceSceneId, sourceZoneId, targetSceneId){
-    const source = deepClone(this.getZoneFromScene(sourceZoneId,sourceSceneId));
+    const source = foundry.utils.deepClone(this.getZoneFromScene(sourceZoneId,sourceSceneId));
     delete source['id']; delete source['scene'];
     const zn = new zone(targetSceneId);
     const updt = await zn.update(source); 
-    updt.data.flags?.[this.ID]?.[this.FLAGS.SCENEZONE]?.[zn.id] ? ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.zone-copied")) : ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.zone-copy-fail"));
+    dangerZone.log(false,'Copying Zone ', {update: updt, zone: zn})
+    updt.flags?.[this.ID]?.[this.FLAGS.SCENEZONE]?.[zn.id] ? ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.zone-copied")) : ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.zone-copy-fail"));
     return updt    
   }
 
@@ -444,7 +445,7 @@ export class zone {
    * @param {object} updateData 
    */
   async _update(updateData){
-    mergeObject(this, updateData, {insertKeys: false, enforceTypes: true});
+    foundry.utils.mergeObject(this, updateData, {insertKeys: false, enforceTypes: true});
     const updt = await this._setFlag();
     return updt
   }
@@ -678,9 +679,9 @@ export class zone {
 
   /*prompts the user to select the zone location point (top left grid location) and captures the location*/
   async promptTemplate() {
-    const z = (this.options.noPrompt) ? 0 : await this._promptZ() 
+    const z = (this.options.noPrompt) ? 0 : await this._promptZ() ;
     const xy = await this._promptXY(z);
-    return xy ? {x: xy.x, y: xy.y, z: z} : {}
+    return (xy ? {x: xy.x, y: xy.y, z: z} : {})
   }
 
   async _promptZ(){
@@ -720,9 +721,9 @@ export class zone {
       ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-warpgate-target"));
       const size = canvas.grid.type === 1 ? this.danger.dimensions.units.w : 1
       xy = await warpgate.crosshairs.show({icon: this.danger.icon, fillAlpha: 0.1, fillColor: '#000000', size: size, interval: (size % 2) > 0 ? -1 : 1 })
-      let tg = canvas.grid.grid.getGridPositionFromPixels(xy.x, xy.y)
-      let tl = canvas.grid.grid.getPixelsFromGridPosition(tg[0]-Math.floor(size/2), tg[1]-Math.floor(size/2))
-      xy.x = tl[0], xy.y = tl[1]
+      let tg = canvas.grid.getOffset(xy)
+      let topLeft = canvas.grid.getTopLeftPoint({i:tg.i-Math.floor(size/2), j:tg.j-Math.floor(size/2)})
+      xy.x = topLeft.x, xy.y = topLeft.y
     } else {
       let currentLayer = canvas.activeLayer;
       currentLayer.deactivate();

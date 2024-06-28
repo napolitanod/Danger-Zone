@@ -1,5 +1,6 @@
 import {taggerOn} from '../index.js';
 import {dangerZone} from '../danger-zone.js';
+import {point} from './dimensions.js'
 
 export function circleAreaGrid(xLoc,yLoc,w,h){
   if((!xLoc &&!yLoc) || (yLoc===h&&!xLoc) || (xLoc===w&&!yLoc) || (xLoc===w&&yLoc===h)){return false}
@@ -7,20 +8,27 @@ export function circleAreaGrid(xLoc,yLoc,w,h){
 }
 
 export function furthestShiftPosition(token, [xGrids, yGrids] = [0,0]){
-  let x = token.x,y = token.y, collisionTest = true;
+  let collisionTestX = false, collisionTestY = false, xTest = 0, yTest = 0, test, options =  {type: 'move', mode: "any"};
   const xSign = Math.sign(xGrids); const ySign = Math.sign(yGrids);
   const placeable = canvas.tokens.placeables.find(t => t.id === token.id)
-  const max = (xGrids > 0 ? xGrids : xGrids * -1) * (yGrids > 0 ? yGrids : yGrids * -1)
-  let i = 0
+  const max = Math.abs(xGrids) + Math.abs(yGrids)
+  let i = 0, position = {x: placeable.x,y: placeable.y};
   do{
-      let [xTest,yTest] = canvas.grid.grid.shiftPosition(placeable.x, placeable.y, xGrids, yGrids)
-      collisionTest = placeable.checkCollision({x: xTest,y: yTest});
-      if(!collisionTest){x = xTest,y = yTest}
-      dangerZone.log(false,'Wall Collision Test ', {"shiftPos": [x,y], token: token, placeable: placeable, test: collisionTest, grids:[xGrids,yGrids]});
-      if(xGrids > yGrids){xGrids = xGrids -(1 * xSign)} else {yGrids = yGrids -(1 * ySign)} 
+      if(!collisionTestX && xTest < Math.abs(xGrids) && (xTest <= yTest || yTest === Math.abs(yGrids))){
+        xTest++
+        test = point.shiftPoint(position, {w: (1 * xSign), h:0}) 
+        collisionTestX = placeable.checkCollision(canvas.grid.getCenterPoint(test), options);
+        if(!collisionTestX) position = test
+      } else if(!collisionTestY && yTest < Math.abs(yGrids))  {
+        yTest++
+        test = point.shiftPoint(position, {w: 0, h: (1 * ySign)}) 
+        collisionTestY = placeable.checkCollision(canvas.grid.getCenterPoint(test), options);
+        if(!collisionTestY) position = test
+      }
+      dangerZone.log(false,'Wall Collision Test ', {"shiftPos": test, token: token, placeable: placeable,  grids:[xGrids,yGrids]});
       i++
-  } while (collisionTest && (!xGrids || !yGrids) && i < max);
-  return [x,y]
+  } while (!collisionTestX && !collisionTestY && i < max);
+  return position
 }
 
 export function getActorOwner(document){
@@ -70,9 +78,10 @@ export async function maybe(){
   return roll
 }
 
-export function rayIntersectsGrid([yPos,xPos], r){
-  const [xl,yl] = canvas.grid.grid.getPixelsFromGridPosition(yPos, xPos);
-  const [xc,yc] = canvas.grid.grid.getCenter(xl, yl);
+export function rayIntersectsGrid(coords, r){
+  const topLeft = canvas.grid.getTopLeftPoint(coords);
+  const xl = topLeft.x; const yl = topLeft.y;
+  const [xc,yc] = canvas.grid.getCenter(xl, yl);
   const wg = (xc - xl) * 2, hg = (yc - yl) * 2;
   if(r.intersectSegment([xl, yl, xl+wg, yl]) || r.intersectSegment([xl, yl, xl, yl+hg])
       || r.intersectSegment([xl, yl+hg, xl+wg, yl+hg]) || r.intersectSegment([xl+wg, yl, xl+wg, yl+hg])
