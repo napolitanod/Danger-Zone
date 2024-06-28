@@ -1,4 +1,4 @@
-<form autocomplete="off">
+<form autocomplete="off" class="danger-part-form">
     <div class="tab">
         <p class="notes">{{localize "DANGERZONE.type-form.warpgate.description"}}</p>
         <div class="form-group">
@@ -22,7 +22,7 @@
                 <span class="range-value">{{#if duplicates}}{{duplicates}}{{/if}}{{#unless duplicates}}1{{/unless}}</span>    
             </div>
         </div>
-        <div class="form-group">
+        <div class="form-group dz-hidden">
             <label for="mutate">{{localize "DANGERZONE.type-form.warpgate.mutate.label"}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.mutate.description'}}"><i class="fas fa-info-circle"></i></span>
             </label>

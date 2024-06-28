@@ -384,7 +384,11 @@ export function saveTypes() {
 export function damageTypes() {
     switch(game.world.system){
         case "dnd5e":
-            return Object.assign(game.dnd5e.config.damageTypes, game.dnd5e.config.healingTypes)
+            const damageEntries = {};
+            for ( let [k, v] of Object.entries(Object.assign(game.dnd5e.config.damageTypes, game.dnd5e.config.healingTypes)) ) {
+                damageEntries[k] = v.label;
+            }
+            return damageEntries
         default:
             return {}
     }

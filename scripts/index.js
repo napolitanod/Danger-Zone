@@ -404,9 +404,8 @@ function setModsAvailable () {
 	if (game.modules.get("monks-active-tiles")?.active){monksActiveTilesOn = true} ;
 	if (game.modules.get("monks-scene-navigation")?.active){monksSceneOn = true}
 	if (game.modules.get("token-says")?.active){tokenSaysOn = true} ;
-	if (game.modules.get("warpgate")?.active){warpgateOn = true} ;
+	if (game.modules.get("portal-lib")?.active){warpgateOn = true} ;
 	if (game.modules.get("fxmaster")?.active){fxMasterOn = true} ;
-	//if (game.modules.get("kandashis-fluid-canvas")?.active){fluidCanvasOn = true} ; --suppress until this is supported again.
 	if (game.modules.get("sequencer")?.active){sequencerOn = true} ;
 	if (game.modules.get("tagger")?.active){taggerOn = true} ;
 	if (game.modules.get("wall-height")?.active){wallHeightOn = true} ;

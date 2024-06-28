@@ -194,42 +194,42 @@
                     {{selectOptions colorationOps selected=data.coloration nameAttr="id" labelAttr="label" localize=true}}
                 </select>
             </div>
-            <p class="hint">{{ localize 'LIGHT.ColorationTechniqueHint' }}</p>
+            <p class="hint">{{ localize 'DANGERZONE.type-form.light.coloration.description' }}</p>
         </div>
         <div class="form-group">
             <label for="luminosity">{{localize 'DANGERZONE.type-form.light.luminosity.label'}}</label>
             <div class="form-fields">
                 {{rangePicker name="luminosity" value=data.luminosity min="-1" max="1" step="0.05"}}
             </div>
-            <p class="hint">{{ localize 'LIGHT.LuminosityHint' }}</p>
+            <p class="hint">{{ localize 'DANGERZONE.type-form.light.luminosity.description' }}</p>
         </div>
         <div class="form-group">
             <label for="attenuation">{{ localize 'DANGERZONE.type-form.light.attenuation.label' }}</label>
             <div class="form-fields">
                 {{ rangePicker name="attenuation" value=data.attenuation min="0" max="1" step="0.05" }}
             </div>
-            <p class="hint">{{ localize 'LIGHT.AttenuationHint' }}</p>
+            <p class="hint">{{ localize 'DANGERZONE.type-form.light.attenuation.description' }}</p>
         </div>
         <div class="form-group">
             <label>{{localize 'DANGERZONE.type-form.light.saturation.label'}}</label>
             <div class="form-fields">
                 {{rangePicker name="saturation" value=data.saturation min="-1" max="1" step="0.05" }}
             </div>
-            <p class="hint">{{ localize 'LIGHT.SaturationHint' }}</p>
+            <p class="hint">{{ localize 'DANGERZONE.type-form.light.saturation.description' }}</p>
         </div>
         <div class="form-group">
             <label>{{localize 'DANGERZONE.type-form.light.contrast.label'}}</label>
             <div class="form-fields">
                 {{rangePicker name="contrast" value=data.contrast min="-1" max="1" step="0.05" }}
             </div>
-            <p class="hint">{{ localize 'LIGHT.ContrastHint' }}</p>
+            <p class="hint">{{ localize 'DANGERZONE.type-form.light.contrast.description' }}</p>
         </div>
         <div class="form-group">
             <label>{{localize 'DANGERZONE.type-form.light.shadows.label'}}</label>
             <div class="form-fields">
                 {{rangePicker name="shadows" value=data.shadows min="0" max="1" step="0.05" }}
             </div>
-            <p class="hint">{{ localize 'LIGHT.ShadowsHint' }}</p>
+            <p class="hint">{{ localize 'DANGERZONE.type-form.light.shadows.description' }}</p>
         </div>
         <div class="form-group{{#unless hasPerfectVision}} dz-hidden{{/unless}}">
             <label>{{localize 'DANGERZONE.type-form.light.priority.label'}}</label>

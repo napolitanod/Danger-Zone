@@ -325,6 +325,10 @@ class executorData {
         return this.scene.tokens
     }
 
+    get range(){
+        return this.scene.dimensions.distance * Math.max(this.danger.dimensions.units.w, this.danger.dimensions.units.h)
+    }
+
     get targetBoundary(){
         return this.boundary
     }
@@ -1321,9 +1325,12 @@ class ambientLight extends executable{
                 darkness: this.darkness,
                 dim: this.dim,
                 luminosity: this.luminosity,
+                negative: this.luminosity >= 0 ? false : true,
+                priority: 0,
                 saturation: this.saturation,
                 shadows: this.shadows
-            },               
+            },   
+            elevation: this.boundary.bottom,            
             hidden: false,
             rotation: this._flipRotation(),
             vision: false,
@@ -1623,7 +1630,7 @@ class damageToken extends executable{
 
     async _bulkWorkflow(){
         for (const damage of this.damages){
-            const damageRoll = await new Roll(damage.amount).evaluate({async: true})
+            const damageRoll = await new Roll(damage.amount).evaluate()
             if(damage.save==='F'){
                 await this._calculateDamage(false, damageRoll, this.targets, '', damage)
             } 
@@ -1643,7 +1650,7 @@ class damageToken extends executable{
                 const mvMods = this.data.tokenMovement.find(t => t.tokenId === token.id);
                 const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.hz ? mvMods.hz : 0), (mvMods?.v ? mvMods.v : 0));
                 let dice = damage.amount.replace(/@elevation/i,e).replace(/@moved/i,mv);
-                const damageRoll = await new Roll(dice).evaluate({async: true});     
+                const damageRoll = await new Roll(dice).evaluate();     
                 let flavor = flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
                 await this._calculateDamage(half, damageRoll, [token], flavor, damage)
             }
@@ -1653,10 +1660,10 @@ class damageToken extends executable{
 
     async _calculateDamage(half, damageRoll, tokens, flavor, damage){
         let roll; const types = damageTypes();
-        let title = `<label>${damageRoll.result} ${types[damage.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}.</label>`;
+        let title = `${damageRoll.result} ${types[damage.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}`;
         if(half){
             let hf = Math.floor(damageRoll.total/2);
-            roll = await new Roll(`${hf}`).evaluate({async: true});
+            roll = await new Roll(`${hf}`).evaluate();
         } else {roll = damageRoll}
         await this._applyDamage(tokens, roll, damage.type, flavor, title)
     }
@@ -1664,6 +1671,7 @@ class damageToken extends executable{
     async _applyDamage(tokens, damage, type, flavor, title){
         if(!damage?.total || !tokens.length) return
         const result = await new MidiQOL.DamageOnlyWorkflow(tokens[0].actor, tokens[0], damage.total, type, tokens, damage, {flavor: title}) 
+        await wait(1000)
         for(const token of tokens){
             const res = {token: token, flavor: flavor, name: token.name, applied: result.damageList.find(d => d.tokenId === token.id)?.appliedDamage ?? 0, damage: damage.total, type: result.defaultDamageType}
             if (token.id in this._damageResults){
@@ -2803,11 +2811,15 @@ class spawn extends executable {
     }
 
     get options(){
-        return this.duplicates ? {"duplicates": this.duplicates} : {}
+        return this.duplicates ? {"count": this.duplicates} : {"count": 1}
+    }
+
+    get location(){
+        return {x:this.boundary.center.x, y:this.boundary.center.y, elevation: this.boundary.bottom}
     }
 
     get updates(){
-        const updates = {token: {elevation: this.boundary.bottom}}
+        const updates = {token: {}}
         if(this.tag) updates.token['flags'] = {"tagger":this.taggerTag}
         return updates
     }
@@ -2817,7 +2829,8 @@ class spawn extends executable {
         if(this._cancel) return
         const token = await this.token();
         if(token) {
-            this.data.spawn.tokens = await warpgate.spawnAt(this.boundary.center, token, this.updates, {}, this.options);
+            const obj = Object.assign(this.options, {updateData: this.updates});
+            this.data.spawn.tokens = await new Portal().addCreature(this.actor, obj).origin(this.location).range(this.data.range).spawn();
             if(this._part.mutate) this.data.spawn.mutate = true;
         }
         await this.data.fillSources()
@@ -2825,7 +2838,7 @@ class spawn extends executable {
 
     async token(){
         if(!this.hasActor) await this._setActor();
-        const token = this.hasActor ? await game.actors.getName(this.actor).getTokenData() : ''
+        const token = this.hasActor ? await game.actors.getName(this.actor).getTokenDocument() : ''
         return token
     }
     
