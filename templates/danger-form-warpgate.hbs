@@ -22,6 +22,37 @@
                 <span class="range-value">{{#if duplicates}}{{duplicates}}{{/if}}{{#unless duplicates}}1{{/unless}}</span>    
             </div>
         </div>
+        <!--
+        <div class="form-group">
+            <label for="file">{{localize "DANGERZONE.type-form.warpgate.file.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.file.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                {{filePicker target="file" type="imagevideo"}}
+                <input type="text" required name="file" class="image" placeholder="{{localize "DANGERZONE.type-form.warpgate.file.placeholder"}}" value="{{file}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="randomFile">{{localize "DANGERZONE.type-form.warpgate.randomFile.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="randomFile" {{checked randomFile}}>
+            </div>
+        </div>
+        -->
+        <div class="form-group">
+            <label for="color">{{localize "DANGERZONE.type-form.warpgate.color.label"}}</label>
+            <div class="form-fields">
+                <input type="text" name="color"  min="0.00" step="0.01"  value={{color}}>
+                <input type="color" value="{{color}}" data-edit="color">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.warpgate.range.label"}} <span class="units">{{localize "DANGERZONE.gridUnits2"}}</span><span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.range.description'}}"><i class="fas fa-info-circle"></i></span></label>
+            <div class="form-fields">
+                <label for="range">{{localize "DANGERZONE.type-form.warpgate.range.label"}}</label>
+                <input type="number" name="range"  min="0.00" step="1" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{range}}>
+            </div>
+        </div>
         <div class="form-group dz-hidden">
             <label for="mutate">{{localize "DANGERZONE.type-form.warpgate.mutate.label"}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.mutate.description'}}"><i class="fas fa-info-circle"></i></span>
@@ -34,6 +65,12 @@
             <label for="delay">{{localize "DANGERZONE.type-form.warpgate.delay.label"}}</label>
             <div class="form-fields">
                 <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{delay}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="spawnDelay">{{localize "DANGERZONE.type-form.warpgate.spawnDelay.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="Number" name="spawnDelay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{spawnDelay}}>
             </div>
         </div>
         <div class="form-group {{#if taggerOnNot}}dz-hidden{{/if}}">
