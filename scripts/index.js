@@ -363,8 +363,8 @@ Hooks.on('renderSceneControls', async(app, html, options) => {
    }
 });
 
-Hooks.on("changeSidebarTab", async(app) => {
-	addQuickZonesLaunch(app);
+Hooks.on("renderSidebarTab", async(app,options,update) => {
+	if(update?.tabName ==='scenes') addQuickZonesLaunch(app);
 });
 
 /**

@@ -995,6 +995,11 @@ class DangerZoneDangerFormLight extends FormApplication {
       }
 
     getData(options) {
+      if(this.data.luminosity < 0) {//FvTT 11 and backwards compat
+        this.data.negative = true;
+        this.data.luminosity = 0
+      }
+
       return {
         clearOps: AMBIENTLIGHTCLEAROPS,
         colorationOps: AdaptiveLightingShader.SHADER_TECHNIQUES,

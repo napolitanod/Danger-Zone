@@ -40,6 +40,7 @@ export class dangerZoneType {
             type: ""
           },
           luminosity: 0.5,
+          negative: false,
           offset: {
             x: {
               adj: 0,
@@ -61,7 +62,8 @@ export class dangerZoneType {
           shadows: 0,
           tag: "",
           tintColor: "",
-          tintAlpha: 0.5
+          tintAlpha: 0.5,
+          walls: true
         },
         audio: {
           file:'',
@@ -76,6 +78,7 @@ export class dangerZoneType {
             randomFile: false,
             volume: 0.5
           },
+          below: true,
           delay: 0,
           file: '',
           offset: {

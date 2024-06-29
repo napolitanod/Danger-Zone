@@ -1278,6 +1278,10 @@ class ambientLight extends executable{
         return this._part.luminosity
     }
 
+    get negative(){
+        return (this.luminosity < 0 || this._part.negative ? true : false)
+    }
+
     get rotation(){
         return this._part.rotation
     }
@@ -1300,6 +1304,10 @@ class ambientLight extends executable{
 
     get tintColor(){
         return this._part.tintColor
+    }
+
+    get walls(){
+        return this._part.walls ? true : false
     }
 
     get has(){
@@ -1325,7 +1333,7 @@ class ambientLight extends executable{
                 darkness: this.darkness,
                 dim: this.dim,
                 luminosity: this.luminosity,
-                negative: this.luminosity >= 0 ? false : true,
+                negative: this.negative,
                 priority: 0,
                 saturation: this.saturation,
                 shadows: this.shadows
@@ -1337,6 +1345,7 @@ class ambientLight extends executable{
             walls: true,
             x: this.boundary.center.x,
             y: this.boundary.center.y,
+            walls: this.walls,
             flags: this.flag
         }
         if(taggerOn && this.tag) light.flags['tagger'] = this.taggerTag
@@ -2523,6 +2532,10 @@ class secondaryEffect extends executableWithFile {
     get audio(){
         return this._part.audio ? this._part.audio : {}
     }
+    
+    get below(){
+        return this._part.below 
+    }
 
     get duration(){
         return this._part.duration
@@ -2597,6 +2610,7 @@ class secondaryEffect extends executableWithFile {
             .file(this._fileB)
             .volume(this.audio.volume)
         }
+        if(this.below) s = s.belowTokens()
         return s
     }
 
@@ -2794,6 +2808,10 @@ class spawn extends executable {
         return this._part.actor
     }
 
+    get color(){
+        return this._part.color
+    }
+
     get duplicates(){
         return this._part.duplicates
     }
@@ -2818,10 +2836,37 @@ class spawn extends executable {
         return {x:this.boundary.center.x, y:this.boundary.center.y, elevation: this.boundary.bottom}
     }
 
+    get range(){
+        return this._part.range ? this._part.range : this.data.range
+    }
+
+    get spawnDelay(){
+        return this._part.spawnDelay 
+    }
+
+    get texture(){
+        return game.actors.getName(this.actor)?.thumbnail
+    }
+
     get updates(){
         const updates = {token: {}}
         if(this.tag) updates.token['flags'] = {"tagger":this.taggerTag}
         return updates
+    }
+
+    async _build(){
+        const obj = Object.assign(this.options, {updateData: this.updates});
+        this.data.spawn.portal = await new Portal()
+        if(this.color) this.data.spawn.portal = this.data.spawn.portal.color(this.color)
+        if(this.spawnDelay) this.data.spawn.portal = this.data.spawn.portal.delay(this.spawnDelay)
+        if(this.texture) this.data.spawn.portal = this.data.spawn.portal.texture(this.texture)
+        this.data.spawn.portal = this.data.spawn.portal.addCreature(this.actor, obj).origin(this.location).range(this.range).setLocation(this.location)
+    }
+
+    async _spawn(){
+        this.data.spawn.tokens = await this.data.spawn.portal.spawn();
+        await this.data.fillSources()
+        if(this._part.mutate) this.data.spawn.mutate = true;
     }
 
     async play(){
@@ -2829,11 +2874,9 @@ class spawn extends executable {
         if(this._cancel) return
         const token = await this.token();
         if(token) {
-            const obj = Object.assign(this.options, {updateData: this.updates});
-            this.data.spawn.tokens = await new Portal().addCreature(this.actor, obj).origin(this.location).range(this.data.range).spawn();
-            if(this._part.mutate) this.data.spawn.mutate = true;
+            await this._build()
+            this._spawn()
         }
-        await this.data.fillSources()
     }
 
     async token(){
