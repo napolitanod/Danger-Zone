@@ -8,7 +8,8 @@ export class DangerZoneSceneForm extends FormApplication {
   constructor(app, sceneId, ...args) {
       super(...args);
       this.parent = app,
-      this.sceneId = sceneId
+      this.sceneId = sceneId;
+      
   }
 
   static get defaultOptions(){

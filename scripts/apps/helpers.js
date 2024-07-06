@@ -2,8 +2,8 @@ import {taggerOn} from '../index.js';
 import {dangerZone} from '../danger-zone.js';
 import {point} from './dimensions.js'
 
-export function circleAreaGrid(xLoc,yLoc,w,h){
-  if((!xLoc &&!yLoc) || (yLoc===h&&!xLoc) || (xLoc===w&&!yLoc) || (xLoc===w&&yLoc===h)){return false}
+export function circleAreaGrid(xLoc,yLoc, dimension = {w:w, h:h}){
+  if((!xLoc &&!yLoc) || (yLoc===dimension.h&&!xLoc) || (xLoc===dimension.w&&!yLoc) || (xLoc===dimension.w&&yLoc===dimension.h)){return false}
   return true
 }
 
@@ -59,6 +59,14 @@ export async function getFilesFromPattern(pattern) {
     return content.files;      
 }
 
+export function getSceneRegionList(sceneId){
+  let list = {'':'[Use Scene Dimensions]'};
+  for (let region of game.scenes.get(sceneId).regions.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
+    list[region.id] = region.name;
+  }
+  return list
+}
+
 export async function getTagEntities(tag, scene){
   const d = scene.getEmbeddedCollection("Drawing").filter(d => d.text === tag);
   if(taggerOn){
@@ -81,8 +89,8 @@ export async function maybe(){
 export function rayIntersectsGrid(coords, r){
   const topLeft = canvas.grid.getTopLeftPoint(coords);
   const xl = topLeft.x; const yl = topLeft.y;
-  const [xc,yc] = canvas.grid.getCenter(xl, yl);
-  const wg = (xc - xl) * 2, hg = (yc - yl) * 2;
+  const center = canvas.grid.getCenterPoint(topLeft);
+  const wg = (center.x - xl) * 2, hg = (center.y - yl) * 2;
   if(r.intersectSegment([xl, yl, xl+wg, yl]) || r.intersectSegment([xl, yl, xl, yl+hg])
       || r.intersectSegment([xl, yl+hg, xl+wg, yl+hg]) || r.intersectSegment([xl+wg, yl, xl+wg, yl+hg])
       ){

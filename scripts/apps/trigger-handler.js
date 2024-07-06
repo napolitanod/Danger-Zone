@@ -81,7 +81,7 @@ export class triggerManager {
             if(this.data?.options?.sources && this.data.options.sources.length) options.sources = this._loadTokens(this.data.options.sources)
             if(zone.options.targetCombatant && COMBATTRIGGERS.includes(zone.trigger)){
                 const token = this.getTriggerCombatant(zone);
-                if(token && !options.location && !options.boundary) options['location'] = {x: token.x, y: token.y, z: token.elevation}
+                if(token && !options.location && !options.boundary) options['location'] = {coords: {x: token.x, y: token.y}, elevation: token.elevation}
                 if(token && !options.targets) options.targets = [token];
             } 
         }
@@ -272,7 +272,7 @@ export class triggerManager {
             if(!(await zn.sourceTrigger([token?.actor?.id]))){
                 continue;
             }
-            const zoneBoundary = await zn.scene.boundary();
+            const zoneBoundary = await zn.scene.getZoneBoundary();
             const zoneTokens = zoneBoundary.tokensIn([token]);
             if(zoneTokens.length){
                 zones.push(zn)

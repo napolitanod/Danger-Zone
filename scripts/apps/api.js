@@ -99,8 +99,10 @@ export class api {
         if(zn.enabled) await zn.toggleZoneActive()
     }
 
-    static _tokensInBoundary(A,B){
-        const b = new boundary(A,B);
+    static _tokensInBoundary(A,B, elevation = {bottom: null, top: null}){
+        if(elevation.bottom === null && A.z) elevation.bottom = A.z
+        if(elevation.top === null && B.z) elevation.top = B.z
+        const b = new boundary(A,B,elevation);
         return b.tokensIn(canvas.scene.tokens);
     }
 

@@ -186,6 +186,14 @@ Hooks.once('init', async function() {
         type: Object
     }); 
 
+	game.settings.register('danger-zone', 'region-migration-complete', {
+		name: 'Region Migration Complete Flag',
+		scope: 'world',
+		config: false,
+		default: false,
+		type: Boolean
+	}); 
+
 	if(game.world.system === 'dnd5e'){
 		game.settings.register('danger-zone', 'saving-throw-fast-forward', {
 			name: game.i18n.localize('DANGERZONE.setting.saving-throw-fast-forward.label'),
@@ -253,6 +261,7 @@ Hooks.once('ready', async function() {
 
 	  setExecutableOptions();
 	  setModOptions();
+	  dangerZone._migrate();
 });
 
 /**
@@ -270,7 +279,7 @@ Hooks.once('setup', async function() {
 			  condition: (li) => {
 				return game.user.isGM
 			  },
-			  callback: (li) => {
+			  callback: async (li) => {
 				let scene = game.scenes.get(li.data('documentId'));
 				if(scene){
 					new DangerZoneSceneForm('', scene.id).render(true);
@@ -290,7 +299,7 @@ Hooks.once('setup', async function() {
 			  condition: (li) => {
 				return game.user.isGM
 			  },
-			  callback: (li) => {
+			  callback: async (li) => {
 				let scene = game.scenes.get(li.data('sceneId'));
 				if(scene){
 					new DangerZoneSceneForm( '', scene.id).render(true);
@@ -335,6 +344,20 @@ Hooks.on('renderSceneConfig', async (app, html, options) => {
     DangerZoneScene._init(app, html, options);
 });
 
+
+
+Hooks.on('createScene', async (scene, options, userId) => {
+	if(options.fromCompendium){
+		const flag = dangerZone.validatePreupdateZones(scene);
+		if(flag){
+			const updt = await dangerZone.updateAllSceneZones(scene.id, flag)
+			dangerZone.log(false, 'Zones updated on compendium scene...', {scene: scene, options: options, flag: flag, update: updt})
+			await dangerZone.migrate(scene)
+		}
+	}
+});
+
+
 /**
  * Hook for preupdating the scene form. Confirms compatibility of zone scene ids in update with current scene 
  */
@@ -344,6 +367,7 @@ Hooks.on('preUpdateScene', (scene, change, options, userId) => {
 		change[`flags.${dangerZone.ID}.${dangerZone.FLAGS.SCENEZONE}`] = flag;
 	}
 });
+
 
 /**
  * Hook for the rendering of the scene list at top of canvas display. Adds zone trigger buttons to scene navigation bar on canvas

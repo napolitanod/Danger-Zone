@@ -59,86 +59,15 @@
     </div>
     <div class="tab" data-tab="dimensions">
         <p class="notes">{{localize 'DANGERZONE.edit-form.boundary.description'}}</p>
-        <p class="notes warning {{#unless sceneInactive}}dz-hidden{{/unless}}">{{localize 'DANGERZONE.edit-form.scene-inactive'}}</p>
-        <div class="form-group">
+        <div class="form-group" >
             <label>
-                {{localize 'DANGERZONE.edit-form.boundary.choose.label'}}
+                {{localize 'DANGERZONE.edit-form.region.label'}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.region.description'}}"><i class="fas fa-info-circle"></i></span>
             </label>
             <div class="form-fields">
-                <div class="form-group">
-                    <button type="button" {{#if sceneInactive}}disabled{{/if}} data-action="location-picker" title="{{localize 'DANGERZONE.location-picker'}}" class="location-picker">
-                        <i class="fas fa-crosshairs fa-sm"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
-            <label>
-                {{localize 'DANGERZONE.edit-form.boundary.start.label'}}
-            </label>
-            <div class="form-fields">
-                <div class="form-group">
-                    <label>
-                        {{localize 'DANGERZONE.edit-form.boundary.x.label'}}
-                    </label>
-                    <div class="form-fields">
-                        <input type="Number" name="scene.start.x" min="0" step="any" value={{zone.scene.start.x}} required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <span>{{localize 'DANGERZONE.edit-form.boundary.y.label'}}</span>
-                    </label>
-                    <div class="form-fields">
-                        <input type="Number" name="scene.start.y" min="0" step="any" value={{zone.scene.start.y}} required>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
-            <label>
-                {{localize 'DANGERZONE.edit-form.boundary.end.label'}}
-            </label>
-            <div class="form-fields">
-                <div class="form-group">
-                    <label>
-                        {{localize 'DANGERZONE.edit-form.boundary.x.label'}}
-                    </label>
-                    <div class="form-fields">
-                        <input type="Number" name="scene.end.x" min="1" step="any" value={{zone.scene.end.x}} required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <span>{{localize 'DANGERZONE.edit-form.boundary.y.label'}}</span>
-                    </label>
-                    <div class="form-fields">
-                        <input type="Number" name="scene.end.y" min="1" step="any" value={{zone.scene.end.y}} required>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="form-group">
-            <label>
-                {{localize 'DANGERZONE.edit-form.boundary.elevation.label'}}
-            </label>
-            <div class="form-fields">
-                <div class="form-group">
-                    <label>
-                        {{localize 'DANGERZONE.edit-form.boundary.bottom.label'}}
-                    </label>
-                    <div class="form-fields">
-                        <input type="Number" name="scene.start.z" step="1" value={{zone.scene.start.z}} required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>
-                        {{localize 'DANGERZONE.edit-form.boundary.top.label'}}
-                    </label>
-                    <div class="form-fields">
-                        <input type="Number" name="scene.end.z" step="1" value={{zone.scene.end.z}} required>
-                    </div>
-                </div>
+                <select name="scene.regionId" value="{{zone.scene.regionId}}">
+                    {{selectOptions regionOps selected=zone.scene.regionId localize=true}}
+                </select>
             </div>
         </div>
         <div class="form-group">

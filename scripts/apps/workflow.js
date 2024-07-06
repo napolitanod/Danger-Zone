@@ -214,12 +214,12 @@ class plan {
 class executorData {
     constructor(zone, options){
         this.id = foundry.utils.randomID(16),
-        this.boundary = options.boundary ? options.boundary : {},
-        this.clearBypass = options.clearBypass ? options.clearBypass : false,
+        this.boundary = options.boundary ?? {},
+        this.clearBypass = options.clearBypass ?? false,
         this._delay = options.delay,
         this.eligibleTargets = [],
         this.likelihoodResult = 100,
-        this.location = options.location ? new point(options.location) : {},
+        this.location = options.location ? new point(options.location.coords ?? {x: options.location.x, y: options.location.y}, options.location.elevation ?? options.location.z) : {},
         this.offset = {
             x:{
                 random: Math.random(),
@@ -231,11 +231,11 @@ class executorData {
             }
         },
         this._options = options,
-        this.previouslyExecuted = options.previouslyExecuted ? options.previouslyExecuted : false,
-        this.save = {failed: options.save?.failed ? options.save?.failed : [], succeeded: options.save?.succeeded ? options.save?.succeeded : []},
-        this._sources = options.sources ? options.sources : [],
+        this.previouslyExecuted = options.previouslyExecuted ?? false,
+        this.save = {failed: options.save?.failed ?? [], succeeded: options.save?.succeeded ?? []},
+        this._sources = options.sources ?? [],
         this.sources = [],
-        this._sourceAreas = options.sourceAreas ? options.sourceAreas : [],
+        this._sourceAreas = options.sourceAreas ?? [],
         this.sourceAreas = [],
         this.sourcesBlended = [],
         this.sourceLimit = zone.generateSourceCount(),
@@ -243,7 +243,7 @@ class executorData {
             mutate: false,
             tokens: []
         },
-        this.targets = options.targets ? options.targets : [],
+        this.targets = options.targets ?? [],
         this.tokenMovement = [],
         this.twinBoundary = {},
         this.valid = true,
@@ -346,8 +346,8 @@ class executorData {
                 `;
             if(this.hasBoundary){
                 content += `
-                <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.A.z}</span></div>
-                <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.B.z}</span></div>
+                <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.bottom}</span></div>
+                <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.top}</span></div>
                 <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => t.name)}</span></div>
                 <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => t.name)}</span></div></div>`
             } 
@@ -490,7 +490,7 @@ class executorData {
     }
 
     async setZone(){
-        this.zoneBoundary = await this.zone.scene.boundary();
+        this.zoneBoundary = await this.zone.scene.getZoneBoundary();
         this.zoneTokens = this.zoneBoundary.tokensIn(this.sceneTokens);
         this.zoneEligibleTokens = this.zone.zoneEligibleTokens(this.zoneTokens);
     }
@@ -502,7 +502,7 @@ class executorData {
     _setLocationBoundary(){
         const options = {excludes: this.zoneBoundary.excludes, universe: this.zoneBoundary.universe}
         this.zone.stretch(options);
-        this.boundary = boundary.locationToBoundary(this.location, this.danger.dimensions.units, options);
+        this.boundary = boundary.locationToBoundary(this.location.coords, {bottom: this.location.elevation, top: this.location.elevation}, this.danger.dimensions.units, options);
         this._setBoundary();
     }
 
@@ -523,14 +523,11 @@ class executorData {
     }
 
     updateBoundary(boundary){
-        this.boundary = boundary ? boundary : {}
+        this.boundary = boundary ?? {}
     }
 
     updateLocation(location){
-        const obj = {
-            x: location?.x ? location.x : 0, y: location?.y ? location.y : 0, z: location?.z ? location.z : (location?.elevation ? location.elevation : 0)
-        }
-        this.location = location ? new point(obj) : {};
+        this.location = location ? new point({x: location?.x ?? 0, y: location?.y ?? 0}, location?.elevation) : {}
     }
 
     updateSaveFailed(saves){
@@ -1338,7 +1335,7 @@ class ambientLight extends executable{
                 saturation: this.saturation,
                 shadows: this.shadows
             },   
-            elevation: this.boundary.bottom,            
+            elevation: this.boundary.bottom ?? 0,            
             hidden: false,
             rotation: this._flipRotation(),
             vision: false,
@@ -2023,7 +2020,7 @@ class lastingEffect extends executableWithFile{
     _tile(boundary, index = 0){
         const tile = {
             alpha: this.alpha,
-            elevation: boundary.bottom, 
+            elevation: boundary.bottom ?? 0, 
             flags: this.data.flag,
             hidden: this.hidden,
             locked: false,
@@ -2234,7 +2231,7 @@ class primaryEffect extends executableWithFile {
     _sequence(boundary, s, source = {}){
         s = s.effect()
             .file(this._file)
-            .zIndex(boundary.top)
+            .zIndex(boundary.top ?? 0)
             .mirrorX(this.flipContent('x'))
             .mirrorY(this.flipContent('y'))
             if(source.center){
@@ -2597,7 +2594,7 @@ class secondaryEffect extends executableWithFile {
     _sequence(boundary, s){
         s = s.effect()
             .file(this._file)
-            .zIndex(boundary.bottom)
+            .zIndex(boundary.bottom ?? 0)
             .atLocation(boundary.center)
             .mirrorX(this.flipContent('x'))
             .mirrorY(this.flipContent('y'))
@@ -2766,7 +2763,7 @@ class sourceEffect extends executableWithFile {
     _sequence(boundary, s){
         s = s.effect()
             .file(this._file)
-            .zIndex(boundary.bottom)
+            .zIndex(boundary.bottom ?? 0)
             .atLocation(boundary.center)
             .mirrorX(this.flipContent('x'))
             .mirrorY(this.flipContent('y'))
