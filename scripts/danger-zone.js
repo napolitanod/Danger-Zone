@@ -103,7 +103,7 @@ export class dangerZone {
 
   static getAllZonesFromScene(sceneId, options = {enabled: true, typeRequired: true, triggerRequired: true}){
     const ar = [];
-    const scene = game.scenes.get(sceneId);
+    const scene = game.scenes?.get(sceneId);
     const flag = scene ? scene.getFlag(this.ID, this.FLAGS.SCENEZONE) : ar; 
     for (var zn in flag) {
         if((!options.enabled || flag[zn].enabled) && (!options.triggerRequired || flag[zn].trigger) && flag[zn].scene?.sceneId) ar.push(this._toClass(flag[zn]));
