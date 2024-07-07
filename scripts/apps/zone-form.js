@@ -1,6 +1,7 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {boundary, point} from './dimensions.js';
+import {getSceneRegionList} from './helpers.js';
 import {COMBATTRIGGERS, DANGERZONETRIGGERS, TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, DANGERZONEWEATHERREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps, ZONEEXTENSIONINTERACTIONOPTIONS, ZONEEXTENSIONSEQUENCEOPTIONS} from './constants.js';
 
 export class DangerZoneForm extends FormApplication {
@@ -58,6 +59,7 @@ export class DangerZoneForm extends FormApplication {
       replaceOps: DANGERZONEREPLACE,
       lightReplaceOps: DANGERZONELIGHTREPLACE,
       operationOps: TRIGGEROPERATION,
+      regionOps: getSceneRegionList(this.sceneId),
       soundReplaceOps: DANGERZONESOUNDREPLACE,
       sourceAreaOps: SOURCEAREA,
       sourceTargetOps: SOURCEAREATARGET,
@@ -100,10 +102,6 @@ export class DangerZoneForm extends FormApplication {
       }
       case 'render-zone-types': {
         dangerZone.DangerZoneTypesForm.render(true);
-        break;
-      }
-      case 'location-picker':{
-        this.promptSelectZoneBoundary();
         break;
       }
     }
@@ -203,59 +201,6 @@ export class DangerZoneForm extends FormApplication {
 
   partialRender(){
     this._setExtendsList()
-  }
-
-  async promptSelectZoneBoundary() {
-    let currentLayer = canvas.activeLayer;
-    currentLayer.deactivate();
-    await this.minimizeForms();
-
-    let x = new Promise(function(resolve, reject){
-      ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-zone-start"));
-      canvas.app.stage.once('pointerdown', event => {
-        let selection = event.data.getLocalPosition(canvas.app.stage); 
-        resolve(selection);
-        });
-    }).then((selection)=>{
-      this.pickerStart = new point(selection);
-      let y = new Promise(function(resolve, reject){
-        ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-zone-end"));
-        canvas.app.stage.once('pointerdown', event => {
-          let selection = event.data.getLocalPosition(canvas.app.stage); 
-          resolve(selection);
-          });
-      }).then((selection)=>{
-        this.pickerEnd = new point(selection);
-        currentLayer.activate();
-        this.maximizeForms();
-        this.pickToForm();
-      });
-    });  
-  }
-
-  async minimizeForms(){
-    if (!this._minimized){await this.minimize()}
-    if (!this.parent?._minimized){await this.parent?.minimize()}
-    if (this.parent?.parent && !this.parent.parent._minimized){await this.parent.parent.minimize()}
-  }
-
-  async maximizeForms(){
-    if (this.parent?.parent && !this.parent.parent._maximized){await this.parent.parent.maximize()}
-    if (!this.parent?._maximized){await this.parent?.maximize()}
-    if (!this._maximized){await this.maximize()}  
-  }
-
-  pickToForm(){
-    const pick = new boundary(this.pickerStart, this.pickerEnd);
-    let size = this.scene.dimensions.size;
-    pick.B.x = pick.B.x + size;
-    pick.B.y = pick.B.y + size;
-    $(this.form).find("input[name='scene.start.x']").val(pick.A.x);
-    $(this.form).find("input[name='scene.start.y']").val(pick.A.y);
-    $(this.form).find("input[name='scene.end.x']").val(pick.B.x);
-    $(this.form).find("input[name='scene.end.y']").val(pick.B.y);
-  
-    dangerZone.log(false, 'User zone selection recorded', {pick: {start: this.pickerStart, end: this.pickerEnd}, final: pick});
   }
 
   _setExtendsList(){
@@ -359,7 +304,7 @@ export class DangerZoneExtensionForm extends FormApplication {
       dangerOps: this.dangerOps,
       worldZoneOps: this.worldZoneOps,
       zoneOps: this.zoneOps,
-      isTrigger: this.extension.interaction === 'T' ? true : false
+      isTrigger: (!this.extension.interaction || this.extension.interaction === 'T') ? true : false
      } 
   }
   

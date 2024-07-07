@@ -68,9 +68,22 @@ export class dangerZone {
   static log(force, ...args) {  
      // const shouldLog = force || game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.ID);
   
-      if (true) {
+      if (force || (game.user.isGM && game.settings.get(dangerZone.ID, 'logging'))) {
         console.log(this.ID, '|', ...args);
       }
+  }
+
+  static async _migrate(){
+    
+	  //data migrations
+	  if(game.user.isGM && game.settings.get('danger-zone', 'region-migration-complete') === false){
+      ui.notifications?.info('Danger Zone migration of zone dimensions to regions started')
+      for (const scene of game.scenes) {
+         await dangerZone.migrate(scene)
+      }
+      game.settings.set(dangerZone.ID, 'region-migration-complete', true);
+      ui.notifications?.info('Danger Zone migration of zone dimensions to regions completed!')
+    }
   }
 
   /**
@@ -90,7 +103,8 @@ export class dangerZone {
 
   static getAllZonesFromScene(sceneId, options = {enabled: true, typeRequired: true, triggerRequired: true}){
     const ar = [];
-    const flag = sceneId ? game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE) : ar; 
+    const scene = game.scenes?.get(sceneId);
+    const flag = scene ? scene.getFlag(this.ID, this.FLAGS.SCENEZONE) : ar; 
     for (var zn in flag) {
         if((!options.enabled || flag[zn].enabled) && (!options.triggerRequired || flag[zn].trigger) && flag[zn].scene?.sceneId) ar.push(this._toClass(flag[zn]));
     }
@@ -141,7 +155,7 @@ export class dangerZone {
   static getRandomZonesFromScene(sceneId) {
     return this.getAllZonesFromScene(sceneId).filter(zn => zn.random)
   }
-
+  
   static getAllDangersAsGlobalZones(sceneId) {
     return dangerZoneType.allDangers.map(danger => {
       return this._convertZoneGlobalToScene(danger, sceneId);
@@ -154,6 +168,10 @@ export class dangerZone {
       return this._convertZoneGlobalToScene(danger, sceneId);
       }
     )
+  }
+
+  static getZonesToMigrate(sceneId, zoneId = ''){
+    return dangerZone.getAllZonesFromScene(sceneId, {enabled: false, typeRequired: false, triggerRequired: false})?.filter(zn => (!zoneId || zn.id ===zoneId) && !zn.scene.regionId && zn.scene.start) ?? []
   }
 
  /**
@@ -254,6 +272,28 @@ export class dangerZone {
     return keptZones.find(zn => randomResult >= zn.min && randomResult <= zn.max).zone
   }
 
+  static async migrate(scene, zoneId = ''){
+    if(!scene) return
+    const zones = dangerZone.getZonesToMigrate(scene.id, zoneId)
+    if(!zones.length) return;
+    let regions = [], regionsData = [];
+
+    regionsData = zones.filter(zn => !zn.scene.hasFullSceneDimensions && !zn.scene._migrateRegionMatch(regionsData)).map(zn => zn.scene._migrationData.regionData)
+    
+    if (regionsData.length) regions = await scene.createEmbeddedDocuments("Region", regionsData)
+
+    dangerZone.log(false, 'Check migration to region', {zones: zones, scene: scene, regions: regions, regionsData: regionsData})
+
+    for (const zn of zones) {
+      await zn.scene.convertToRegion(zn.scene._migrateRegionMatch(regions)?.id)
+    }
+  }
+  
+  static async updateAllSceneZones(sceneId,flag){
+    const updt = await game.scenes.get(sceneId).setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, flag);
+    return updt
+  }
+
   static validatePreupdateZones(scene){
     const flag = scene.flags?.[this.ID]?.[this.FLAGS.SCENEZONE];
     let b = false;
@@ -305,7 +345,7 @@ export class zone {
    * 
    * @param {string} sceneId the scene id 
    */
-  constructor (sceneId) {
+  constructor (sceneId, regionId = '') {
     this.id = foundry.utils.randomID(16);
     this.actor = '',
     this.enabled = game.settings.get('danger-zone', 'scene-enabled-default'),
@@ -331,7 +371,7 @@ export class zone {
     },
     this.random = false,
     this.replace = 'N',
-    this.scene = new dangerZoneDimensions(sceneId, this.id),
+    this.scene = new dangerZoneDimensions(sceneId, this.id, regionId),
     this.soundReplace = 'N',
     this.source = {
       area: '',
@@ -374,6 +414,7 @@ export class zone {
   get randomDelay(){
     return Math.floor(Math.random() * this.delay)
   }
+
 
   get sources(){
     return this.scene.scene.tokens.filter(t => t.actor?.id === this.source.actor) 
@@ -435,8 +476,8 @@ export class zone {
    * @param {object} updateData 
    * @returns returns the zone after update
    */
-  async update(updateData){
-    const updt = await this._update(updateData);
+  async update(updateData, options = {insertKeys: false, enforceTypes: true}){
+    const updt = await this._update(updateData, options);
     return updt
   }
 
@@ -444,8 +485,8 @@ export class zone {
    * private method to save the zone data
    * @param {object} updateData 
    */
-  async _update(updateData){
-    foundry.utils.mergeObject(this, updateData, {insertKeys: false, enforceTypes: true});
+  async _update(updateData, options = {insertKeys: false, enforceTypes: true}){
+    foundry.utils.mergeObject(this, updateData, options);
     const updt = await this._setFlag();
     return updt
   }
@@ -528,7 +569,7 @@ export class zone {
 
   async tokensInZone(tokens){
     if(!tokens?.length) return false
-    const b = await this.scene.boundary();
+    const b = await this.scene.getZoneBoundary();
     return this.zoneEligibleTokens(b.tokensIn(tokens)).length ? true : false
   }
 
@@ -569,16 +610,16 @@ export class zone {
   stretch(options){
     switch(this.options.stretch){
       case "B":
-          options.bottom = this.scene.start.z
+          options.bottom = this.scene.bottom
           break;
       case "G":
           options.bottom = 0
           break;
       case "S":
-          options.top = 99999
+          options.top = null
           break;
       case "T":
-          options.top = this.scene.end.z
+          options.top = this.scene.top
           break;
     }
     return options
@@ -679,13 +720,13 @@ export class zone {
 
   /*prompts the user to select the zone location point (top left grid location) and captures the location*/
   async promptTemplate() {
-    const z = (this.options.noPrompt) ? 0 : await this._promptZ() ;
-    const xy = await this._promptXY(z);
-    return (xy ? {x: xy.x, y: xy.y, z: z} : {})
+    const elevation = (this.options.noPrompt) ? 0 : await this._promptElevation() ;
+    const xy = await this._promptXY();
+    return (xy ? {coords: {x: xy.x, y: xy.y}, elevation: elevation} : {})
   }
 
-  async _promptZ(){
-    const z = await new Promise((resolve, reject) => {
+  async _promptElevation(){
+    const elevation = await new Promise((resolve, reject) => {
       new Dialog({
           title: game.i18n.localize("DANGERZONE.alerts.input-z"),
           content: `<p>${game.i18n.localize("DANGERZONE.alerts.enter-z")}</p><center><input type="number" id="zInput" min="0" steps="1" value="0"></center><br>`,
@@ -694,8 +735,8 @@ export class zone {
                   label: game.i18n.localize("DANGERZONE.yes"),
                   icon: '<i class="fas fa-check"></i>',
                   callback: async (html) => {
-                      const z = parseInt(html.find("#zInput")[0].value);
-                      resolve(z)
+                      const elevation = parseInt(html.find("#zInput")[0].value);
+                      resolve(elevation)
                       }
                   },
               cancel:  {
@@ -709,7 +750,7 @@ export class zone {
           default: 'submit'
           }, {width: 75}).render(true);
     });  
-    return z
+    return elevation
   }
 
   async _promptXY(){ 
@@ -717,34 +758,25 @@ export class zone {
     dangerZoneDimensions.destroyHighlightZone(this.id, '', this.scene.dangerId);
     await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_wf', this.scene.dangerId);
 
-    if(warpgateOn && this.danger.dimensions.units.w === this.danger.dimensions.units.h){
-      ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-warpgate-target"));
-      const size = canvas.grid.type === 1 ? this.danger.dimensions.units.w : 1
-      xy = await warpgate.crosshairs.show({icon: this.danger.icon, fillAlpha: 0.1, fillColor: '#000000', size: size, interval: (size % 2) > 0 ? -1 : 1 })
-      let tg = canvas.grid.getOffset(xy)
-      let topLeft = canvas.grid.getTopLeftPoint({i:tg.i-Math.floor(size/2), j:tg.j-Math.floor(size/2)})
-      xy.x = topLeft.x, xy.y = topLeft.y
-    } else {
-      let currentLayer = canvas.activeLayer;
-      currentLayer.deactivate();
-      ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
-      
-      xy = await new Promise((resolve, reject)=>{
-        function _cancel(event){
-          ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.cancel-target-select"));
-          window.removeEventListener('auxclick', _cancel);
-          resolve(false)
-        }
-        window.addEventListener('auxclick', _cancel);
-        canvas.app.stage.once('mousedown', event => {
-          let selected = event.data.getLocalPosition(canvas.app.stage);
-          window.removeEventListener('auxclick', _cancel);
-          resolve(selected)
-        });
-      });   
-      currentLayer.activate();
-    }
-      
+    let currentLayer = canvas.activeLayer;
+    currentLayer.deactivate();
+    ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.select-target"));
+    
+    xy = await new Promise((resolve, reject)=>{
+      function _cancel(event){
+        ui.notifications?.info(game.i18n.localize("DANGERZONE.alerts.cancel-target-select"));
+        window.removeEventListener('auxclick', _cancel);
+        resolve(false)
+      }
+      window.addEventListener('auxclick', _cancel);
+      canvas.app.stage.once('mousedown', event => {
+        let selected = event.data.getLocalPosition(canvas.app.stage);
+        window.removeEventListener('auxclick', _cancel);
+        resolve(selected)
+      });
+    });   
+    currentLayer.activate();
+    
     dangerZoneDimensions.destroyHighlightZone(this.id, '_wf', this.scene.dangerId); 
     return xy
   }

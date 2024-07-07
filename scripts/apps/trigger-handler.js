@@ -81,7 +81,7 @@ export class triggerManager {
             if(this.data?.options?.sources && this.data.options.sources.length) options.sources = this._loadTokens(this.data.options.sources)
             if(zone.options.targetCombatant && COMBATTRIGGERS.includes(zone.trigger)){
                 const token = this.getTriggerCombatant(zone);
-                if(token && !options.location && !options.boundary) options['location'] = {x: token.x, y: token.y, z: token.elevation}
+                if(token && !options.location && !options.boundary) options['location'] = {coords: {x: token.x, y: token.y}, elevation: token.elevation}
                 if(token && !options.targets) options.targets = [token];
             } 
         }
@@ -133,10 +133,10 @@ export class triggerManager {
             }
             if(this.combatTriggers.indexOf(zn.trigger) !== -1){    
                 if(zn.trigger==='turn-start'){
-                    if(!(await zn.sourceTrigger([this.combatant.actorId]))){continue}
+                    if(!(await zn.sourceTrigger([this.combatant?.actorId]))){continue}
                 }
                 else if(zn.trigger==='turn-end'){
-                    if(!(await zn.sourceTrigger([this.previousCombatant.actorId]))){continue}
+                    if(!(await zn.sourceTrigger([this.previousCombatant?.actorId]))){continue}
                 } 
                 else {
                     if(!(await zn.sourceTrigger(this.data.combatants.map(c => c.actorId)))){continue}
@@ -272,7 +272,12 @@ export class triggerManager {
             if(!(await zn.sourceTrigger([token?.actor?.id]))){
                 continue;
             }
-            const zoneBoundary = await zn.scene.boundary();
+            const zoneBoundary = await zn.scene.getZoneBoundary();
+            //account for the token being in start position - update to end position
+            if('x' in update) token.x = update.x
+            if('y' in update) token.y= update.y
+            if('elevation' in update) token.elevation = update.elevation
+
             const zoneTokens = zoneBoundary.tokensIn([token]);
             if(zoneTokens.length){
                 zones.push(zn)
@@ -280,7 +285,7 @@ export class triggerManager {
         }
 
         if(zones.length){
-            const tm = new triggerManager(sceneId, {provokingMove: move, update: update, options: {targets: [token], location:move.endPos}}, zones, "updateToken");
+            const tm = new triggerManager(sceneId, {provokingMove: move, update: update, options: {targets: [token], location:move.end}}, zones, "updateToken");
             tm.log(`Initiating move trigger handler...`, {token: token, update:update, move: move});
             await tm.movementTrigger()
         }
