@@ -9,7 +9,7 @@
 :biohazard: [Tutorials](../../wiki/Video-Tutorials) <br>
 
 ## About
-Add life to your scenes! With Danger Zone, GMs can invoke highly customized localized effects across any region or scene, including:
+Add life to your scenes! With Danger Zone, GMs can invoke highly customizable localized effects across any region or scene, including:
 * A storm where the danger of being struck by lightning is a deadly possibility.
 * A crumbling building where the collapsing ceiling can injure or trap occupants.
 * A twisted field of magic with portals that blink in and out of existance.
