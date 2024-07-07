@@ -9,7 +9,7 @@
 :biohazard: [Tutorials](../../wiki/Video-Tutorials) <br>
 
 ## About
-Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT module that provides GMs the ability to easily invoke localized effects within a scene. Examples of what you can do with this module:
+Add life to your scenes! With Danger Zone, GMs can invoke highly customized localized effects across any region or scene, including:
 * A storm where the danger of being struck by lightning is a deadly possibility.
 * A crumbling building where the collapsing ceiling can injure or trap occupants.
 * A twisted field of magic with portals that blink in and out of existance.
@@ -17,18 +17,18 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 
 <img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/crumbling%20ceiling%20gif.gif" height="400">
 
-> A zone is triggered by the start of a new combat turn, and the resulting danger causes the screen to shake and shed rubble.
+> Here, a scene's zone is triggered at the start of the combat turn, causing the screen to shake and rubble to fall.
 
 ## What's in the module
-* Add zones to a scene within which effects generate and tokens are affected.
-* Activate and trigger zones with on-screen buttons. 
-* Associate zone triggers to game events, such as combat turn change or token movement. 
-* Sequence various effects and zone triggers to perfect the overall effect experience. 
-* Target tokens within zone effects in order to do things like add active effects, update token data, or add items. 
-* Target within a zone's width, height and depth dimensions, for square and hex grids.
-* Easy to use forms for configuring dangers and zones.
-* Functionality can be expanded through other Foundry modules - see the Module Integration section below.
-* Accessible API for accessing Danger Zone functionality from another module or macro.
+* The ability to create dangers for use within zones.
+* The ability to add zones to a scene and then associate them to a region, a danger and a trigger condition.
+* The ability to activate and trigger zones through game events or with on-screen buttons. 
+* The ability to sequence zone triggers so that one zone event can trigger another. 
+* The ability to target tokens as part of a zone trigger so that the danger's effects interact with the targeted tokens, doing things like adding active effects, moving tokens, or add items to the token. 
+* An API for accessing Danger Zone exposed functionality.
+  
+Fnctionality can be expanded through other Foundry modules - see the Module Integration section below.
+
 
 ## What's not in the module
 * **!!!Does not include any video, image or audio components.!!!**
@@ -37,24 +37,24 @@ Bring danger, personality and life to your scenes. Danger Zone is a Foundary VTT
 ## Getting Started
 <img src="https://user-images.githubusercontent.com/22696153/147769650-1a095760-9c4e-4ef9-8cff-403abc049bb1.gif" height="400">
 
-> A danger zone is triggered by token movement within a zone using the zone aura trigger.
+> Here, a zone is triggered by token movement using the zone aura trigger.
 
 ### 1. Create a Danger
-The danger is the lava bubble that bursts to the surface or the vent of poisonous gas that releases from a lava field. It defines an effect that executes within a zone. With Danger Zone, you have control over a vast array of configuration combinations, including displaying effects, creating lights and walls, spawning tokens, executing macros, playing sounds and moving tokens.
+Whether it be a lava bubble that bursts to the surface or a vent of poisonous gas, a danger defines the effect that executes within a zone. With Danger Zone, you have control over a vast array of configuration combinations for your dangers, including displaying effects, creating lights and walls, spawning tokens, executing macros, playing sounds and moving tokens.
 
 <img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/r9/dangerFilled4.JPG"  height="400">
 
-Add dangers by going to Foundry's 'Configure Settings' > 'Module Settings', locating Danger Zone, and selecting the 'Configure Dangers' button. Or access the Dangers button from the Scenes right navigation area. See [Dangers](../../wiki/Dangers) for more info.
+Access the Dangers button from the Scenes right navigation area. See [Dangers](../../wiki/Dangers) for more info.
 
 ### 2. Add Zone to Scene
-The zone is the lava field. Within the zone's boundary the dangers are generated. You associate one danger to each zone and a scene can have any number of zones. Zones may also be copied from one scene to another.
+Like a wide lake of lava, a zone is the boundary within which dangers are generated. Each zone exists within a scene and is associated to a danger and a trigger condition. Zones may also be copied from one scene to another.
 
 <img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/r9/configureSceneZones.JPG"  height="300px">
 
-Access the Danger Zone section from within scene configuration form's header or by right clicking on the scene in the navigation or within the side menu and selecting 'Configure Zones' from the context menu. This will present the form where you can create new zones or edit existing ones. See [Zones](../../wiki/Zones) for more info.
+Access zones from the scene configuration form's header or by right clicking on the scene in the navigation or within the side menu and selecting 'Configure Zones' from the context menu. This will present the form where you can create new zones or edit existing ones. See [Zones](../../wiki/Zones) for more info.
 
 ### 3. Trigger Zone
-The trigger causes the lava bubble to erupt from the lava field. A trigger can be invoked either manually or as part of a Foundary event.
+The trigger defines the conditions under which lava bubble (danger) erupts from the lava field (zone). A trigger can be invoked either manually or as part of a defined event.
 
 See [Triggers](../../wiki/Triggers) for more info.
 
