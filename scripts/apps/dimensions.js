@@ -43,8 +43,6 @@ export class dangerZoneDimensions {
         )
     }
 
-    
-    //data migration for r12
     async convertToRegion(regionId){
         if(!this.scene || !this.start) return
 
@@ -138,19 +136,32 @@ export class dangerZoneDimensions {
     }
 
     static tokenMovement(token, update){
-        const endXPixel = update.x ? update.x : token.x; 
-		const endYPixel = update.y ? update.y : token.y;
-		const start = canvas.grid.getOffset(token);
-		const end= canvas.grid.getOffset({x:endXPixel, y:endYPixel});
-		const endDepth = update.elevation ? update.elevation : token.elevation;
+        const endPos = {
+            coords: {
+                x: update.x ? update.x : token.x,
+                y: update.y ? update.y : token.y
+            },
+            elevation: update.elevation ? update.elevation : token.elevation 
+        };
+        const startPos = {
+            coords: {
+                x: token.x,
+                y: token.y
+            },
+            elevation: token.elevation
+        };
+		const startGrid = canvas.grid.getOffset(token);
+		const endGrid = canvas.grid.getOffset(endPos.coords);
 		return {
-			startPos: {x: token.x, y: token.y, z: token.elevation},
-			endPos: {x: endXPixel, y: endYPixel, z: endDepth},
-			moveYGrids: Math.abs(start.i - end.i),
-			moveXGrids: Math.abs(start.j - end.j),
-			moveYPixels: Math.abs(token.y - endYPixel),
-			moveXPixels: Math.abs(token.x - endXPixel),
-			moveDepth: Math.abs(token.elevation - endDepth)
+            start:startPos,
+            end: endPos,
+            dimensions: {
+                h:  Math.abs(startGrid.i - endGrid.i),
+                w: Math.abs(startGrid.j - endGrid.j),
+                d: Math.abs(startPos.elevation - endPos.elevation)
+            },
+			height: Math.abs(startPos.coords.y - endPos.coords.y ),
+			width: Math.abs(startPos.coords.x - endPos.coords.x)
 		}
     }
 
@@ -276,7 +287,7 @@ export class boundary{
         const newUniv = new Set() 
         this.universe.forEach((value) => {
             const[i, j] = value.split('_')
-            const nghbrs = canvas.grid.getNeighbors(Number(i), Number(j))
+            const nghbrs = canvas.grid.getAdjacentOffsets({i:Number(i), j:Number(j)})
             for(const pos of nghbrs){
                 let index = boundary.makeIndex(pos)
                 if(this.limit.target === 'A') {
@@ -309,7 +320,7 @@ export class boundary{
                 indices.add(index)
             }
         }
-        dangerZone.log(false, 'Tagged ', {tagged: documents, boundary: this});
+        dangerZone.log(false, 'Tagged ', {tagged: documents, boundary: this, indices: indices});
     }
 
     _init(){
@@ -328,10 +339,10 @@ export class boundary{
 
     _testGridToRegion(dim = {}){
         let inRegion = false, i = 0;
-        let vertices = canvas.grid.getVertices(dim)
-        if(this.range.h > 1) vertices = vertices.concat(canvas.grid.getVertices({i: dim.i + (this.range.h-1), j: dim.j}))
-        if(this.range.w > 1) vertices = vertices.concat(canvas.grid.getVertices({i: dim.i, j: dim.j + (this.range.w - 1)}))
-        if(this.range.h > 1 && this.range.w  > 1) vertices = vertices.concat(canvas.grid.getVertices({i: dim.i + (this.range.h-1), j: dim.j + (this.range.w - 1)}))
+        let vertices = []//canvas.grid.getVertices(dim)
+        if(this.range.h > 1) vertices = vertices.concat(canvas.grid.getCenterPoint(canvas.grid.getTopLeftPoint({i: dim.i + (this.range.h-1), j: dim.j})))//vertices = vertices.concat(canvas.grid.getVertices({i: dim.i + (this.range.h-1), j: dim.j}))
+        if(this.range.w > 1) vertices = vertices.concat(canvas.grid.getCenterPoint(canvas.grid.getTopLeftPoint({i: dim.i, j: dim.j + (this.range.w - 1)})))//vertices = vertices.concat(canvas.grid.getVertices({i: dim.i, j: dim.j + (this.range.w - 1)}))
+        if(this.range.h > 1 && this.range.w  > 1) vertices = vertices.concat(canvas.grid.getCenterPoint(canvas.grid.getTopLeftPoint({i: dim.i + (this.range.h-1), j: dim.j + (this.range.w - 1)}))) //vertices = vertices.concat(canvas.grid.getVertices({i: dim.i + (this.range.h-1), j: dim.j + (this.range.w - 1)}))
         vertices.push(canvas.grid.getCenterPoint(dim))
         //dangerZone.log(true, "Testing Grid to Region", {dimensions: this, coord: dim, vertices: vertices})
         do {
@@ -479,7 +490,7 @@ export class boundary{
     } 
 
     intersectsBoundary(bound = boundary){
-        if((this.depth === 0 || ((this.bottom === null || this.bottom <= bound.top) && (this.top === null || this.top > bound.bottom)))) {
+        if((this.bottom === null || this.bottom < bound.top) && (this.top === null || this.top >= bound.bottom)) {
             const grids = bound.grids()
             for(const grid of grids){
                 if(this.gridIndex.has(grid.index)) return true

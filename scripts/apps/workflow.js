@@ -475,7 +475,7 @@ class executorData {
     }
     
     setTargets(){
-        if (this.hasTargets) return
+        if (this.hasTargets) return this.eligibleTargets.filter(e => this.targets.find(t => e.id === t.id))
         if(!this.zone.options.allInArea){
             if(this.eligibleTargets.length > 1){
                 return this.targets.push(this.eligibleTargets[Math.floor(Math.random() * this.eligibleTargets.length)])
@@ -1657,7 +1657,7 @@ class damageToken extends executable{
                 const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.hz ? mvMods.hz : 0), (mvMods?.v ? mvMods.v : 0));
                 let dice = damage.amount.replace(/@elevation/i,e).replace(/@moved/i,mv);
                 const damageRoll = await new Roll(dice).evaluate();     
-                let flavor = flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
+                flavor = flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
                 await this._calculateDamage(half, damageRoll, [token], flavor, damage)
             }
             flavor = ''

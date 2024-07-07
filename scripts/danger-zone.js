@@ -68,7 +68,7 @@ export class dangerZone {
   static log(force, ...args) {  
      // const shouldLog = force || game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.ID);
   
-      if (true) {
+      if (force || (game.user.isGM && game.settings.get(dangerZone.ID, 'logging'))) {
         console.log(this.ID, '|', ...args);
       }
   }

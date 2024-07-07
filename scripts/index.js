@@ -218,6 +218,14 @@ Hooks.once('init', async function() {
 			}
 		}); 
 	}
+	
+	game.settings.register('danger-zone', 'logging', {
+		name: 'Console Logging',
+		scope: 'world',
+		config: true,
+		default: false,
+		type: Boolean
+	}); 
 
 	dangerZone.initialize();
 
