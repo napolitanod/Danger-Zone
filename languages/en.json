@@ -51,6 +51,7 @@
             "clear.description": "Clear all Danger Zone placeables?",
             "clearAmbientLight.label": "Clear Danger Zone Ambient Lighting",
             "clearAmbientSound.label": "Clear Danger Zone Ambient Sounds",
+            "clearRegion.label": "Clear Danger Zone Regions",
             "clearEffectsTile.label": "Clear Danger Zone Lasting Effects",
             "clearWall.label": "Clear Danger Zone Walls"
         },
@@ -155,6 +156,8 @@
             "random.description": "All zones in this scene that share the same trigger are grouped and only one is triggered at random. Assign a weight to control how often one triggers in relation to the others.",
             "region.label": "Associate Zone to Region",
             "region.description": "Assigns the zone to a region, otherwise the zone consists of the scene's dimensions.",
+            "region.replace.label": "Regions",
+            "region.replace.description": "Choose what to do with existing Danger Zone created regions when this zone triggers.",
             "replace.label": "Lasting Effects",
             "replace.description": "Choose what to do with existing Danger Zone created lasting effects when this zone triggers.",
             "runUntilTokenFound.label": "Always Hits a Token",
@@ -344,6 +347,13 @@
             "likelihood.description": "Likelihood",
             "isActive.label": "Active"            
         },
+        "region.replace-types": {
+            "A.label": "Clear all regions",
+            "N.label": "Retain all regions",
+            "R.label": "Clear regions that share this trigger",
+            "T.label": "Clear regions that share this danger",
+            "Z.label": "Clear regions that share this zone"
+        },
         "replace-types": {
             "A.label": "Clear all lasting effects",
             "N.label": "Retain all lasting effects",
@@ -396,6 +406,8 @@
             "scene-control-clear-all-button-display.description": "Toggles the display of the Clear button within the Danger Zone list of scene buttons.",
             "scene-control-light-button-display.label": "Display Clear Ambient Light Button",
             "scene-control-light-button-display.description": "Toggles the display of the Clear Ambient Light button within the scene control buttons lighting control grouping.",
+            "scene-control-region-button-display.label": "Display Clear Region Button",
+            "scene-control-region-button-display.description": "Toggles the display of the Clear Region button within the scene control buttons region control grouping.",
             "scene-control-sound-button-display.label": "Display Clear Ambient Sound Button",
             "scene-control-sound-button-display.description": "Toggles the display of the Clear Ambient Sound button within the scene control buttons ambient sound control grouping.",
             "scene-control-wall-button-display.label": "Display Clear Wall Button",
@@ -712,18 +724,19 @@
             },
             "mutate": {
                 "actor.label": "Token Actor Data",
-                "actor.description": "Updates token actor by passing in object data. Expects key: value pairs. This will be wrapped in {brackets} and passed as an object to the Warpgate actor mutation.",
+                "actor.description": "Updates token actor by passing in object data. Expects key: value pairs.",
                 "delay.label": "Delay Start",
-                "description": "Transforms targeted tokens with revertable changes using Warpgate.",
+                "description": "Mutates targeted tokens with PERMANENT updates.",
                 "embedded.label": "Embedded Data",
-                "embedded.description": "Updates token items or active effects by passing in object data. Expects key: value pairs. This will be wrapped in {brackets} and passed as an object to the Warpgate embedded mutation.",
-                "interpolate.description": "Updates can refer to existing token data using [[path]] placeholder (e.g. name: '[[name]] Mutated', width: [[width]] +1). Token and Token Actor Data are supported but currently not Embedded Data.",
+                "embedded.description": "Updates token items or active effects by passing in object data. Expects key: value pairs.",
+                "interpolate.description": "Updates can refer to existing token data using [[path]] placeholder (e.g. name: '[[name]] Mutated', width: [[width]] +1).",
                 "label": "Mutate",
-                "permanent.label": "Mutation is Permanent",
+                "permanent.description": "Mututations are currently all permanent updates to tokens. There is no method to revert back to a previous token version.",
+                "permanent.label": "Enable Mutation",
                 "tag.label": "Token Tag",
                 "tag.description": "Tagger tag",
                 "token.label": "Token Data",
-                "token.description": "Updates token by passing in object data. Expects key: value pairs. This will be wrapped in {brackets} and passed as an object to the Warpgate token mutation."
+                "token.description": "Updates token by passing in object data. Expects key: value pairs."
             },
             "name.label": "Name",
             "offset": {
@@ -758,6 +771,23 @@
                         }
                     },
                     "y.label": "Y Offset"
+            },
+            "region":{
+                "active.label": "Enable Region",
+                "color.label": "Color",
+                "delay.label": "Delay Start",
+                "description": "Create a region in the target area.",
+                "label": "Region",
+                "name.label": "Name",
+                "scale.label": "Region Scale",
+                "tag.label": "Region Tag",
+                "tag.description": "Tagger tag",
+                "visibility.label": "Visibility",
+                "visibility.options": {
+                    "layer": "Only on Region Layer",
+                    "gamemaster": "Always for Gamemaster",
+                    "always": "Always for Anyone"
+                }
             },
             "scene": {
                 "active.label": "Enable Scene Modifications",

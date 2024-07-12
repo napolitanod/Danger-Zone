@@ -1,6 +1,14 @@
 <form autocomplete="off">
     <div class="tab">
         <p class="notes">{{localize "DANGERZONE.type-form.mutate.description"}}</p>
+        <div class="form-group">
+            <label for="permanent">{{localize "DANGERZONE.type-form.mutate.permanent.label"}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.mutate.permanent.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="permanent" {{checked permanent}}>
+            </div>
+        </div>
         <div class="form-group stacked command">
             <label for="token">{{localize "DANGERZONE.type-form.mutate.token.label"}}</label>
             <textarea name="token" placeholder="{{localize "DANGERZONE.type-form.mutate.token.description"}}" value="{{token}}">{{token}}</textarea>
@@ -9,17 +17,11 @@
             <label for="actor">{{localize "DANGERZONE.type-form.mutate.actor.label"}}</label>
             <textarea name="actor" placeholder="{{localize "DANGERZONE.type-form.mutate.actor.description"}}" value="{{actor}}">{{actor}}</textarea>
         </div>
-        <div class="form-group stacked command">
+        <div class="form-group stacked command dz-hidden">
             <label for="embedded">{{localize "DANGERZONE.type-form.mutate.embedded.label"}}</label>
             <textarea name="embedded" placeholder="{{localize "DANGERZONE.type-form.mutate.embedded.description"}}" value="{{embedded}}">{{embedded}}</textarea>
         </div>
         <p class="notes">{{localize "DANGERZONE.type-form.mutate.interpolate.description"}}</p>
-        <div class="form-group">
-            <label for="permanent">{{localize "DANGERZONE.type-form.mutate.permanent.label"}}</label>
-            <div class="form-fields">
-                <input type="checkbox" data-dtype="Boolean" name="permanent" {{checked permanent}}>
-            </div>
-        </div>
         <div class="form-group">
             <label for="delay">{{localize "DANGERZONE.type-form.mutate.delay.label"}}</label>
             <div class="form-fields">

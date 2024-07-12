@@ -11,7 +11,7 @@ import {requestSavingThrow} from './apps/helpers.js';
 /**
  * global variables
  */
-export var activeEffectOn = true, timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, socketLibOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, warpgateOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, fxMasterOn = false, itemPileOn = false; //active modules
+export var activeEffectOn = true, timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, socketLibOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, portalOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fluidCanvasOn = false, fxMasterOn = false, itemPileOn = false; //active modules
 export var dzMActive = false; 
 export let dangerZoneSocket; //var for socketlib
 
@@ -109,6 +109,16 @@ Hooks.once('init', async function() {
 	game.settings.register(modulename, "scene-control-sound-button-display", {
 		name: game.i18n.localize("DANGERZONE.setting.scene-control-sound-button-display.label"),
 		hint: game.i18n.localize("DANGERZONE.setting.scene-control-sound-button-display.description"),
+		scope: "world",
+		config: true,
+		default: false,
+		type: Boolean,
+		requiresReload: true
+	});
+
+	game.settings.register(modulename, "scene-control-region-button-display", {
+		name: game.i18n.localize("DANGERZONE.setting.scene-control-region-button-display.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.scene-control-region-button-display.description"),
 		scope: "world",
 		config: true,
 		default: false,
@@ -342,6 +352,7 @@ Hooks.on("getSceneControlButtons", (controls, b, c) => {
 	insertTileEffectsClearButton(controls, b, c);
 	insertAmbientLightClearButton(controls, b, c);
 	insertAmbientSoundClearButton(controls, b, c);
+	insertRegionClearButton(controls, b, c);
 	insertWallClearButton(controls, b, c);
 });
 
@@ -436,7 +447,7 @@ function setModsAvailable () {
 	if (game.modules.get("monks-active-tiles")?.active){monksActiveTilesOn = true} ;
 	if (game.modules.get("monks-scene-navigation")?.active){monksSceneOn = true}
 	if (game.modules.get("token-says")?.active){tokenSaysOn = true} ;
-	if (game.modules.get("portal-lib")?.active){warpgateOn = true} ;
+	if (game.modules.get("portal-lib")?.active){portalOn = true} ;
 	if (game.modules.get("fxmaster")?.active){fxMasterOn = true} ;
 	if (game.modules.get("sequencer")?.active){sequencerOn = true} ;
 	if (game.modules.get("tagger")?.active){taggerOn = true} ;
@@ -515,6 +526,31 @@ function insertAmbientSoundClearButton (controls, b, c) {
 				visible: game.user.isGM,
 				onClick: async () => {
 					dangerZone.wipe('AmbientSound')
+				},
+				button: true
+			});
+		}
+	}
+}
+
+/**
+ * adds the region clear button to the controls on the canvas
+ * @param {object} controls 
+ * @param {*} b 
+ * @param {*} c 
+ */
+function insertRegionClearButton (controls, b, c) {
+	if(game.user.isGM && game.settings.get('danger-zone', 'scene-control-region-button-display') === true){
+		const button = controls.find(b => b.name == "regions")
+
+		if (button) {
+			button.tools.push({
+				name: "danger-zone-regions-clear",
+				title:  game.i18n.localize("DANGERZONE.controls.clearRegion.label"),
+				icon: "fas fa-radiation",
+				visible: game.user.isGM,
+				onClick: async () => {
+					dangerZone.wipe('Region')
 				},
 				button: true
 			});

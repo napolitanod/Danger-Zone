@@ -1,4 +1,4 @@
-import {activeEffectOn, tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, warpgateOn, fxMasterOn, fluidCanvasOn, sequencerOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
+import {activeEffectOn, tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, portalOn, fxMasterOn, fluidCanvasOn, sequencerOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -14,6 +14,7 @@ export const PLACEABLESBYDOCUMENT =  {
     'Wall': 'walls',
     'AmbientLight': 'lights',
     'AmbientSound': 'sounds',
+    'Region': 'regions',
     'fxmaster-particle':'fxmaster-particle'
 }
 
@@ -35,6 +36,7 @@ export const WORLDZONE = {
     "operation": "Q",
     "replace": "N",
     "lightReplace": "N",
+    "regionReplace": "N",
     "soundReplace": "N",
     "wallReplace": "N",
     "weatherReplace": "N",
@@ -84,6 +86,14 @@ export const DANGERZONELIGHTREPLACE = {
     "T": "DANGERZONE.light.replace-types.T.label",
     "Z": "DANGERZONE.light.replace-types.Z.label",
     "A": "DANGERZONE.light.replace-types.A.label"
+}
+
+export const DANGERZONEREGIONREPLACE = {
+    "N": "DANGERZONE.region.replace-types.N.label", 
+    "R": "DANGERZONE.region.replace-types.R.label",
+    "T": "DANGERZONE.region.replace-types.T.label",
+    "Z": "DANGERZONE.region.replace-types.Z.label",
+    "A": "DANGERZONE.region.replace-types.A.label"
 }
 
 export const DANGERZONESOUNDREPLACE = {
@@ -305,6 +315,10 @@ export function actorOps(){
     return game.actors.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
 }
 
+export function regionOps(sceneId){
+    return game.scenes.get(sceneId).regions.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
+}
+
 export function sceneOps(){
     return game.scenes.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
 }
@@ -317,6 +331,12 @@ export const MOVETYPES = {
 export const FVTTMOVETYPES = {
     0: 0,
     1: 20
+}
+
+export const REGIONVISIBILITY = {
+    'LAYER': "DANGERZONE.type-form.region.visibility.options.layer",
+    'GAMEMASTER': "DANGERZONE.type-form.region.visibility.options.gamemaster",
+    'ALWAYS': "DANGERZONE.type-form.region.visibility.options.always"
 }
 
 export const SENSETYPES = {
@@ -479,7 +499,7 @@ export function setExecutableOptions(){
             'combat': {
                 title: "Combat", 
                 icon: "fas fa-swords", 
-                modules: [{active: warpgateOn, name: "warpgate", dependent: false}],
+                modules: [{active: portalOn, name: "portal", dependent: false}],
                 scope: "scene"
             },
             'foregroundEffect': {
@@ -540,7 +560,6 @@ export function setExecutableOptions(){
                 title: "Mutate", 
                 icon: "fas fa-pastafarianism", 
                 modules:[
-                    {active: warpgateOn, name: "warpgate", dependent: true}, 
                     {active: taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "token"
@@ -550,6 +569,13 @@ export function setExecutableOptions(){
                 icon: "fas fa-bomb", 
                 modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
+            },
+            'region': {
+                document: "Region", 
+                title: "Region", 
+                icon: "fa-solid fa-expand",
+                scope: "boundary",
+                wipeable: true
             },
             'save': {
                 title: "Save", 
@@ -582,7 +608,7 @@ export function setExecutableOptions(){
                 title: "Spawn", 
                 icon: "fas fa-circle-notch", 
                 modules:[
-                    {active: warpgateOn, name: "warpgate", dependent: true}, 
+                    {active: portalOn, name: "portal", dependent: true}, 
                     {active: taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"

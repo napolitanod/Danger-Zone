@@ -206,6 +206,29 @@ export class dangerZoneType {
           tag: '',
           z: 0
         },
+        region: {
+          active: false,
+          color: '',
+          delay: 0,
+          name: '',
+          offset: {
+            x: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            },
+            y: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            }
+          },
+          scale: 1.0,
+          tag: '',
+          visibility: 'LAYER'
+        },
         scene:{
           active: false,
           background: {
@@ -405,6 +428,10 @@ export class dangerZoneType {
     const flags = this.options.flags ? Object.entries(this.options.flags).filter(o => o[0]!=='tokenResponse') : []
     const tr = this.options.flags?.tokenResponse ? Object.entries(this.options.flags.tokenResponse) : []
     return Object.entries(this.options).filter(o => o[0]!=='flags').concat(flags).concat(tr)
+  }
+
+  get region(){
+    return this.options.region
   }
 
   get save(){

@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, warpgateOn, wallHeightOn, itemPileOn, fluidCanvasOn} from '../index.js';
+import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, portalOn, wallHeightOn, itemPileOn, fluidCanvasOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
@@ -600,6 +600,9 @@ export class executor {
                     break;
                 case 'item': 
                     be = new item(this.danger.item, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'region': 
+                    be = new region(this.danger.region, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'save': 
                     be = new save(this.danger.save, this.data, name, EXECUTABLEOPTIONS[name]); 
@@ -1521,7 +1524,7 @@ class combat extends executable {
     _setTargets(){
         if(this.addTargets) this.initiativeTargets = this.targets
         if(this.addSource && this.data.hasSources) this.initiativeTargets = this.initiativeTargets.concat(this.data.sources.filter(s => !this.initiativeTargets.find(t => t.id === s.id)))
-        if(warpgateOn && this.spawn){
+        if(portalOn && this.spawn){
             for(const tokenId of this.data.spawn.tokens){
                 if(!this.initiativeTargets.find(t => t.id === tokenId)) this.initiativeTargets.push(this.data.sceneTokens.get(tokenId))
             }
@@ -2112,14 +2115,32 @@ class macro extends executable{
 
 class mutate extends executable {
 
+    constructor(...args){
+        super(...args),
+        this._tokenUpdates = [],
+        this._actorUpdates = []
+    }
+
     get embedded(){
-        return this._part.embedded ? stringToObj(this._part.embedded) : {}
+        return this.hasEmbedded ? stringToObj(this._part.embedded) : {}
+    }
+
+    get hasActor(){
+        return this._part.actor ? true : false
+    }
+
+    //get hasEmbedded(){
+    //    return this._part.embedded ? true : false
+    //}
+
+    get hasToken(){
+        return this._part.token ? true : false
     }
 
     get options(){
         return this.permanent ? {permanent: this.permanent} : {}
     }
-
+    
     get permanent(){
         return this._part.permanent
     } 
@@ -2133,29 +2154,38 @@ class mutate extends executable {
     }
 
     actor(token){
-        return this._part.actor ? stringToObj(this._part.actor, {document: token.actor}) : {}
+        const actor = stringToObj(this._part.actor, {document: token.actor})
+        actor['_id'] = token.actorId
+        this._actorUpdates.push(actor)
+        return actor
     }
 
     token(token){
-        const tok = this._part.token ? stringToObj(this._part.token, {document: token}) : {}
+        const tok = stringToObj(this._part.token, {document: token})
         if(this.tag) tok['flags'] = {"tagger":this.taggerTag}
-        return tok
+        tok['_id'] = token.id
+        this._tokenUpdates.push(tok)
     }
 
-    updates(token){
-        return {
-            actor: this.actor(token),
-            embedded: this.embedded,
-            token: this.token(token)
+    async updates(token){
+        const obj = token.toJSON()
+        if(this.hasToken) this.token(token)
+        if(this.hasActor) {
+            const actorUpdate = this.actor(token)
+            await token.updateEmbeddedDocuments("Actor", [actorUpdate])
         }
+        //if(this.hasEmbedded) Object.assign(obj.delta, {delta: this.embedded}) //removed for v12 with loss of Warpgate
+        return obj
     }
 
     async play(){    
         await super.play()  
+        if(!this.permanent) this._cancel = true
         if(this._cancel) return          
         for (const token of this.targets) { 
-            await warpgate.mutate(token, this.updates(token), {}, this.options);
+            if(!token.actorLink) await this.updates(token);
         }
+        await this.data.scene.updateEmbeddedDocuments("Token", this._tokenUpdates)
         await this.data.fillSources()
     }
 }
@@ -2247,6 +2277,70 @@ class primaryEffect extends executableWithFile {
             if(this.repeat) s = s.repeats(this.repeat)
         return s
     }
+}
+
+class region extends executable{
+    constructor(...args){
+        super(...args);
+        this._regions = []
+    }
+
+    get color(){
+        return this._part.color ?? ''
+    }
+
+    get flags(){
+        return this._flags ?? {}
+    }
+
+    get regionName(){
+        return this._part.name.length ? this._part.name  : this.data.danger.name
+    }
+
+    get scale(){
+        return this._part.scale ?? 1
+    }
+
+    get visibility(){
+        return CONST.REGION_VISIBILITY[this._part.visibility] ?? 0
+    }
+
+    build(){
+        const boundaries = this.data.twinDanger ? this.dualBoundaries : [this.boundary]
+        for(let i = 0; i < boundaries.length; i++){
+            this._regions.push(this._region(boundaries[i], i))
+        }
+    }
+
+    async play(){
+        await super.play()
+        if(this._cancel) return
+        if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
+            this.build();
+            await this.data.scene.createEmbeddedDocuments("Region", this._regions);
+        }
+        await this.data.fillSourceAreas()
+    }
+
+    _region(boundary, index = 0){
+        const rg = {
+            color: this.color,
+            elevation: {bottom: boundary.bottom ?? 0, top: boundary.top ?? 0}, 
+            flags: this.data.flag,
+            name: this.regionName,
+            shapes: [{
+                type: 'rectangle',
+                height: boundary.height,
+                rotation: 0,
+                width: boundary.width,
+                x: boundary.A.x,
+                y: boundary.A.y
+            }],
+            visibility: this.visibility
+        };
+        if(taggerOn && this.tag) tile.flags['tagger'] = this.taggerTag
+        return rg
+    } 
 }
 
 class save extends executable{

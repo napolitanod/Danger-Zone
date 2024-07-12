@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
-import {activeEffectOn, daeOn, fluidCanvasOn, itemPileOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, warpgateOn} from '../index.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MIRRORIMAGEOPTIONS, MIRRORROTATIONOPTIONS, MOVETYPES, OFFSETOPTIONS, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
+import {activeEffectOn, daeOn, fluidCanvasOn, itemPileOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, portalOn} from '../index.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MIRRORIMAGEOPTIONS, MIRRORROTATIONOPTIONS, MOVETYPES, OFFSETOPTIONS, REGIONVISIBILITY, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -21,6 +21,7 @@ export class DangerForm extends FormApplication {
     this.light,
     this.monksActiveTiles,
     this.mutate,
+    this.region,
     this.scene,
     this.sound,
     this.sourceEffect,
@@ -135,6 +136,9 @@ export class DangerForm extends FormApplication {
       case 'mutate':
         new DangerZoneDangerFormMutate(this, eventParent, this.mutate).render(true);
         break;
+      case 'region':
+        new DangerZoneDangerFormRegion(this, eventParent, this.region).render(true);
+        break;
       case 'scene':
         new DangerZoneDangerFormScene(this, eventParent, this.scene).render(true);
         break;
@@ -206,6 +210,9 @@ export class DangerForm extends FormApplication {
       case 'mutate':
         this.mutate = {}
         break;
+      case 'region':
+        this.region = Object.assign(this.region, danger.options.region)
+        break;
       case 'scene':
         this.scene = Object.assign(this.scene, danger.options.scene)
         break;
@@ -262,6 +269,7 @@ export class DangerForm extends FormApplication {
     this.light = instance.options.ambientLight;
     this.monksActiveTiles = instance.options.flags?.['monks-active-tiles'] ? instance.options.flags['monks-active-tiles'] : {};
     this.mutate = instance.options.flags?.mutate ? instance.options.flags.mutate : {};
+    this.region = instance.options.region;
     this.scene = instance.options.scene;
     this.sound = instance.options.sound;
     this.sourceEffect = instance.options.sourceEffect;
@@ -287,7 +295,8 @@ export class DangerForm extends FormApplication {
       hasItem: this.item?.name ? true : false,
       hasLastingEffect: this.lastingEffect?.file ? true : false,
       hasLight: (this.light.bright || this.light.dim) ? true : false,
-      hasMutate: Object.keys(this.mutate).length ? true : false,
+      hasMutate: this.mutate?.permanent,
+      hasRegi9on: this.region?.active ? true : false,
       hasScene: this.scene.active ? true : false,
       hasSound: this.sound?.file ? true : false,
       hasSourceEffect: this.sourceEffect?.file ? true : false,
@@ -301,7 +310,7 @@ export class DangerForm extends FormApplication {
       activeEffectOnNot: !activeEffectOn,
       tokenSaysOnNot: !tokenSaysOn, 
       sequencerOnNot: !sequencerOn,
-      warpgateOnNot: !warpgateOn, 
+      portalOnNot: !portalOn, 
       canvasOnNot: !fluidCanvasOn && !sequencerOn, 
       taggerOnNot: !taggerOn,
       tokenResponseOnNot: Object.keys(saveTypes()).length ? false : true
@@ -324,6 +333,7 @@ export class DangerForm extends FormApplication {
     expandedData.options.item = this.item;
     expandedData.options.lastingEffect = this.lastingEffect;
     expandedData.options.ambientLight = this.light;
+    expandedData.options.region = this.region;
     expandedData.options.scene = this.scene;
     expandedData.options.sound = this.sound;
     expandedData.options.sourceEffect = this.sourceEffect;
@@ -615,7 +625,7 @@ class DangerZoneDangerFormCombat extends FormApplication {
         initiativeOps: COMBATINITIATIVE,
         isInitiativeRoll: this.data.initiative.type === 'R' ? true : false,
         isInitiativeSet: this.data.initiative.type === 'S' ? true : false,
-        warpgateOnNot: !warpgateOn
+        portalOnNot: !portalOn
         }
     }
 
@@ -830,6 +840,7 @@ class DangerZoneDangerFormGlobalZone extends FormApplication {
         stretchOps: STRETCH,
         tokenDispositionOps: TOKENDISPOSITION,
         operationOps: TRIGGEROPERATION,
+        regionReplaceOps: DANGERZONEREGIONREPLACE,
         soundReplaceOps: DANGERZONESOUNDREPLACE,
         wallReplaceOps: DANGERZONEWALLREPLACE,
         weatherReplaceOps: DANGERZONEWEATHERREPLACE
@@ -1062,7 +1073,54 @@ class DangerZoneDangerFormMutate extends FormApplication {
       if (expandedData.actor) stringToObj(expandedData.actor, {type: 'Actor', notify: true})
       if (expandedData.embedded) stringToObj(expandedData.embedded, {type:'Embedded', notify:true})
       this.parent.mutate = expandedData;
-      this.eventParent.addClass('active');
+      if(expandedData.permanent) this.eventParent.addClass('active');
+    }
+}
+
+class DangerZoneDangerFormRegion extends FormApplication {
+  constructor(app, eventParent, data, ...args) {
+    super(...args);
+    this.data = data,
+    this.eventParent = eventParent,
+    this.parent = app;
+    }
+
+    static get defaultOptions(){
+        const defaults = super.defaultOptions;
+
+        return foundry.utils.mergeObject(defaults, {
+          title : game.i18n.localize("DANGERZONE.type-form.region.label"),
+          id : "danger-zone-danger-region",
+          classes: ["sheet","danger-part-form"],
+          template : dangerZone.TEMPLATES.DANGERZONEDANGERREGION,
+          height : "auto",
+          width: 425,
+          closeOnSubmit: true,
+          tabs : [
+            {navSelector: ".tabs", contentSelector: "form", initial: "main"}
+          ]
+        });
+      }
+
+    getData(options) {
+
+      return {
+        data: this.data.region,
+        taggerOnNot: !taggerOn,
+        visibilityOps: REGIONVISIBILITY,
+        offsetOps: OFFSETOPTIONS,
+        mirrorOps: MIRRORIMAGEOPTIONS
+      }
+    }
+
+    activateListeners(html) {
+      super.activateListeners(html);
+    }
+  
+    async _updateObject(event, formData) {
+      const expandedData = foundry.utils.expandObject(formData);
+      this.parent.region = expandedData;
+      expandedData.active ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
 
