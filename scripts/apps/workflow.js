@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, portalOn, wallHeightOn, itemPileOn, fluidCanvasOn} from '../index.js';
+import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, portalOn, wallHeightOn, itemPileOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
@@ -1806,31 +1806,6 @@ class Canvas extends executable{
                             frequency: this.iteration
                         })
             return s.play()
-        }
-        if(fluidCanvasOn){
-            switch(this.type){
-                case 'blur':
-                    await KFC.executeAsGM(this.type, this.users, this.intensity);
-                    break;
-                case 'drug':
-                    await KFC.executeAsGM(this.type, this.users, this.intensity, this.duration, this.iteration);
-                    break;
-                case 'black':
-                case 'negative':
-                case 'sepia':
-                    await KFC.executeAsGM(this.type, this.users);
-                    break;
-                case 'fade':
-                    await KFC.executeAsGM(this.type);
-                    break;
-                case 'spin':
-                case 'earthquake':
-                case 'heartbeat':
-                    await KFC.executeForEveryone(this.type, this.intensity, this.duration, this.iteration);
-                    break;
-            }
-            await this._for();
-            await this.off();
         }
     }
 

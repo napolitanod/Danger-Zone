@@ -603,16 +603,7 @@
                 "speed.label": "Speed",
                 "type.label":"Effect Type",
                 "types":{
-                    "shake": "Canvas Shake",
-                    "fluid-canvas-black":"Fluid Canvas: Black",
-                    "fluid-canvas-blur":"Fluid Canvas: Blur",
-                    "fluid-canvas-drug":"Fluid Canvas: Drug",
-                    "fluid-canvas-earthquake":"Fluid Canvas: Earthquake",
-                    "fluid-canvas-fade":"Fluid Canvas: Fade",
-                    "fluid-canvas-heartbeat":"Fluid Canvas: Heart Beat",
-                    "fluid-canvas-negative":"Fluid Canvas: Negative",
-                    "fluid-canvas-sepia":"Fluid Canvas: Sepia",
-                    "fluid-canvas-spin":"Fluid Canvas: Spin"
+                    "shake": "Canvas Shake"
                 }
             },
             "foregroundEffect":{

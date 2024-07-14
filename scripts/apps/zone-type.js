@@ -1,6 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
 import {WORLDZONE, saveTypes} from './constants.js';
-import {monksActiveTilesOn} from '../index.js';
 
 export class dangerZoneType {
     constructor() {
@@ -545,15 +544,7 @@ export class dangerZoneType {
       let type =  new dangerZoneType;
       foundry.utils.mergeObject(type, obj, {insertKeys: false, enforceTypes: enforceTypes});
       if(obj.flags){foundry.utils.mergeObject(type.flags, obj.flags, {insertKeys: true})}
-      dangerZoneType._cleanClass(type)
       return type;
-    }
-  }
-
-  static _cleanClass(obj){
-    if(obj.options.flags.fluidCanvas){
-      Object.assign(obj.canvas.effect,obj.options.flags.fluidCanvas);
-      delete obj.options.flags.fluidCanvas;
     }
   }
 
