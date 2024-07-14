@@ -1,7 +1,7 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {dangerZoneDimensions} from './dimensions.js';
-import {sceneOps} from './constants.js';
+import {sceneOps, regionOps} from './constants.js';
 import {DangerZoneForm} from './zone-form.js';
 
 export class DangerZoneSceneForm extends FormApplication {
@@ -92,7 +92,8 @@ export class DangerZoneSceneForm extends FormApplication {
   getData(options){
     return {
         dangerZones: dangerZone.getAllZonesFromScene(this.sceneId, {enabled: false, typeRequired: false, triggerRequired: false}).sort((a, b) => a.title.localeCompare(b.title)),
-        sceneId: this.sceneId
+        sceneId: this.sceneId,
+        regions: regionOps(this.sceneId)
     }
   }
 

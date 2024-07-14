@@ -7,7 +7,7 @@ import {COMBATTRIGGERS, DANGERZONETRIGGERS,  PLACEABLESBYDOCUMENT, WORLDZONE} fr
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities} from './apps/helpers.js';
-import { fxMasterOn, warpgateOn } from './index.js';
+import { fxMasterOn} from './index.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -42,6 +42,7 @@ export class dangerZone {
     DANGERZONEDANGERLASTINGEFFECT: `modules/${this.ID}/templates/danger-form-lasting-effect.hbs`,
     DANGERZONEDANGERLIGHT: `modules/${this.ID}/templates/danger-form-light.hbs`,
     DANGERZONEDANGERMUTATE: `modules/${this.ID}/templates/danger-form-mutate.hbs`,
+    DANGERZONEDANGERREGION: `modules/${this.ID}/templates/danger-form-region.hbs`,
     DANGERZONEDANGERSCENE: `modules/${this.ID}/templates/danger-form-scene.hbs`,
     DANGERZONEDANGERSOUND: `modules/${this.ID}/templates/danger-form-sound.hbs`,
     DANGERZONEDANGERSOURCEEFFECT: `modules/${this.ID}/templates/danger-form-source-effect.hbs`,
@@ -370,6 +371,7 @@ export class zone {
       deleteAfter: {turns: 0, rounds: 0, seconds: 0}
     },
     this.random = false,
+    this.regionReplace = 'N',
     this.replace = 'N',
     this.scene = new dangerZoneDimensions(sceneId, this.id, regionId),
     this.soundReplace = 'N',
@@ -713,6 +715,8 @@ export class zone {
         return {replace: this.lightReplace, placeable: PLACEABLESBYDOCUMENT[document]}
       case 'AmbientSound':
         return {replace: this.soundReplace, placeable: PLACEABLESBYDOCUMENT[document]}
+      case 'Region':
+        return {replace: this.regionReplace, placeable: PLACEABLESBYDOCUMENT[document]}
       case 'fxmaster-particle':
         return {replace: this.weatherReplace}
     }

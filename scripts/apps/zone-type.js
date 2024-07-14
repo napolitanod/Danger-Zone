@@ -206,6 +206,39 @@ export class dangerZoneType {
           tag: '',
           z: 0
         },
+        region: {
+          active: false,
+          behavior: {
+            teleport: {
+              choice: false,
+              enable: false,
+              name: '',
+              twin: false
+            }
+          },
+          color: '',
+          delay: 0,
+          hole: false,
+          name: '',
+          offset: {
+            x: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            },
+            y: {
+              flip: '',
+              min: 0,
+              max: 0,
+              type: ''
+            }
+          },
+          scale: 1.0,
+          tag: '',
+          type: 'rectangle',
+          visibility: 'LAYER'
+        },
         scene:{
           active: false,
           background: {
@@ -381,8 +414,13 @@ export class dangerZoneType {
     return Object.keys(this.options.globalZone).length ? true : false
   }
 
+  get hasRegionTeleport(){
+    return this.region.behavior?.teleport?.enable ? true : false
+  }
+
   get hasTwinBoundary(){
-    return (monksActiveTilesOn && this.lastingEffect.flags?.['monks-active-tiles']?.teleport) ? true : false
+    const mat = this.options.flags['monks-active-tiles']?.teleport
+    return (this.hasRegionTeleport || (mat && mat.add && mat.twin)) ? true : false
   }
 
   get item(){
@@ -405,6 +443,10 @@ export class dangerZoneType {
     const flags = this.options.flags ? Object.entries(this.options.flags).filter(o => o[0]!=='tokenResponse') : []
     const tr = this.options.flags?.tokenResponse ? Object.entries(this.options.flags.tokenResponse) : []
     return Object.entries(this.options).filter(o => o[0]!=='flags').concat(flags).concat(tr)
+  }
+
+  get region(){
+    return this.options.region ?? {}
   }
 
   get save(){
@@ -433,11 +475,6 @@ export class dangerZoneType {
 
   get tokenSays(){
     return this.options.flags.tokenSays ? this.options.flags.tokenSays : {}
-  }
-
-  get twinDanger(){
-    const mat = this.options.flags['monks-active-tiles']?.teleport
-    return (mat && mat.add && mat.twin) ? true : false
   }
 
   get wall(){

@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, warpgateOn, wallHeightOn, itemPileOn, fluidCanvasOn} from '../index.js';
+import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, portalOn, wallHeightOn, itemPileOn, fluidCanvasOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
@@ -302,7 +302,7 @@ class executorData {
     }
 
     get twinDanger(){
-        return (this.zone.danger.twinDanger) ? true : false
+        return (this.zone.danger.hasTwinBoundary) ? true : false
     }
 
     get likelihoodMet(){
@@ -600,6 +600,9 @@ export class executor {
                     break;
                 case 'item': 
                     be = new item(this.danger.item, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'region': 
+                    be = new region(this.danger.region, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'save': 
                     be = new save(this.danger.save, this.data, name, EXECUTABLEOPTIONS[name]); 
@@ -1521,7 +1524,7 @@ class combat extends executable {
     _setTargets(){
         if(this.addTargets) this.initiativeTargets = this.targets
         if(this.addSource && this.data.hasSources) this.initiativeTargets = this.initiativeTargets.concat(this.data.sources.filter(s => !this.initiativeTargets.find(t => t.id === s.id)))
-        if(warpgateOn && this.spawn){
+        if(portalOn && this.spawn){
             for(const tokenId of this.data.spawn.tokens){
                 if(!this.initiativeTargets.find(t => t.id === tokenId)) this.initiativeTargets.push(this.data.sceneTokens.get(tokenId))
             }
@@ -2112,14 +2115,32 @@ class macro extends executable{
 
 class mutate extends executable {
 
+    constructor(...args){
+        super(...args),
+        this._tokenUpdates = [],
+        this._actorUpdates = []
+    }
+
     get embedded(){
-        return this._part.embedded ? stringToObj(this._part.embedded) : {}
+        return this.hasEmbedded ? stringToObj(this._part.embedded) : {}
+    }
+
+    get hasActor(){
+        return this._part.actor ? true : false
+    }
+
+    //get hasEmbedded(){
+    //    return this._part.embedded ? true : false
+    //}
+
+    get hasToken(){
+        return this._part.token ? true : false
     }
 
     get options(){
         return this.permanent ? {permanent: this.permanent} : {}
     }
-
+    
     get permanent(){
         return this._part.permanent
     } 
@@ -2133,29 +2154,38 @@ class mutate extends executable {
     }
 
     actor(token){
-        return this._part.actor ? stringToObj(this._part.actor, {document: token.actor}) : {}
+        const actor = stringToObj(this._part.actor, {document: token.actor})
+        actor['_id'] = token.actorId
+        this._actorUpdates.push(actor)
+        return actor
     }
 
     token(token){
-        const tok = this._part.token ? stringToObj(this._part.token, {document: token}) : {}
+        const tok = stringToObj(this._part.token, {document: token})
         if(this.tag) tok['flags'] = {"tagger":this.taggerTag}
-        return tok
+        tok['_id'] = token.id
+        this._tokenUpdates.push(tok)
     }
 
-    updates(token){
-        return {
-            actor: this.actor(token),
-            embedded: this.embedded,
-            token: this.token(token)
+    async updates(token){
+        const obj = token.toJSON()
+        if(this.hasToken) this.token(token)
+        if(this.hasActor) {
+            const actorUpdate = this.actor(token)
+            await token.updateEmbeddedDocuments("Actor", [actorUpdate])
         }
+        //if(this.hasEmbedded) Object.assign(obj.delta, {delta: this.embedded}) //removed for v12 with loss of Warpgate
+        return obj
     }
 
     async play(){    
         await super.play()  
+        if(!this.permanent) this._cancel = true
         if(this._cancel) return          
         for (const token of this.targets) { 
-            await warpgate.mutate(token, this.updates(token), {}, this.options);
+            if(!token.actorLink) await this.updates(token);
         }
+        await this.data.scene.updateEmbeddedDocuments("Token", this._tokenUpdates)
         await this.data.fillSources()
     }
 }
@@ -2247,6 +2277,126 @@ class primaryEffect extends executableWithFile {
             if(this.repeat) s = s.repeats(this.repeat)
         return s
     }
+}
+
+class region extends executable{
+    constructor(...args){
+        super(...args);
+        this._boundaries = [],
+        this._data = [],
+        this._regions = []
+    }
+
+    get color(){
+        return this._part.color ?? ''
+    }
+
+    get flags(){
+        return this._flags ?? {}
+    }
+
+    get hole(){
+        return this._part.hole ?? false
+    }
+
+    get regionName(){
+        return this._part.name.length ? this._part.name  : this.data.danger.name
+    }
+
+    get scale(){
+        return this._part.scale ?? 1
+    }
+
+    get teleport(){
+        return this._part.behavior.teleport.enable ? this._part.behavior.teleport : false
+    }
+
+    get type(){
+        return this._part.type ?? 'rectangle'
+    }
+
+    get visibility(){
+        return CONST.REGION_VISIBILITY[this._part.visibility] ?? 0
+    }
+
+    async _addBehaviors(){
+        for(let i = 0; i < this._regions.length; i++){
+            let data = this._buildBehaviors(this._regions[i])
+            if (data.length) await this._regions[i].createEmbeddedDocuments("RegionBehavior", data)
+        }
+    }
+
+    build(){
+        this._boundaries = this.data.twinDanger ? this.dualBoundaries : [this.boundary]
+        for(let i = 0; i < this._boundaries.length; i++){
+            this._data.push(this._region(this._boundaries[i], i))
+        }
+    }
+
+    _buildBehaviors(region){
+        const behaviors = []
+        const isTwin = region.flags?.[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.istwin
+        if(this.teleport && (!isTwin || this.teleport.twin)) behaviors.push(this._buildTeleport(region))
+        if(isTwin) return behaviors
+        return behaviors
+    }
+
+    _buildShape(boundary){
+        return Object.assign( {
+            type: this.type,
+            hole: this.hole,
+            rotation: 0,
+            x: boundary.A.x,
+            y: boundary.A.y
+        }, this.type ==='rectangle' ? 
+            {x: boundary.A.x, y: boundary.A.y, width: boundary.width, height: boundary.height} : 
+            {x: boundary.center.x, y: boundary.center.y, radiusX: boundary.width/2, radiusY: boundary.height/2})
+    }
+
+    _buildTeleport(region){
+        return {
+            disabled: false,
+            flags: this.data.flag,
+            name: this.teleport.name ?? `${this.regionName} Teleport`,
+            system: {
+                choice: this.teleport.choice,
+                destination: this._regions.find(r => r.id !== region.id)?.uuid
+            },
+            type: "teleportToken"
+        } 
+    }
+
+    async play(){
+        await super.play()
+        if(this._cancel) return
+        if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
+            this.build();
+            this._regions = await this.data.scene.createEmbeddedDocuments("Region", this._data);
+            await this._addBehaviors()
+        }
+        await this.data.fillSourceAreas()
+    }
+
+    _pairedBoundary(index){
+        if(!this.data.hasDualBoundaries) return this.boundary
+        if(index % 2 && this.dualBoundaries.length >= index) return this.dualBoundaries[index-1]
+        if(this.dualBoundaries.length >= index+1) return this.dualBoundaries[index+1]
+        return this.dualBoundaries[index]
+    }
+
+    _region(boundary, index){
+        const rg = {
+            color: this.color,
+            elevation: {bottom: boundary.bottom ?? 0, top: boundary.top ?? 0}, 
+            flags: this.data.flag,
+            name: this.regionName,
+            shapes: [this._buildShape(boundary)],
+            visibility: this.visibility
+        };
+        if(taggerOn && this.tag) rg.flags['tagger'] = this.taggerTag
+        if(index) rg.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].istwin = true
+        return rg
+    } 
 }
 
 class save extends executable{
