@@ -1753,7 +1753,7 @@ class flavor extends executable{
 class Canvas extends executable{
     
     get duration(){
-        return this._part.effect.duration ?? 500
+        return this._part.effect.duration ?? 400
     }
 
     get has(){
@@ -1761,11 +1761,11 @@ class Canvas extends executable{
     }
 
     get intensity(){
-        return this._part.effect.intensity ?? 1
+        return this._part.effect.intensity ?? 10
     }
 
     get iteration(){
-        return this._part.effect.iteration ?? 3
+        return this._part.effect.iteration ?? 25
     }
 
     get pan(){
@@ -2293,6 +2293,10 @@ class region extends executable{
 
     get flags(){
         return this._flags ?? {}
+    }
+
+    get has(){
+        return (super.has && this.data.danger.hasRegion) ? true : false
     }
 
     get hole(){

@@ -414,6 +414,10 @@ export class dangerZoneType {
     return Object.keys(this.options.globalZone).length ? true : false
   }
 
+  get hasRegion(){
+    return this.options.region.active
+  }
+
   get hasRegionTeleport(){
     return this.region.behavior?.teleport?.enable ? true : false
   }
