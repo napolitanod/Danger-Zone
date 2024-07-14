@@ -404,19 +404,24 @@ export class zone {
     return dangerZoneType.getDanger(this.type)
   }
 
-  get delay(){
-    const del = this.options.delay.max - this.options.delay.min
-    return del > 0 ? del : 0
-  }
-
   get hasSourcing(){
     return this.source.actor ? true : false
   }
 
-  get randomDelay(){
-    return Math.floor(Math.random() * this.delay)
+  delay(){
+    return zone.delay(this.options.delay)
   }
 
+  static delay(delay){ 
+    if(typeof delay === 'object' ){
+      const min = delay.min ?? 0, max = delay.max ?? 0;
+      const del = max - min
+      if(del <= 0) return min
+      return Math.floor(Math.random() * del)
+    } else {
+      return delay
+    }
+  }
 
   get sources(){
     return this.scene.scene.tokens.filter(t => t.actor?.id === this.source.actor) 

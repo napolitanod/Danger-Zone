@@ -112,6 +112,7 @@ export class dangerZoneDimensions {
     async boundaryConstrained(options = {}){
         const b = await this.getZoneBoundary();
         const dim = {d:b.depth - this.dangerRelativeDimensions.d, h: b.dimensions.h - this.dangerRelativeDimensions.h, w: b.dimensions.w - this.dangerRelativeDimensions.w}
+        console.log(b, dim, this)
         return boundary.locationToBoundary(b.A, b.elevation, dim, Object.assign(options, {excludes: b.excludes, universe: b.universe, regionUuid: this.region.uuid}))
     }
 
@@ -236,9 +237,9 @@ export class boundary{
         const right = canvas.grid.getOffset({x:this.B.x, y:this.A.y});
         const bottom = canvas.grid.getOffset(this.B);
         const w = Math.max(right.j,bottom.j) - Math.min(top.j,left.j);
-        const h = Math.max(left.i,bottom.i) - Math.min(top.i,right.i);
+        const h = Math.max(bottom.i,left.i) - Math.min(top.i,right.i);
 
-        return {w: w, h: h, j:top.j, i:top.i}
+        return {w: w, h: h, j:top.j, i:top.i, top: top, left: left, right: right, bottom: bottom}
     }
 
     get exclude(){

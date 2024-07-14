@@ -98,6 +98,12 @@
                 "boundary.label": "Pass in Target Location",
                 "clear.label": "Bypass Clearing",
                 "clear.description": "This extension's clearing settings will be ignored",
+                "delay":{
+                    "description": "Delays the extension's trigger for the given amount of milliseconds. This is in addition to any delay already on the triggering zone.\nIf the maximum value exceeds the minimum value, then the delay will randomly vary within this range.",
+                    "label": "Delay Start",
+                    "min.label": "Minimum",
+                    "max.label": "Maximum"
+                },
                 "interaction.label": "Interaction",
                 "interaction.options": {
                     "toggle": "Toggle Zone Active",
