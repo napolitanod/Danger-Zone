@@ -112,7 +112,6 @@ export class dangerZoneDimensions {
     async boundaryConstrained(options = {}){
         const b = await this.getZoneBoundary();
         const dim = {d:b.depth - this.dangerRelativeDimensions.d, h: b.dimensions.h - this.dangerRelativeDimensions.h, w: b.dimensions.w - this.dangerRelativeDimensions.w}
-        console.log(b, dim, this)
         return boundary.locationToBoundary(b.A, b.elevation, dim, Object.assign(options, {excludes: b.excludes, universe: b.universe, regionUuid: this.region.uuid}))
     }
 
