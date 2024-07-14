@@ -333,6 +333,11 @@ export const FVTTMOVETYPES = {
     1: 20
 }
 
+export const REGIONSHAPETYPEOPTIONS = {
+    "ellipse": "DANGERZONE.type-form.region.type.options.ellipse",
+    "rectangle": "DANGERZONE.type-form.region.type.options.rectangle"
+}
+
 export const REGIONVISIBILITY = {
     'LAYER': "DANGERZONE.type-form.region.visibility.options.layer",
     'GAMEMASTER': "DANGERZONE.type-form.region.visibility.options.gamemaster",

@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {activeEffectOn, daeOn, fluidCanvasOn, itemPileOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, portalOn} from '../index.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MIRRORIMAGEOPTIONS, MIRRORROTATIONOPTIONS, MOVETYPES, OFFSETOPTIONS, REGIONVISIBILITY, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE, determineMacroList,  REGIONSHAPETYPEOPTIONS, dirTypes, doorTypes, ELEVATIONMOVEMENT, FLUIDCANVASTYPES, getCompendiumOps, HORIZONTALMOVEMENT, MIRRORIMAGEOPTIONS, MIRRORROTATIONOPTIONS, MOVETYPES, OFFSETOPTIONS, REGIONVISIBILITY, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -296,7 +296,7 @@ export class DangerForm extends FormApplication {
       hasLastingEffect: this.lastingEffect?.file ? true : false,
       hasLight: (this.light.bright || this.light.dim) ? true : false,
       hasMutate: this.mutate?.permanent,
-      hasRegi9on: this.region?.active ? true : false,
+      hasRegion: this.region?.active ? true : false,
       hasScene: this.scene.active ? true : false,
       hasSound: this.sound?.file ? true : false,
       hasSourceEffect: this.sourceEffect?.file ? true : false,
@@ -1105,11 +1105,12 @@ class DangerZoneDangerFormRegion extends FormApplication {
     getData(options) {
 
       return {
-        data: this.data.region,
+        data: this.data,
         taggerOnNot: !taggerOn,
         visibilityOps: REGIONVISIBILITY,
         offsetOps: OFFSETOPTIONS,
-        mirrorOps: MIRRORIMAGEOPTIONS
+        mirrorOps: MIRRORIMAGEOPTIONS,
+        shapeTypeOps: REGIONSHAPETYPEOPTIONS
       }
     }
 

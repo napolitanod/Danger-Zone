@@ -302,7 +302,7 @@ class executorData {
     }
 
     get twinDanger(){
-        return (this.zone.danger.twinDanger) ? true : false
+        return (this.zone.danger.hasTwinBoundary) ? true : false
     }
 
     get likelihoodMet(){
@@ -2282,6 +2282,8 @@ class primaryEffect extends executableWithFile {
 class region extends executable{
     constructor(...args){
         super(...args);
+        this._boundaries = [],
+        this._data = [],
         this._regions = []
     }
 
@@ -2293,6 +2295,10 @@ class region extends executable{
         return this._flags ?? {}
     }
 
+    get hole(){
+        return this._part.hole ?? false
+    }
+
     get regionName(){
         return this._part.name.length ? this._part.name  : this.data.danger.name
     }
@@ -2301,15 +2307,63 @@ class region extends executable{
         return this._part.scale ?? 1
     }
 
+    get teleport(){
+        return this._part.behavior.teleport.enable ? this._part.behavior.teleport : false
+    }
+
+    get type(){
+        return this._part.type ?? 'rectangle'
+    }
+
     get visibility(){
         return CONST.REGION_VISIBILITY[this._part.visibility] ?? 0
     }
 
-    build(){
-        const boundaries = this.data.twinDanger ? this.dualBoundaries : [this.boundary]
-        for(let i = 0; i < boundaries.length; i++){
-            this._regions.push(this._region(boundaries[i], i))
+    async _addBehaviors(){
+        for(let i = 0; i < this._regions.length; i++){
+            let data = this._buildBehaviors(this._regions[i])
+            if (data.length) await this._regions[i].createEmbeddedDocuments("RegionBehavior", data)
         }
+    }
+
+    build(){
+        this._boundaries = this.data.twinDanger ? this.dualBoundaries : [this.boundary]
+        for(let i = 0; i < this._boundaries.length; i++){
+            this._data.push(this._region(this._boundaries[i], i))
+        }
+    }
+
+    _buildBehaviors(region){
+        const behaviors = []
+        const isTwin = region.flags?.[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.istwin
+        if(this.teleport && (!isTwin || this.teleport.twin)) behaviors.push(this._buildTeleport(region))
+        if(isTwin) return behaviors
+        return behaviors
+    }
+
+    _buildShape(boundary){
+        return Object.assign( {
+            type: this.type,
+            hole: this.hole,
+            rotation: 0,
+            x: boundary.A.x,
+            y: boundary.A.y
+        }, this.type ==='rectangle' ? 
+            {x: boundary.A.x, y: boundary.A.y, width: boundary.width, height: boundary.height} : 
+            {x: boundary.center.x, y: boundary.center.y, radiusX: boundary.width/2, radiusY: boundary.height/2})
+    }
+
+    _buildTeleport(region){
+        return {
+            disabled: false,
+            flags: this.data.flag,
+            name: this.teleport.name ?? `${this.regionName} Teleport`,
+            system: {
+                choice: this.teleport.choice,
+                destination: this._regions.find(r => r.id !== region.id)?.uuid
+            },
+            type: "teleportToken"
+        } 
     }
 
     async play(){
@@ -2317,28 +2371,30 @@ class region extends executable{
         if(this._cancel) return
         if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
             this.build();
-            await this.data.scene.createEmbeddedDocuments("Region", this._regions);
+            this._regions = await this.data.scene.createEmbeddedDocuments("Region", this._data);
+            await this._addBehaviors()
         }
         await this.data.fillSourceAreas()
     }
 
-    _region(boundary, index = 0){
+    _pairedBoundary(index){
+        if(!this.data.hasDualBoundaries) return this.boundary
+        if(index % 2 && this.dualBoundaries.length >= index) return this.dualBoundaries[index-1]
+        if(this.dualBoundaries.length >= index+1) return this.dualBoundaries[index+1]
+        return this.dualBoundaries[index]
+    }
+
+    _region(boundary, index){
         const rg = {
             color: this.color,
             elevation: {bottom: boundary.bottom ?? 0, top: boundary.top ?? 0}, 
             flags: this.data.flag,
             name: this.regionName,
-            shapes: [{
-                type: 'rectangle',
-                height: boundary.height,
-                rotation: 0,
-                width: boundary.width,
-                x: boundary.A.x,
-                y: boundary.A.y
-            }],
+            shapes: [this._buildShape(boundary)],
             visibility: this.visibility
         };
-        if(taggerOn && this.tag) tile.flags['tagger'] = this.taggerTag
+        if(taggerOn && this.tag) rg.flags['tagger'] = this.taggerTag
+        if(index) rg.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].istwin = true
         return rg
     } 
 }

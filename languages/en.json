@@ -774,12 +774,32 @@
             },
             "region":{
                 "active.label": "Enable Region",
+                "behavior": {
+                    "teleport":{
+                        "choice.label": "Allow Choice",
+                        "description": "Teleport tokens to another random destination in the zone. If 'Twin' is selected then a second region will be created and the two will teleport between each other.",
+                        "enable.label": "Add Token Teleportion",
+                        "name.label": "Name",
+                        "label": "Teleport",
+                        "twin.label": "Twin Regions (i.e. Portal)"
+                    }
+                },
                 "color.label": "Color",
                 "delay.label": "Delay Start",
                 "description": "Create a region in the target area.",
+                "hole.label": "Is a Hole",
                 "label": "Region",
                 "name.label": "Name",
                 "scale.label": "Region Scale",
+                "tab": {
+                    "main.title": "Main",
+                    "behaviors.title": "Behaviors"
+                },
+                "type.label": "Shape",
+                "type.options": {
+                    "rectangle": "Rectangle",
+                    "ellipse": "Ellipse"
+                },
                 "tag.label": "Region Tag",
                 "tag.description": "Tagger tag",
                 "visibility.label": "Visibility",
