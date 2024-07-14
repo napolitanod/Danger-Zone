@@ -236,9 +236,9 @@ export class boundary{
         const right = canvas.grid.getOffset({x:this.B.x, y:this.A.y});
         const bottom = canvas.grid.getOffset(this.B);
         const w = Math.max(right.j,bottom.j) - Math.min(top.j,left.j);
-        const h = Math.max(left.i,bottom.i) - Math.min(top.i,right.i);
+        const h = Math.max(bottom.i,left.i) - Math.min(top.i,right.i);
 
-        return {w: w, h: h, j:top.j, i:top.i}
+        return {w: w, h: h, j:top.j, i:top.i, top: top, left: left, right: right, bottom: bottom}
     }
 
     get exclude(){

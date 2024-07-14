@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, portalOn, wallHeightOn, itemPileOn, fluidCanvasOn} from '../index.js';
+import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, portalOn, wallHeightOn, itemPileOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
@@ -17,6 +17,7 @@ export class workflow {
     constructor(zone, trigger, options = {}) {
         this.active = true,
         this.executor = new executor(zone, options);
+        this._options = options,
         this._id = foundry.utils.randomID(16),
         this._state = WORKFLOWSTATES.NONE,
         this.trigger = trigger
@@ -44,23 +45,24 @@ export class workflow {
 
     log(message, data){
         dangerZone.log(false,`${message} ${this.title}... `, {workflow: this, data:data});
-    }
+    } 
 
     static async go(zone, trigger, options){
         const length = zone.loop ? zone.loop : 1
         let delay = 0;
         for(let i=0; i < length; i++){
             options['previouslyExecuted'] = i ? true : false
-            if(zone.delay > 0) {
+            if(zone.options.delay.min > 0 || zone.options.delay.max > 0) {
                 if(zone.operation === 'T'){
-                    if(!i) delay = zone.randomDelay
+                    if(!i) delay = zone.delay()
                 } else {
-                    delay = zone.randomDelay
+                    delay = zone.delay()
                 }
             }
+            if(options.extensionDelay) delay = delay + options.extensionDelay;
             options['delay'] = delay;
-            dangerZone.log(false, `Workflow ${zone.title} loop ${i+1} of ${length}...`, {});
             const flow = new workflow(zone, trigger, options);
+            flow.log(`Workflow ${zone.title} loop ${i+1} of ${length}...`, {zone: zone, trigger: trigger, options: options});
             zone.operation === 'Q' ? await flow.next() : flow.next()
         }
     }
@@ -219,7 +221,7 @@ class executorData {
         this._delay = options.delay,
         this.eligibleTargets = [],
         this.likelihoodResult = 100,
-        this.location = options.location ? new point(options.location.coords ?? {x: options.location.x, y: options.location.y}, options.location.elevation ?? options.location.z) : {},
+        this.location = options.location ? (new point(options.location.coords ?? {x: options.location.x, y: options.location.y}, options.location.elevation ?? options.location.z)) : {},
         this.offset = {
             x:{
                 random: Math.random(),
@@ -785,14 +787,15 @@ export class executor {
         await Promise.all(promises);
     }
 
-    async extensionTrigger(extension, zone){
+    async extensionTrigger(extension, zn){
         const ops = {};
         if(extension.boundary) ops.boundary = this.data.boundary;
         if(extension.target) ops.targets = this.data.targets;
         if(extension.save) ops.save = this.data.save;
         if(extension.source) ops.sources = this.data.sources;
         if(extension.clear) ops.clearBypass = true;
-        await workflow.go(zone, 'zone',ops)
+        if(extension.delay?.min || extension.delay?.max) ops.extensionDelay = zone.delay(extension.delay)
+        await workflow.go(zn, 'zone',ops)
     }
  
     async inform(){
@@ -1753,7 +1756,7 @@ class flavor extends executable{
 class Canvas extends executable{
     
     get duration(){
-        return this._part.effect.duration ?? 400
+        return !this._part.effect.duration ? 1 : this._part.effect.duration
     }
 
     get has(){
@@ -1761,11 +1764,11 @@ class Canvas extends executable{
     }
 
     get intensity(){
-        return this._part.effect.intensity ?? 10
+        return !this._part.effect.intensity ? 1 : this._part.effect.intensity
     }
 
     get iteration(){
-        return this._part.effect.iteration ?? 25
+        return !this._part.effect.iteration ? 1 : this._part.effect.iteration 
     }
 
     get pan(){
@@ -1774,18 +1777,6 @@ class Canvas extends executable{
     
     get type(){
         return this._part.effect.type
-    }
-
-    get isToggle(){
-        return ['black', 'blur', 'drug', 'fade','negative','sepia'].includes(this.type)
-    }
-
-    get users(){
-        return game.users.map(u => u.id)
-    }
-
-    async off(){ 
-        if(this.isToggle) await KFC.executeAsGM(this.type, this.users);
     }
 
     async play(){
@@ -1807,35 +1798,6 @@ class Canvas extends executable{
                         })
             return s.play()
         }
-        if(fluidCanvasOn){
-            switch(this.type){
-                case 'blur':
-                    await KFC.executeAsGM(this.type, this.users, this.intensity);
-                    break;
-                case 'drug':
-                    await KFC.executeAsGM(this.type, this.users, this.intensity, this.duration, this.iteration);
-                    break;
-                case 'black':
-                case 'negative':
-                case 'sepia':
-                    await KFC.executeAsGM(this.type, this.users);
-                    break;
-                case 'fade':
-                    await KFC.executeAsGM(this.type);
-                    break;
-                case 'spin':
-                case 'earthquake':
-                case 'heartbeat':
-                    await KFC.executeForEveryone(this.type, this.intensity, this.duration, this.iteration);
-                    break;
-            }
-            await this._for();
-            await this.off();
-        }
-    }
-
-    async _for(){
-        if(this.isToggle) await delay(this.duration);
     }
 }
 

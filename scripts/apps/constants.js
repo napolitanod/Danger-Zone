@@ -1,4 +1,4 @@
-import {activeEffectOn, tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, portalOn, fxMasterOn, fluidCanvasOn, sequencerOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
+import {activeEffectOn, tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, portalOn, fxMasterOn, sequencerOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -227,18 +227,6 @@ export const SCENEGLOBALILLUMINATION = {
 export const CANVASTYPES = {
     "": "",
     "shake": "DANGERZONE.type-form.canvas.types.shake"
-}
-
-export const FLUIDCANVASTYPES = {
-    "black": "DANGERZONE.type-form.canvas.types.fluid-canvas-black",
-    "blur": "DANGERZONE.type-form.canvas.types.fluid-canvas-blur",
-    "drug": "DANGERZONE.type-form.canvas.types.fluid-canvas-drug",
-    "earthquake": "DANGERZONE.type-form.canvas.types.fluid-canvas-earthquake",
-    "fade": "DANGERZONE.type-form.canvas.types.fluid-canvas-fade",
-    "heartbeat": "DANGERZONE.type-form.canvas.types.fluid-canvas-heartbeat",
-    "negative": "DANGERZONE.type-form.canvas.types.fluid-canvas-negative",
-    "sepia": "DANGERZONE.type-form.canvas.types.fluid-canvas-sepia",
-    "spin": "DANGERZONE.type-form.canvas.types.fluid-canvas-spin"
 }
 
 export const OFFSETOPTIONS = {
@@ -528,7 +516,6 @@ export function setExecutableOptions(){
                 title: "Canvas", 
                 icon: "fas fa-wind", 
                 modules: [
-                    {active: fluidCanvasOn, name: "kandashis-fluid-canvas", dependent: false},
                     {active: sequencerOn, name: "sequencer", dependent: true}
                 ],
                 scope: "scene"
