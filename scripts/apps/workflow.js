@@ -1528,8 +1528,8 @@ class combat extends executable {
         if(this.addTargets) this.initiativeTargets = this.targets
         if(this.addSource && this.data.hasSources) this.initiativeTargets = this.initiativeTargets.concat(this.data.sources.filter(s => !this.initiativeTargets.find(t => t.id === s.id)))
         if(portalOn && this.spawn){
-            for(const tokenId of this.data.spawn.tokens){
-                if(!this.initiativeTargets.find(t => t.id === tokenId)) this.initiativeTargets.push(this.data.sceneTokens.get(tokenId))
+            for(const token of this.data.spawn.tokens){
+                if(!this.initiativeTargets.find(t => t.id === token.id)) this.initiativeTargets.push(this.data.sceneTokens.get(token.id))
             }
         }
     }
@@ -2112,7 +2112,7 @@ class mutate extends executable {
     }
 
     get targets(){
-        return this.data.spawn.mutate ? this.data.sceneTokens.filter(t => this.data.spawn.tokens.includes(t.id)) : super.targets
+        return this.data.spawn.mutate ? this.data.sceneTokens.filter(t => this.data.spawn.tokens.find(s => s.id === t.id)) : super.targets
     }
 
     actor(token){
