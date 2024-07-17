@@ -29,7 +29,7 @@ export class ExecutorForm extends FormApplication {
     }
 
     get boundaryInfo(){
-        return this.boundary ? `x: ${this.boundary.A.x} y: ${this.boundary.A.y} bottom: ${this.boundary.A.z} to x: ${this.boundary.B.x} y: ${this.boundary.B.y} top: ${this.boundary.B.z}` : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.boundary.none.label")
+        return this.boundary ? `x: ${this.boundary.A.x} y: ${this.boundary.A.y} bottom: ${this.boundary.bottom ?? '&infin;'} to x: ${this.boundary.B.x} y: ${this.boundary.B.y} top: ${this.boundary.top ?? '&infin;'}` : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.boundary.none.label")
     }
 
     get dangerOps(){
@@ -105,7 +105,7 @@ export class ExecutorForm extends FormApplication {
     }
 
     get userTargets(){
-        return Array.from(game.user.targets)
+        return Array.from(game.user.targets.map(t=> t.document))
     }
 
     get worldZoneOps(){
