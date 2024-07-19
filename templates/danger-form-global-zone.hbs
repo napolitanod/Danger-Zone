@@ -34,20 +34,6 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="options.placeTemplate">{{localize 'DANGERZONE.edit-form.placeTemplate.label'}}
-                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.placeTemplate.description'}}"><i class="fas fa-info-circle"></i></span>
-            </label>
-            <div class="form-fields">
-                <input type="checkbox" name="options.placeTemplate" {{checked zone.options.placeTemplate}} />
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="options.noPrompt">{{localize 'DANGERZONE.edit-form.promptElevation.label'}}</label>
-            <div class="form-fields">
-                <input type="checkbox" name="options.noPrompt" {{checked zone.options.noPrompt}} />
-            </div>
-        </div>
-        <div class="form-group">
             <label for="options.stretch">{{localize 'DANGERZONE.edit-form.stretch.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.stretch.description'}}"><i class="fas fa-info-circle"></i></span>
             </label>
@@ -133,11 +119,34 @@
             </div>
         </div>
         <div class="form-group">
+            <label for="options.placeTemplate">{{localize 'DANGERZONE.edit-form.placeTemplate.label'}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.placeTemplate.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" name="options.placeTemplate" {{checked zone.options.placeTemplate}} />
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="options.noPrompt">{{localize 'DANGERZONE.edit-form.promptElevation.label'}}</label>
+            <div class="form-fields">
+                <input type="checkbox" name="options.noPrompt" {{checked zone.options.noPrompt}} />
+            </div>
+        </div>
+        <div class="form-group">
             <label for="options.allInArea">{{localize 'DANGERZONE.edit-form.allInArea.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.allInArea.description'}}"><i class="fas fa-info-circle"></i></span>
             </label>
             <div class="form-fields">
                 <input type="checkbox" name="options.allInArea" {{checked zone.options.allInArea}} />
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                {{localize 'DANGERZONE.edit-form.runUntilTokenFound.label'}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.runUntilTokenFound.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" name="options.runUntilTokenFound" {{checked zone.options.runUntilTokenFound}} />
             </div>
         </div>
     </div>

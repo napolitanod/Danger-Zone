@@ -79,12 +79,12 @@ export class ExecutorForm extends FormApplication {
     get executorOptions(){
         return {
             boundary: this.locked.boundary ? this.boundary  : false,
-            sources: this.locked.source ? this.executor.sources : false,
+            sources: this.locked.source ? this.executor.sources : [],
             save: {
-                failed: this.locked.saves ? this.executor.saveFailed : false,
-                succeeded:  this.locked.saves ? this.executor.saveSucceeded : false
+                failed: this.locked.saves ? this.executor.saveFailed : [],
+                succeeded:  this.locked.saves ? this.executor.saveSucceeded : []
             },
-            targets: this.locked.target ? this.executor.targets : false
+            targets: this.locked.target ? this.executor.targets : []
         }
     }
 
