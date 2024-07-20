@@ -1,5 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
 import {WORLDZONE, saveTypes} from './constants.js';
+import {stringToArray} from './helpers.js';
 
 export class dangerZoneType {
     constructor() {
@@ -371,6 +372,22 @@ export class dangerZoneType {
 
   get effect(){
     return this.options.effect
+  }
+
+  get effectDeleteEffects(){
+    return stringToArray(this.effect.flags?.[`${dangerZone.ID}`].deleteEffects, {splitter: '||'})
+  }
+  
+  get effectDisableEffects(){
+    return stringToArray(this.effect.flags?.[`${dangerZone.ID}`].disableEffects, {splitter: '||'})
+  }
+
+  get effectEnableEffects(){
+    return stringToArray(this.effect.flags?.[`${dangerZone.ID}`].enableEffects, {splitter: '||'})
+  }
+
+  get effectToggleEffects(){
+    return stringToArray(this.effect.flags?.[`${dangerZone.ID}`].toggleEffects, {splitter: '||'})
   }
 
   get ambientLight(){

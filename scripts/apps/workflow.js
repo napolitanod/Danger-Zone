@@ -2,7 +2,7 @@ import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
 import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, portalOn, wallHeightOn, itemPileOn} from '../index.js';
 import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
-import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
+import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
 async function delay(delay){
     if(delay) await wait(delay)
@@ -1186,9 +1186,31 @@ class executableWithFile extends executable{
 }
 
 class activeEffect extends executable {
+    constructor(...args){
+        super(...args),
+        this._adds = [],
+        this._deletes = [],
+        this._updates = []
+    }
 
     get delay(){
         return this.flag.delay ? this.flag.delay : 0
+    }
+
+    get delete(){
+        return this.data.danger.effectDeleteEffects
+    }
+
+    get disable(){
+        return this.data.danger.effectDisableEffects.filter(e => !this.enable.includes(e))
+    }
+
+    get enable(){
+        return this.data.danger.effectEnableEffects
+    }
+
+    get toggle(){
+        return this.data.danger.effectToggleEffects.filter(e => !this.enable.includes(e)).filter(e => !this.disable.includes(e))
     }
 
     get effect(){
@@ -1216,15 +1238,52 @@ class activeEffect extends executable {
         return this.data.danger.save.ae ? parseInt(this.data.danger.save.ae) : 0
     }
 
+    _data(token, array, type){
+        const effects = token.actor.effects.filter(e => array.includes(e.name))
+        switch(type){  
+            case 0: 
+                return effects.map(e => e._id) 
+            case 1:
+                return effects.map(e => ({_id: e._id, disabled: false})) 
+            case 2:
+                return effects.map(e => ({_id: e._id, disabled: true})) 
+            case 3:
+                return effects.map(e => ({_id: e._id, disabled: e.disabled ? false : true})) 
+        }
+    }
+
+    async _addEffects(token){
+        if(this.limit && token.actor && token.actor.effects.find(e => e.flags[dangerZone.ID]?.origin === this.data.danger.id)){
+            return;
+        }
+        const add = await token.actor.createEmbeddedDocuments("ActiveEffect", [this.effect]);
+        this._adds.push({token: token, data: add}) 
+    }
+
+
+    async _deleteEffects(token){
+        const data = this._data(token, this.delete, 0)
+        if(data.length) await token.actor.deleteEmbeddedDocuments("ActiveEffect", data);
+        this._deletes.push({token: token, data: data})  
+    }
+
+    async _updateEffects(token){
+        let data = [];
+        data = data.concat(this._data(token, this.enable, 1))
+        data = data.concat(this._data(token, this.disable, 2))
+        data = data.concat(this._data(token, this.toggle, 3))
+        if(data.length) await token.actor.updateEmbeddedDocuments("ActiveEffect", data);
+        this._updates.push({token: token, data: data})  
+    }
+
     async play(){  
         await super.play() 
         if(this._cancel) return                 
         for (const token of this.targets) {
             if(!token.actor) continue
-            if(this.limit && token.actor && token.actor.effects.find(e => e.flags[dangerZone.ID]?.origin === this.data.danger.id)){
-                continue;
-            }
-            await token.actor.createEmbeddedDocuments("ActiveEffect", [this.effect]);
+            await this._updateEffects(token)
+            await this._deleteEffects(token)     
+            await this._addEffects(token)                
         }
     }
 }
@@ -1829,7 +1888,7 @@ class item extends executable {
     } 
 
     get itemNames(){
-        return this._part.name ? this._part.name.split('||').map(n => n.trim()) : []
+        return stringToArray(this._part.name, {splitter: '||'})
     }
 
     get source(){
