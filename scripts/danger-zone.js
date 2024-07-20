@@ -6,7 +6,7 @@ import {addTriggersToHotbar} from './apps/hotbar.js';
 import {COMBATTRIGGERS, DANGERZONETRIGGERS,  PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
-import {wait, getTagEntities} from './apps/helpers.js';
+import {wait, getTagEntities, stringToArray} from './apps/helpers.js';
 import { fxMasterOn} from './index.js';
 
 /**
@@ -397,7 +397,7 @@ export class zone {
   }
 
   get conditionEscape(){
-    return this.tokenExCon ? this.tokenExCon.split('|').map(n => n.trim()).filter(n => n !== "") : ''
+    return stringToArray(this.tokenExCon)
   }
 
   get danger(){

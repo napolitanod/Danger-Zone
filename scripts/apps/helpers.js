@@ -129,6 +129,10 @@ export function shuffleArray(array) {
   return array;
 }
 
+export function stringToArray(string, {splitter = '|'}){
+  return string ? string.split(splitter).map(n => n.trim()).filter(n => n !== "") : []
+}
+
 export function stringToObj(string, {type = '', notify = false, document = {}}={}) {
   let obj;
   const error = `${type} ${game.i18n.localize("DANGERZONE.alerts.json-invalid")}`;

@@ -29,6 +29,44 @@
                 </select>   
             </div>
         </div>
+        <hr>
+        <div class="form-group">
+            <label>
+                <span>{{localize 'DANGERZONE.type-form.active-effect.enable-effects.label'}}</span>
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.active-effect.enable-effects.description'}}"><i class="fas fa-info-circle"></i></span>
+           </label>
+            <div class="form-fields">
+                <input type="text" name="flags.danger-zone.enableEffects" value="{{data.flags.danger-zone.enableEffects}}"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                <span>{{localize 'DANGERZONE.type-form.active-effect.disable-effects.label'}}</span>
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.active-effect.disable-effects.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="text" name="flags.danger-zone.disableEffects" value="{{data.flags.danger-zone.disableEffects}}"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                <span>{{localize 'DANGERZONE.type-form.active-effect.delete-effects.label'}}</span>
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.active-effect.delete-effects.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="text" name="flags.danger-zone.deleteEffects" value="{{data.flags.danger-zone.deleteEffects}}"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                <span>{{localize 'DANGERZONE.type-form.active-effect.toggle-effects.label'}}</span>
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.active-effect.toggle-effects.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="text" name="flags.danger-zone.toggleEffects" value="{{data.flags.danger-zone.toggleEffects}}"/>
+            </div>
+        </div>
+        <hr>
         <div class="form-group">
             <label for="flags.danger-zone.source">{{localize "DANGERZONE.source.label"}} 
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.source.danger.description'}}"><i class="fas fa-info-circle"></i></span>
