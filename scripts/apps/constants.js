@@ -381,6 +381,24 @@ export function determineMacroList() {
   return list;
 }
 
+export function determineMacroListUuid() {
+    let list = {'': ''};
+    for (let macro of game.macros.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
+      list[macro.uuid] = macro.name;
+    }
+    return list;
+  }
+
+export function regionEvents(){
+    return Object.keys(CONST.REGION_EVENTS).reduce((obj, key) => {
+        let k = CONST.REGION_EVENTS[key];
+        let v = game.i18n.localize(`DANGERZONE.region.events.options.${k}`)
+        obj[k] = v === key ? key.titleCase().replace('_',' ').replace('_',' ') : v;
+        return obj;
+    }, {})
+}
+
+
 export function saveTypes() {
     switch(game.world.system){
         case "dnd5e":
@@ -464,7 +482,10 @@ export const ZONEEXTENSIONINTERACTIONOPTIONS = {
     "T": "DANGERZONE.edit-form.extension.interaction.options.trigger",
     "A": "DANGERZONE.edit-form.extension.interaction.options.enable",
     "D": "DANGERZONE.edit-form.extension.interaction.options.disable",
-    "G": "DANGERZONE.edit-form.extension.interaction.options.toggle"
+    "G": "DANGERZONE.edit-form.extension.interaction.options.toggle",
+    "R": "DANGERZONE.edit-form.extension.interaction.options.add-region",
+    "P": "DANGERZONE.edit-form.extension.interaction.options.replace-region",
+    "S": "DANGERZONE.edit-form.extension.interaction.options.swap-region"
 }
 
 export const ZONEEXTENSIONSEQUENCEOPTIONS = {

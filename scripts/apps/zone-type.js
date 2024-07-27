@@ -209,6 +209,11 @@ export class dangerZoneType {
         region: {
           active: false,
           behavior: {
+            macro: {
+              everyone: false,
+              uuid: '',
+              events: []
+            },
             teleport: {
               choice: false,
               enable: false,

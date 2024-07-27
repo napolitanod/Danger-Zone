@@ -269,6 +269,10 @@ export class DangerZoneExtensionForm extends FormApplication {
     return this.parent.scene
   }
 
+  get sceneZones(){
+      return this.zones.filter(z => !z.scene.dangerId && z.id !== this.triggeringZone.id)
+  }
+
   get triggeringZone(){
     return this.parent.zone;
   }
@@ -278,8 +282,9 @@ export class DangerZoneExtensionForm extends FormApplication {
   }
 
   get zoneOps(){
-      return this.zones.filter(z => !z.scene.dangerId && z.id !== this.triggeringZone.id).reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
+      return this.sceneZones.reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
   }
+
 
   async _handleChange(event) {
     const action = $(event.currentTarget).data().action, val = event.currentTarget.value;
@@ -287,6 +292,13 @@ export class DangerZoneExtensionForm extends FormApplication {
       case 'interaction': 
         const tfId = document.getElementById(`danger-zone-extension-trigger-fields`);
         val === 'T' ? tfId.classList.remove('dz-hidden') : tfId.classList.add('dz-hidden')
+        const sFld = document.getElementById(`danger-zone-extension-interaction-shape`);
+        val === 'R' ? sFld.classList.remove('dz-hidden') : sFld.classList.add('dz-hidden')
+        this.setPosition()
+        break;
+      case 'zone':
+        const iFld = document.getElementById(`danger-zone-extension-interaction-warning`);
+        this.sceneZones.find(z=>z.id === val) ? iFld.classList.add('dz-hidden') : iFld.classList.remove('dz-hidden')
         this.setPosition()
         break;
     }
@@ -305,7 +317,8 @@ export class DangerZoneExtensionForm extends FormApplication {
       dangerOps: this.dangerOps,
       worldZoneOps: this.worldZoneOps,
       zoneOps: this.zoneOps,
-      isTrigger: (!this.extension.interaction || this.extension.interaction === 'T') ? true : false
+      isTrigger: (!this.extension.interaction || this.extension.interaction === 'T') ? true : false,
+      isSceneZone: (!this.extension.zoneId || this.sceneZones.find(z=>z.id === this.extension.zoneId)) ? true : false
      } 
   }
   

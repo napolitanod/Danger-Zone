@@ -63,6 +63,10 @@ export class dangerZoneDimensions {
         return this.region?.id ? boundary.documentBoundary("Region", this.region) : boundary.documentBoundary("Scene", this.scene)
     }
 
+    get hasRegion(){
+        return this.region?.id ? true : false
+    }
+
     get region(){
         return this.regionId ? this.scene.getEmbeddedDocument("Region",this.regionId) : {}
     }
