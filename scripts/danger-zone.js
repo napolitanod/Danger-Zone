@@ -444,6 +444,12 @@ export class zone {
     return updt
   }
 
+  async addShapesToRegion(shapes){
+      if(shapes?.length && this.scene.hasRegion){
+          await this.scene.region.update({shapes: this.scene.region.shapes.concat(shapes)})
+      }
+  }
+
   async clearWeather({includeFXMaster = false, includeFoundry = false, effect = ''} = {}){     
     dangerZone.log(false,'Clearing Weather ', {includeFXMaster: includeFXMaster, includeFoundry: includeFoundry, effect: effect, scene: this.scene.scene})
     if(!this.scene?.scene || (!includeFXMaster && !includeFoundry)) return
@@ -486,6 +492,10 @@ export class zone {
   async update(updateData, options = {insertKeys: false, enforceTypes: true}){
     const updt = await this._update(updateData, options);
     return updt
+  }
+
+  async updateRegion(regionId = ''){
+    await this.update({scene: {regionId: regionId}})
   }
 
   /**

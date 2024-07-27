@@ -156,6 +156,32 @@
                 </div>
             </div>
         </fieldset>
+        <fieldset>
+            <legend>{{localize "DANGERZONE.type-form.region.behavior.macro.label"}}</legend>
+            <p class="notes">{{localize "DANGERZONE.type-form.region.behavior.macro.description"}}</p>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.region.behavior.macro.events.label"}}</label>
+                <div class="form-fields">
+                    <multi-select name="behavior.macro.events" value="{{data.behavior.macro.events}}">
+                        {{selectOptions eventOps selected=data.behavior.macro.events localize=true}}
+                    </multi-select> 
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.region.behavior.macro.uuid.label"}}</label>
+                <div class="form-fields">
+                    <select name="behavior.macro.uuid" value="{{data.behavior.macro.uuid}}"> 
+                        {{selectOptions macroOps selected=data.behavior.macro.uuid localize=true}}
+                    </select>   
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="behavior.macro.everyone">{{localize "DANGERZONE.type-form.region.behavior.macro.everyone.label"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" data-dtype="Boolean" name="behavior.macro.everyone" {{checked data.behavior.macro.everyone}}>
+                </div>
+            </div>
+        </fieldset>
     </div>
     <footer class="sheet-footer flexrow">
         <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>

@@ -5,9 +5,18 @@
         </div>
         <p class="notes">{{localize "DANGERZONE.edit-form.extend.description"}}</p>
         <div class="form-group">
+            <label for="interaction">{{localize 'DANGERZONE.edit-form.extension.interaction.label'}}</label>
+            <div class="form-fields">
+                <select data-action="interaction" name="interaction" value="{{data.interaction}}"  required> 
+                    {{selectOptions interactionOps selected=data.interaction localize=true}}
+                </select>     
+            </div>
+        </div>
+        <p id="danger-zone-extension-interaction-shape" class="notes {{#unless (eq data.interaction "R")}}dz-hidden{{/unless}}">{{localize "DANGERZONE.edit-form.extension.interaction.shape"}}</p>
+         <div class="form-group">
             <label for="zoneId">{{localize "DANGERZONE.edit-form.extension.zone.label"}}</label>
             <div class="form-fields">
-                <select name="zoneId" value="{{data.zoneId}}" required> 
+                <select data-action="zone" name="zoneId" value="{{data.zoneId}}" required> 
                     <option value="" disabled>{{localize 'DANGERZONE.executor-form.zone.options.scene'}}</option>
                     {{selectOptions zoneOps selected=data.zoneId localize=false}}
                     <option value="" disabled>{{localize 'DANGERZONE.executor-form.zone.options.world'}}</option>
@@ -17,6 +26,7 @@
                 </select>   
             </div>
         </div>
+        <p id="danger-zone-extension-interaction-warning" class="notes {{#if isSceneZone}}dz-hidden{{/if}}">{{localize "DANGERZONE.edit-form.extension.interaction.warning"}}</p>
         <div class="form-group">
             <label for="sequence">{{localize 'DANGERZONE.edit-form.extension.sequence.label'}}</label>
             <div class="form-fields">
@@ -25,15 +35,8 @@
                 </select>     
             </div>
         </div>
-        <div class="form-group">
-            <label for="interaction">{{localize 'DANGERZONE.edit-form.extension.interaction.label'}}</label>
-            <div class="form-fields">
-                <select data-action="interaction" name="interaction" value="{{data.interaction}}"  required> 
-                    {{selectOptions interactionOps selected=data.interaction localize=true}}
-                </select>     
-            </div>
-        </div>
-        <div class="form-group">
+        <hr>
+       <div class="form-group">
             <label>
                 {{localize 'DANGERZONE.edit-form.extension.likelihood.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.extension.likelihood.description'}}"><i class="fas fa-info-circle"></i></span>

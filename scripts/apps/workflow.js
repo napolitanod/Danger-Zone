@@ -234,6 +234,9 @@ class executorData {
         },
         this._options = options,
         this.previouslyExecuted = options.previouslyExecuted ?? false,
+        this.regionData = {
+            shapes: []
+        },
         this.save = {failed: options.save?.failed ?? [], succeeded: options.save?.succeeded ?? []},
         this._sources = options.sources ?? [],
         this.sources = [],
@@ -762,6 +765,13 @@ export class executor {
                 dangerZone.log(false,'Extension triggers only once, bypassing on triggering zone loops', {extension: ex})
                 continue;
             }
+            if(['S', 'R', 'P'].includes(ex.interaction)){//identify those zones that are on scene (and not global or dangers)
+                const sceneZoneIds = dangerZone.getAllZonesFromScene(this.data.scene.id, {enabled: false, typeRequired: true}).map(m => m.id)
+                if(!sceneZoneIds.includes(zn.id) || (ex.interaction === 'S' && !sceneZoneIds.includes(this.zone.id))){
+                    console.log(`Zone extension uses a global zone or a zone that is not part of this scene.`)
+                    continue;
+                }
+            }
             if(ex.likelihood < 100){
                 const maybe = await maybe();
                 if(ex.likelihood > maybe.result) {
@@ -769,6 +779,7 @@ export class executor {
                     continue;
                 }
             }
+            let sourceRegionId = this.zone.scene.regionId, targetRegionId = zn.scene.regionId;            
             switch(ex.interaction){
                 case 'A':
                     if(!zn.enabled) promises.push(zn.toggleZoneActive())
@@ -778,6 +789,16 @@ export class executor {
                     break;    
                 case 'G':
                     promises.push(zn.toggleZoneActive())
+                    break;  
+                case 'P':
+                    promises.push(zn.updateRegion(sourceRegionId))
+                    break; 
+                case 'R':
+                    if(this.data.regionData.shapes.length) promises.push(zn.addShapesToRegion(this.data.regionData.shapes))
+                    break; 
+                case 'S':
+                    promises.push(zn.updateRegion(sourceRegionId))
+                    promises.push(this.zone.updateRegion(targetRegionId))
                     break; 
                 case 'T':
                     promises.push(this.extensionTrigger(ex, zn))
@@ -2324,6 +2345,10 @@ class region extends executable{
         return this._part.hole ?? false
     }
 
+    get macro(){
+        return this._part.behavior.macro?.uuid ? this._part.behavior.macro : false
+    }
+
     get regionName(){
         return this._part.name.length ? this._part.name  : this.data.danger.name
     }
@@ -2363,7 +2388,22 @@ class region extends executable{
         const isTwin = region.flags?.[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.istwin
         if(this.teleport && (!isTwin || this.teleport.twin)) behaviors.push(this._buildTeleport(region))
         if(isTwin) return behaviors
+        if(this.macro) behaviors.push(this._buildMacro())
         return behaviors
+    }
+
+    _buildMacro(){
+        return {
+            disabled: false,
+            flags: this.data.flag,
+            name: `${this.regionName} Macro`,
+            system: {
+                events: this.macro.events,
+                everyone: this.macro.everyone,
+                uuid: this.macro.uuid
+            },
+            type: "executeMacro"
+        } 
     }
 
     _buildShape(boundary){
@@ -2410,16 +2450,21 @@ class region extends executable{
     }
 
     _region(boundary, index){
+        let shape = this._buildShape(boundary);
         const rg = {
             color: this.color,
             elevation: {bottom: boundary.bottom ?? 0, top: boundary.top ?? 0}, 
             flags: this.data.flag,
             name: this.regionName,
-            shapes: [this._buildShape(boundary)],
+            shapes: [shape],
             visibility: this.visibility
         };
         if(taggerOn && this.tag) rg.flags['tagger'] = this.taggerTag
-        if(index) rg.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].istwin = true
+        if(index) {
+            rg.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].istwin = true
+        } else {
+            this.data.regionData.shapes.push(shape)
+        }
         return rg
     } 
 }

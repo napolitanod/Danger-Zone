@@ -106,11 +106,16 @@
                 },
                 "interaction.label": "Interaction",
                 "interaction.options": {
-                    "toggle": "Toggle Zone Active",
-                    "enable": "Activate Zone",
-                    "disable": "Deactivate Zone",
-                    "trigger": "Trigger Zone"
+                    "toggle": "Toggle target zone active",
+                    "enable": "Activate target zone",
+                    "disable": "Deactivate target zone",
+                    "trigger": "Trigger target zone",
+                    "add-region": "Copy region shape to target zone",
+                    "replace-region": "Replace target zone's region with this zone's region",
+                    "swap-region": "Swap target zone's region with this zone's region"
                 },
+                "interaction.warning": "Interactions that update zone regions can only affect scene zones. They have no effect on world zones or dangers because these are not associated to a region.",
+                "interaction.shape": "In order to have a shape to copy, this (source) zone must trigger first and this zone's danger must create a region. The target zone must be associated with a region. ",
                 "likelihood.description": "Set the probability that this extension will be interacted with when the triggering zone triggers. Note that zone likelihood of this extension (as configured on the zone itself) will still be assessed in addition to what is set here.",
                 "likelihood.label": "Likelihood",
                 "once.label": "Do Once",
@@ -128,7 +133,7 @@
                 "target.description": "This extension will use the same target tokens as the triggering zone.",
                 "target.label": "Pass in Target Tokens",
                 "trigger.label": "Trigger Settings",
-                "zone.label": "Zone"
+                "zone.label": "Target Zone"
             },
             "clear.label": "Clear",
             "combatantInZone.description": "The zone will only trigger if the current combatant is within the zone.",
@@ -780,6 +785,13 @@
             "region":{
                 "active.label": "Enable Region",
                 "behavior": {
+                    "macro":{
+                        "label": "Macro",
+                        "description": "Generate a macro on region trigger",
+                        "events.label": "Events",
+                        "uuid.label": "Macro",
+                        "everyone.label": "Everyone"
+                    },
                     "teleport":{
                         "choice.label": "Allow Choice",
                         "description": "Teleport tokens to another random destination in the zone. If 'Twin' is selected then a second region will be created and the two will teleport between each other.",
@@ -1121,6 +1133,24 @@
                 "duration.label": "Duration",
                 "label": "Weather",
                 "type.label": "Type"
+            }
+        },
+        "region":{
+            "events": {
+                "options": {
+                    "behaviorStatus": "Behavior Status Change",
+                    "regionBoundary": "Region Boundary Change",
+                    "tokenEnter": "Token Enters",
+                    "tokenExit": "Token Exits",
+                    "tokenMove": "After Token Moved",
+                    "tokenMoveIn": "Token Moved In",
+                    "tokenMoveOut": "Token Moved Out",
+                    "tokenPreMove": "Before Token Moves",
+                    "tokenRoundEnd": "Token Ends Round",
+                    "tokenRoundStart": "Token Starts Round",
+                    "tokenTurnEnd": "Token Ends Turn",
+                    "tokenTurnStart": "Token Starts Turn"
+                }
             }
         },
         "tiles-block":{
