@@ -358,12 +358,30 @@
             "likelihood.description": "Likelihood",
             "isActive.label": "Active"            
         },
-        "region.replace-types": {
-            "A.label": "Clear all regions",
-            "N.label": "Retain all regions",
-            "R.label": "Clear regions that share this trigger",
-            "T.label": "Clear regions that share this danger",
-            "Z.label": "Clear regions that share this zone"
+        "region": {
+            "events": {
+                "options": {
+                    "behaviorStatus": "Behavior Status Change",
+                    "regionBoundary": "Region Boundary Change",
+                    "tokenEnter": "Token Enters",
+                    "tokenExit": "Token Exits",
+                    "tokenMove": "After Token Moved",
+                    "tokenMoveIn": "Token Moved In",
+                    "tokenMoveOut": "Token Moved Out",
+                    "tokenPreMove": "Before Token Moves",
+                    "tokenRoundEnd": "Token Ends Round",
+                    "tokenRoundStart": "Token Starts Round",
+                    "tokenTurnEnd": "Token Ends Turn",
+                    "tokenTurnStart": "Token Starts Turn"
+                }
+            },
+            "replace-types": {
+                "A.label": "Clear all regions",
+                "N.label": "Retain all regions",
+                "R.label": "Clear regions that share this trigger",
+                "T.label": "Clear regions that share this danger",
+                "Z.label": "Clear regions that share this zone"
+            }
         },
         "replace-types": {
             "A.label": "Clear all lasting effects",
@@ -1133,24 +1151,6 @@
                 "duration.label": "Duration",
                 "label": "Weather",
                 "type.label": "Type"
-            }
-        },
-        "region":{
-            "events": {
-                "options": {
-                    "behaviorStatus": "Behavior Status Change",
-                    "regionBoundary": "Region Boundary Change",
-                    "tokenEnter": "Token Enters",
-                    "tokenExit": "Token Exits",
-                    "tokenMove": "After Token Moved",
-                    "tokenMoveIn": "Token Moved In",
-                    "tokenMoveOut": "Token Moved Out",
-                    "tokenPreMove": "Before Token Moves",
-                    "tokenRoundEnd": "Token Ends Round",
-                    "tokenRoundStart": "Token Starts Round",
-                    "tokenTurnEnd": "Token Ends Turn",
-                    "tokenTurnStart": "Token Starts Turn"
-                }
             }
         },
         "tiles-block":{
