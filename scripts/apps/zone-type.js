@@ -342,6 +342,7 @@ export class dangerZoneType {
           hz: {dir:'', max:0, min:0},
           source:'',
           sToT: false,
+          teleport: false,
           tiles: '',
           walls: '',
           v: {dir:'', max:0, min:0}

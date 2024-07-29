@@ -665,7 +665,9 @@
                 "duration.label": "Duration"
             },
             "global-zone": {
+                "bottom.label": "Zone Bottom",
                 "description": "Configures this danger so that it becomes available on every scene as a manually triggered zone with a more limited option set.",
+                "top.label": "Zone Top",
                 "label": "World Zone"
             },
             "icon.label": "Icon",
@@ -1054,6 +1056,7 @@
                 "label": "Move Tokens",
                 "overrides.label": "Movement Overrides",
                 "source-to-target.label": "Move Source to Targeted Area",
+                "teleport.label": "Teleport",
                 "tiles-block.label": "Tiles Block Target Depth Move",
                 "walls-block.label": "Walls Block Target X/Y Move",
                 "vertical.label": "Vertical Movement",
