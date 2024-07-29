@@ -326,6 +326,13 @@ class executorData {
        return game.scenes.get(this.zone.scene.sceneId)
     }
 
+    get sceneBoundary(){
+        return {
+            x: {min: this.scene.dimensions.sceneX, max: this.scene.dimensions.sceneX + this.scene.dimensions.sceneWidth - this.scene.dimensions.size},
+            y: {min: this.scene.dimensions.sceneY, max: this.scene.dimensions.sceneY + this.scene.dimensions.sceneHeight - this.scene.dimensions.size }
+        }
+    }
+
     get sceneTokens() {
         return this.scene.tokens
     }
@@ -3264,6 +3271,10 @@ class tokenMove extends executable {
         return targets
     }
 
+    get teleport(){
+        return this._part.teleport
+    }
+
     async play() {
         await super.play()
         if(this._cancel) return
@@ -3280,6 +3291,16 @@ class tokenMove extends executable {
                     x = shift.x; y = shift.y;
                     e = this.e.type === 'S' ? amtE : token.elevation + amtE;
                     this.data.tokenMovement.push({tokenId: token.id, hz: Math.abs(w), v: Math.abs(h), e: Math.abs(e - token.elevation)})
+                }
+                if(x < this.data.sceneBoundary.x.min) {
+                    x = this.data.sceneBoundary.x.min
+                } else if (x > this.data.sceneBoundary.x.max) {
+                    x = this.data.sceneBoundary.x.max
+                }
+                if(y < this.data.sceneBoundary.y.min) {
+                    y = this.data.sceneBoundary.y.min
+                } else if (y > this.data.sceneBoundary.y.max) {
+                    y = this.data.sceneBoundary.y.max
                 }
                 this.updates.push({"_id": token.id,"x": x,"y": y, "elevation": e});
             }
@@ -3305,6 +3326,10 @@ class tokenMove extends executable {
 
     async _update(){
         const opts = this.flag ? {dangerZoneMove: true} : {};
+        if(this.teleport){
+            opts.teleport = true;
+            opts.forced = true;
+        }
         await this.data.scene.updateEmbeddedDocuments("Token", this.updates, opts);
     }
 }
@@ -3383,6 +3408,11 @@ class tokenSays extends executable {
 
 class wall extends executable {
 
+    constructor(...args){
+        super(...args);
+        this._data = []
+    }
+
     get bottom(){
         return this._part.bottom
     }
@@ -3447,23 +3477,11 @@ class wall extends executable {
         return this._part.top
     }
 
-    get _build(){
-        const walls = [];
-        if(this.top && this.randomize()) walls.push(this._wall(this.boundary.A, {x: this.boundary.B.x, y: this.boundary.A.y}))
-        if(this.right && this.randomize()) walls.push(this._wall({x: this.boundary.B.x, y: this.boundary.A.y}, this.boundary.B))
-        if(this.bottom && this.randomize()) walls.push(this._wall(this.boundary.B, {x: this.boundary.A.x, y: this.boundary.B.y}))
-        if(this.left && this.randomize()) walls.push(this._wall({x: this.boundary.A.x, y: this.boundary.B.y}, this.boundary.A))
-        return walls
-    }
-
-    async play(){
-        await super.play()
-        if(this._cancel) return
-        if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
-            const walls = this._build;
-            if(walls.length) await this.data.scene.createEmbeddedDocuments("Wall",walls)
-        }
-        await this.data.fillSourceAreas()
+    _build(){
+        if(this.top && this.randomize()) this._data.push(this._wall(this.boundary.A, {x: this.boundary.B.x, y: this.boundary.A.y}))
+        if(this.right && this.randomize()) this._data.push(this._wall({x: this.boundary.B.x, y: this.boundary.A.y}, this.boundary.B))
+        if(this.bottom && this.randomize()) this._data.push(this._wall(this.boundary.B, {x: this.boundary.A.x, y: this.boundary.B.y}))
+        if(this.left && this.randomize()) this._data.push(this._wall({x: this.boundary.A.x, y: this.boundary.B.y}, this.boundary.A))
     }
 
     _wall(start, end){
@@ -3480,10 +3498,20 @@ class wall extends executable {
             threshold: this.threshold,
             flags: this.data.flag
         }
-        if(wallHeightOn && (this.boundary.bottom || this.boundary.top)) wall.flags['wallHeight'] = {"wallHeightTop": this.boundary.top-1, "wallHeightBottom": this.boundary.bottom}
+        if(wallHeightOn && (this.boundary.bottom || this.boundary.top)) wall.flags['wall-height'] = {"top": this.boundary.top, "bottom": this.boundary.bottom}
         if(taggerOn && this.tag) wall.flags['tagger'] = this.taggerTag
         return wall;
     }  
+
+    async play(){
+        await super.play()
+        if(this._cancel) return
+        if(!this.save || (this.save > 1 ? this.data.hasFails : this.data.hasSuccesses)){
+            this._build();
+            if(this._data.length) await this.data.scene.createEmbeddedDocuments("Wall",this._data)
+        }
+        await this.data.fillSourceAreas()
+    }
 }
 
 class weather extends executable{

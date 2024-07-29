@@ -90,6 +90,12 @@
         </div>
         <hr>
         <div class="form-group">
+            <label for="flag">{{localize "DANGERZONE.type-form.tokenMove.teleport.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="teleport" {{checked data.teleport}}>
+            </div>
+        </div>
+        <div class="form-group">
             <label for="flag">{{localize "DANGERZONE.type-form.tokenMove.flag.label"}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenMove.flag.description'}}"><i class="fas fa-info-circle"></i></span>
             </label>

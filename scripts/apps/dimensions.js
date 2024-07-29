@@ -6,6 +6,7 @@ export class dangerZoneDimensions {
     /**
      * @param {string} zoneId - id of the parent zone
      * @param {string} sceneId - the id of the scene  
+     * @param {string} regionId - the id of the region that defines the zone dimensions. Can be blank, which indicates full scene dimensions.
     */
     constructor (sceneId, zoneId, regionId = '') {
         this.zoneId = zoneId,
@@ -60,7 +61,7 @@ export class dangerZoneDimensions {
     /**Migration end */
 
     get boundary(){
-        return this.region?.id ? boundary.documentBoundary("Region", this.region) : boundary.documentBoundary("Scene", this.scene)
+        return this.region?.id ? boundary.documentBoundary("Region", this.region) : boundary.documentBoundary("Scene", this.scene, this.dangerId ? {global: {bottom: this.danger.globalZone?.options?.bottom ?? null, top: this.danger.globalZone?.options?.top ?? null}} : {})
     }
 
     get hasRegion(){
@@ -307,7 +308,7 @@ export class boundary{
     _indexDocuments(documents, indices){
         for(const document of documents){
             const documentName = document.documentName ?? document.document.documentName;
-            const b = boundary.documentBoundary(documentName, document, {inclusive: documentName === "Token" ? false : true});
+            const b = boundary.documentBoundary(documentName, document, {inclusive: (documentName === "Token" ? false : true)});
             const grids = b.grids()  
             for(const grid of grids){
                 let index = boundary.makeIndex(grid);
@@ -400,6 +401,16 @@ export class boundary{
 
     }
 
+    /**
+     * 
+     * @param {*} documentName 
+     * @param {*} document 
+     * @param {*} options 
+     *  {
+     *      global: {bottom: integar, top: integer}} //used to pass in bottom and top of zone for world zones
+     *  }
+     * @returns 
+     */
     static documentBoundary(documentName, document, options = {}){
         //dangerZone.log(false,'Determine document boundary ', {documentName: documentName, document: document, options: options})
         let dim;
@@ -420,7 +431,7 @@ export class boundary{
                 dim={x: document.object.bounds.x, y:document.object.bounds.y, width: document.object.bounds.width, height: document.object.bounds.height, bottom: document.elevation.bottom, top: document.elevation.top}
                 break;
             case "Scene":
-                dim={x: document.dimensions.sceneX, y:document.dimensions.sceneY, width: document.dimensions.sceneWidth, height: document.dimensions.sceneHeight, bottom: 0, top: 0}
+                dim={x: document.dimensions.sceneX, y:document.dimensions.sceneY, width: document.dimensions.sceneWidth, height: document.dimensions.sceneHeight, bottom: options.global ? options.global.bottom : null, top: options.global ? options.global.top : null}
                 break;
             case "Tile":
                 dim={x: document.x, y:document.y, width: document.width - 1, height: document.height - 1, bottom: document.elevation, top: document.elevation}
