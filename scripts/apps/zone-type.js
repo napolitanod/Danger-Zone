@@ -214,6 +214,17 @@ export class dangerZoneType {
               uuid: '',
               events: []
             },
+            pause: {
+              enable: false,
+              once: false
+            },
+            script: {
+              source: '',
+              events: []
+            },
+            suppressWeather: {
+              enable: false
+            },
             teleport: {
               choice: false,
               enable: false,

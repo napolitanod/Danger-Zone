@@ -804,11 +804,26 @@
                 "active.label": "Enable Region",
                 "behavior": {
                     "macro":{
-                        "label": "Macro",
+                        "label": "Execute Macro",
                         "description": "Generate a macro on region trigger",
                         "events.label": "Events",
                         "uuid.label": "Macro",
                         "everyone.label": "Everyone"
+                    },
+                    "pause":{
+                        "enable.label": "Add Pause Game",
+                        "label": "Pause Game",
+                        "once.label": "Once"
+                    },
+                    "script":{
+                        "label": "Execute Script",
+                        "description": "Generate a script on region trigger",
+                        "events.label": "Events",
+                        "source.label": "Script"
+                    },
+                    "suppress-weather": {
+                        "enable.label": "Add Suppress Weather",
+                        "label": "Suppress Weather"
                     },
                     "teleport":{
                         "choice.label": "Allow Choice",
