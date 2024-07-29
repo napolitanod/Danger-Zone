@@ -2349,12 +2349,24 @@ class region extends executable{
         return this._part.behavior.macro?.uuid ? this._part.behavior.macro : false
     }
 
+    get pause(){
+        return this._part.behavior.pause?.enable ? this._part.behavior.pause : false
+    }
+
     get regionName(){
         return this._part.name.length ? this._part.name  : this.data.danger.name
     }
 
     get scale(){
         return this._part.scale ?? 1
+    }
+
+    get script(){
+        return this._part.behavior.script?.source ? this._part.behavior.script : false
+    }
+
+    get suppressWeather(){
+        return this._part.behavior.suppressWeather?.enable ? this._part.behavior.suppressWeather : false
     }
 
     get teleport(){
@@ -2389,6 +2401,9 @@ class region extends executable{
         if(this.teleport && (!isTwin || this.teleport.twin)) behaviors.push(this._buildTeleport(region))
         if(isTwin) return behaviors
         if(this.macro) behaviors.push(this._buildMacro())
+        if(this.pause) behaviors.push(this._buildPauseGame())
+        if(this.script) behaviors.push(this._buildScript())
+        if(this.suppressWeather) behaviors.push(this._buildSuppressWeather())
         return behaviors
     }
 
@@ -2405,6 +2420,31 @@ class region extends executable{
             type: "executeMacro"
         } 
     }
+    
+    _buildPauseGame(){
+        return {
+            disabled: false,
+            flags: this.data.flag,
+            name: `${this.regionName} Pause Game`,
+            system: {
+                once: this.pause.once
+            },
+            type: "pauseGame"
+        } 
+    }
+
+    _buildScript(){
+        return {
+            disabled: false,
+            flags: this.data.flag,
+            name: `${this.regionName} Script`,
+            system: {
+                events: this.script.events,
+                source: this.script.source
+            },
+            type: "executeScript"
+        } 
+    }
 
     _buildShape(boundary){
         return Object.assign( {
@@ -2416,6 +2456,15 @@ class region extends executable{
         }, this.type ==='rectangle' ? 
             {x: boundary.A.x, y: boundary.A.y, width: boundary.width, height: boundary.height} : 
             {x: boundary.center.x, y: boundary.center.y, radiusX: boundary.width/2, radiusY: boundary.height/2})
+    }
+
+    _buildSuppressWeather(){
+        return {
+            disabled: false,
+            flags: this.data.flag,
+            name: `${this.regionName} Suppress Weather`,
+            type: "suppressWeather"
+        } 
     }
 
     _buildTeleport(region){

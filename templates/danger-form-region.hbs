@@ -128,8 +128,8 @@
         </div>
     </div>
      <div class="tab" data-tab="behaviors">
-        <fieldset>
-            <legend>{{localize "DANGERZONE.type-form.region.behavior.teleport.label"}}</legend>
+        <fieldset style="margin-top: 15px;">
+            <legend><i class="fa-solid fa-transporter-1 fa-fw" data-tooltip="Teleport Token"></i> {{localize "DANGERZONE.type-form.region.behavior.teleport.label"}}</legend>
             <p class="notes">{{localize "DANGERZONE.type-form.region.behavior.teleport.description"}}</p>
             <div class="form-group">
                 <label for="behavior.teleport.enable">{{localize "DANGERZONE.type-form.region.behavior.teleport.enable.label"}}</label>
@@ -156,8 +156,8 @@
                 </div>
             </div>
         </fieldset>
-        <fieldset>
-            <legend>{{localize "DANGERZONE.type-form.region.behavior.macro.label"}}</legend>
+        <fieldset style="margin-top: 15px;">
+            <legend><i class="fa-solid fa-code fa-fw" data-tooltip="Execute Macro"></i> {{localize "DANGERZONE.type-form.region.behavior.macro.label"}}</legend>
             <p class="notes">{{localize "DANGERZONE.type-form.region.behavior.macro.description"}}</p>
             <div class="form-group">
                 <label>{{localize "DANGERZONE.type-form.region.behavior.macro.events.label"}}</label>
@@ -179,6 +179,46 @@
                 <label for="behavior.macro.everyone">{{localize "DANGERZONE.type-form.region.behavior.macro.everyone.label"}}</label>
                 <div class="form-fields">
                     <input type="checkbox" data-dtype="Boolean" name="behavior.macro.everyone" {{checked data.behavior.macro.everyone}}>
+                </div>
+            </div>
+        </fieldset>
+        <fieldset style="margin-top: 15px;">
+            <legend><i class="fa-brands fa-js fa-fw" data-tooltip="Execute Script"></i> {{localize "DANGERZONE.type-form.region.behavior.script.label"}}</legend>
+            <p class="notes">{{localize "DANGERZONE.type-form.region.behavior.script.description"}}</p>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.region.behavior.script.events.label"}}</label>
+                <div class="form-fields">
+                    <multi-select name="behavior.script.events" value="{{data.behavior.script.events}}">
+                        {{selectOptions eventOps selected=data.behavior.script.events localize=true}}
+                    </multi-select> 
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "DANGERZONE.type-form.region.behavior.script.source.label"}}</label>
+                <textarea name="behavior.script.source" value="{{data.behavior.script.source}}">{{data.behavior.script.source}}</textarea>
+            </div>
+        </fieldset>
+        <fieldset style="margin-top: 15px;">
+            <legend><i class="fa-solid fa-pause fa-fw" data-tooltip="Pause Game"></i> {{localize "DANGERZONE.type-form.region.behavior.pause.label"}}</legend>
+             <div class="form-group">
+                <label for="behavior.pause.enable">{{localize "DANGERZONE.type-form.region.behavior.pause.enable.label"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" data-dtype="Boolean" name="behavior.pause.enable" {{checked data.behavior.pause.enable}}>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="behavior.pause.once">{{localize "DANGERZONE.type-form.region.behavior.pause.once.label"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" data-dtype="Boolean" name="behavior.pause.once" {{checked data.behavior.pause.once}}>
+                </div>
+            </div>
+        </fieldset>
+        <fieldset style="margin-top: 15px;">
+            <legend><i class="fa-solid fa-cloud-slash fa-fw" data-tooltip="Suppress Weather"></i> {{localize "DANGERZONE.type-form.region.behavior.suppress-weather.label"}}</legend>
+             <div class="form-group">
+                <label for="behavior.suppressWeather.enable">{{localize "DANGERZONE.type-form.region.behavior.suppress-weather.enable.label"}}</label>
+                <div class="form-fields">
+                    <input type="checkbox" data-dtype="Boolean" name="behavior.suppressWeather.enable" {{checked data.behavior.suppressWeather.enable}}>
                 </div>
             </div>
         </fieldset>
