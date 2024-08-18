@@ -284,7 +284,7 @@ form.danger-zone-type-form .main-danger {
     margin-bottom: 5px;
 } 
 
-.danger-zone-record fieldset .tags .tag, .danger-part-form fieldset .tags .tag {
+.danger-zone-record fieldset .tags .tag, .danger-part-form fieldset .tags .tag, .danger-part-form .form-fields .tags .tag {
     background-color: rgba(0, 0, 0, 0.5);
     color: #FFF;
 }

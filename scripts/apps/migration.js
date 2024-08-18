@@ -53,7 +53,7 @@ export class migrateDanger {
       _migrationData_001(danger){
             //Global Zone Revision
             if (!danger.migration || danger.migration < MIGRATION_DANGER.WORLD) {
-                if(Object.keys(danger.options.globalZone).length){
+                if(danger.options.globalZone && Object.keys(danger.options.globalZone).length){
                     const update = {}, part = {}; 
                     Object.assign(update, WORLDZONE)
                     Object.assign(part,danger.options.globalZone)
@@ -64,31 +64,34 @@ export class migrateDanger {
                     });
 
                     Object.assign(update.dimensions, {
-                        bleed: part.options.bleed,
-                        bottom: part.options.bottom ?? 0,
-                        stretch: part.options.stretch,
-                        top: part.options.top ?? 0
+                        bleed: part.options?.bleed ?? false,
+                        bottom: part.options?.bottom ?? 0,
+                        stretch: part.options?.stretch ?? '',
+                        top: part.options?.top ?? 0
                     });
 
                     Object.assign(update.trigger, {
-                        delay: part.options.delay,
+                        delay:  {
+                            min: part.options?.delay?.min ?? 0,
+                            max: part.options?.delay?.max ?? 0
+                        }, 
                         loop: part.loop,
                         operation: part.operation
                     });
 
                     Object.assign(update.source, {
-                        actors: [part.source.actor]
+                        actors: stringToArray(part.source.actor)
                     });
 
                     Object.assign(update.target, {
-                        actors: [part.actor],
-                        all: part.options.allInArea,
-                        always: part.options.runUntilTokenFound,
+                        actors: stringToArray(part.actor),
+                        all: part.options?.allInArea ?? false,
+                        always: part.options?.runUntilTokenFound ?? false,
                         choose:{
-                            enable: part.options.placeTemplate,
-                            prompt: !part.options.noPrompt
+                            enable: part.options?.placeTemplate ?? false,
+                            prompt: !part.options?.noPrompt ?? true
                         },
-                        dispositions: [part.tokenDisposition]
+                        dispositions: stringToArray(part.tokenDisposition)
                     });
 
                     danger.options.globalZone = foundry.utils.deepClone(update);
@@ -190,18 +193,21 @@ export class migrateScene {
                 });
 
                 Object.assign(zn.dimensions, {
-                    bleed: flag.options.bleed,
-                    stretch: flag.options.stretch
+                    bleed: flag.options?.bleed ?? false,
+                    stretch: flag.options?.stretch ?? ''
                 });
 
                 Object.assign(zn.trigger, {
-                    combatantInZone: flag.options.combatantInZone,
-                    delay: flag.options.delay,
+                    combatantInZone: flag.options?.combatantInZone ?? false,
+                    delay: {
+                        min: flag.options?.delay?.min ?? 0,
+                        max: flag.options?.delay?.max ?? 0
+                    }, 
                     initiative: flag.initiative,
                     likelihood: flag.likelihood,
                     loop: flag.loop,
                     operation: flag.operation,
-                    prompt: flag.options.promptTrigger,
+                    prompt: flag.options?.promptTrigger ?? false,
                     random: flag.random,
                     events: stringToArray(flag.trigger),
                     weight: flag.weight
@@ -218,13 +224,13 @@ export class migrateScene {
 
                 Object.assign(zn.target, {
                     actors: stringToArray(flag.actor),
-                    all: flag.options.allInArea,
-                    always: flag.options.runUntilTokenFound,
+                    all: flag.options?.allInArea ?? false,
+                    always: flag.options?.runUntilTokenFound ?? false,
                     choose:{
-                        enable: flag.options.placeTemplate,
-                        prompt: !flag.options.noPrompt
+                        enable: flag.options?.placeTemplate ?? false,
+                        prompt: !flag.options?.noPrompt ?? true
                     },
-                    isCombatant: flag.options.targetCombatant,
+                    isCombatant: flag.options?.targetCombatant ?? false,
                     dispositions: stringToArray(flag.tokenDisposition),
                     exclusion: {
                         conditions: stringToArray(flag.tokenExCon)

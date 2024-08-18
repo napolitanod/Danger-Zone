@@ -651,6 +651,8 @@ export class dangerZoneType {
                 inError.push(record)
             } else if (allTypes[addId]) {
               alreadyExists.push(record);
+            } else if(record.migration > dangerZone.MIGRATION.DANGER) {
+              inError.push(addId)
             } else{
               allTypes[record.id]=this._toClass(record, false);
               added.push(record);
