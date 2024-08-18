@@ -67,7 +67,7 @@
             "locked": "Locked"
         },
         "edit-form": {
-            "actor.label": "Actor",
+            "actor.label": "Actors",
             "allInArea.label": "Danger Targets All Tokens",
             "allInArea.description": "If more than one token is in a target area, they will all be targeted. Otherwise only one random token is targeted.",
             "basics.label": "Basics",
@@ -146,6 +146,7 @@
                 "max.label": "Maximum"
             },
             "enabled.label": "Active",
+            "events.label": "Events",
             "initiative-count.label": "Initiative Count",
             "flavor.label": "Flavor",
             "flavor.description": "This text will output to a chat message when this zone triggers. Flavor will only output once regardless of how many loops are in the zone.",
@@ -160,8 +161,8 @@
             "operation.label": "Loop Operation",
             "placeTemplate.label": "Choose Location",
             "placeTemplate.description": "On trigger, you will be prompted to select the scene location to target with the danger (otherwise the location is randomly selected from within the bounds of the zone and bleed). If the location that you select is fully outside of the zone, the danger effects will generate but tokens outside of the zone will not be targeted. ",
-            "promptElevation.label": "Skip Elevation Prompt",
-            "promptTrigger.label": "Prompt GM Before Executing?",
+            "promptElevation.label": "Choose Elevation",
+            "promptTrigger.label": "Prompt GM on Trigger",
             "promptTrigger.description": "When the zone trigger is initiated, this will evoke a prompt to the GM that queries whether or not the trigger should proceed. Useful for automated triggers where you want the option to cancel.",
             "random.label": "Randomize",
             "random.description": "All zones in this scene that share the same trigger are grouped and only one is triggered at random. Assign a weight to control how often one triggers in relation to the others.",
@@ -177,7 +178,7 @@
             "sound.replace.label": "Sounds",
             "sound.replace.description": "Choose what to do with existing Danger Zone created ambient sounds when this zone triggers.",
             "source":{
-                "actor.label": "Source Actor",
+                "actor.label": "Source Actors",
                 "area.label": "Source Area",
                 "area.description": "Defines a source area within the zone which may influence targeting",
                 "description": "The source may influence when and if a zone triggers. Many danger parts can be defined in relation to the zone's source.",
@@ -191,7 +192,7 @@
                 "tag":{
                     "zone.label": "Zone",
                     "danger.label": "Danger",
-                    "tag.label": "Tag"
+                    "tag.label": "Tags"
                 },
                 "target.label": "Targeting Influence",
                 "target.description": "Limits targeting within zone based on the zone's source areas.\n *has no influence on aura triggered zones or ones where GM chooses target location",
@@ -209,11 +210,11 @@
             "targetCombatant.description": "For combat scoped triggers, this will target the location of the combatant and solely target the combatant unless 'Danger Targets All Tokens' is enabled.",
             "targetCombatant.label": "Target Current Combatant",
             "title.label": "Title",
-            "token-targeting.label": "Target",
-            "token-condition-ex.description": "List of condition or effect names that, if active on token, will exclude that token from being a target of the danger. Separate each name with a pipe '|' to list more than one.",
+            "token-targeting.label": "Targets",
+            "token-condition-ex.description": "List of condition or effect names that, if active on token, will exclude that token from being a target of the danger.",
             "token-condition-ex.label": "Exclude if condition/effect",
-            "token-disposition.label": "Disposition",
-            "trigger.description": "The trigger defines an event that will cause the danger to be placed within the zone. Documentation at https://github.com/napolitanod/Danger-Zone/wiki/Triggers.",
+            "token-disposition.label": "Dispositions",
+            "trigger.description": "The trigger defines the conditions that must be met for the danger to be invoked within this zone. Documentation at https://github.com/napolitanod/Danger-Zone/wiki/Triggers.",
             "trigger.label": "Trigger",
             "type.label": "Danger",
             "types.add": "View dangers",
@@ -520,12 +521,14 @@
             "staggered": "Staggered",
             "together": "Together"
         },
-        "trigger-types": {
+        "events": {
+            "api.label": "API",
             "aura.label": "Aura",
             "manual.label": "Manual",
             "move.label": "Movement",
             "combat-start.label": "Combat Start",
             "combat-end.label": "Combat End",
+            "extension.label": "Zone Extension",
             "initiative-start.label":  "Initiative Count (Win Ties)",
             "initiative-end.label":  "Initiative Count (Lose Ties)",
             "round-start.label": "Round Start",
@@ -537,11 +540,11 @@
             "active-effect":{
                 "delay.label": "Delay Start",
                 "description": "Adds an active effect to targeted tokens.",
-                "deleteEffects.description": "Enter a list of active effect names to delete from the target, separating each by two pipes ||",
+                "deleteEffects.description": "Enter a list of active effect names to delete from the target.",
                 "delete-effects.label": "Delete Effects",
-                "disable-effects.description": "Enter a list of active effect names to disable on the target, separating each by two pipes ||",
+                "disable-effects.description": "Enter a list of active effect names to disable on the target.",
                 "disable-effects.label": "Disable Effects",
-                "enable-effects.description": "Enter a list of active effect names to enable on the target, separating each by two pipes ||",
+                "enable-effects.description": "Enter a list of active effect names to enable on the target.",
                 "enable-effects.label": "Enable Effects",
                 "label": "Active Effect",
                 "limit.description": "If a token already has this effect applied, a second one will not be added.",
@@ -549,7 +552,7 @@
                 "macro.description": "Determine if active effect macros should repeat on each turn of the associated token.",
                 "macro.label": "Macro Repeat",
                 "notes": "Active effect will be transferred to each danger target.",
-                "toggle-effects.description": "Enter a list of active effect names to toggle on the target, separating each by two pipes ||",
+                "toggle-effects.description": "Enter a list of active effect names to toggle on the target.",
                 "toggle-effects.label": "Toggle Effects",
                 "edit.title": "Edit Active Effect",
                 "delete.title": "Delete Active Effect"
@@ -684,7 +687,7 @@
                 "description": "Adds, removes or updates an item on the target tokens.",
                 "interpolate.description": "Updates can refer to existing item data using [[path]] placeholder (e.g. name: '[[name]] Mutated').",
                 "label": "Item",
-                "name.description": "Enter a list of item names using the name exactly as found on the item that you wish to interact with, separating each by two pipes ||",
+                "name.description": "Enter a list of item names using the name exactly as found on the item that you wish to interact with.",
                 "name.label": "Item Names",
                 "pile.label": "Create as Item Pile",
                 "updates.description": "Updates the token's items by passing in object update data by item name, e.g. \"Item A\": {name: 'My rename'}, \"Item B\": {name: 'My other item rename'}",

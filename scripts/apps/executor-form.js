@@ -200,7 +200,7 @@ export class ExecutorForm extends FormApplication {
         const executable = executableId ? this.executor.executable[executableId] : {}
         switch (action) {
             case 'edit-danger':
-                new DangerForm(this.zone.type, this).render(true);
+                new DangerForm(this.zone.dangerId, this).render(true);
                 break;
             case 'edit-zone': 
                 new DangerZoneForm(this, this.zoneId, this.sceneId, this.worldId).render(true);

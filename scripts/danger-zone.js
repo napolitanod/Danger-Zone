@@ -3,10 +3,10 @@ import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
 import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
-import {COMBATTRIGGERS, DANGERZONETRIGGERS,  PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
+import {AUTOMATED_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
-import {wait, getTagEntities, stringToArray} from './apps/helpers.js';
+import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
 import { fxMasterOn} from './index.js';
 
 /**
@@ -20,7 +20,8 @@ export class dangerZone {
   static FLAGS = {
     SCENEZONE: 'sceneZone',
     SCENETILE: 'sceneTile',
-    ZONETYPE: 'zoneTypeEffect'
+    ZONETYPE: 'zoneTypeEffect',
+    MIGRATION: 'migration'
   }
  
   static TEMPLATES = {
@@ -56,6 +57,11 @@ export class dangerZone {
     DANGERZONEZONECOPY: `modules/${this.ID}/templates/danger-zone-scene-zone-copy.hbs`
   }
 
+  static MIGRATION = {
+    ZONE: 2,
+    DANGER: 2
+  }
+
   static initialize() {
     this.DangerZoneTypesForm = new DangerZoneTypesForm();
     this.executorForm = new ExecutorForm();
@@ -72,19 +78,6 @@ export class dangerZone {
       if (force || (game.user.isGM && game.settings.get(dangerZone.ID, 'logging'))) {
         console.log(this.ID, '|', ...args);
       }
-  }
-
-  static async _migrate(){
-    
-	  //data migrations
-	  if(game.user.isGM && game.settings.get('danger-zone', 'region-migration-complete') === false){
-      ui.notifications?.info('Danger Zone migration of zone dimensions to regions started')
-      for (const scene of game.scenes) {
-         await dangerZone.migrate(scene)
-      }
-      game.settings.set(dangerZone.ID, 'region-migration-complete', true);
-      ui.notifications?.info('Danger Zone migration of zone dimensions to regions completed!')
-    }
   }
 
   /**
@@ -107,7 +100,7 @@ export class dangerZone {
     const scene = game.scenes?.get(sceneId);
     const flag = scene ? scene.getFlag(this.ID, this.FLAGS.SCENEZONE) : ar; 
     for (var zn in flag) {
-        if((!options.enabled || flag[zn].enabled) && (!options.triggerRequired || flag[zn].triggers.trigger) && flag[zn].scene?.sceneId) ar.push(this._toClass(flag[zn]));
+        if((!options.enabled || flag[zn].enabled) && (!options.triggerRequired || flag[zn].trigger.events.length) && flag[zn].scene?.sceneId) ar.push(this._toClass(flag[zn]));
     }
     return ar.filter(z => !options.typeRequired || z.danger)
   }
@@ -126,7 +119,7 @@ export class dangerZone {
    * @returns 
    */
   static getCombatZonesFromScene(sceneId) {
-    return this.getAllZonesFromScene(sceneId).filter(zn => COMBATTRIGGERS.includes(zn.trigger))
+    return this.getAllZonesFromScene(sceneId).filter(zn => zn.hasCombatEvent)
   }  
 
   static getExtendedZones(sceneId){
@@ -141,7 +134,7 @@ export class dangerZone {
   * @returns array of zones
   */
   static getMovementZonesFromScene(sceneId) {
-    return this.getAllZonesFromScene(sceneId).filter(zn => ["move","aura"].includes(zn.trigger))
+    return this.getAllZonesFromScene(sceneId).filter(zn => zn.hasMovementEvent)
   }
 
   /**
@@ -150,7 +143,7 @@ export class dangerZone {
    * @returns array of zones
    */
   static getTriggerZonesFromScene(sceneId) {
-      return this.getAllZonesFromScene(sceneId, {enabled: false, typeRequired: true}).filter(zn => zn.enabled || zn.trigger !== 'manual').concat(this.getGlobalZones(sceneId))
+      return this.getAllZonesFromScene(sceneId, {enabled: false, typeRequired: true}).filter(zn => zn.enabled || zn.hasAutomatedEvent).concat(this.getGlobalZones(sceneId))
   }
   
   static getRandomZonesFromScene(sceneId) {
@@ -170,11 +163,7 @@ export class dangerZone {
       }
     )
   }
-
-  static getZonesToMigrate(sceneId, zoneId = ''){
-    return dangerZone.getAllZonesFromScene(sceneId, {enabled: false, typeRequired: false, triggerRequired: false})?.filter(zn => (!zoneId || zn.id ===zoneId) && !zn.scene.regionId && zn.scene.start) ?? []
-  }
-
+  
  /**
    * Returns a specific zone from the given scene
    * @param {string} zoneId the danger zone id
@@ -248,17 +237,17 @@ export class dangerZone {
     let worldZone = false;
     !zn ? zn = WORLDZONE : worldZone = true;
     zn.scene = {sceneId: sceneId, dangerId: danger.id};
-    zn.type= danger.id;
+    zn.dangerId = danger.id;
     zn.title = danger.name;
     worldZone ? zn.id = 'w_' + danger.id : zn.id = 'd_' + danger.id
     return this._toClass(zn);
   }
 
-  static async getRandomZoneFromScene(sceneId, trigger, eligibaleZones = []) {
+  static async getRandomZoneFromScene(sceneId, event, eligibaleZones = []) {
     let keptZones = [], max = 0;
     let zones = this.getRandomZonesFromScene(sceneId);
     for (const zn of zones) {
-      if(zn.triggerWithInitiative === trigger && (!eligibaleZones.length || eligibaleZones.find(z => z.id === zn.id))){
+      if(zn.eventsIncludingInitiative.includes(event) && (!eligibaleZones.length || eligibaleZones.find(z => z.id === zn.id))){
         let min = max + 1;
         max += zn.weight;
         keptZones.push({zone: zn, min: min, max: max});
@@ -272,41 +261,10 @@ export class dangerZone {
     this.log(false,'Random Zone Search ', {zones:keptZones, roll: randomResult, range: {min: 1, max:max}});
     return keptZones.find(zn => randomResult >= zn.min && randomResult <= zn.max).zone
   }
-
-  static async migrate(scene, zoneId = ''){
-    if(!scene) return
-    const zones = dangerZone.getZonesToMigrate(scene.id, zoneId)
-    if(!zones.length) return;
-    let regions = [], regionsData = [];
-
-    regionsData = zones.filter(zn => !zn.scene.hasFullSceneDimensions && !zn.scene._migrateRegionMatch(regionsData)).map(zn => zn.scene._migrationData.regionData)
-    
-    if (regionsData.length) regions = await scene.createEmbeddedDocuments("Region", regionsData)
-
-    dangerZone.log(false, 'Check migration to region', {zones: zones, scene: scene, regions: regions, regionsData: regionsData})
-
-    for (const zn of zones) {
-      await zn.scene.convertToRegion(zn.scene._migrateRegionMatch(regions)?.id)
-    }
-  }
   
   static async updateAllSceneZones(sceneId,flag){
     const updt = await game.scenes.get(sceneId).setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, flag);
     return updt
-  }
-
-  static validatePreupdateZones(scene){
-    const flag = scene.flags?.[this.ID]?.[this.FLAGS.SCENEZONE];
-    let b = false;
-    if(flag){
-      Object.keys(flag).forEach(function(key) {
-        if(flag[key].scene.sceneId !== scene.id){
-          flag[key].scene.sceneId = scene.id
-          b=true;
-        }
-      });
-    }
-    return b ? flag : b
   }
 
   static initializeTriggerButtons(){
@@ -348,91 +306,136 @@ export class zone {
    */
   constructor (sceneId, regionId = '') {
     this.id = foundry.utils.randomID(16);
-    this.actor = '',
+    this.dangerId = '',
     this.enabled = game.settings.get('danger-zone', 'scene-enabled-default'),
     this.extensions = [],
     this.flavor = '',
-    this.initiative = 0,
-    this.lightReplace = 'N',
-    this.likelihood = 100,
-    this.loop = 1,
-    this.operation = "Q",
-    this.options = {
-      allInArea: false,
-      bleed: true,
+    this.dimensions = {
+      bleed: false,
+      stretch: ''
+    },
+    this.trigger = {
       combatantInZone: false,
       delay: {min: 0, max: 0},
-      noPrompt:false,
-      placeTemplate:false,
-      promptTrigger: false,
-      runUntilTokenFound: false,
-      stretch: '',
-      targetCombatant: false,
-      deleteAfter: {turns: 0, rounds: 0, seconds: 0}
+      initiative: 0,
+      likelihood: 100,
+      loop: 1,
+      operation: "Q",
+      prompt: false,
+      random: false,
+      events: ['manual'],
+      weight: 1
     },
-    this.random = false,
-    this.regionReplace = 'N',
-    this.replace = 'N',
+    this.replace = {
+      light: 'N',
+      region: 'N',
+      sound: 'N',
+      tile: 'N',
+      wall: 'N',
+      weather: 'N'
+    },
     this.scene = new dangerZoneDimensions(sceneId, this.id, regionId),
-    this.soundReplace = 'N',
     this.source = {
       area: '',
-      actor: '',
+      actors: [],
       limit: {
         min: 0,
         max: 0
       },
-      tag: '',
+      tags: [],
       target: '',
       trigger: ''
     },
-    this.title = '',
-    this.tokenDisposition = '',
-    this.tokenExCon = '',
-    this.trigger = 'manual',
-    this.type = '',
-    this.wallReplace = 'N',
-    this.weatherReplace = 'N',
-    this.weight = 1
+    this.target = {
+      actors: [],
+      all: false,
+      always: false,
+      choose:{
+        enable: false,
+        prompt: true
+      },
+      isCombatant: false,
+      dispositions: [],
+      exclusion: {
+        conditions: []
+      }
+    },
+    this.title = ''
   }
 
-  get conditionEscape(){
-    return stringToArray(this.tokenExCon)
+  get _executor(){
+    return new executor(this)
+  }
+
+  get combatEvents(){
+    return this.trigger.events.filter(e => COMBAT_EVENTS.includes(e)) 
+  }
+
+  get combatInitiativeEvents(){
+    return 
   }
 
   get danger(){
-    return dangerZoneType.getDanger(this.type)
+    return dangerZoneType.getDanger(this.dangerId)
   }
 
-  get hasSourcing(){
-    return this.source.actor ? true : false
+  get eventsIncludingInitiative(){
+    return this.combatInitiativeEvents.map(i => COMBAT_PERIOD_INITIATIVE_EVENTS.includes(i) ? (i + '-' + (this.trigger.initiative ? this.trigger.initiative.toString() : '0')) : i)
   }
 
-  delay(){
-    return zone.delay(this.options.delay)
+  get flaggablePlaceables(){
+    return this.scene.scene.walls.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE])
+      .concat(this.scene.scene.lights.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
+      .concat(this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
+      .concat(this.scene.scene.regions.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
   }
 
-  static delay(delay){ 
-    if(typeof delay === 'object' ){
-      const min = delay.min ?? 0, max = delay.max ?? 0;
-      const del = max - min
-      if(del <= 0) return min
-      return Math.floor(Math.random() * del)
-    } else {
-      return delay
-    }
+  get hasAutomatedEvent(){
+    return this.trigger.events.find(e => AUTOMATED_EVENTS.includes(e)) ? true : false 
+  }
+
+  get hasCombatEvent(){
+    return this.trigger.events.find(e => COMBAT_EVENTS.includes(e)) ? true : false
+  }
+
+  get hasCombatInitiativeEvent(){
+    return this.trigger.events.find(e => COMBAT_PERIOD_INITIATIVE_EVENTS.includes(e)) ? true : false
+  }
+
+  get hasEvents(){
+    return this.trigger.events.length ? true : false
+  }
+
+  get hasManualEvent(){
+    return this.trigger.events.find(e => MANUAL_EVENTS.includes(e)) ? true : false 
+  }
+
+  get hasMovementEvent(){
+    return this.trigger.events.find(e => MOVEMENT_EVENTS.includes(e)) ? true : false
+  }
+  
+  get hasSourceActor(){
+    return this.source.actors.length ? true : false
+  }
+
+  get hasTargetActor(){
+    return this.target.actors.length ? true : false
+  }
+
+  get hasTargetDisposition(){
+    return this.target.dispositions.length ? true : false
+  }
+
+  get hasTargetExclusionCondition(){
+    return this.target.exclusion.conditions.length ? true : false
   }
 
   get sources(){
-    return this.scene.scene.tokens.filter(t => t.actor?.id === this.source.actor) 
+    return this.scene.scene.tokens.filter(t => this.isSourceActor(t.actor?.id)) 
   }
 
-  get triggerDescription(){
-    return this.trigger ? game.i18n.localize(DANGERZONETRIGGERS[this.trigger]) : ''
-  }
-
-  get triggerWithInitiative(){
-    return (this.trigger === 'initiative-start' || this.trigger === 'initiative-end') ? (this.trigger + '-' + (this.initiative ? this.initiative.toString() : '0')) : this.trigger
+  get eventsDescription(){
+    return this.hasEvents ? joinWithAnd(this.trigger.events.map(e => game.i18n.localize(EVENTS[e]?.label))) : ''
   }
 
   /**
@@ -441,6 +444,16 @@ export class zone {
    */
   async _setFlag(){
     const updt = await game.scenes.get(this.scene.sceneId).setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, {[this.id]: this});
+    return updt
+  }
+
+  /**
+   * private method to save the zone data
+   * @param {object} updateData 
+   */
+  async _update(updateData, options = {insertKeys: false, enforceTypes: true}){
+    foundry.utils.mergeObject(this, updateData, options);
+    const updt = await this._setFlag();
     return updt
   }
 
@@ -484,28 +497,19 @@ export class zone {
     }
   }
 
-  /**
-   * public method to save the zone data
-   * @param {object} updateData 
-   * @returns returns the zone after update
-   */
-  async update(updateData, options = {insertKeys: false, enforceTypes: true}){
-    const updt = await this._update(updateData, options);
-    return updt
+  delay(){
+    return zone.delay(this.trigger.delay)
   }
 
-  async updateRegion(regionId = ''){
-    await this.update({scene: {regionId: regionId}})
-  }
-
-  /**
-   * private method to save the zone data
-   * @param {object} updateData 
-   */
-  async _update(updateData, options = {insertKeys: false, enforceTypes: true}){
-    foundry.utils.mergeObject(this, updateData, options);
-    const updt = await this._setFlag();
-    return updt
+  static delay(delay){ 
+    if(typeof delay === 'object' ){
+      const min = delay.min ?? 0, max = delay.max ?? 0;
+      const del = max - min
+      if(del <= 0) return min
+      return Math.floor(Math.random() * del)
+    } else {
+      return delay
+    }
   }
 
   /**
@@ -516,20 +520,15 @@ export class zone {
     await this.scene.scene.update({[`flags.${dangerZone.ID}.${dangerZone.FLAGS.SCENEZONE}.-=${this.id}`]: null})
   }
 
-  get _executor(){
-    return new executor(this)
-  }
-
   async executor(options={}){
     const ex = new executor(this, options);
     await ex.set(false);
     return ex
   }
 
-  get flaggablePlaceables(){
-    return this.scene.scene.walls.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE])
-      .concat(this.scene.scene.lights.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
-      .concat(this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
+  generateSourceCount(){
+    if(!this.source.limit.max && !this.source.limit.min) return -1
+    return this.source.limit.max === this.source.limit.min ? this.source.limit.max : Math.floor(Math.random() * (this.source.limit.max - this.source.limit.min + 1))
   }
 
   getExtension(extensionId){
@@ -545,65 +544,51 @@ export class zone {
     }
   } 
 
-  /**
-   * enables or disables the zone
-   * @returns zone
-   */
-  async toggleZoneActive() {
-    if(this.enabled){this.enabled = false} else {this.enabled = true}
-    return await this._setFlag();
+  isSourceActor(id){
+    return (id && this.source.actors.includes(id)) ? true : false
+  }
+
+  isSource(token, sources = []){
+    return sources.length ? sources.filter(s => s.id === token.id).length > 0 : this.isSourceActor(token.actor?.id)
+  }
+
+  isTargetActor(id){
+    return (id && this.target.actors.includes(id)) ? true : false
+  }
+
+  async sourceOnScene(){
+    if(this.hasSourceActor && this.scene.scene.tokens.find(t => this.isSourceActor(t.actor.id))) return true
+    const area = await this.sourceArea()
+    return area.documents.length ? true : false
+  }
+
+  sourceAdd(tokens){
+    return this.sources.concat(tokens.filter(t => !this.isSourceActor(t.actor?.id)))
   }
 
   async sourceArea(){
     const obj = {documents: [], target: this.source.target}
     switch(this.source.area){
         case 'A':
-          obj['documents'] = this.scene.scene.tokens.filter(t => t.actor?.id === this.source.actor);
+          obj['documents'] = this.scene.scene.tokens.filter(t => this.isSourceActor(t.actor.id));
           break;
         case 'C':
-          obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.source.tag);
+          obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type));
           break;
         case 'D':
-          obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].type === this.source.tag);
+          obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].type && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type));
           break;
         case 'T':
-          obj['documents'] = await getTagEntities(this.source.tag, this.scene.scene)
+          obj['documents'] = await getTagEntities(this.source.tags, this.scene.scene)
           break;
         case 'Y':
-          obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.source.tag);
+          obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId));
           break;
         case 'Z':
-          obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].zoneId === this.source.tag);
+          obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].zoneId && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId));
           break;
     }
     return obj
-  }
-
-  generateSourceCount(){
-    if(!this.source.limit.max && !this.source.limit.min) return -1
-    return this.source.limit.max === this.source.limit.min ? this.source.limit.max : Math.floor(Math.random() * (this.source.limit.max - this.source.limit.min + 1))
-  }
-
-  async tokensInZone(tokens){
-    if(!tokens?.length) return false
-    const b = await this.scene.getZoneBoundary();
-    return this.zoneEligibleTokens(b.tokensIn(tokens)).length ? true : false
-  }
-
-  async sourceOnScene(){
-    if(this.source.actor && this.scene.scene.tokens.find(t => t.actor?.id === this.source.actor)) return true
-    const area = await this.sourceArea()
-    return area.documents.length ? true : false
-  }
-
-  async sourceTrigger(actorIds){
-    const trigger = this.source.trigger ? (this.source.trigger === 'C' ? await this.sourceOnScene() : actorIds.includes(this.source.actor)) : true;
-    dangerZone.log(false,'Determining Source Trigger ', {zone: this, triggerActors: actorIds, trigger: trigger});
-    return trigger
-  }
-
-  isSource(token, sources = []){
-    return sources.length ? sources.filter(s => s.id === token.id).length > 0 : token.actor?.id === this.source.actor
   }
 
   sourceTreatment(treatment, tokens, sources = []){
@@ -612,7 +597,7 @@ export class zone {
       case "I":
         return tokens.filter(t => !sources.find(s => s.id === t.id))
       case "S":
-        return tokens.filter(t => t.actor?.id !== this.source.actor).concat(sources)
+        return tokens.filter(t => !this.isSourceActor(t.actor?.id)).concat(sources)
       case "O":
         return sources
       default:
@@ -620,12 +605,14 @@ export class zone {
     }
   }
 
-  sourceAdd(tokens){
-    return this.sources.concat(tokens.filter(t => t.actor?.id !== this.source.actor))
+  async sourceTrigger(actorIds){
+    const trigger = this.source.trigger ? (this.source.trigger === 'C' ? await this.sourceOnScene() : actorIds.find(a => this.isSourceActor(a.id))) : true;
+    dangerZone.log(false,'Determining Source Trigger ', {zone: this, triggerActors: actorIds, trigger: trigger});
+    return trigger
   }
 
   stretch(options){
-    switch(this.options.stretch){
+    switch(this.dimensions.stretch){
       case "B":
           options.bottom = this.scene.bottom
           break;
@@ -642,8 +629,35 @@ export class zone {
     return options
   }
 
+  /**
+   * enables or disables the zone
+   * @returns zone
+   */
+  async toggleZoneActive() {
+    if(this.enabled){this.enabled = false} else {this.enabled = true}
+    await this._setFlag();
+    dangerZone.initializeTriggerButtons()
+    return
+  }
+
+  tokenHasTargetDisposition(token){
+    return this.target.dispositions.includes(token.disposition.toString())
+  }
+
+  tokenHasExclusion(token){
+    return token.actor?.effects?.find(e => !e.disabled && this.target.exclusion.conditions.includes(e.name)) ? true : false
+  }
+
+  async tokensInZone(tokens){
+    if(!tokens?.length) return false
+    const b = await this.scene.getZoneBoundary();
+    const eligible = this.zoneEligibleTokens(b.tokensIn(tokens));
+    dangerZone.log(false, 'Finding tokens in zone...', {boundary: b, tokens: tokens, eligible: eligible})
+    return eligible.length ? true : false
+  }
+
   async triggerCheck(){
-    if(!this.options.promptTrigger) return true
+    if(!this.trigger.prompt) return true
     const choice = await new Promise((resolve, reject) => {
         new Dialog({
         title: game.i18n.localize("DANGERZONE.alerts.trigger-zone"),
@@ -664,6 +678,20 @@ export class zone {
         }).render(true);
     });
     return choice
+  }
+
+  /**
+   * public method to save the zone data
+   * @param {object} updateData 
+   * @returns returns the zone after update
+   */
+  async update(updateData, options = {insertKeys: false, enforceTypes: true}){
+    const updt = await this._update(updateData, options);
+    return updt
+  }
+
+  async updateRegion(regionId = ''){
+    await this.update({scene: {regionId: regionId}})
   }
 
   async wipe(document, replace = ''){
@@ -702,16 +730,19 @@ export class zone {
 
   zoneEligibleTokens(tokens){
     let kept = [];
-    if(this.actor || this.tokenDisposition || this.tokenExCon){
+    if(this.hasTargetActor || this.hasTargetDisposition || this.hasTargetExclusionCondition){
       for(let token of tokens){
         let keep = 1;
-        if(this.actor && token.actorId !== this.actor){
+        if(this.hasTargetActor && !this.isTargetActor(token.actor?.id)){
+          dangerZone.log(false, 'Token not eligible not a target actor...', {zone: this, token: token})
           keep = 0;
         }
-        else if(this.tokenDisposition && parseInt(this.tokenDisposition) !== token.disposition){
+        else if(this.hasTargetDisposition && !this.tokenHasTargetDisposition(token)){
+          dangerZone.log(false, 'Token not eligible not a target disposition...', {zone: this, token: token})
           keep = 0;
         }
-        else if(this.tokenExCon && token.actor?.effects?.find(e => !e.disabled && this.conditionEscape.includes(e.label))){
+        else if(this.hasTargetExclusionCondition && this.tokenHasExclusion(token)){
+          dangerZone.log(false, 'Token not eligible has an exclusion...', {zone: this, token: token})
           keep = 0;      
         }
         if(keep){kept.push(token)}
@@ -723,23 +754,23 @@ export class zone {
   _wipeData(document){
     switch(document){
       case 'Tile':
-        return {replace: this.replace, placeable: PLACEABLESBYDOCUMENT[document]}
+        return {replace: this.replace.tile, placeable: PLACEABLESBYDOCUMENT[document]}
       case 'Wall':
-        return {replace: this.wallReplace, placeable: PLACEABLESBYDOCUMENT[document]}
+        return {replace: this.replace.wall, placeable: PLACEABLESBYDOCUMENT[document]}
       case 'AmbientLight':
-        return {replace: this.lightReplace, placeable: PLACEABLESBYDOCUMENT[document]}
+        return {replace: this.replace.light, placeable: PLACEABLESBYDOCUMENT[document]}
       case 'AmbientSound':
-        return {replace: this.soundReplace, placeable: PLACEABLESBYDOCUMENT[document]}
+        return {replace: this.replace.sound, placeable: PLACEABLESBYDOCUMENT[document]}
       case 'Region':
-        return {replace: this.regionReplace, placeable: PLACEABLESBYDOCUMENT[document]}
+        return {replace: this.replace.region, placeable: PLACEABLESBYDOCUMENT[document]}
       case 'fxmaster-particle':
-        return {replace: this.weatherReplace}
+        return {replace: this.replace.weather}
     }
   }
 
   /*prompts the user to select the zone location point (top left grid location) and captures the location*/
   async promptTemplate() {
-    const elevation = (this.options.noPrompt) ? 0 : await this._promptElevation() ;
+    const elevation = (this.target.choose.prompt) ? await this._promptElevation() : 0 ;
     const xy = await this._promptXY();
     return (xy ? {coords: {x: xy.x, y: xy.y}, elevation: elevation} : {})
   }

@@ -101,7 +101,7 @@ export function rayIntersectsGrid(coords, r){
 
 export async function requestSavingThrow(tokenUuid, saveType, time){
   const token = await fromUuid(tokenUuid)
-  if(!token) return 
+  if(!token?.actor) return 
   let dialog, result;
   Hooks.once('renderDialog', async(app, html, options) => {
     dialog = app
@@ -127,10 +127,6 @@ export function shuffleArray(array) {
       array[randomIndex], array[currentIndex]];
   }
   return array;
-}
-
-export function stringToArray(string, {splitter = '|'}){
-  return string ? string.split(splitter).map(n => n.trim()).filter(n => n !== "") : []
 }
 
 export function stringToObj(string, {type = '', notify = false, document = {}}={}) {

@@ -23,8 +23,8 @@
                     <img src="{{this.danger.icon}}">
                     <div class="title">{{this.title}}</div>
                     <div class="type">{{this.danger.name}}</div>
-                    <div class="trigger">{{this.triggerDescription}}</div>
-                    <div class="randomFile">{{#if this.randomFile}}<i class="fas fa-radiation"></i>{{/if}}</div>
+                    <div class="trigger">{{this.eventsDescription}}</div>
+                    <div class="randomFile">{{#if this.trigger.random}}<i class="fas fa-radiation"></i>{{/if}}</div>
                 </div>
                 <div class="danger-zone-controls flexrow">
                     <a class="danger-zone-edit" title="{{localize 'DANGERZONE.scene.edit-danger-zone'}}" data-action="edit"><i class="fas fa-edit"></i></a>&nbsp;&nbsp;&nbsp;

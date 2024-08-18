@@ -116,7 +116,7 @@ export class api {
     }
     
     /**
-     * triggers the given zone on the given scene
+     * trigger the given zone on the given scene
      * @param {string} zoneName - the zone's title
      * @param {string} sceneId - the scene id. If left blank, defaults to canvas scene
      * @param {object} options - object with options - 

@@ -19,29 +19,40 @@ export const PLACEABLESBYDOCUMENT =  {
 }
 
 export const WORLDZONE = {
-    "options": {
-        "bleed": false,
-        "delay": {"min": 0, "max": 0},
-        "placeTemplate": false,
-        "noPrompt": false,
-        "stretch": "",
-        "allInArea": false
+    dimensions: {
+        bleed: false,
+        bottom: 0,
+        stretch: '',
+        top: 0
     },
-    "source": {
-        "actor": ""
+    source: {
+        actors: [],
     },
-    "tokenDisposition": "",
-    "actor": "",
-    "loop": 1,
-    "operation": "Q",
-    "replace": "N",
-    "lightReplace": "N",
-    "regionReplace": "N",
-    "soundReplace": "N",
-    "wallReplace": "N",
-    "weatherReplace": "N",
-    "flavor": "",
-    "enabled": true
+    replace: {
+        light: 'N',
+        region: 'N',
+        sound: 'N',
+        tile: 'N',
+        wall: 'N',
+        weather: 'N'
+    },
+    target: {
+        actors: [],
+        all: false,
+        always: false,
+        choose:{
+          enable: false,
+          prompt: true
+        },
+        dispositions: []
+    },
+    trigger: {
+        delay: {min: 0, max: 0},
+        loop: 1,
+        operation: "Q"
+    },
+    flavor: "",
+    enabled: true
   }
 
 export const AMBIENTLIGHTCLEAROPS = {
@@ -118,22 +129,149 @@ export const DANGERZONEWEATHERREPLACE = {
     "A": "DANGERZONE.weather.replace-types.A.label"
 }
 
-export const DANGERZONETRIGGERS = {
-    "manual":  "DANGERZONE.trigger-types.manual.label",
-    "aura":  "DANGERZONE.trigger-types.aura.label",
-    "move":  "DANGERZONE.trigger-types.move.label",
-    "combat-start":  "DANGERZONE.trigger-types.combat-start.label",
-    "combat-end":  "DANGERZONE.trigger-types.combat-end.label",
-    "initiative-start":  "DANGERZONE.trigger-types.initiative-start.label",
-    "initiative-end":  "DANGERZONE.trigger-types.initiative-end.label",
-    "round-start":  "DANGERZONE.trigger-types.round-start.label",
-    "round-end":  "DANGERZONE.trigger-types.round-end.label",
-    "turn-start":  "DANGERZONE.trigger-types.turn-start.label",
-    "turn-end":  "DANGERZONE.trigger-types.turn-end.label"
-} 
-
-export const COMBATTRIGGERS = ["combat-start","combat-end","initiative-start","initiative-end","round-start","round-end","turn-start","turn-end"];
-export const ENDOFTURNTRIGGERS = ["combat-end","initiative-end","round-end","turn-end"]
+export const EVENTS = {
+    "api": {
+        automated: false,
+        combat: {
+            event: false
+        },
+        label:  "DANGERZONE.events.api.label",
+        movement: false,
+        zone: false
+    },
+    "manual":  {
+        automated: false,
+        combat: {
+            event: false
+        },
+        label: "DANGERZONE.events.manual.label",
+        movement: false,
+        zone: true
+    },
+    "aura": {
+        automated: true,
+        combat: {
+            event: false
+        },
+        label: "DANGERZONE.events.aura.label",
+        movement: true,
+        zone: true
+    }, 
+    "move": {
+        automated: true,
+        combat: {
+            event: false
+        },
+        label:  "DANGERZONE.events.move.label",
+        movement: true,
+        zone: true
+    },
+    "combat-start": {
+        automated: true,
+        combat: {
+            event: true,
+            threshold:'start',
+            period: 'combat'
+        },
+        label:  "DANGERZONE.events.combat-start.label",
+        movement: false,
+        zone: true
+    }, 
+    "combat-end": {
+        automated: true,
+        combat: {
+            event: true,
+            threshold:'end',
+            period: 'combat'
+        },
+        label: "DANGERZONE.events.combat-end.label",
+        movement: false,
+        zone: true
+    },  
+    "extension": {
+        automated: false,
+        combat: {
+            event: false
+        },
+        label:  "DANGERZONE.events.extension.label",
+        movement: false,
+        zone: false
+    },
+    "initiative-start": {
+        automated: true,
+        combat: {
+            event: true,
+            threshold:'start',
+            period: 'initiative'
+        },
+        label:  "DANGERZONE.events.initiative-start.label",
+        movement: false,
+        zone: true
+    },  
+    "initiative-end": {
+        automated: true,
+        combat: {
+            event: true,
+            threshold:'end',
+            period: 'initiative'
+        },
+        label:  "DANGERZONE.events.initiative-end.label",
+        movement: false,
+        zone: true
+    },  
+    "round-start": {
+        automated: true,
+        combat: {
+            event: true,
+            threshold:'start',
+            period: 'round'
+        },
+        label:  "DANGERZONE.events.round-start.label",
+        movement: false,
+        zone: true
+    }, 
+    "round-end": {
+        automated: true,
+        combat: {
+            event: true,
+            threshold:'end',
+            period: 'round'
+        },
+        label:  "DANGERZONE.events.round-end.label",
+        movement: false,
+        zone: true
+    }, 
+    "turn-start": {
+        automated: true,
+        combat: {
+            event: true,
+            threshold:'start',
+            period: 'turn'
+        },
+        label:  "DANGERZONE.events.turn-start.label",
+        movement: false,
+        zone: true
+    }, 
+    "turn-end": {
+        automated: true,
+        combat: {
+            event: true,
+            threshold:'end',
+            period: 'turn'
+        },
+        label:  "DANGERZONE.events.turn-end.label",
+        movement: false,
+        zone: true
+    } 
+};
+export const AUTOMATED_EVENTS = Object.entries(EVENTS).filter(e => e[1].automated).map(([k,v]) => k);
+export const EVENT_OPTIONS = Object.entries(EVENTS ).filter(e => e[1].zone).reduce((obj,[k,v]) => {obj[k] = v.label; return obj;}, {});
+export const COMBAT_EVENTS = Object.entries(EVENTS).filter(e => e[1].combat.event).map(([k,v]) => k);
+export const COMBAT_PERIOD_INITIATIVE_EVENTS = Object.entries(EVENTS).filter(e => e[1].combat.period === 'initiative').map(([k,v]) => k);
+export const COMBAT_THRESHOLD_END_EVENTS = Object.entries(EVENTS).filter(e => e[1].combat.threshold === 'end').map(([k,v]) => k);
+export const COMBAT_PERIOD_COMBAT_EVENTS = Object.entries(EVENTS).filter(e => e[1].combat.period === 'combat').map(([k,v]) => k);
+export const MANUAL_EVENTS = Object.entries(EVENTS).filter(e => !e[1].automated).map(([k,v]) => k);
+export const MOVEMENT_EVENTS = Object.entries(EVENTS).filter(e => e[1].movement).map(([k,v]) => k);
 
 export const DANGERZONETRIGGERSORT = {
     "manual":  8,
@@ -148,6 +286,18 @@ export const DANGERZONETRIGGERSORT = {
     "turn-start":  1,
     "turn-end":  6
 } 
+
+export const MIGRATION_DANGER = {
+    INITIAL: 0,
+    WORLD: 1,
+    MULTI: 2
+}
+
+export const MIGRATION_ZONE = {
+    INITIAL: 0,
+    REGION: 1,
+    MULTI: 2
+}
 
 export const TRIGGEROPERATION = {
     "Q": "DANGERZONE.trigger-operation.sequential",
@@ -300,7 +450,7 @@ export const FVTTDOORSTATES = {
 }
 
 export function actorOps(){
-    return game.actors.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
+    return game.actors.reduce((obj, a) => {obj[a.id] = a.name; return obj;}, {})
 }
 
 export function regionOps(sceneId){

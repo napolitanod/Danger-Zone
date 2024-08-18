@@ -1,8 +1,7 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
-import {boundary, point} from './dimensions.js';
 import {getSceneRegionList} from './helpers.js';
-import {COMBATTRIGGERS, DANGERZONETRIGGERS, TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, DANGERZONEWEATHERREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps, ZONEEXTENSIONINTERACTIONOPTIONS, ZONEEXTENSIONSEQUENCEOPTIONS} from './constants.js';
+import {COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENT_OPTIONS, TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, DANGERZONEWEATHERREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps, ZONEEXTENSIONINTERACTIONOPTIONS, ZONEEXTENSIONSEQUENCEOPTIONS} from './constants.js';
 
 export class DangerZoneForm extends FormApplication {
   constructor(app, zoneId, sceneId, dangerId, ...args) {
@@ -46,15 +45,14 @@ export class DangerZoneForm extends FormApplication {
   }
 
   getData(){
-    const instance = this.zoneId ? (this.dangerId ? dangerZone.getGlobalZone(this.dangerId, this.sceneId) : dangerZone.getZoneFromScene(this.zoneId, this.sceneId)) : new zone(this.sceneId);
-    return {
+     return {
       zone: this.zone,
       actorOps: actorOps(),
-      hideElevationPrompt: !instance.options.placeTemplate,
-      hideInit: ['initiative-start','initiative-end'].includes(instance.trigger) ? false : true,
-      hideOperation: instance.loop > 1 ? false : true,
-      hideTargetCombatant: COMBATTRIGGERS.includes(instance.trigger) ? false : true,
-      hideWeight: !instance.random,
+      hideElevationPrompt: !this.zone.target.choose.enable,
+      hideInit: this.zone.hasCombatInitiativeEvent ? false : true,
+      hideOperation: this.zone.trigger.loop > 1 ? false : true,
+      hideTargetCombatant: this.zone.hasCombatEvent ? false : true,
+      hideWeight: !this.zone.trigger.random,
       hideWorld: this.dangerId ? false : true,
       replaceOps: DANGERZONEREPLACE,
       lightReplaceOps: DANGERZONELIGHTREPLACE,
@@ -67,7 +65,7 @@ export class DangerZoneForm extends FormApplication {
       sourceTriggerOps: SOURCETRIGGERS,
       stretchOps: STRETCH,
       tokenDispositionOps: TOKENDISPOSITION,
-      triggerOps: DANGERZONETRIGGERS,
+      eventOps: EVENT_OPTIONS,
       zoneOps: dangerZone.getZoneList(this.sceneId),
       zoneTypeOps: dangerZoneType.dangerList,
       wallReplaceOps: DANGERZONEWALLREPLACE,
@@ -114,15 +112,16 @@ export class DangerZoneForm extends FormApplication {
       case 'trigger-select': {
         const targetCom = document.getElementById(`dz-target-combatant`);
         const triggerCom = document.getElementById(`dz-combatantInZone`);
-        if(COMBATTRIGGERS.includes(val)){
+        const init = document.getElementById(`dz-initiative`);
+        if(COMBAT_EVENTS.find(e => val.includes(e))){
            targetCom.classList.remove('dz-hidden')
            triggerCom.classList.remove('dz-hidden')
         } else{
           targetCom.classList.add('dz-hidden')
           triggerCom.classList.add('dz-hidden')
         }
-        const init = document.getElementById(`dz-initiative`);
-        if(['initiative-start', 'initiative-end'].includes(val)){
+        console.log(COMBAT_PERIOD_INITIATIVE_EVENTS.find(e => val.includes(e)), val, event, init)
+        if(COMBAT_PERIOD_INITIATIVE_EVENTS.find(e => val.includes(e))){
           init.classList.remove('dz-hidden')
         } else {
           init.classList.add('dz-hidden')
@@ -163,20 +162,20 @@ export class DangerZoneForm extends FormApplication {
         tag.removeClass('dz-hidden');
         sourceD.removeClass('dz-hidden');
         tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.danger.label'))
-        $(this.form).find('#dz-source-tag-danger').attr('name', 'source.tag')
+        $(this.form).find('#dz-source-tag-danger').attr('name', 'source.tags')
         break;
       case 'T':
         tag.removeClass('dz-hidden');
         sourceT.removeClass('dz-hidden');
         tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.tag.label'))
-        $(this.form).find('#dz-source-tag-tag').attr('name', 'source.tag')
+        $(this.form).find('#dz-source-tag-tag').attr('name', 'source.tags')
         break;
       case 'Y':
       case 'Z':
         tag.removeClass('dz-hidden');
         sourceZ.removeClass('dz-hidden');
         tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.zone.label'))
-        $(this.form).find('#dz-source-tag-zone').attr('name', 'source.tag')
+        $(this.form).find('#dz-source-tag-zone').attr('name', 'source.tags')
         break;
       default:
         tag.addClass('dz-hidden');
@@ -185,17 +184,17 @@ export class DangerZoneForm extends FormApplication {
     if(!['C','D'].includes(sourceArea)){
       sourceD.addClass('dz-hidden')
       sourceD.removeAttr('name')
-      sourceD.val('')
+      sourceD.val([])
     }
     if(sourceArea !=='T'){
       sourceT.addClass('dz-hidden')
       sourceT.removeAttr('name')
-      sourceT.val('')
+      sourceT.val([])
     }
     if(!['Y','Z'].includes(sourceArea)){
       sourceZ.addClass('dz-hidden')
       sourceZ.removeAttr('name')
-      sourceZ.val('')
+      sourceZ.val([])
     }
     this.setPosition()
   }

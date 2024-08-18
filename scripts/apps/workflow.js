@@ -1,8 +1,8 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
 import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, portalOn, wallHeightOn, itemPileOn} from '../index.js';
-import {damageTypes, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
-import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
+import {damageTypes, EVENTS, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
+import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
 async function delay(delay){
     if(delay) await wait(delay)
@@ -14,12 +14,13 @@ function biRandom() {
 
 export class workflow {
 
-    constructor(zone, trigger, options = {}) {
+    constructor(zone, trigger, event, options = {}) {
         this.active = true,
-        this.executor = new executor(zone, options);
+        this.executor = new executor(zone, options, this);
         this._options = options,
         this._id = foundry.utils.randomID(16),
         this._state = WORKFLOWSTATES.NONE,
+        this.event = event,
         this.trigger = trigger
     };
 
@@ -47,13 +48,13 @@ export class workflow {
         dangerZone.log(false,`${message} ${this.title}... `, {workflow: this, data:data});
     } 
 
-    static async go(zone, trigger, options){
-        const length = zone.loop ? zone.loop : 1
+    static async go(zone, trigger, event, options){
+        const length = zone.trigger.loop ?? 1
         let delay = 0;
         for(let i=0; i < length; i++){
             options['previouslyExecuted'] = i ? true : false
-            if(zone.options.delay.min > 0 || zone.options.delay.max > 0) {
-                if(zone.operation === 'T'){
+            if(zone.trigger.delay.min > 0 || zone.trigger.delay.max > 0) {
+                if(zone.trigger.operation === 'T'){
                     if(!i) delay = zone.delay()
                 } else {
                     delay = zone.delay()
@@ -61,9 +62,9 @@ export class workflow {
             }
             if(options.extensionDelay) delay = delay + options.extensionDelay;
             options['delay'] = delay;
-            const flow = new workflow(zone, trigger, options);
-            flow.log(`Workflow ${zone.title} loop ${i+1} of ${length}...`, {zone: zone, trigger: trigger, options: options});
-            zone.operation === 'Q' ? await flow.next() : flow.next()
+            const flow = new workflow(zone, trigger, event, options);
+            flow.log(`Workflow ${zone.title} loop ${i+1} of ${length}...`, {zone: zone, event: event, trigger: trigger, options: options});
+            zone.trigger.operation === 'Q' ? await flow.next() : flow.next()
         }
     }
 
@@ -214,7 +215,7 @@ class plan {
 }
 
 class executorData {
-    constructor(zone, options){
+    constructor(zone, options, parent){
         this.id = foundry.utils.randomID(16),
         this.boundary = options.boundary ?? {},
         this.clearBypass = options.clearBypass ?? false,
@@ -233,6 +234,7 @@ class executorData {
             }
         },
         this._options = options,
+        this.parent = parent,
         this.previouslyExecuted = options.previouslyExecuted ?? false,
         this.regionData = {
             shapes: []
@@ -270,8 +272,12 @@ class executorData {
         return this.zone.sources.filter(s => !this.sources.find(s.id))
     }
 
+    get event(){
+        return this.parent?.parent?.event ?? 'manual'
+    }
+
     get flag(){
-        return {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.zone.trigger, type: this.zone.type}}}
+        return {[dangerZone.ID]: {[dangerZone.FLAGS.SCENETILE]: {zoneId: this.zone.id, trigger: this.event, type: this.zone.dangerId}}}
     }
 
     get hasFails(){
@@ -311,7 +317,7 @@ class executorData {
     }
 
     get likelihoodMet(){
-        return this.likelihoodResult <= this.zone.likelihood
+        return this.likelihoodResult <= this.zone.trigger.likelihood
     }
 
     get saveFailed(){
@@ -350,11 +356,11 @@ class executorData {
             let content =
                 `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Workflow Details</div><div class="danger-zone-chat-message-body">
                 <div><label class="danger-zone-label">Danger:</label><span> ${this.danger.name}</span></div>
-                <div><label class="danger-zone-label">Dimensions:</label><span> w${this.danger.dimensions.units.w}  h${this.danger.dimensions.units.h}  d${this.danger.dimensions.units.d}${this.zone.options.bleed ? ' (bleed)' : ''}</span></div>
+                <div><label class="danger-zone-label">Dimensions:</label><span> w${this.danger.dimensions.units.w}  h${this.danger.dimensions.units.h}  d${this.danger.dimensions.units.d}${this.zone.dimensions.bleed ? ' (bleed)' : ''}</span></div>
                 <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => t.name)}</span></div>
-                <div><label class="danger-zone-label">Trigger:</label><span> ${this.zone.triggerDescription}</span></div>
-                <div><label class="danger-zone-label">Likelihood:</label><span> ${this.zone.likelihood}</span> <label class="danger-zone-label">Likelihood result:</label><span> ${this.likelihoodResult}</span></div>
-                <div><label class="danger-zone-label">Targeting:</label><span> ${this.zone.options.runUntilTokenFound ? 'Must target a location with a token' : 'Can target any location in zone'}. ${this.zone.options.allInArea ? 'Hits all eligible tokens' : 'Hits one eligible token'} at location.</span></div>
+                <div><label class="danger-zone-label">Trigger:</label><span> ${game.i18n.localize(EVENTS[this.event].label)}</span></div>
+                <div><label class="danger-zone-label">Likelihood:</label><span> ${this.zone.trigger.likelihood}</span> <label class="danger-zone-label">Likelihood result:</label><span> ${this.likelihoodResult}</span></div>
+                <div><label class="danger-zone-label">Targeting:</label><span> ${this.zone.target.always ? 'Must target a location with a token' : 'Can target any location in zone'}. ${this.zone.target.all ? 'Hits all eligible tokens' : 'Hits one eligible token'} at location.</span></div>
                 `;
             if(this.hasBoundary){
                 content += `
@@ -371,7 +377,7 @@ class executorData {
     }
 
     async checkLikelihood() {
-        if(this.zone.likelihood < 100){
+        if(this.zone.trigger.likelihood < 100){
             const roll = await maybe();
             this.likelihoodResult = roll.result;
         }
@@ -396,7 +402,7 @@ class executorData {
     }
 
     informLikelihood(){
-        console.log(`Zone likelihood of ${this.zone.likelihood} was${this.likelihoodMet ? '' : ' not'} met with a roll of ${this.likelihoodResult}`)
+        console.log(`Zone likelihood of ${this.zone.trigger.likelihood} was${this.likelihoodMet ? '' : ' not'} met with a roll of ${this.likelihoodResult}`)
     }
 
     async promptBoundary(){ 
@@ -411,7 +417,7 @@ class executorData {
         let max = 1, i=0;
         const test = await this.zone.scene.randomDangerBoundary();
         const targetPool = this.targets.length ? this.targets : this.zoneEligibleTokens;
-        if((this.targets.length || this.zone.options.runUntilTokenFound) && targetPool.length) max = 10000;
+        if((this.targets.length || this.zone.target.always) && targetPool.length) max = 10000;
         do {
             i++;
             const b = test.next()
@@ -434,7 +440,7 @@ class executorData {
     async setBoundary(asRun = false) {
         if(this.hasBoundary) return this._setBoundary();
         if(this.hasLocation) return this._setLocationBoundary();
-        if(asRun && this.zone.options.placeTemplate) {
+        if(asRun && this.zone.target.choose.enable) {
             await this.promptBoundary();
             return
         }
@@ -488,7 +494,7 @@ class executorData {
     
     setTargets(){
         if (this.hasTargets) return this.eligibleTargets.filter(e => this.targets.find(t => e.id === t.id))
-        if(!this.zone.options.allInArea){
+        if(!this.zone.target.all){
             if(this.eligibleTargets.length > 1){
                 return this.targets.push(this.eligibleTargets[Math.floor(Math.random() * this.eligibleTargets.length)])
             }
@@ -560,12 +566,13 @@ class executorData {
 }
 
 export class executor {
-    constructor(zone, options = {}) {
-        this.data = new executorData(zone, options),
+    constructor(zone, options = {}, parent = {}) {
+        this.data = new executorData(zone, options, this),
         this.executable = {},
         this.parts = [],
         this.promises = {load: []},
-        this.state = 1;
+        this.state = 1,
+        this.parent = parent;
 
         this._initialize();
 
@@ -673,7 +680,7 @@ export class executor {
     }
 
     get hasSourcing(){
-        return (this.zone.hasSourcing || this.executables.find(e => e.hasSourcing)) ? true : false
+        return (this.zone.hasSourceActor || this.executables.find(e => e.hasSourcing)) ? true : false
     }
 
     get hasSourceToTarget(){
@@ -823,7 +830,7 @@ export class executor {
         if(extension.source) ops.sources = this.data.sources;
         if(extension.clear) ops.clearBypass = true;
         if(extension.delay?.min || extension.delay?.max) ops.extensionDelay = zone.delay(extension.delay)
-        await workflow.go(zn, 'zone',ops)
+        await workflow.go(zn, 'zone', 'extension', ops)
     }
  
     async inform(){
@@ -1267,6 +1274,7 @@ class activeEffect extends executable {
     }
 
     _data(token, array, type){
+        if(!token.actor) return []
         const effects = token.actor.effects.filter(e => array.includes(e.name))
         switch(type){  
             case 0: 
@@ -1281,7 +1289,7 @@ class activeEffect extends executable {
     }
 
     async _addEffects(token){
-        if(this.limit && token.actor && token.actor.effects.find(e => e.flags[dangerZone.ID]?.origin === this.data.danger.id)){
+        if(this.limit && token.actor.effects.find(e => e.flags[dangerZone.ID]?.origin === this.data.danger.id)){
             return;
         }
         const add = await token.actor.createEmbeddedDocuments("ActiveEffect", [this.effect]);
@@ -1916,7 +1924,7 @@ class item extends executable {
     } 
 
     get itemNames(){
-        return stringToArray(this._part.name, {splitter: '||'})
+        return this._part.name
     }
 
     get source(){
@@ -2219,7 +2227,7 @@ class mutate extends executable {
     async updates(token){
         const obj = token.toJSON()
         if(this.hasToken) this.token(token)
-        if(this.hasActor) {
+        if(this.hasActor && token.actor) {
             const actorUpdate = this.actor(token)
             await token.updateEmbeddedDocuments("Actor", [actorUpdate])
         }
@@ -3537,7 +3545,7 @@ class weather extends executable{
     }
 
     get flagName(){
-        return this.duration ? this.data.id : this.data.zone.type
+        return this.duration ? this.data.id : this.data.zone.dangerId
     }
 
     get fxEffect(){
