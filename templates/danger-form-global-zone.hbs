@@ -30,7 +30,7 @@
                 {{localize 'DANGERZONE.type-form.global-zone.bottom.label'}}
             </label>
             <div class="form-fields">
-                <input type="Number" name="dimensions.bottom" step="1" value={{#unless zone.dimensions.bottom}}0{{/unless}}>
+                <input type="Number" name="dimensions.bottom" step="1" value={{#if zone.dimensions.bottom}}{{zone.dimensions.bottom}}{{else}}0{{/if}}>
             </div>
         </div>
         <div class="form-group">
@@ -38,7 +38,7 @@
                 {{localize 'DANGERZONE.type-form.global-zone.top.label'}}
             </label>
             <div class="form-fields">
-                <input type="Number" name="dimensions.top" step="1" value={{#unless zone.dimensions.top}}0{{/unless}}>
+                <input type="Number" name="dimensions.top" step="1" value={{#if zone.dimensions.top}}{{zone.dimensions.top}}{{else}}0{{/if}}>
             </div>
         </div>
         <div class="form-group">
@@ -66,8 +66,8 @@
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.loop.description'}}"><i class="fas fa-info-circle"></i></span>
             </label>
             <div class="form-fields">
-                <input type="range" name="trigger.loop" value="{{#if zone.trigger.loop}}{{zone.trigger.loop}}{{/if}}{{#unless zone.trigger.loop}}1{{/unless}}" min="1" max="20" step="1" data-action="loop-change"/>
-                <span class="range-value">{{#if zone.trigger.loop}}{{zone.trigger.loop}}{{/if}}{{#unless zone.trigger.loop}}1{{/unless}}</span>
+                <input type="range" name="trigger.loop" value="{{#if zone.trigger.loop}}{{zone.trigger.loop}}{{else}}1{{/if}}" min="1" max="20" step="1" data-action="loop-change"/>
+                <span class="range-value">{{#if zone.trigger.loop}}{{zone.trigger.loop}}{{else}}1{{/if}}</span>
             </div>
         </div>
         <div class="form-group{{#if hideOperation}} dz-hidden{{/if}}" id="dz-operation" >

@@ -282,6 +282,7 @@ Hooks.once('ready', async function() {
 	  setModOptions();
 	  await migrateDanger.migrate();
 	  await migrateScene.migrate();
+	  dangerZone.initializeTriggerButtons()
 });
 
 /**

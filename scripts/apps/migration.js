@@ -19,7 +19,7 @@ export class migrateDanger {
     static async migrate(){
         if(game.user.isGM) {
             const migration = new migrateDanger()
-            migration.go()
+            await migration.go()
         } 
     }
     
@@ -80,7 +80,7 @@ export class migrateDanger {
                     });
 
                     Object.assign(update.source, {
-                        actors: stringToArray(part.source.actor)
+                        actors: stringToArray(part.source?.actor)
                     });
 
                     Object.assign(update.target, {
@@ -163,7 +163,6 @@ export class migrateScene {
         await this._migrateData()
         await this.save()
         await this.scene.setFlag(dangerZone.ID, dangerZone.FLAGS.MIGRATION, this.flagMigration);
-        if(this.scene.active) dangerZone.initializeTriggerButtons()
     }
 
     async save(){
@@ -214,12 +213,15 @@ export class migrateScene {
                 });
 
                 Object.assign(zn.source, {
-                    actors: stringToArray(flag.source.actor),
-                    tags: stringToArray(flag.source.tag),
-                    area: flag.source.area,
-                    limit: flag.source.limit,
-                    target: flag.source.target,
-                    trigger: flag.source.trigger
+                    actors: stringToArray(flag.source?.actor),
+                    tags: stringToArray(flag.source?.tag),
+                    area: flag.source?.area ?? '',
+                    limit: {
+                        min: flag.source?.limit?.min ?? 0,
+                        max: flag.source?.limit?.max ?? 0
+                      },
+                    target: flag.source?.target ?? '',
+                    trigger: flag.source?.trigger ?? ''
                 });
 
                 Object.assign(zn.target, {
