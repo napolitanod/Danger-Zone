@@ -13,52 +13,6 @@ export class dangerZoneDimensions {
         this.sceneId = sceneId,
         this.regionId = regionId;
     }
-  ;
-
-    /**Migration */
-    get _migrationData(){
-        return {
-            regionData: {
-                elevation: {bottom: this.start?.z, top: this.end?.z},
-                name: `Danger Zone Region: ${this.zone.title}`,
-                shapes: [{
-                    type: 'rectangle',
-                    height: this.end?.y - this.start?.y,
-                    rotation: 0,
-                    width: this.end?.x - this.start?.x,
-                    x: this.start?.x,
-                    y: this.start?.y
-                }]
-            }
-        }
-    }
-
-    _migrateRegionMatch(regionArray){
-        return regionArray.find(rg => 
-            rg.elevation.bottom === this._migrationData.regionData.elevation.bottom
-            && rg.elevation.top === this._migrationData.regionData.elevation.top
-            && rg.shapes[0].x === this._migrationData.regionData.shapes[0].x
-            && rg.shapes[0].y === this._migrationData.regionData.shapes[0].y
-            && rg.shapes[0].height === this._migrationData.regionData.shapes[0].height
-            && rg.shapes[0].width === this._migrationData.regionData.shapes[0].width
-        )
-    }
-
-    async convertToRegion(regionId){
-        if(!this.scene || !this.start) return
-
-        if(regionId || this.hasFullSceneDimensions) {
-            await this.zone.update({scene: {
-                start: null,
-                end: null,
-                regionId: regionId ?? ''
-            }}, {insertKeys: true, enforceTypes: false})
-        }
-        if (game.user.isGM && regionId ) ui.notifications?.info(`The dimensions for zone ${this.zone.title} on scene ${this.scene.name} have been converted to a region.`)
-        dangerZone.log(false, regionId ? 'Converted scene to Zone' : 'Converted to scene-wide zone', {zoneScene: this, region: regionId})
-    }
-
-    /**Migration end */
 
     get boundary(){
         return this.region?.id ? boundary.documentBoundary("Region", this.region) : boundary.documentBoundary("Scene", this.scene, this.dangerId ? {global: {bottom: this.danger.globalZone?.options?.bottom ?? null, top: this.danger.globalZone?.options?.top ?? null}} : {})
@@ -82,21 +36,6 @@ export class dangerZoneDimensions {
 
     get dangerRelativeDimensions(){
         return {w:this.danger.dimensions.units.w ?? this.boundary.dimensions.w, h: this.danger.dimensions.units.h ?? this.boundary.dimensions.h, d:this.danger.dimensions.units.d ?? this.boundary.depth}
-    }
-
-    get hasFullSceneDimensions(){
-        return (
-            (!this.start && !this.regionId)
-            || (
-                this.start 
-                && this.start.x === this.scene.dimensions.sceneX
-                && this.start.y === this.scene.dimensions.sceneY
-                && this.start.z === 0
-                && this.end.x === this.scene.dimensions.sceneX + this.scene.dimensions.sceneWidth
-                && this.end.y === this.scene.dimensions.sceneY + this.scene.dimensions.sceneHeight
-                && this.end.z === 0
-            )
-         ) ? true : false
     }
 
     get zone(){
@@ -133,7 +72,7 @@ export class dangerZoneDimensions {
 
     async randomDangerBoundary() {
         const options = {range: this.dangerRelativeDimensions}
-        const b = this.zone.options.bleed ? await this.boundaryBleed(options) : await this.boundaryConstrained(options);
+        const b = this.zone.dimensions.bleed ? await this.boundaryBleed(options) : await this.boundaryConstrained(options);
         this.zone.stretch(options);
         const grids = b.randomBoundary();
         dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, boundary: b, grids: grids, zone: this.zone, options: options})

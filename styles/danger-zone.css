@@ -276,6 +276,23 @@ form.danger-zone-type-form .main-danger {
     margin-bottom: 8px;
 }
 
+.danger-zone-record fieldset, .danger-part-form fieldset {
+    margin: 15px 0px;
+} 
+
+.danger-zone-record fieldset multi-select, .danger-part-form fieldset multi-select {
+    margin-bottom: 5px;
+} 
+
+.danger-zone-record fieldset .tags .tag, .danger-part-form fieldset .tags .tag, .danger-part-form .form-fields .tags .tag {
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #FFF;
+}
+
+.danger-zone-record fieldset .tags .tag a, .danger-part-form fieldset .tags .tag a, .danger-part-form .form-fields .tags .tag a  {
+    color: #FFF;
+} 
+
 /*hotbar*/
 .danger-zone-hotbar-trigger {
     position: absolute;

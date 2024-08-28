@@ -1,4 +1,5 @@
 import {dangerZone} from './danger-zone.js';
+import {migrateDanger, migrateScene} from './apps/migration.js';
 import {TRIGGERDISPLAYOPTIONS, SCENEFORMICONDISPLAYOPTIONS, setExecutableOptions, setModOptions} from './apps/constants.js';
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
@@ -279,7 +280,9 @@ Hooks.once('ready', async function() {
 
 	  setExecutableOptions();
 	  setModOptions();
-	  dangerZone._migrate();
+	  await migrateDanger.migrate();
+	  await migrateScene.migrate();
+	  dangerZone.initializeTriggerButtons()
 });
 
 /**
@@ -329,12 +332,6 @@ Hooks.once('setup', async function() {
 	  });
  });
 
-/**
- * Register debug flag with developer mode's custom hook
- */
-Hooks.once('devModeReady', ({registerPackageDebugFlag}) => {
-    registerPackageDebugFlag(dangerZone.ID);
-});
 
 /**
  * Register sockets
@@ -364,34 +361,20 @@ Hooks.on('renderSceneConfig', async (app, html, options) => {
 });
 
 
-
 Hooks.on('createScene', async (scene, options, userId) => {
-	if(options.fromCompendium){
-		const flag = dangerZone.validatePreupdateZones(scene);
-		if(flag){
-			const updt = await dangerZone.updateAllSceneZones(scene.id, flag)
-			dangerZone.log(false, 'Zones updated on compendium scene...', {scene: scene, options: options, flag: flag, update: updt})
-			await dangerZone.migrate(scene)
-		}
+	if(scene?.flags?.[dangerZone.ID]){
+		await migrateScene.migrate(scene)
 	}
 });
-
-
-/**
- * Hook for preupdating the scene form. Confirms compatibility of zone scene ids in update with current scene 
- */
-Hooks.on('preUpdateScene', (scene, change, options, userId) => {
-	const flag = dangerZone.validatePreupdateZones(scene);
-	if(flag){
-		change[`flags.${dangerZone.ID}.${dangerZone.FLAGS.SCENEZONE}`] = flag;
-	}
-});
-
 
 /**
  * Hook for the rendering of the scene list at top of canvas display. Adds zone trigger buttons to scene navigation bar on canvas
  */
 Hooks.on('renderSceneDirectory', async(app, html, options) => {
+	dangerZone.initializeTriggerButtons()
+});
+
+Hooks.on('closeDangerZoneForm', (form, app) => {
 	dangerZone.initializeTriggerButtons()
 });
 
@@ -411,29 +394,29 @@ Hooks.on("renderSidebarTab", async(app,options,update) => {
 });
 
 /**
- * in combat hook for when combat ends. Used for managing in combat zone triggers
+ * in combat hook for when combat ends. Used for managing in combat zone events
  */
  Hooks.on('combatStart', async(combat, options) => {
-	triggerManager.findCombatTriggers(combat, 'combatStart', options)
+	triggerManager.findcombatEvents(combat, 'combatStart', options)
 });
 
 /**
- * in combat hook for when combat ends. Used for managing in combat zone triggers
+ * in combat hook for when combat ends. Used for managing in combat zone events
  */
 Hooks.on('deleteCombat', async(combat, options, id) => {
-	triggerManager.findCombatTriggers(combat, 'deleteCombat', options)
+	triggerManager.findcombatEvents(combat, 'deleteCombat', options)
 });
 
 /**
- * in combat hook for when combat begins or round/turn changes. Used for managing in combat zone triggers
+ * in combat hook for when combat begins or round/turn changes. Used for managing in combat zone events
  */
 Hooks.on('updateCombat', async(combat, round, options, id) => {
-	if(options.advanceTime || options.direction === 1) triggerManager.findCombatTriggers(combat, 'updateCombat', options)
+	if(options.advanceTime || options.direction === 1) triggerManager.findcombatEvents(combat, 'updateCombat', options)
 });
 
 Hooks.on("updateToken", async (token, update, options, userId) => {
     if (game.user.isGM && ("x" in update || "y" in update || "elevation" in update) && !options.dangerZoneMove && dangerZone.getMovementZonesFromScene(token.parent?.id).length) {
-		triggerManager.findMovementTriggers(token, update)
+		triggerManager.findMovementEvents(token, update)
     }
 });
 

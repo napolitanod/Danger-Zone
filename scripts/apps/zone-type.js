@@ -1,6 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
-import {WORLDZONE, saveTypes} from './constants.js';
-import {stringToArray} from './helpers.js';
+import {MIGRATION_DANGER, WORLDZONE, saveTypes} from './constants.js';
+import {migrateDanger} from './migration.js';
 
 export class dangerZoneType {
     constructor() {
@@ -13,6 +13,7 @@ export class dangerZoneType {
       },
       this.icon = 'icons/svg/biohazard.svg',
       this.id = foundry.utils.randomID(16),
+      this.migration = MIGRATION_DANGER.INITIAL,
       this.name = 'New Danger',
       this.options = {
         ambientLight: {
@@ -168,7 +169,7 @@ export class dangerZoneType {
           action: '',
           compendiumName: '',
           delay: '',
-          name: '',
+          name: [],
           source: '',
           tag: '',
           updates: ''
@@ -383,7 +384,10 @@ export class dangerZoneType {
             sound: null
           }
         },
-        macro: ''
+        macro: '',
+        migration: {
+          globalZone: 1
+        }
       }
     }
 
@@ -392,19 +396,19 @@ export class dangerZoneType {
   }
 
   get effectDeleteEffects(){
-    return stringToArray(this.effect.flags?.[`${dangerZone.ID}`]?.deleteEffects, {splitter: '||'})
+    return this.effect.flags?.[`${dangerZone.ID}`]?.deleteEffects ?? []
   }
   
   get effectDisableEffects(){
-    return stringToArray(this.effect.flags?.[`${dangerZone.ID}`]?.disableEffects, {splitter: '||'})
+    return this.effect.flags?.[`${dangerZone.ID}`]?.disableEffects ?? []
   }
 
   get effectEnableEffects(){
-    return stringToArray(this.effect.flags?.[`${dangerZone.ID}`]?.enableEffects, {splitter: '||'})
+    return this.effect.flags?.[`${dangerZone.ID}`]?.enableEffects ?? []
   }
 
   get effectToggleEffects(){
-    return stringToArray(this.effect.flags?.[`${dangerZone.ID}`]?.toggleEffects, {splitter: '||'})
+    return this.effect.flags?.[`${dangerZone.ID}`]?.toggleEffects ?? []
   }
 
   get ambientLight(){
@@ -647,6 +651,8 @@ export class dangerZoneType {
                 inError.push(record)
             } else if (allTypes[addId]) {
               alreadyExists.push(record);
+            } else if(record.migration > dangerZone.MIGRATION.DANGER) {
+              inError.push(addId)
             } else{
               allTypes[record.id]=this._toClass(record, false);
               added.push(record);
@@ -654,6 +660,7 @@ export class dangerZoneType {
         }
     } else{inError.push(json)}
     await this.setZoneTypes(allTypes);
+    if(added) await migrateDanger.migrate()
     return {"added": added, "skipped": alreadyExists, "error": inError}
   }
 }

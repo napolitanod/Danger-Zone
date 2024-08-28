@@ -3,7 +3,6 @@ import {toggleMasterButtonActive, dzMActive} from '../index.js';
 import {dangerZoneType} from './zone-type.js';
 import {dangerZoneDimensions} from './dimensions.js';
 import {triggerManager} from './trigger-handler.js';
-import {DANGERZONETRIGGERS} from './constants.js';
 import {DangerZoneForm} from './zone-form.js';
 
 export function addTriggersToHotbar() {
@@ -29,16 +28,16 @@ function _setDangerZoneButton(html, scene, clss) {
         let randomSet = 0;
         const hidden = ((hasEx || hasClear) ? zones.length : zones.length > 1) ? ' dz-hidden ' : '';
         for (const zn of zones){
-            const zoneType = dangerZoneType.getDanger(zn.type)
-            if(zoneType){
-                if(zn.enabled && zn.trigger === 'manual' && zn.random && !randomSet) {
+            const danger = dangerZoneType.getDanger(zn.dangerId)
+            if(danger){
+                if(zn.enabled && zn.hasManualEvent && zn.trigger.random && !randomSet) {
                     let btn = $('<li>').addClass(`danger-zone-scene-trigger-button .random${hidden}`).append($('<i class="fas fa-radiation-alt"></i>')).data("data-id", {zone: 'random', scene: zn.scene.sceneId}).prop('title', game.i18n.localize("DANGERZONE.scene.random-trigger.label"))
                     btn.click(_handleTriggerClick);
                     btnWrap.prepend(btn);
                     randomSet = 1; 
-                } else if(!zn.random || zn.trigger !== 'manual') {
-                    let url = `url(${zoneType.icon})`;
-                    let btn = $('<li>').addClass(`danger-zone-scene-trigger-button${(zn.enabled && zn.trigger !== 'manual') ? ' active' : ''}${hidden}${zn.scene.dangerId ? ' global-zone' : ''}`).css({"background-image": url}).data("data-id", {zone: zn.id, scene: zn.scene.sceneId, dangerId: zn.scene.dangerId}).prop('title', zn.title + (zn.scene.dangerId ? ' (' + game.i18n.localize("DANGERZONE.type-form.global-zone.label") + ') ' :' ') + game.i18n.localize(DANGERZONETRIGGERS[zn.trigger])+ ' ' + game.i18n.localize("DANGERZONE.scene.trigger"))
+                } else if(!zn.trigger.random || zn.hasAutomatedEvent) {
+                    let url = `url(${danger.icon})`;
+                    let btn = $('<li>').addClass(`danger-zone-scene-trigger-button${(zn.enabled && zn.hasAutomatedEvent) ? ' active' : ''}${hidden}${zn.scene.dangerId ? ' global-zone' : ''}`).css({"background-image": url}).data("data-id", {zone: zn.id, scene: zn.scene.sceneId, dangerId: zn.scene.dangerId}).prop('title', zn.title + (zn.scene.dangerId ? ' (' + game.i18n.localize("DANGERZONE.type-form.global-zone.label") + ') ' :' ') + zn.eventsDescription + ' ' + game.i18n.localize("DANGERZONE.scene.trigger"))
                     btn.click(_handleTriggerClick).hover(_showZoneHighlight, _hideZoneHighlight).contextmenu(_contextMenu)
                     btnWrap.append(btn);
                 }
