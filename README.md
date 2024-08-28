@@ -80,12 +80,15 @@ Each button is a zone in that scene and displays the icon for the danger held wi
 #### On Hover
 Hovering over any button, aside from the manual trigger grouping, will highlight it's area within the scene grid.
 
-### Danger Zone Lasting Effect Clear
+### Danger Zone Tile Clear
 <img src="https://user-images.githubusercontent.com/22696153/132107176-928adf83-cd37-47e4-a3b3-c792cbdb2151.png">
 A button is added to the tile controls. Selecting this will clear all lasting effects (tiles) on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
 
 ### Danger Zone Ambient Light Clear
 A button is added to the lighting controls with the same icon as the tile clear button shown in the above section. Selecting this will clear all ambient lights on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
+
+### Danger Zone Region Clear
+A button is added to the region controls. Selecting this will clear all regions on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
 
 ### Danger Zone Wall Clear
 A button is added to the walls controls with the same icon as the tile clear button shown in the above Danger Zone Lasting Effect Clear section. Selecting this will clear all walls on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
