@@ -292,7 +292,7 @@ export class DangerForm extends FormApplication {
       hasCanvas: (this.canvas.effect.type || this.canvas.pan.active) ? true : false,
       hasForegroundEffect: this.foregroundEffect?.file ? true : false,
       hasGlobalZone: Object.keys(this.globalZone).length ? true : false,
-      hasItem: this.item?.name ? true : false,
+      hasItem: this.item?.name?.length ? true : false,
       hasLastingEffect: this.lastingEffect?.file ? true : false,
       hasLight: (this.light.bright || this.light.dim) ? true : false,
       hasMutate: this.mutate?.permanent,

@@ -120,7 +120,6 @@ export class DangerZoneForm extends FormApplication {
           targetCom.classList.add('dz-hidden')
           triggerCom.classList.add('dz-hidden')
         }
-        console.log(COMBAT_PERIOD_INITIATIVE_EVENTS.find(e => val.includes(e)), val, event, init)
         if(COMBAT_PERIOD_INITIATIVE_EVENTS.find(e => val.includes(e))){
           init.classList.remove('dz-hidden')
         } else {
