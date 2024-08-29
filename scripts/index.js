@@ -12,7 +12,7 @@ import {requestSavingThrow} from './apps/helpers.js';
 /**
  * global variables
  */
-export var activeEffectOn = true, timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, socketLibOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, portalOn = false, monksSceneOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fxMasterOn = false, itemPileOn = false; //active modules
+export var activeEffectOn = true, timesUpOn = false, midiQolOn = false, daeOn = false, perfectVisionOn = false, socketLibOn = false, taggerOn = false, sequencerOn = false, wallHeightOn = false, portalOn = false, monksActiveTilesOn = false, tokenSaysOn = false, fxMasterOn = false, itemPileOn = false; //active modules
 export var dzMActive = false; 
 export let dangerZoneSocket; //var for socketlib
 
@@ -428,7 +428,6 @@ function setModsAvailable () {
 	if (game.modules.get("item-piles")?.active){itemPileOn = true};
 	if (game.modules.get("midi-qol")?.active){midiQolOn = true} ;
 	if (game.modules.get("monks-active-tiles")?.active){monksActiveTilesOn = true} ;
-	if (game.modules.get("monks-scene-navigation")?.active){monksSceneOn = true}
 	if (game.modules.get("token-says")?.active){tokenSaysOn = true} ;
 	if (game.modules.get("portal-lib")?.active){portalOn = true} ;
 	if (game.modules.get("fxmaster")?.active){fxMasterOn = true} ;
