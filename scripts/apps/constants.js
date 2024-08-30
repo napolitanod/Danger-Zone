@@ -1,4 +1,4 @@
-import {activeEffectOn, tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, portalOn, fxMasterOn, sequencerOn, taggerOn, wallHeightOn, midiQolOn} from '../index.js';
+import {activeEffectOn, tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, portalOn, fxMasterOn, sequencerOn, taggerOn, wallHeightOn} from '../index.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -694,7 +694,7 @@ export function setExecutableOptions(){
             'damage': {
                 title: "Damage", 
                 icon: "fas fa-skull", 
-                modules: [{active: midiQolOn, name: "midi-qol", dependent: true}],
+                modules: [],
                 scope: "token"
             },
             'item': {

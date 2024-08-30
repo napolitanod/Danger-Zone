@@ -1,6 +1,6 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
-import {activeEffectOn, daeOn, itemPileOn, midiQolOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, portalOn} from '../index.js';
+import {activeEffectOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, portalOn} from '../index.js';
 import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE,determineMacroList, determineMacroListUuid,  REGIONSHAPETYPEOPTIONS, dirTypes, doorTypes, ELEVATIONMOVEMENT, getCompendiumOps, HORIZONTALMOVEMENT, MIRRORIMAGEOPTIONS, MIRRORROTATIONOPTIONS, MOVETYPES, OFFSETOPTIONS, regionEvents, REGIONVISIBILITY, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
 import {stringToObj} from './helpers.js';
 
@@ -284,6 +284,7 @@ export class DangerForm extends FormApplication {
 
     const dataToSend =  {
       zone: instance,
+      migration: dangerZone.MIGRATION.DANGER,
       macroOps: determineMacroList(),
       hasActiveEffect: Object.keys(this.effect).length ? true : false,
       hasAudio: this.audio?.file ? true : false,
@@ -1420,8 +1421,7 @@ class DangerZoneDangerFormTokenResponse extends FormApplication {
         sourceOps: SOURCETREATMENT,
         tokenSaysOnNot: !tokenSaysOn, 
         sequencerOnNot: !sequencerOn,
-        socketLibOn: socketLibOn,
-        midiQolOnNot: !midiQolOn
+        socketLibOn: socketLibOn
       }
     }
 

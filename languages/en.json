@@ -412,10 +412,14 @@
             "random": "Random",
             "random-trigger.label": "Random Manual Trigger",
             "title": "Title",
-            "trigger": "Trigger",
+            "trigger": "Events",
             "type": "Danger"
         },
         "setting": {
+            "apply-damage":{
+                "label": "Apply Damage",
+                "description": "For dangers that include a damage part, this will automatically apply the damage, accounting for resistances, vulnerabilities, etc."
+            },
             "chat-details-to-gm.label": "Chat Zone Details to GM on Trigger",
 		    "chat-details-to-gm.description": "Will send a private chat message to GM that includes details on the danger zone on trigger, such as target location, eligible tokens, and targeted tokens.",
             "danger-zone-types-config.name": "Dangers",
@@ -963,7 +967,6 @@
                     "mode.label":  "Occlusion Mode"
                 },
                 "overhead.label": "Overhead Tile",
-                "overhead.description": "If Levels module is installed, tile will automatically be set to overhead for zones with depth if the bottom of danger when placed in the zone is > 0.",
                 "is-overhead.label": "Is Overhead?",
                 "loop.label": "Loop Video",
                 "randomFile.label": "Randomize Wildcard Image",
@@ -1080,7 +1083,7 @@
                     "amount.label": "Damage Roll or Amount",
                     "amount.title": "Include parameters for variable roll:\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",
                     "delay.label": "Delay Start",
-                    "description": "Roll damage on each targeted token. Whether or not damage is automatically applied depends on your midiQol configuration.",
+                    "description": "Roll damage on each targeted token. Whether or not damage is automatically applied depends on your Danger Zone damage settings.",
                     "enable.label": "Activate Damage",
                     "flavor.label": "Flavor (Chat Card)",
                     "flavor.description": "Outputs the message to chat for each token damaged as part of the damage card.\nInclude parameters for variable text:\n@alias for token name list\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",
