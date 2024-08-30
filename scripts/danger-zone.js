@@ -189,16 +189,11 @@ export class dangerZone {
       return this.getAllZonesFromScene(sceneId, false, false).find(zn => zn.title === zoneName)
     }
 
-  /**
-   * adds a new zone to a scene
-   * @param {string} sceneId 
-   * @returns the new zone
-   */
-  static async addZone(sceneId) {
-    const instance = new zone(sceneId);
-    await scene.setFlag(this.ID, this.FLAGS.SCENEZONE, {[instance.id]: instance});
-    return instance
-  } 
+
+  static async checkSetMigration(scene){
+    const hasMigration = scene.getFlag(this.ID, this.FLAGS.MIGRATION) ? true : false 
+    if(!hasMigration) await scene.setFlag(dangerZone.ID, dangerZone.FLAGS.MIGRATION, dangerZone.MIGRATION.ZONE);
+  }
 
   static async copyZone(sourceSceneId, sourceZoneId, targetSceneId){
     const source = foundry.utils.deepClone(this.getZoneFromScene(sourceZoneId,sourceSceneId));
@@ -263,7 +258,9 @@ export class dangerZone {
   }
   
   static async updateAllSceneZones(sceneId,flag){
-    const updt = await game.scenes.get(sceneId).setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, flag);
+    const scene = game.scenes.get(sceneId)
+    const updt = await scene.setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, flag);
+    await dangerZone.checkSetMigration(scene)
     return updt
   }
 
@@ -443,7 +440,9 @@ export class zone {
    * @returns module flag on the scene
    */
   async _setFlag(){
-    const updt = await game.scenes.get(this.scene.sceneId).setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, {[this.id]: this});
+    const scene = game.scenes.get(this.scene.sceneId)
+    const updt = await scene.setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, {[this.id]: this});
+    await dangerZone.checkSetMigration(scene)
     return updt
   }
 

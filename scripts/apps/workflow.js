@@ -1651,15 +1651,12 @@ class combat extends executable {
 class damageToken extends executable{
     constructor(...args){
         super(...args),
+        this._apply = game.settings.get('danger-zone', 'apply-damage') ?? false,
         this._chatMessageResults = '',
         this._gmChatMessageResults = '',
         this._gmDamageCount = 0,
-        this._damageResults = {}
+        this._damageResults = []
     }
-    
-    get amount(){
-        return this._part.amount
-    } 
 
     get damages(){
         const arr = [];
@@ -1668,6 +1665,10 @@ class damageToken extends executable{
         return arr
     }
     
+    get damageRoll(){
+        return CONFIG.Dice.DamageRoll
+    }
+
     get enable(){
         return this._part.enable
     } 
@@ -1681,35 +1682,31 @@ class damageToken extends executable{
     }
 
     get has(){
-        return (super.has && this.enable && this.amount) ? true : false
+        return (super.has && this.enable && this._part.amount) ? true : false
+    }
+
+    get hasSaves(){
+        return (this.data.danger.save.enable && this.damages.find(d => ['N', 'H'].includes(d.save))) ? true : false
     }
 
     get isBulk(){
-        return (this.amount.indexOf('@')!==-1 || this.flavor.indexOf('@elevation')!==-1 || this.flavor.indexOf('@moved')!==-1) ? false : true
+        return (this.primaryDamage.amount.indexOf('@')!==-1 || this.secondaryDamage.amount.indexOf('@')!==-1 || this.flavor.indexOf('@elevation')!==-1 || this.flavor.indexOf('@moved')!==-1) ? false : true
     }
 
     get primaryDamage(){
         return {
-            amount: this.amount,
-            save: this.save,
-            type: this.type,
+            amount: this._part.amount,
+            save: this._part.save,
+            type: this._part.type,
         }
     }
 
     get requiresSaveFail(){
-        return this.save === "N" ? false : true
+        return (this.primaryDamage.save === "N" || this.secondaryDamage.save ==='N') ? false : true
     }
 
     get requiresSaveSuccess(){
-        return this.save === "H" ? true : false
-    }
-
-    get _save(){
-        return this._part.save
-    } 
-    
-    get save(){
-        return !this.data.danger.save.enable ? "F" : this._save
+        return (this.primaryDamage.save === "H" || this.secondaryDamage.save ==='H') ? true : false
     }
 
     get secondaryDamage(){
@@ -1732,79 +1729,108 @@ class damageToken extends executable{
         await super.play()
         if(this._cancel) return
         this.isBulk ? await this._bulkWorkflow() : await this._individualWorkflow()
-        if(this._damageResults) this._messageDamage()
+        if(this._damageResults.length) this._messageDamage()
+    }
+
+    async _applyDamage(options){
+        if(!options.targets.length) return
+        
+        const damages = dnd5e.dice.aggregateDamageRolls(options.damageRolls, {respectProperties: true}).map(roll => ({
+            value: roll.total,
+            type: roll.options.type
+        }));
+
+        const message = await ChatMessage.create(
+            {flavor: options.flavor, type: CONST.CHAT_MESSAGE_STYLES.OOC, rolls: options.damageRolls, emote:false, flags: {
+                dnd5e: { targets: options.targets.map(target => ({
+                    name: target.name,
+                    img: target.texture.src,
+                    uuid: target.actor.uuid,
+                    ac: target.actor.system.attributes.ac.value
+             }))
+            }
+            }
+        })
+
+        for(const token of options.targets){
+            if(this._apply) await token.actor.applyDamage(damages, {multiplier: 1, invertHealing: false, ignore: false}); 
+            this._damageResults.push({token: token, flavor: options.flavor, name: token.name, damages: damages} )    
+        }
     }
 
     async _bulkWorkflow(){
+        let success = [], remainder = [];
+        if(this.data.hasSuccesses && this.hasSaves){
+            success = this.data.save.succeeded
+            remainder = this.data.save.failed
+        } else {
+            remainder = this.targets
+        }
+
+        const damageRolls = [], successDamageRolls = []
         for (const damage of this.damages){
-            const damageRoll = await new Roll(damage.amount).evaluate()
-            if(damage.save==='F'){
-                await this._calculateDamage(false, damageRoll, this.targets, '', damage)
-            } 
-            else { 
-                if(this.data.save.failed.length) await this._calculateDamage(false, damageRoll, this.data.save.failed, '', damage)
-                if(damage.save === 'H' && this.data.hasSuccesses) await this._calculateDamage(true, damageRoll, this.data.save.succeeded, flavor, damage)
+            if(remainder.length){
+                const damageRoll = await new this.damageRoll(damage.amount, {}, {type: damage.type}).evaluate();     
+                damageRolls.push(damageRoll)
+            }
+            if(success.length){
+                const successDamageRoll =  damage.save ==='N' ? await new this.damageRoll('0', {}, {type: damage.type}).evaluate() : await new this.damageRoll(`floor((${damage.amount})/2)`, {}, {type: damage.type}).evaluate();     
+                successDamageRolls.push(successDamageRoll)
             }
         }
+
+        if(remainder.length) await this._applyDamage({targets:remainder, damageRolls: damageRolls, flavor: this.flavor})
+        if(success.length) await this._applyDamage({targets:success, damageRolls: successDamageRolls, flavor: this.flavor})
     }
 
     async _individualWorkflow(){
-        let flavor =  this.flavor;
-        for (const damage of this.damages){
-            for (const token of this.targets){
-                if(damage.save ==='N' && this.data.save.succeeded.find(t => t.id === token.id)) continue;
-                const half = (damage.save === 'H' && this.data.save.succeeded.find(t => t.id === token.id)) ? true : false;
-                const mvMods = this.data.tokenMovement.find(t => t.tokenId === token.id);
-                const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.hz ? mvMods.hz : 0), (mvMods?.v ? mvMods.v : 0));
+        for (const token of this.targets){
+            const damageRolls = []
+            //handle movement and elevation paramters
+            const mvMods = this.data.tokenMovement.find(t => t.tokenId === token.id);
+            const e = mvMods?.e ? mvMods.e : 0; const mv = Math.max((mvMods?.hz ? mvMods.hz : 0), (mvMods?.v ? mvMods.v : 0));
+            
+            for (const damage of this.damages){
+                if(this.hasSaves && damage.save ==='N' && this.data.save.succeeded.find(t => t.id === token.id)) {
+                    damageRolls.push(await new this.damageRoll('0', {}, {type: damage.type}).evaluate())
+                    continue;
+                }
+               
                 let dice = damage.amount.replace(/@elevation/i,e).replace(/@moved/i,mv);
-                const damageRoll = await new Roll(dice).evaluate();     
-                flavor = flavor.replace(/@elevation/i,e).replace(/@moved/i,mv);
-                await this._calculateDamage(half, damageRoll, [token], flavor, damage)
+
+                //apply half damage
+                if(this.hasSaves && damage.save === 'H' && this.data.save.succeeded.find(t => t.id === token.id)) dice = `floor((${dice})/2)`
+                const damageRoll = await new this.damageRoll(dice, {}, {type: damage.type}).evaluate();     
+                damageRolls.push(damageRoll)
             }
-            flavor = ''
-        }
-    }
-
-    async _calculateDamage(half, damageRoll, tokens, flavor, damage){
-        let roll; const types = damageTypes();
-        let title = `${damageRoll.result} ${types[damage.type]} on a ${damageRoll?.formula} roll${half ? ' (halved due to save)': ''}`;
-        if(half){
-            let hf = Math.floor(damageRoll.total/2);
-            roll = await new Roll(`${hf}`).evaluate();
-        } else {roll = damageRoll}
-        await this._applyDamage(tokens, roll, damage.type, flavor, title)
-    }
-
-    async _applyDamage(tokens, damage, type, flavor, title){
-        if(!damage?.total || !tokens.length) return
-        const result = await new MidiQOL.DamageOnlyWorkflow(tokens[0].actor, tokens[0], damage.total, type, tokens, damage, {flavor: title}) 
-        await wait(1000)
-        for(const token of tokens){
-            const res = {token: token, flavor: flavor, name: token.name, applied: result.damageList.find(d => d.tokenId === token.id)?.appliedDamage ?? 0, damage: damage.total, type: result.defaultDamageType}
-            if (token.id in this._damageResults){
-                this._damageResults[token.id].secondary = res
-            } else {
-                this._damageResults[token.id] = {primary: res}
-            }            
+            await this._applyDamage({targets:[token], damageRolls: damageRolls, flavor: this.flavor.replace(/@elevation/i,e).replace(/@moved/i,mv)})
         }
     }
 
     async _messageDamage(){
-        for(const d in this._damageResults){
-            const damage = this._damageResults[d]
-            let text
-            const flavor = (this.flavorIsIndividual && damage.primary.flavor) ? damage.primary.flavor + '. ' : ''
-            const applied = (damage.secondary ? damage.primary.applied + damage.secondary.applied : damage.primary.applied)
-            const diffPrim = damage.primary.damage - damage.primary.applied
-            const adjPrim = (diffPrim === 0 ? '' : (diffPrim > 0 ? 'reduced' : 'increased'))
-            if(damage.secondary){
-                const diffSec = damage.secondary.damage - damage.secondary.applied
-                const adjSec = (diffSec === 0 ? '' : (diffSec > 0 ? 'reduced' : 'increased'))
-                text = `<div>${flavor}${damage.primary.name} takes <span class="danger-zone-label">${applied}</span> damage from ${damage.primary.type}${damage.primary.type === damage.secondary.type ? '' : ' and ' + damage.secondary.type}${adjPrim ? ' ('+ damage.primary.type + ' ' + adjPrim + ' to ' + damage.primary.applied + ' from ' + damage.primary.damage + ' ' + (adjSec ? ' and ' : ')') : ''}${adjSec ? (adjPrim ? '' : ' (') + damage.secondary.type + ' ' + adjSec + ' to ' + damage.secondary.applied + ' from ' + damage.secondary.damage +  ')' : ''}.<br><hr></div>`
-            } else {
-                text = `<div>${flavor}${damage.primary.name} takes <span class="danger-zone-label">${applied}</span> damage from ${damage.primary.type}${adjPrim ? ' (' + adjPrim + ' from ' + damage.primary.damage + ')' : ''}.<br><hr></div>`
+        for(const damage of this._damageResults){
+            let text = '', 
+                hasSecondary = damage.damages.length > 1 ? true : false, 
+                primary= damage.damages[0], 
+                secondary = damage.damages[1], 
+                primSaveMessage = '',
+                secSaveMessage = '';
+            const flavor = (this.flavorIsIndividual && damage.flavor) ? damage.flavor + '. ' : ''
+
+            if(this.hasSaves){
+                primSaveMessage += this._saveResult(this.primaryDamage, damage)
+                secSaveMessage += this._saveResult(this.secondaryDamage, damage)
             }
-            if(getActorOwner(damage.primary.token)) {
+
+            text += `<div>${flavor}${damage.name} damaged for `
+
+            if(hasSecondary){
+                text += `<span class="danger-zone-label">${primary.value}</span> ${primary.type}${primSaveMessage} and <span class="danger-zone-label">${secondary.value}</span> ${secondary.type}${secSaveMessage}`
+            } else {
+                text += `<span class="danger-zone-label">${primary.value}</span> ${primary.type}${primSaveMessage}`
+            }
+            text += `.<br><hr></div>`
+            if(getActorOwner(damage.token)) {
                 this._chatMessageResults += text
             } else {
                 this._gmDamageCount = ++this._gmDamageCount
@@ -1822,6 +1848,21 @@ class damageToken extends executable{
                 content: `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> GM Applied Damage</div><div class="danger-zone-chat-message-body">${this._gmChatMessageResults}</div>`,
                 whisper: ChatMessage.getWhisperRecipients("GM") 
             })
+        }
+    }
+
+    _saveResult(damageData, damageResults){
+        if(this.data.save.succeeded.find(t => t.id === damageResults.token.id)){
+            switch(damageData.save){
+                case 'F': 
+                    return ' (full damage on save)'
+                case 'H': 
+                    return ' (half damage on save)'
+                default:
+                    return ' (no damage on save)' 
+            }
+        } else {
+            return ' (failed save)'
         }
     }
 }
