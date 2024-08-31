@@ -368,16 +368,12 @@ export class zone {
     return this.trigger.events.filter(e => COMBAT_EVENTS.includes(e)) 
   }
 
-  get combatInitiativeEvents(){
-    return 
-  }
-
   get danger(){
     return dangerZoneType.getDanger(this.dangerId)
   }
 
   get eventsIncludingInitiative(){
-    return this.combatInitiativeEvents.map(i => COMBAT_PERIOD_INITIATIVE_EVENTS.includes(i) ? (i + '-' + (this.trigger.initiative ? this.trigger.initiative.toString() : '0')) : i)
+    return this.combatEvents.map(i => COMBAT_PERIOD_INITIATIVE_EVENTS.includes(i) ? (i + '-' + (this.trigger.initiative ? this.trigger.initiative.toString() : '0')) : i)
   }
 
   get flaggablePlaceables(){
@@ -541,6 +537,10 @@ export class zone {
       await wait(750)
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
     }
+  }
+
+  isEvent(event){
+    return (event && this.trigger.events.includes(event)) ? true : false
   } 
 
   isSourceActor(id){
@@ -701,7 +701,7 @@ export class zone {
               await this.clearWeather({includeFXMaster: fxMasterOn, includeFoundry: !this.danger.weatherIsFoundry})
           break;
           case 'T': 
-              await this.clearWeather({includeFXMaster: fxMasterOn, includeFoundry: false, effect: this.type})
+              await this.clearWeather({includeFXMaster: fxMasterOn, includeFoundry: false, effect: this.dangerId})
           break;
           default: return false
         }
@@ -712,10 +712,10 @@ export class zone {
             ids=this.scene.scene[data.placeable].filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId === this.id).map(t => t.id);
               break;
           case 'T':
-            ids=this.scene.scene[data.placeable].filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.type).map(t => t.id);
+            ids=this.scene.scene[data.placeable].filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type === this.dangerId).map(t => t.id);
               break;
           case 'R':
-            ids=this.scene.scene[data.placeable].filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.trigger === this.trigger).map(t => t.id);
+            ids=this.scene.scene[data.placeable].filter(t => this.isEvent(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.trigger)).map(t => t.id);
               break;
           case 'A':
             ids=this.scene.scene[data.placeable].filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]).map(t => t.id);
