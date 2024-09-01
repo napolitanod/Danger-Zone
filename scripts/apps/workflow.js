@@ -3570,7 +3570,7 @@ class weather extends executable{
     }
 
     get has(){
-        return (super.has && this.type) ? true : false
+        return (super.has && this.type && !this.data.previouslyExecuted) ? true : false
     }
 
     get animations(){

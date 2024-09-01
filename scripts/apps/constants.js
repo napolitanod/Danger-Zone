@@ -26,7 +26,14 @@ export const WORLDZONE = {
         top: 0
     },
     source: {
+        area: '',
         actors: [],
+        limit: {
+          min: 0,
+          max: 0
+        },
+        tags: [],
+        target: ''
     },
     replace: {
         light: 'N',
@@ -44,10 +51,14 @@ export const WORLDZONE = {
           enable: false,
           prompt: true
         },
-        dispositions: []
+        dispositions: [],
+        exclusion: {
+          conditions: []
+        }
     },
     trigger: {
         delay: {min: 0, max: 0},
+        likelihood: 100,
         loop: 1,
         operation: "Q"
     },
@@ -319,6 +330,13 @@ export const SOURCEAREA = {
     "D": "DANGERZONE.source.area.danger.placeable",
     "T": "DANGERZONE.source.area.tag",
     "Z": "DANGERZONE.source.area.zone.placeable"
+}
+
+export const SOURCEAREAGLOBALZONE = {
+    "": "DANGERZONE.source.area.none",
+    "A": "DANGERZONE.source.area.actor",
+    "D": "DANGERZONE.source.area.danger.placeable",
+    "T": "DANGERZONE.source.area.tag"
 }
 
 export const SOURCEAREATARGET = {
@@ -603,6 +621,7 @@ export const TILESBLOCK = {
 export function setModOptions(){
     if(taggerOn){
         SOURCEAREA["C"] = "DANGERZONE.source.area.danger.tile"; 
+        SOURCEAREAGLOBALZONE["C"] = "DANGERZONE.source.area.danger.tile"; 
         SOURCEAREA["Y"] = "DANGERZONE.source.area.zone.tile";  
     }     
 }

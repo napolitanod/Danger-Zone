@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {activeEffectOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, portalOn} from '../index.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE,determineMacroList, determineMacroListUuid,  REGIONSHAPETYPEOPTIONS, dirTypes, doorTypes, ELEVATIONMOVEMENT, getCompendiumOps, HORIZONTALMOVEMENT, MIRRORIMAGEOPTIONS, MIRRORROTATIONOPTIONS, MOVETYPES, OFFSETOPTIONS, regionEvents, REGIONVISIBILITY, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters} from './constants.js';
+import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE,determineMacroList, determineMacroListUuid,  REGIONSHAPETYPEOPTIONS, dirTypes, doorTypes, ELEVATIONMOVEMENT, getCompendiumOps, HORIZONTALMOVEMENT, MIRRORIMAGEOPTIONS, MIRRORROTATIONOPTIONS, MOVETYPES, OFFSETOPTIONS, regionEvents, REGIONVISIBILITY, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCEAREATARGET, SOURCEAREAGLOBALZONE, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters, WORLDZONE} from './constants.js';
 import {stringToObj} from './helpers.js';
 
 export class DangerForm extends FormApplication {
@@ -832,9 +832,12 @@ class DangerZoneDangerFormGlobalZone extends FormApplication {
       }
 
     getData(options) {
+      const obj = foundry.utils.mergeObject(WORLDZONE, this.data)
       return {
-        "zone": this.data,
+        zone: obj,
         actorOps: actorOps(),
+        hideElevationPrompt: !obj.target.choose.enable,
+        hideOperation: obj.trigger.loop > 1 ? false : true,
         replaceOps: DANGERZONEREPLACE,
         lightReplaceOps: DANGERZONELIGHTREPLACE,
         stretchOps: STRETCH,
@@ -842,8 +845,11 @@ class DangerZoneDangerFormGlobalZone extends FormApplication {
         operationOps: TRIGGEROPERATION,
         regionReplaceOps: DANGERZONEREGIONREPLACE,
         soundReplaceOps: DANGERZONESOUNDREPLACE,
+        sourceAreaOps: SOURCEAREAGLOBALZONE,
+        sourceTargetOps: SOURCEAREATARGET,
         wallReplaceOps: DANGERZONEWALLREPLACE,
-        weatherReplaceOps: DANGERZONEWEATHERREPLACE
+        weatherReplaceOps: DANGERZONEWEATHERREPLACE,
+        zoneTypeOps: dangerZoneType.dangerList
       } 
     }
 
@@ -856,13 +862,56 @@ class DangerZoneDangerFormGlobalZone extends FormApplication {
       const action = $(event.currentTarget).data().action, val = event.currentTarget.value, checked = event.currentTarget.checked;
       switch (action) {
         case 'loop-change': 
-          const op = document.getElementById(`dz-operation`);
+          const op = document.getElementById(`dz-operation-global`);
           val > 1 ? op.classList.remove('dz-hidden') : op.classList.add('dz-hidden')
+          this.setPosition()
+          break;
+        case 'source-area':
+          this._handleSourceTag(val)
+          break;  
+        case 'template-toggle': 
+          const templt = document.getElementById(`dz-elevation-prompt-global`);
+          checked ? templt.classList.remove('dz-hidden') : templt.classList.add('dz-hidden')
           this.setPosition()
           break;
       }
     }
   
+    _handleSourceTag(sourceArea = this.data?.source?.area ?? ''){
+      const tag = $(this.form).find('#dz-source-tag-global')
+      const sourceT = $(this.form).find('#dz-source-tag-tag-global')
+      const sourceD = $(this.form).find('#dz-source-tag-danger-global')
+      switch(sourceArea){
+        case 'C':
+        case 'D':
+          tag.removeClass('dz-hidden');
+          sourceD.removeClass('dz-hidden');
+          tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.danger.label'))
+          $(this.form).find('#dz-source-tag-danger-global').attr('name', 'source.tags')
+          break;
+        case 'T':
+          tag.removeClass('dz-hidden');
+          sourceT.removeClass('dz-hidden');
+          tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.tag.label'))
+          $(this.form).find('#dz-source-tag-tag-global').attr('name', 'source.tags')
+          break;
+        default:
+          tag.addClass('dz-hidden');
+          break;
+      }
+      if(!['C','D'].includes(sourceArea)){
+        sourceD.addClass('dz-hidden')
+        sourceD.removeAttr('name')
+        sourceD.val([])
+      }
+      if(sourceArea !=='T'){
+        sourceT.addClass('dz-hidden')
+        sourceT.removeAttr('name')
+        sourceT.val([])
+      }
+      this.setPosition()
+    }
+
     async _updateObject(event, formData) {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.globalZone = expandedData;
