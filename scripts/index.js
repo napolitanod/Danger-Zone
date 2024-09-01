@@ -253,6 +253,10 @@ Hooks.once('init', async function() {
 		app._handleSourceTag();
 	});
 
+	Hooks.on("renderDangerZoneDangerFormGlobalZone", (app, html, options) => {
+		app._handleSourceTag();
+	});
+
     //hook to ensure that, on settings render, the search is applied to the list
 	Hooks.on("renderDangerZoneTypesForm", (app, html, options) => {
         app._filter();

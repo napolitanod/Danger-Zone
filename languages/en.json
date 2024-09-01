@@ -157,7 +157,7 @@
             "loop.label": "Loop Count",
             "loop.description": "Set the number of danger executions when this zone is triggered. Each loop will have the likelihood assessed separately when executed.",
             "name": "Configure Zone",
-            "operation.description": "Determines the trigger operation of each loop.\n  Sequential: Next loop fires once the current loop completes.\n  Staggered: All loops fire at the same time and 'Delay Start' is calculated separately for each loop.\n  Together: 'Delay Start' is calculated and performed once and then all loops are triggered directly after.",
+            "operation.description": "Determines the trigger operation of each loop.\n  Sequential: Next loop fires once the current loop completes.\n  Staggered: All loops fire at the same time and 'Delay Start' is calculated separately for each loop.\n  Together: 'Delay Start' is calculated and performed once and then all loops are triggered directly after.\nnote: a danger's weather part is only played on the first loop.",
             "operation.label": "Loop Operation",
             "placeTemplate.label": "Choose Location",
             "placeTemplate.description": "On trigger, you will be prompted to select the scene location to target with the danger (otherwise the location is randomly selected from within the bounds of the zone and bleed). If the location that you select is fully outside of the zone, the danger effects will generate but tokens outside of the zone will not be targeted. ",
