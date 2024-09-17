@@ -1,7 +1,7 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {getSceneRegionList} from './helpers.js';
-import {COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENT_OPTIONS, TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, DANGERZONEWEATHERREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps, ZONEEXTENSIONINTERACTIONOPTIONS, ZONEEXTENSIONSEQUENCEOPTIONS} from './constants.js';
+import {COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENT_OPTIONS, TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, DANGERZONEWEATHERREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps, ZONEEXTENSIONINTERACTIONOPTIONS, ZONEEXTENSIONSEQUENCEOPTIONS, MOVEMENT_EVENTS} from './constants.js';
 
 export class DangerZoneForm extends FormApplication {
   constructor(app, zoneId, sceneId, dangerId, ...args) {
@@ -52,6 +52,8 @@ export class DangerZoneForm extends FormApplication {
       hideInit: this.zone.hasCombatInitiativeEvent ? false : true,
       hideOperation: this.zone.trigger.loop > 1 ? false : true,
       hideTargetCombatant: this.zone.hasCombatEvent ? false : true,
+      //hideTargetStartMovement: this.zone.hasAuraEvent ? false : true,
+      hideTriggerMovementWait: this.zone.hasMovementEvent ? false : true,
       hideWeight: !this.zone.trigger.random,
       hideWorld: this.dangerId ? false : true,
       replaceOps: DANGERZONEREPLACE,
@@ -112,6 +114,8 @@ export class DangerZoneForm extends FormApplication {
       case 'trigger-select': {
         const targetCom = document.getElementById(`dz-target-combatant`);
         const triggerCom = document.getElementById(`dz-combatantInZone`);
+        const targetMvWait = document.getElementById(`dz-trigger-movement-wait`);
+        const triggerMvStart = document.getElementById(`dz-target-movement-start`);
         const init = document.getElementById(`dz-initiative`);
         if(COMBAT_EVENTS.find(e => val.includes(e))){
            targetCom.classList.remove('dz-hidden')
@@ -125,6 +129,16 @@ export class DangerZoneForm extends FormApplication {
         } else {
           init.classList.add('dz-hidden')
           init.children[1].children[0].value=0;
+        }
+        // if(val.includes('aura')){
+        //   triggerMvStart.classList.remove('dz-hidden')
+        // } else {
+        //   triggerMvStart.classList.add('dz-hidden')
+        // }
+        if(MOVEMENT_EVENTS.find(e => val.includes(e))){
+          targetMvWait.classList.remove('dz-hidden')
+        } else{
+          targetMvWait.classList.add('dz-hidden')
         }
         this.setPosition()
         break;

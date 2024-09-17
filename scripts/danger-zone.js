@@ -137,6 +137,14 @@ export class dangerZone {
     return this.getAllZonesFromScene(sceneId).filter(zn => zn.hasMovementEvent)
   }
 
+  static getMovementCompleteZonesFromScene(sceneId) {
+    return this.getMovementZonesFromScene(sceneId).filter(zn => zn.hasMovementComplete)
+  }
+
+  static getMovementNotCompleteZonesFromScene(sceneId) {
+    return this.getMovementZonesFromScene(sceneId).filter(zn => !zn.hasMovementComplete)
+  }
+
   /**
    * Returns all zones on a given scene that are either manual and enabled or triggered in an automated fashion
    * @param {string} sceneId  the scene id
@@ -250,7 +258,7 @@ export class dangerZone {
     }
 
     if(!keptZones) return
-    const maybe = await new Roll(`1d${max}`).evaluate({async: true})
+    const maybe = await new Roll(`1d${max}`).evaluate()
     const randomResult = maybe.result;
 
     this.log(false,'Random Zone Search ', {zones:keptZones, roll: randomResult, range: {min: 1, max:max}});
@@ -317,6 +325,9 @@ export class zone {
       initiative: 0,
       likelihood: 100,
       loop: 1,
+      movement: {
+        wait: false
+      },
       operation: "Q",
       prompt: false,
       random: false,
@@ -335,6 +346,7 @@ export class zone {
     this.source = {
       area: '',
       actors: [],
+      dispositions: [],
       limit: {
         min: 0,
         max: 0
@@ -355,7 +367,10 @@ export class zone {
       dispositions: [],
       exclusion: {
         conditions: []
-      }
+      }//,
+      //movement: {
+        //start: false
+     // }
     },
     this.title = ''
   }
@@ -383,6 +398,10 @@ export class zone {
       .concat(this.scene.scene.regions.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]))
   }
 
+  get hasAuraEvent(){
+    return this.trigger.events.includes('aura') ? true : false
+  }
+
   get hasAutomatedEvent(){
     return this.trigger.events.find(e => AUTOMATED_EVENTS.includes(e)) ? true : false 
   }
@@ -406,9 +425,21 @@ export class zone {
   get hasMovementEvent(){
     return this.trigger.events.find(e => MOVEMENT_EVENTS.includes(e)) ? true : false
   }
+
+/*   get hasMovementStartLocation(){
+    return this.hasAuraEvent && this.target.movement?.start ? true : false
+  } */
+
+  get hasMovementComplete(){
+    return this.trigger.movement?.wait ? true : false
+  }
   
   get hasSourceActor(){
-    return this.source.actors.length ? true : false
+    return (this.source.actors.length || this.source.dispositions.length) ? true : false
+  }
+
+  get hasSourceDisposition(){
+    return this.source.dispositions.length ? true : false
   }
 
   get hasTargetActor(){
@@ -422,9 +453,13 @@ export class zone {
   get hasTargetExclusionCondition(){
     return this.target.exclusion.conditions.length ? true : false
   }
+  
+  get movementEvents(){
+    return this.trigger.events.filter(e => MOVEMENT_EVENTS.includes(e)) 
+  }
 
   get sources(){
-    return this.scene.scene.tokens.filter(t => this.isSourceActor(t.actor?.id)) 
+    return this.scene.scene.tokens.filter(t => this.isSourceActor(t)) 
   }
 
   get eventsDescription(){
@@ -543,12 +578,9 @@ export class zone {
     return (event && this.trigger.events.includes(event)) ? true : false
   } 
 
-  isSourceActor(id){
-    return (id && this.source.actors.includes(id)) ? true : false
-  }
-
-  isSource(token, sources = []){
-    return sources.length ? sources.filter(s => s.id === token.id).length > 0 : this.isSourceActor(token.actor?.id)
+  isSourceActor(token){
+    const id = token?.actor?.id; 
+    return ((this.hasSourceActor && id && this.source.actors.includes(id)) || (this.hasSourceDisposition && this.tokenHasSourceDisposition(token))) ? true : false
   }
 
   isTargetActor(id){
@@ -556,20 +588,20 @@ export class zone {
   }
 
   async sourceOnScene(){
-    if(this.hasSourceActor && this.scene.scene.tokens.find(t => this.isSourceActor(t.actor.id))) return true
+    if(this.hasSourceActor && this.scene.scene.tokens.find(t => this.isSourceActor(t))) return true
     const area = await this.sourceArea()
     return area.documents.length ? true : false
   }
 
   sourceAdd(tokens){
-    return this.sources.concat(tokens.filter(t => !this.isSourceActor(t.actor?.id)))
+    return this.sources.concat(tokens.filter(t => !this.isSourceActor(t)))
   }
 
   async sourceArea(){
     const obj = {documents: [], target: this.source.target}
     switch(this.source.area){
         case 'A':
-          obj['documents'] = this.scene.scene.tokens.filter(t => this.isSourceActor(t.actor.id));
+          obj['documents'] = this.scene.scene.tokens.filter(t => this.isSourceActor(t));
           break;
         case 'C':
           obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type));
@@ -596,7 +628,7 @@ export class zone {
       case "I":
         return tokens.filter(t => !sources.find(s => s.id === t.id))
       case "S":
-        return tokens.filter(t => !this.isSourceActor(t.actor?.id)).concat(sources)
+        return tokens.filter(t => !this.isSourceActor(t)).concat(sources)
       case "O":
         return sources
       default:
@@ -604,9 +636,9 @@ export class zone {
     }
   }
 
-  async sourceTrigger(actorIds){
-    const trigger = this.source.trigger ? (this.source.trigger === 'C' ? await this.sourceOnScene() : actorIds.find(a => this.isSourceActor(a.id))) : true;
-    dangerZone.log(false,'Determining Source Trigger ', {zone: this, triggerActors: actorIds, trigger: trigger});
+  async sourceTrigger(tokens){
+    const trigger = this.source.trigger ? (this.source.trigger === 'C' ? await this.sourceOnScene() : tokens.find(token => this.isSourceActor(token))) : true;
+    dangerZone.log(false,'Determining Source Trigger ', {zone: this, triggeTokens: tokens, trigger: trigger});
     return trigger
   }
 
@@ -637,6 +669,10 @@ export class zone {
     await this._setFlag();
     dangerZone.initializeTriggerButtons()
     return
+  }
+
+  tokenHasSourceDisposition(token){
+    return this.source.dispositions?.includes(token?.disposition?.toString())
   }
 
   tokenHasTargetDisposition(token){

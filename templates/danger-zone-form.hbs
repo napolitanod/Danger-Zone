@@ -119,6 +119,15 @@
                     <input type="checkbox" name="trigger.combatantInZone" {{checked zone.trigger.combatantInZone}}/>
                 </div>
             </div>
+            <div class="form-group {{#if hideTriggerMovementWait}} dz-hidden{{/if}}" id="dz-trigger-movement-wait">
+                <label>
+                    {{localize 'DANGERZONE.edit-form.trigger.movement.wait.label'}}
+                    <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.trigger.movement.wait.description'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <input type="checkbox" name="trigger.movement.wait" {{checked zone.trigger.movement.wait}}/>
+                </div>
+            </div>
         </fieldset>
         <div class="form-group">
             <label>
@@ -250,9 +259,26 @@
          <fieldset>
             <legend>{{localize 'DANGERZONE.edit-form.source.actor.label'}}</legend>
             <div class="form-group">
+                <label>
+                    {{localize 'DANGERZONE.edit-form.source.actor.actors.label'}}
+                </label>
+            </div>
+            <div class="form-group">
                 <div class="form-fields">
                     <multi-select name="source.actors" value="{{zone.source.actors}}">
                         {{selectOptions actorOps selected=zone.source.actors}}
+                    </multi-select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    {{localize 'DANGERZONE.edit-form.source.actor.dispositions.label'}}
+                </label>
+            </div>
+            <div class="form-group">
+                <div class="form-fields">
+                    <multi-select name="source.dispositions" value="{{zone.source.dispositions}}">
+                        {{selectOptions tokenDispositionOps selected=zone.source.dispositions localize=true}}
                     </multi-select>
                 </div>
             </div>
@@ -339,6 +365,15 @@
                 <input type="checkbox" name="target.isCombatant" {{checked zone.target.isCombatant}} />
             </div>
         </div>
+{{!--         <div class="form-group {{#if hideTargetStartMovement}} dz-hidden{{/if}}" id="dz-target-movement-start">
+            <label>
+                {{localize 'DANGERZONE.edit-form.targetMovementStart.label'}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.targetMovementStart.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <input type="checkbox" name="target.movement.start" {{checked zone.target.movement.start}}/>
+            </div>
+        </div> --}}
          <fieldset>
             <legend>{{localize 'DANGERZONE.edit-form.actor.label'}}</legend>
             <div class="form-fields actor-select">

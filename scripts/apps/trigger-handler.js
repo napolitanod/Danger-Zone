@@ -57,10 +57,13 @@ export class triggerManager {
         this._cancels.push({zone: zn, reason: message})
     }
 
-    _loadTokens(ids){
-        const arr = [];
-        for(const token of ids){
-            const t = this.scene.tokens.get(token._id ? token._id : token.id);
+    _loadTokens(ids, options = {}){
+        const arr = []; let startingArr = ids;
+        if(['aura'].includes(options.event) && options.type === 'target' && options.zone) {
+            startingArr = options.zone.zoneEligibleTokens(ids);
+        }
+        for(const token of startingArr){
+            let t = this.scene.tokens.get(token._id ? token._id : token.id);
             if(t) arr.push(t)
         }
         return arr
@@ -68,11 +71,11 @@ export class triggerManager {
 
     _options(zone, event){
         const options = {}
-        if(event!== 'move'){
-            if(this.data?.options?.location && Object.keys(this.data.options.location).length && event !== 'aura') options['location'] = this.data.options.location
+        if(!['move'].includes(event)){
+            if(this.data?.options?.location && Object.keys(this.data.options.location).length && !['aura'].includes(event)) options['location'] = this.data.options.location
             if(this.data?.options?.boundary && Object.keys(this.data.options.boundary).length) options['boundary'] = new boundary(this.data.options.boundary.A, this.data.options.boundary.B)
-            if(this.data?.options?.targets && this.data.options.targets.length) options.targets = this._loadTokens(this.data.options.targets)
-            if(this.data?.options?.sources && this.data.options.sources.length) options.sources = this._loadTokens(this.data.options.sources)
+            if(this.data?.options?.targets && this.data.options.targets.length) options.targets = this._loadTokens(this.data.options.targets, {zone: zone, event: event, type: 'target'})
+            if(this.data?.options?.sources && this.data.options.sources.length) options.sources = this._loadTokens(this.data.options.sources, {zone: zone, event: event, type: 'source'})
             if(zone.target.isCombatant && COMBAT_EVENTS.includes(event)){
                 const tokens = this.getTriggerCombatant(event);
                 if(tokens.length && !options.location && !options.boundary) options['location'] = {coords: {x: tokens[0].x, y: tokens[0].y}, elevation: tokens[0].elevation}
@@ -116,19 +119,19 @@ export class triggerManager {
                         }
                     }  
                     if(event === 'turn-start'){
-                        if(!(await zn.sourceTrigger([this.combatant.actorId]))){
+                        if(!(await zn.sourceTrigger([this.combatant.token]))){
                             this._cancelZone(zn, `Failed ${event} source trigger check on combatant ${this.combatant.name}`)
                             continue
                         }
                     }
                     else if(event == 'turn-end'){
-                        if(!(await zn.sourceTrigger([this.previousCombatant.actorId]))){
+                        if(!(await zn.sourceTrigger([this.previousCombatant.token]))){
                             this._cancelZone(zn, `Failed ${event} source trigger check on previous combatant ${this.previousCombatant.name}`)
                             continue
                         }
                     } 
                     else {
-                        if(!(await zn.sourceTrigger(this.combatants.map(c => c.actorId)))){
+                        if(!(await zn.sourceTrigger(this.combatants.map(c => c.token)))){
                             this._cancelZone(zn, `Failed ${event} source trigger check on combatants ${this.combatants.map(c => c.name)}`)
                             continue
                         }
@@ -191,34 +194,43 @@ export class triggerManager {
         }
     }
 
-    static async findMovementEvents(token, update){
+    static async zoneMovement(token, update, movementPromise){
         const sceneId = token.parent.id;
         const scene = game.scenes.get(sceneId);
         if(!scene?.grid?.type){return dangerZone.log(false,'No Movement Triggers When Gridless ', {token: token, update:update})}
+        triggerManager.findMovementEvents(token, update, {end: false, sceneId: sceneId})
+        triggerManager.findMovementEvents(token, update, {movementPromise: movementPromise, end: true, sceneId: sceneId})
+    }
 
-        const sceneZones = dangerZone.getMovementZonesFromScene(sceneId);
+    static async findMovementEvents(token, update, options){
+        const sceneZones = options.end ? dangerZone.getMovementCompleteZonesFromScene(options.sceneId) : dangerZone.getMovementNotCompleteZonesFromScene(options.sceneId);
+        if(!sceneZones.length) return
+
         const zones = []
         const move = dangerZoneDimensions.tokenMovement(token, update);
+        if(options.end) await CanvasAnimation.getAnimation(options.movementPromise)?.promise
 
         for (const zn of sceneZones) {
-            if(!(await zn.sourceTrigger([token?.actor?.id]))){
+            if(!(await zn.sourceTrigger([token]))){
                 continue;
             }
             const zoneBoundary = await zn.scene.getZoneBoundary();
-            //account for the token being in start position - update to end position
-            if('x' in update) token.x = update.x
-            if('y' in update) token.y= update.y
-            if('elevation' in update) token.elevation = update.elevation
 
             const zoneTokens = zoneBoundary.tokensIn([token]);
+
+            if('x' in update) token.x = update.x
+            if('y' in update) token.y = update.y
+            if('elevation' in update) token.elevation = update.elevation
             if(zoneTokens.length){
                 zones.push(zn)
             }
         }
 
+        const data = {provokingMove: move, update: update, options: {targets: [token], location: options.end ? move.end : move.start}}
+
         if(zones.length){
-            const tm = new triggerManager(sceneId, {provokingMove: move, update: update, options: {targets: [token], location:move.end}}, zones, "updateToken");
-            tm.log(`Initiating move trigger handler...`, {token: token, update:update, move: move});
+            const tm = new triggerManager(options.sceneId, data, zones, "updateToken");
+            tm.log(`Initiating ${options.end ? 'movement end' : 'movement start'} trigger handler...`, {token: token, data:data, move: move});
             await tm.movementTrigger()
         }
     }
@@ -240,8 +252,10 @@ export class triggerManager {
     }
 
     async movementTrigger(){
-        for(let i = 0; i < this.sceneZones.length; i++) { 
-            this.stageZones(this.sceneZones[i]);
+        for(const zn of this.sceneZones) { 
+            for(const event of zn.movementEvents){
+                this.stageZones(zn, event);
+            }
         }
         await this.reconcileRandomZones();
         this.zones.sort((a, b) => { return DANGERZONETRIGGERSORT[a.event] < DANGERZONETRIGGERSORT[b.event] ? -1 : (DANGERZONETRIGGERSORT[a.event] > DANGERZONETRIGGERSORT[b.event] ? 1 : 0)});

@@ -178,7 +178,11 @@
             "sound.replace.label": "Sounds",
             "sound.replace.description": "Choose what to do with existing Danger Zone created ambient sounds when this zone triggers.",
             "source":{
-                "actor.label": "Source Actors",
+                "actor":{
+                    "actors.label": "Actors",
+                    "dispositions.label": "Dispositions",
+                    "label": "Source Actors"
+                },
                 "area.label": "Source Area",
                 "area.description": "Defines a source area within the zone which may influence targeting",
                 "description": "The source may influence when and if a zone triggers. Many danger parts can be defined in relation to the zone's source.",
@@ -207,6 +211,8 @@
             "stretch.description": "Adjusts the danger's area of effect so that the stretch location remains fixed while the zone's top and bottom still constrict the possible initial target. 'Ground' uses 0 as the final bottom and 'Sky' uses 99999 as the final top. Example: Given 'rising from bottom' in a zone with bottom=2, top=10, and danger depth=3, and an initial target of bottom=5/top=8. The stretch will keep the top target = 8 but drop the bottom to 2, which equals the bottom of the zone.",
             "stretch.label": "Stretch",
             "target.description": "On trigger, the danger is placed within the zone's boundaries and tokens within the danger's dimensions become eligble targets.",
+            "targetMovementStart.description": "For aura trigger, the target location will be the moving token's start location (else it is the destination).",
+            "targetMovementStart.label": "At Start Position (Aura)",
             "targetCombatant.description": "For combat scoped triggers, this will target the location of the combatant and solely target the combatant unless 'Danger Targets All Tokens' is enabled.",
             "targetCombatant.label": "Target Current Combatant",
             "title.label": "Title",
@@ -214,8 +220,14 @@
             "token-condition-ex.description": "List of condition or effect names that, if active on token, will exclude that token from being a target of the danger.",
             "token-condition-ex.label": "Exclude if condition/effect",
             "token-disposition.label": "Dispositions",
-            "trigger.description": "The trigger defines the conditions that must be met for the danger to be invoked within this zone. Documentation at https://github.com/napolitanod/Danger-Zone/wiki/Triggers.",
-            "trigger.label": "Trigger",
+            "trigger":{
+                "description": "The trigger defines the conditions that must be met for the danger to be invoked within this zone. Documentation at https://github.com/napolitanod/Danger-Zone/wiki/Triggers.",
+                "label": "Trigger",
+                "movement":{
+                    "wait.label": "At Movement Complete",
+                    "wait.description": "Zone will not trigger until the token movement animation resolves"
+                }
+            },  
             "type.label": "Danger",
             "types.add": "View dangers",
             "wall.replace.label": "Walls",

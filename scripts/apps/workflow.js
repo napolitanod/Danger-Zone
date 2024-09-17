@@ -1695,9 +1695,9 @@ class damageToken extends executable{
 
     get primaryDamage(){
         return {
-            amount: this._part.amount,
-            save: this._part.save,
-            type: this._part.type,
+            amount: this._part.amount ?? '',
+            save: this._part.save ?? '',
+            type: this._part.type ?? '',
         }
     }
 
@@ -1710,7 +1710,11 @@ class damageToken extends executable{
     }
 
     get secondaryDamage(){
-        return this._part.secondary ? this._part.secondary : {}
+        return {
+            amount: this._part.secondary?.amount ?? '',
+            save: this._part.secondary?.save ?? '',
+            type: this._part.secondary?.type ?? ''
+        }
     } 
     
     get targets(){
