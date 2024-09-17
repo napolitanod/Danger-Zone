@@ -82,7 +82,7 @@ export function joinWithAnd(arr){
 }
 
 export async function maybe(){
-  const roll = await new Roll(`1d100`).evaluate({async: true})
+  const roll = await new Roll(`1d100`).evaluate()
   return roll
 }
 

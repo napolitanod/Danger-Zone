@@ -28,6 +28,7 @@ export const WORLDZONE = {
     source: {
         area: '',
         actors: [],
+        dispositions: [],
         limit: {
           min: 0,
           max: 0
