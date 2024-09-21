@@ -351,6 +351,9 @@ export class zone {
         min: 0,
         max: 0
       },
+      exclusion: {
+        conditions: []
+      },
       tags: [],
       target: '',
       trigger: ''
@@ -435,11 +438,19 @@ export class zone {
   }
   
   get hasSourceActor(){
-    return (this.source.actors.length || this.source.dispositions.length) ? true : false
+    return this.source.actors.length  ? true : false
+  }
+
+  get hasSourceTokenDefined(){
+    return (this.hasSourceActor || this.hasSourceDisposition || this.hasSourceExclusionCondition) ? true : false
   }
 
   get hasSourceDisposition(){
     return this.source.dispositions.length ? true : false
+  }
+
+  get hasSourceExclusionCondition(){
+    return this.source?.exclusion?.conditions?.length ? true : false
   }
 
   get hasTargetActor(){
@@ -579,8 +590,12 @@ export class zone {
   } 
 
   isSourceActor(token){
+    if(!this.hasSourceTokenDefined) return false
     const id = token?.actor?.id; 
-    return ((this.hasSourceActor && id && this.source.actors.includes(id)) || (this.hasSourceDisposition && this.tokenHasSourceDisposition(token))) ? true : false
+    if(this.hasSourceActor && id && !this.source.actors.includes(id)) return false
+    if(this.hasSourceDisposition && !this.tokenHasDisposition(token, 'source')) return false
+    if(this.hasSourceExclusionCondition && this.tokenHasExclusion(token, 'source')) return false
+    return true 
   }
 
   isTargetActor(id){
@@ -588,14 +603,11 @@ export class zone {
   }
 
   async sourceOnScene(){
-    if(this.hasSourceActor && this.scene.scene.tokens.find(t => this.isSourceActor(t))) return true
+    if(this.scene.scene.tokens.find(t => this.isSourceActor(t))) return true
     const area = await this.sourceArea()
     return area.documents.length ? true : false
   }
 
-  sourceAdd(tokens){
-    return this.sources.concat(tokens.filter(t => !this.isSourceActor(t)))
-  }
 
   async sourceArea(){
     const obj = {documents: [], target: this.source.target}
@@ -671,16 +683,12 @@ export class zone {
     return
   }
 
-  tokenHasSourceDisposition(token){
-    return this.source.dispositions?.includes(token?.disposition?.toString())
+  tokenHasDisposition(token, type = 'target'){
+    return this[type].dispositions.includes(token.disposition.toString())
   }
 
-  tokenHasTargetDisposition(token){
-    return this.target.dispositions.includes(token.disposition.toString())
-  }
-
-  tokenHasExclusion(token){
-    return token.actor?.effects?.find(e => !e.disabled && this.target.exclusion.conditions.includes(e.name)) ? true : false
+  tokenHasExclusion(token, type = 'target'){
+    return token.actor?.effects?.find(e => !e.disabled && this[type].exclusion.conditions.includes(e.name)) ? true : false
   }
 
   async tokensInZone(tokens){
@@ -772,11 +780,11 @@ export class zone {
           dangerZone.log(false, 'Token not eligible not a target actor...', {zone: this, token: token})
           keep = 0;
         }
-        else if(this.hasTargetDisposition && !this.tokenHasTargetDisposition(token)){
+        else if(this.hasTargetDisposition && !this.tokenHasDisposition(token, 'target')){
           dangerZone.log(false, 'Token not eligible not a target disposition...', {zone: this, token: token})
           keep = 0;
         }
-        else if(this.hasTargetExclusionCondition && this.tokenHasExclusion(token)){
+        else if(this.hasTargetExclusionCondition && this.tokenHasExclusion(token, 'target')){
           dangerZone.log(false, 'Token not eligible has an exclusion...', {zone: this, token: token})
           keep = 0;      
         }

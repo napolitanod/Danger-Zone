@@ -277,9 +277,19 @@
             </div>
             <div class="form-group">
                 <div class="form-fields">
-                    <multi-select name="source.dispositions" value="{{zone.source.dispositions}}">
+                    <multi-select name=".dispositions" value="{{zone.source.dispositions}}">
                         {{selectOptions tokenDispositionOps selected=zone.source.dispositions localize=true}}
-                    </multi-select>
+                    </multi-select>source
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    {{localize 'DANGERZONE.edit-form.token-condition-ex.label'}}
+                </label>
+            </div>
+            <div class="form-group">
+                <div class="form-fields">
+                    <string-tags name="source.exclusion.conditions" value="{{zone.source.exclusion.conditions}}"></string-tags>
                 </div>
             </div>
         </fieldset>

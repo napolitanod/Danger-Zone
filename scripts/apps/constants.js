@@ -29,6 +29,9 @@ export const WORLDZONE = {
         area: '',
         actors: [],
         dispositions: [],
+        exclusion: {
+          conditions: []
+        },
         limit: {
           min: 0,
           max: 0
@@ -714,7 +717,6 @@ export function setExecutableOptions(){
             'damage': {
                 title: "Damage", 
                 icon: "fas fa-skull", 
-                modules: [],
                 scope: "token"
             },
             'item': {

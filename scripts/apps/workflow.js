@@ -680,7 +680,7 @@ export class executor {
     }
 
     get hasSourcing(){
-        return (this.zone.hasSourceActor || this.executables.find(e => e.hasSourcing)) ? true : false
+        return (this.zone.hasSourceTokenDefined || this.executables.find(e => e.hasSourcing)) ? true : false
     }
 
     get hasSourceToTarget(){
