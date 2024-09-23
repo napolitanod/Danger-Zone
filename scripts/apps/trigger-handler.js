@@ -254,6 +254,13 @@ export class triggerManager {
     async movementTrigger(){
         for(const zn of this.sceneZones) { 
             for(const event of zn.movementEvents){
+                if(event === 'aura') {
+                    let targets = zn.zoneEligibleTokens(this.data?.options?.targets)
+                    if(!targets.length){
+                        this.log(`Aura trigger bypassed, moving token cannot be targeted..`, {trigger: this, event: event, zone: zn, targets: this.data?.options?.targets});
+                        continue //only trigger aura if the moving token can be targted
+                    }
+                }
                 this.stageZones(zn, event);
             }
         }
