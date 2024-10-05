@@ -1757,7 +1757,7 @@ class damageToken extends executable{
         })
 
         for(const token of options.targets){
-            if(this._apply) await token.actor.applyDamage(damages, {multiplier: 1, invertHealing: false, ignore: false}); 
+            if(this._apply) await token.actor.applyDamage(damages, {multiplier: 1, invertHealing: true, ignore: false}); 
             this._damageResults.push({token: token, flavor: options.flavor, name: token.name, damages: damages} )    
         }
     }
