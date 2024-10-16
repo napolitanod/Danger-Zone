@@ -688,7 +688,7 @@ export class zone {
   }
 
   tokenHasExclusion(token, type = 'target'){
-    return token.actor?.effects?.find(e => !e.disabled && this[type].exclusion.conditions.includes(e.name)) ? true : false
+    return token.actor?.appliedEffects?.find(e => this[type].exclusion.conditions.includes(e.name)) ? true : false
   }
 
   async tokensInZone(tokens){
