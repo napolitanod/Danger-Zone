@@ -623,6 +623,9 @@ export class executor {
                 case 'region': 
                     be = new region(this.danger.region, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
+                case 'rolltable': 
+                    be = new rolltable(this.danger.rolltable, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
                 case 'save': 
                     be = new save(this.danger.save, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
@@ -2576,6 +2579,57 @@ class region extends executable{
         }
         return rg
     } 
+}
+
+class rolltable extends executable {
+
+    constructor(...args){
+        super(...args);
+        this._message,
+        this._pack = undefined,
+        this._rolledResult = undefined,
+        this._table = undefined
+        ;
+    }
+
+    get options(){
+        return {
+            rollMode: this.whisper ? 'gmroll' : 'publicroll' 
+        }
+    }
+
+    get has(){
+        return (super.has && this.rolltable) ? true : false
+    }
+
+    get rolltable(){
+        return this._part.name
+    }
+
+    get whisper(){
+        return this._part.whisper
+    }
+
+    async play(){
+        await super.play()
+        if(this._cancel) return
+        await this.build()
+        await this.rollMessage()
+    }
+
+    async build(){
+        this._table = game.tables.getName(this.rolltable)
+        if(!this._table) dangerZone.log(false, 'No Rolltable Found ', {rollTable: this})
+    }
+
+    async rollMessage(){
+        if(this._table) {
+            if(!this._table.replacement && !this._table.results?.find(r => !r.drawn)) return console.log(`Rollable table ${this.rolltable} has all results drawn.`)
+            this._rolledResult = await this._table.draw(this.options)
+            this._message = this._rolledResult?.results[0]?.text
+            Hooks.call("updateRollTable", this._rolledResult)
+        }
+    }
 }
 
 class save extends executable{

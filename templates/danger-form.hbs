@@ -121,6 +121,11 @@
                 <label>{{localize 'DANGERZONE.type-form.tokenEffect.label'}}</label>
                 <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
             </li>
+            <li data-id="rolltable" class="{{#if hasRolltable}}active{{/if}}">
+                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.rolltable.description"}}"><i class="fas fa-th-list"></i></button>   
+                <label>{{localize 'DANGERZONE.type-form.rolltable.label'}}</label>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            </li>
             <li data-id="scene" class="{{#if hasScene}}active{{/if}}">
                 <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.scene.description"}}"><i class="fas fa-map"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.scene.label'}}</label>

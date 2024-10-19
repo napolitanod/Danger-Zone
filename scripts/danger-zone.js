@@ -3,7 +3,7 @@ import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
 import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
-import {AUTOMATED_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
+import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
@@ -44,6 +44,7 @@ export class dangerZone {
     DANGERZONEDANGERLIGHT: `modules/${this.ID}/templates/danger-form-light.hbs`,
     DANGERZONEDANGERMUTATE: `modules/${this.ID}/templates/danger-form-mutate.hbs`,
     DANGERZONEDANGERREGION: `modules/${this.ID}/templates/danger-form-region.hbs`,
+    DANGERZONEDANGERROLLTABLE: `modules/${this.ID}/templates/danger-form-rolltable.hbs`,
     DANGERZONEDANGERSCENE: `modules/${this.ID}/templates/danger-form-scene.hbs`,
     DANGERZONEDANGERSOUND: `modules/${this.ID}/templates/danger-form-sound.hbs`,
     DANGERZONEDANGERSOURCEEFFECT: `modules/${this.ID}/templates/danger-form-source-effect.hbs`,
@@ -112,6 +113,10 @@ export class dangerZone {
     }
     return list;
   }
+
+  static getRolltableZonesFromScene(sceneId) {
+    return this.getAllZonesFromScene(sceneId).filter(zn => zn.hasChatEvent)
+  }  
 
   /**
    * Returns all zones on a given scene that automatically triggered during combat
@@ -320,6 +325,9 @@ export class zone {
       stretch: ''
     },
     this.trigger = {
+      chat: {
+        phrases: []
+      },
       combatantInZone: false,
       delay: {min: 0, max: 0},
       initiative: 0,
@@ -382,6 +390,10 @@ export class zone {
     return new executor(this)
   }
 
+  get chatEvents(){
+    return this.trigger.events.filter(e => CHAT_EVENTS.includes(e)) 
+  }
+
   get combatEvents(){
     return this.trigger.events.filter(e => COMBAT_EVENTS.includes(e)) 
   }
@@ -407,6 +419,10 @@ export class zone {
 
   get hasAutomatedEvent(){
     return this.trigger.events.find(e => AUTOMATED_EVENTS.includes(e)) ? true : false 
+  }
+
+  get hasChatEvent(){
+    return this.trigger.events.find(e => CHAT_EVENTS.includes(e)) ? true : false
   }
 
   get hasCombatEvent(){

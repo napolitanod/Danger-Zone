@@ -128,6 +128,15 @@
                     <input type="checkbox" name="trigger.movement.wait" {{checked zone.trigger.movement.wait}}/>
                 </div>
             </div>
+            <div class="form-group {{#if hideTriggerChat}} dz-hidden{{/if}}" id="dz-trigger-chat-phrases">
+                <label>
+                    {{localize 'DANGERZONE.edit-form.trigger.chat.phrases.label'}}
+                    <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.trigger.chat.phrases.description'}}"><i class="fas fa-info-circle"></i></span>
+                </label>
+                <div class="form-fields">
+                    <string-tags name="trigger.chat.phrases" value="{{zone.trigger.chat.phrases}}"></string-tags>
+                </div>
+            </div>
         </fieldset>
         <div class="form-group">
             <label>
