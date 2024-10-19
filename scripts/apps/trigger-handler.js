@@ -102,6 +102,33 @@ export class triggerManager {
         return tm
     }
 
+    static async findChatEvents(chatMessage, hook, options) {
+	    const sceneId = chatMessage.speaker?.scene ?? canvas.scene.id
+        const sceneZones = dangerZone.getRolltableZonesFromScene(sceneId)
+        if(!sceneZones.length) return
+        const rollResult = chatMessage.rolls[0].result
+        if(!rollResult) return
+        const table = game.tables.get(options.rollTableId)
+        if(!table) return
+        const results = table.getResultsForRoll(rollResult).map(r => r.text) 
+        if(!results) return
+        const eligibleZones = sceneZones.filter(s => s.trigger.chat.phrases.find(r => results.includes(r)))
+        dangerZone.log(false, 'Searching for Rolltable Result Trigger', {chatMessage: chatMessage, sceneZones: sceneZones, eligibleZones: eligibleZones, rollResult: rollResult, table: table, tableResults: results})
+        if(eligibleZones.length){
+            const tm = new triggerManager(sceneId, chatMessage, eligibleZones, hook);
+            await tm.chatTrigger();
+        }
+    }
+
+    async chatTrigger(){
+        for(const zn of this.sceneZones) { 
+            for(const event of zn.chatEvents) this.stageZones(zn, event);
+        }
+        await this.reconcileRandomZones();
+        this.zones.sort((a, b) => { return DANGERZONETRIGGERSORT[a.event] < DANGERZONETRIGGERSORT[b.event] ? -1 : (DANGERZONETRIGGERSORT[a.event] > DANGERZONETRIGGERSORT[b.event] ? 1 : 0)});
+        this.next();
+    }
+
     async combatTrigger(){
         this.setCombatFlags();
         for (const zn of this.sceneZones) { 

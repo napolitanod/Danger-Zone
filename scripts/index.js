@@ -381,6 +381,18 @@ Hooks.on('createScene', async (scene, options, userId) => {
 });
 
 /**
+ * Hook for creating the chat message
+ */
+Hooks.on("createChatMessage", async(chatMessage, updates, id) => {
+	//right now only rolltables generate triggers, so eject if not rolltable
+	const rollTableId = chatMessage?.flags?.core?.RollTable
+	if(!rollTableId) return
+	if(!chatMessage.rolls?.length) return
+	const options = {rollTableId: rollTableId}
+	triggerManager.findChatEvents(chatMessage, "createChatMessage", options)
+})
+
+/**
  * Hook for the rendering of the scene list at top of canvas display. Adds zone trigger buttons to scene navigation bar on canvas
  */
 Hooks.on('renderSceneDirectory', async(app, html, options) => {

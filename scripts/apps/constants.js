@@ -147,6 +147,9 @@ export const DANGERZONEWEATHERREPLACE = {
 export const EVENTS = {
     "api": {
         automated: false,
+        chat: {
+            event: false
+        },
         combat: {
             event: false
         },
@@ -156,6 +159,9 @@ export const EVENTS = {
     },
     "manual":  {
         automated: false,
+        chat: {
+            event: false
+        },
         combat: {
             event: false
         },
@@ -165,6 +171,9 @@ export const EVENTS = {
     },
     "aura": {
         automated: true,
+        chat: {
+            event: false
+        },
         combat: {
             event: false
         },
@@ -174,6 +183,9 @@ export const EVENTS = {
     }, 
     "move": {
         automated: true,
+        chat: {
+            event: false
+        },
         combat: {
             event: false
         },
@@ -181,8 +193,24 @@ export const EVENTS = {
         movement: true,
         zone: true
     },
+    "chat-rolltable": {
+        automated: true,
+        chat: {
+            event: true,
+            type: 'R'
+        },
+        combat: {
+            event: false
+        },
+        label:  "DANGERZONE.events.chat-rolltable.label",
+        movement: false,
+        zone: true
+    },
     "combat-start": {
         automated: true,
+        chat: {
+            event: false
+        },
         combat: {
             event: true,
             threshold:'start',
@@ -194,6 +222,9 @@ export const EVENTS = {
     }, 
     "combat-end": {
         automated: true,
+        chat: {
+            event: false
+        },
         combat: {
             event: true,
             threshold:'end',
@@ -205,6 +236,9 @@ export const EVENTS = {
     },  
     "extension": {
         automated: false,
+        chat: {
+            event: false
+        },
         combat: {
             event: false
         },
@@ -214,6 +248,9 @@ export const EVENTS = {
     },
     "initiative-start": {
         automated: true,
+        chat: {
+            event: false
+        },
         combat: {
             event: true,
             threshold:'start',
@@ -225,6 +262,9 @@ export const EVENTS = {
     },  
     "initiative-end": {
         automated: true,
+        chat: {
+            event: false
+        },
         combat: {
             event: true,
             threshold:'end',
@@ -236,6 +276,9 @@ export const EVENTS = {
     },  
     "round-start": {
         automated: true,
+        chat: {
+            event: false
+        },
         combat: {
             event: true,
             threshold:'start',
@@ -247,6 +290,9 @@ export const EVENTS = {
     }, 
     "round-end": {
         automated: true,
+        chat: {
+            event: false
+        },
         combat: {
             event: true,
             threshold:'end',
@@ -258,6 +304,9 @@ export const EVENTS = {
     }, 
     "turn-start": {
         automated: true,
+        chat: {
+            event: false
+        },
         combat: {
             event: true,
             threshold:'start',
@@ -269,6 +318,9 @@ export const EVENTS = {
     }, 
     "turn-end": {
         automated: true,
+        chat: {
+            event: false
+        },
         combat: {
             event: true,
             threshold:'end',
@@ -281,6 +333,7 @@ export const EVENTS = {
 };
 export const AUTOMATED_EVENTS = Object.entries(EVENTS).filter(e => e[1].automated).map(([k,v]) => k);
 export const EVENT_OPTIONS = Object.entries(EVENTS ).filter(e => e[1].zone).reduce((obj,[k,v]) => {obj[k] = v.label; return obj;}, {});
+export const CHAT_EVENTS = Object.entries(EVENTS).filter(e => e[1].chat.event).map(([k,v]) => k);
 export const COMBAT_EVENTS = Object.entries(EVENTS).filter(e => e[1].combat.event).map(([k,v]) => k);
 export const COMBAT_PERIOD_INITIATIVE_EVENTS = Object.entries(EVENTS).filter(e => e[1].combat.period === 'initiative').map(([k,v]) => k);
 export const COMBAT_THRESHOLD_END_EVENTS = Object.entries(EVENTS).filter(e => e[1].combat.threshold === 'end').map(([k,v]) => k);
@@ -292,6 +345,7 @@ export const DANGERZONETRIGGERSORT = {
     "manual":  8,
     "aura": 21,
     "move": 20,
+    "chat-rolltable": 15,
     "combat-start":  7,
     "combat-end":  0,
     "initiative-start":  2,
@@ -761,6 +815,11 @@ export function setExecutableOptions(){
                 icon: "fa-solid fa-expand",
                 scope: "boundary",
                 wipeable: true
+            },
+            'rolltable':{
+                title: 'Roll Table',
+                icon: "fas fa-th-list",
+                scope: "scene"
             },
             'save': {
                 title: "Save", 

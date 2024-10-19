@@ -221,6 +221,10 @@
             "token-condition-ex.label": "Exclude if condition/effect",
             "token-disposition.label": "Dispositions",
             "trigger":{
+                "chat":{
+                    "phrases.description": "List the phrases that will trigger this zone.",
+                    "phrases.label": "Trigger Phrases"
+                },
                 "description": "The trigger defines the conditions that must be met for the danger to be invoked within this zone. Documentation at https://github.com/napolitanod/Danger-Zone/wiki/Triggers.",
                 "label": "Trigger",
                 "movement":{
@@ -540,6 +544,7 @@
         "events": {
             "api.label": "API",
             "aura.label": "Aura",
+            "chat-rolltable.label": "Rollable Table Result",
             "manual.label": "Manual",
             "move.label": "Movement",
             "combat-start.label": "Combat Start",
@@ -879,6 +884,13 @@
                     "gamemaster": "Always for Gamemaster",
                     "always": "Always for Anyone"
                 }
+            },
+            "rolltable": {
+                "name.label": "Rollable Table Name",
+                "delay.label":"Delay Start",
+                "description": "Roll a rollable table and send result to chat.",
+                "label": "Rollable Table",
+                "whisper.label": "Results to GM Only?"
             },
             "scene": {
                 "active.label": "Enable Scene Modifications",

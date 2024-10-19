@@ -1,7 +1,7 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {getSceneRegionList} from './helpers.js';
-import {COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENT_OPTIONS, TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, DANGERZONEWEATHERREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps, ZONEEXTENSIONINTERACTIONOPTIONS, ZONEEXTENSIONSEQUENCEOPTIONS, MOVEMENT_EVENTS} from './constants.js';
+import {CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENT_OPTIONS, TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, DANGERZONEWEATHERREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps, ZONEEXTENSIONINTERACTIONOPTIONS, ZONEEXTENSIONSEQUENCEOPTIONS, MOVEMENT_EVENTS} from './constants.js';
 
 export class DangerZoneForm extends FormApplication {
   constructor(app, zoneId, sceneId, dangerId, ...args) {
@@ -51,6 +51,7 @@ export class DangerZoneForm extends FormApplication {
       hideElevationPrompt: !this.zone.target.choose.enable,
       hideInit: this.zone.hasCombatInitiativeEvent ? false : true,
       hideOperation: this.zone.trigger.loop > 1 ? false : true,
+      hideTriggerChat: this.zone.hasChatEvent ? false : true,
       hideTargetCombatant: this.zone.hasCombatEvent ? false : true,
       //hideTargetStartMovement: this.zone.hasAuraEvent ? false : true,
       hideTriggerMovementWait: this.zone.hasMovementEvent ? false : true,
@@ -115,8 +116,14 @@ export class DangerZoneForm extends FormApplication {
         const targetCom = document.getElementById(`dz-target-combatant`);
         const triggerCom = document.getElementById(`dz-combatantInZone`);
         const targetMvWait = document.getElementById(`dz-trigger-movement-wait`);
-        const triggerMvStart = document.getElementById(`dz-target-movement-start`);
+        const triggerChatPhrase = document.getElementById(`dz-trigger-chat-phrases`);
+        //const triggerMvStart = document.getElementById(`dz-target-movement-start`);
         const init = document.getElementById(`dz-initiative`);
+        if(CHAT_EVENTS.find(e => val.includes(e))){
+          triggerChatPhrase.classList.remove('dz-hidden')
+        } else{
+          triggerChatPhrase.classList.add('dz-hidden')
+        }
         if(COMBAT_EVENTS.find(e => val.includes(e))){
            targetCom.classList.remove('dz-hidden')
            triggerCom.classList.remove('dz-hidden')

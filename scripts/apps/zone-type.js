@@ -256,6 +256,11 @@ export class dangerZoneType {
           type: 'rectangle',
           visibility: 'LAYER'
         },
+        rolltable: {
+          delay: 0,
+          whisper: false,
+          name: ''
+        },
         scene:{
           active: false,
           background: {
@@ -488,6 +493,10 @@ export class dangerZoneType {
 
   get region(){
     return this.options.region ?? {}
+  }
+
+  get rolltable(){
+    return this.options.rolltable ?? {}
   }
 
   get save(){

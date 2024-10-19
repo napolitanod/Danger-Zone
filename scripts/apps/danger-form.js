@@ -22,6 +22,7 @@ export class DangerForm extends FormApplication {
     this.monksActiveTiles,
     this.mutate,
     this.region,
+    this.rolltable,
     this.scene,
     this.sound,
     this.sourceEffect,
@@ -139,6 +140,9 @@ export class DangerForm extends FormApplication {
       case 'region':
         new DangerZoneDangerFormRegion(this, eventParent, this.region).render(true);
         break;
+      case 'rolltable':
+        new DangerZoneDangerFormRolltable(this, eventParent, this.rolltable).render(true);
+        break;
       case 'scene':
         new DangerZoneDangerFormScene(this, eventParent, this.scene).render(true);
         break;
@@ -213,6 +217,9 @@ export class DangerForm extends FormApplication {
       case 'region':
         this.region = Object.assign(this.region, danger.options.region)
         break;
+      case 'rolltable':
+        this.rolltable = Object.assign(this.rolltable, danger.options.rolltable)
+        break;
       case 'scene':
         this.scene = Object.assign(this.scene, danger.options.scene)
         break;
@@ -270,6 +277,7 @@ export class DangerForm extends FormApplication {
     this.monksActiveTiles = instance.options.flags?.['monks-active-tiles'] ? instance.options.flags['monks-active-tiles'] : {};
     this.mutate = instance.options.flags?.mutate ? instance.options.flags.mutate : {};
     this.region = instance.options.region;
+    this.rolltable = instance.options.rolltable;
     this.scene = instance.options.scene;
     this.sound = instance.options.sound;
     this.sourceEffect = instance.options.sourceEffect;
@@ -298,6 +306,7 @@ export class DangerForm extends FormApplication {
       hasLight: (this.light.bright || this.light.dim) ? true : false,
       hasMutate: this.mutate?.permanent,
       hasRegion: this.region?.active ? true : false,
+      hasRolltable: this.rolltable.name ? true : false,
       hasScene: this.scene.active ? true : false,
       hasSound: this.sound?.file ? true : false,
       hasSourceEffect: this.sourceEffect?.file ? true : false,
@@ -335,6 +344,7 @@ export class DangerForm extends FormApplication {
     expandedData.options.lastingEffect = this.lastingEffect;
     expandedData.options.ambientLight = this.light;
     expandedData.options.region = this.region;
+    expandedData.options.rolltable = this.rolltable;
     expandedData.options.scene = this.scene;
     expandedData.options.sound = this.sound;
     expandedData.options.sourceEffect = this.sourceEffect;
@@ -1175,6 +1185,47 @@ class DangerZoneDangerFormRegion extends FormApplication {
       expandedData.active ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
     }
 }
+
+
+class DangerZoneDangerFormRolltable extends FormApplication {
+  constructor(app, eventParent, data, ...args) {
+    super(...args);
+    this.data = data,
+    this.eventParent = eventParent,
+    this.parent = app;
+    }
+
+    static get defaultOptions(){
+        const defaults = super.defaultOptions;
+
+        return foundry.utils.mergeObject(defaults, {
+          title : game.i18n.localize("DANGERZONE.type-form.rolltable.label"),
+          id : "danger-zone-danger-rolltable",
+          classes: ["sheet","danger-part-form"],
+          template : dangerZone.TEMPLATES.DANGERZONEDANGERROLLTABLE,
+          height : "auto",
+          width: 425,
+          closeOnSubmit: true
+        });
+      }
+
+    getData(options) {
+      return {
+        data: this.data
+      }
+    }
+
+    activateListeners(html) {
+      super.activateListeners(html);
+    }
+  
+    async _updateObject(event, formData) {
+      const expandedData = foundry.utils.expandObject(formData);
+      this.parent.rolltable = expandedData;
+      expandedData.name ? this.eventParent.addClass('active') : this.eventParent.removeClass('active');
+    }
+}
+
 
 class DangerZoneDangerFormScene extends FormApplication {
   constructor(app, eventParent, data, ...args) {
