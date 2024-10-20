@@ -392,6 +392,16 @@ Hooks.on("createChatMessage", async(chatMessage, updates, id) => {
 	triggerManager.findChatEvents(chatMessage, "createChatMessage", options)
 })
 
+Hooks.on("token-says.sayingComplete", (saying) => {
+	if(!saying.table?.id || !saying.scene?.id) return
+	const chatMessage = {
+		results: [saying.message],
+		speaker: saying.speaker
+	};
+	const options = {table: saying.table};
+	triggerManager.findChatEvents(chatMessage, "tokenSaysTrigger", options)
+})
+
 /**
  * Hook for the rendering of the scene list at top of canvas display. Adds zone trigger buttons to scene navigation bar on canvas
  */
