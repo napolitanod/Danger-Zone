@@ -3237,10 +3237,10 @@ class spawn extends executable {
     async _build(){
         const obj = Object.assign(this.options, {updateData: this.updates});
         this.data.spawn.portal = await new Portal()
-        if(this.color) this.data.spawn.portal = this.data.spawn.portal.color(this.color)
-        if(this.spawnDelay) this.data.spawn.portal = this.data.spawn.portal.delay(this.spawnDelay)
-        if(this.texture) this.data.spawn.portal = this.data.spawn.portal.texture(this.texture)
-        this.data.spawn.portal = this.data.spawn.portal.addCreature(this.actor, obj).origin(this.location).range(this.range).setLocation(this.location)
+        //if(this.color) this.data.spawn.portal = this.data.spawn.portal.color(this.color)
+        //if(this.spawnDelay) this.data.spawn.portal = this.data.spawn.portal.delay(this.spawnDelay)
+        //if(this.texture) this.data.spawn.portal = this.data.spawn.portal.texture(this.texture)
+        this.data.spawn.portal = this.data.spawn.portal.addCreature(this.actor, obj).origin(this.location).setLocation(this.location)//.range(this.range)
     }
 
     async _spawn(){
