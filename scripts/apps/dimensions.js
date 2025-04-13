@@ -1,6 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
 import {circleAreaGrid, getTagEntities, rayIntersectsGrid} from './helpers.js';
-import { wallHeightOn } from '../index.js';
 
 export class dangerZoneDimensions {
     /**
@@ -324,7 +323,7 @@ export class boundary{
         if('top' in this.options){ops.top = this.options.top}
         if('range' in this.options) ops.range = this.range
         if(all.length < 1 || this.depth < 0){
-            if(this.depth < 0 && game.user.isGM){
+            if(this.depth < 0 && game.user.isActiveGM){
                 ui.notifications?.error(game.i18n.localize("DANGERZONE.alerts.danger-depth-exceeds-zone"));
             }
             return dangerZone.log(false,'Invalid zone settings ', {boundary: this})
@@ -355,7 +354,7 @@ export class boundary{
         let dim;
         switch(documentName){
             case "Wall":
-                const wallHeight = (wallHeightOn && document.flags?.['wall-height']) ? document.flags?.['wall-height'] : {bottom: 0, top: 0}
+                const wallHeight = (dangerZone.MODULES.wallHeightOn && document.flags?.['wall-height']) ? document.flags?.['wall-height'] : {bottom: 0, top: 0}
                 dim={x: document.object.bounds.x, y:document.object.bounds.y, width: document.object.bounds.width, height: document.object.bounds.height, bottom: wallHeight.bottom, top: wallHeight.top}
                 break
             case "AmbientLight":
@@ -380,7 +379,7 @@ export class boundary{
                 const position = canvas.grid.getOffset(document);
                 const topLeft = canvas.grid.getTopLeftPoint({j:position.j + document.width, i:position.i + document.height}); 
                 const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
-                const Td = (wallHeightOn && document.getFlag('wall-height', 'tokenHeight')) ? document.getFlag('wall-height', 'tokenHeight') : (distance * Math.max(document.width, document.height) * multiplier);
+                const Td = (dangerZone.MODULES.wallHeightOn && document.getFlag('wall-height', 'tokenHeight')) ? document.getFlag('wall-height', 'tokenHeight') : (distance * Math.max(document.width, document.height) * multiplier);
                 dim = {x:document.x, y:document.y, width: topLeft.x - document.x, height: topLeft.y - document.y, bottom:document.elevation, top: document.elevation + Td};
                 break
             default: 

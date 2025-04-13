@@ -1,4 +1,3 @@
-import {taggerOn} from '../index.js';
 import {dangerZone} from '../danger-zone.js';
 import {point} from './dimensions.js'
 
@@ -59,6 +58,15 @@ export async function getFilesFromPattern(pattern) {
     return content.files;      
 }
 
+
+export function getSceneOptionButton(){
+  let opt = game.settings.get(dangerZone.ID, 'scene-header');   
+  if (!game.user.isActiveGM || opt === 'N') return
+  let icn = '<i class="fas fa-radiation"></i>';
+  if(opt === 'B') icn+='Zones'
+  return  $(`<a class="open-dangerzone" title="Danger Zone Config">` + icn + `</a>`);
+}
+
 export function getSceneRegionList(sceneId){
   let list = {'':'[Use Scene Dimensions]'};
   for (let region of game.scenes.get(sceneId).regions.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
@@ -69,7 +77,7 @@ export function getSceneRegionList(sceneId){
 
 export async function getTagEntities(tag, scene){
   const d = scene.getEmbeddedCollection("Drawing").filter(d => d.text === tag);
-  if(taggerOn){
+  if(dangerZone.MODULES.taggerOn){
       const t = await Tagger.getByTag(tag, {caseInsensitive: false, matchAll: false, sceneId: scene.id })
       return d.concat(t)
   }

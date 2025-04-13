@@ -3,11 +3,11 @@ import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
 import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
 import {addTriggersToHotbar} from './apps/hotbar.js';
-import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
+import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WIPEABLES, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
-import { fxMasterOn} from './index.js';
+import {setHooks} from './apps/hooks.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -16,12 +16,32 @@ export class dangerZone {
   static ID = 'danger-zone';
 
   static NAME = 'dangerZone';
+
+  static dangerZoneSocket = '';
+
+  static dzMActive = false;
   
   static FLAGS = {
     SCENEZONE: 'sceneZone',
     SCENETILE: 'sceneTile',
     ZONETYPE: 'zoneTypeEffect',
     MIGRATION: 'migration'
+  }
+
+  static MODULES = {
+    activeEffectOn: true, 
+    timesUpOn: false, 
+    daeOn: false, 
+    perfectVisionOn: false, 
+    socketLibOn: false, 
+    taggerOn: false, 
+    sequencerOn: false, 
+    wallHeightOn: false, 
+    portalOn: false, 
+    monksActiveTilesOn: false, 
+    tokenSaysOn: false, 
+    fxMasterOn: false, 
+    itemPileOn: false
   }
  
   static TEMPLATES = {
@@ -63,11 +83,6 @@ export class dangerZone {
     DANGER: 2
   }
 
-  static initialize() {
-    this.DangerZoneTypesForm = new DangerZoneTypesForm();
-    this.executorForm = new ExecutorForm();
-  }
-
   /**
    * A small helper function which leverages developer mode flags to gate debug logs.
    * @param {boolean} force - forces the log even if the debug flag is not on
@@ -76,9 +91,68 @@ export class dangerZone {
   static log(force, ...args) {  
      // const shouldLog = force || game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.ID);
   
-      if (force || (game.user.isGM && game.settings.get(dangerZone.ID, 'logging'))) {
+      if (force || (game.user.isActiveGM && game.settings.get(dangerZone.ID, 'logging'))) {
         console.log(this.ID, '|', ...args);
       }
+  }
+
+  static _addQuickZonesLaunch(app) {
+    if (game.user.isActiveGM && app.id == "scenes" && game.settings.get('danger-zone', 'types-button-display') === true) {
+      let button = $('<div class="header-actions action-buttons flexrow"><button class="danger-zone-types-launcher"><i class="fas fa-radiation"></i> ' + game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.name")+ '</button></div>');
+    
+      button.click(async () => {
+        dangerZone.DangerZoneTypesForm.render(true);
+      });
+      if(!$(app.element).find(".danger-zone-types-launcher")?.length) {$(app.element).find(".directory-footer").append(button);}
+    }
+  }
+
+  static _initialize() {
+    this.DangerZoneTypesForm = new DangerZoneTypesForm();
+    this.executorForm = new ExecutorForm();
+    dangerZone._setModsAvailable();
+    setHooks()
+  }
+
+  /**
+ * adds the clear buttons to the controls on the canvas
+ * @param {object} controls 
+ * @param {*} b 
+ * @param {*} c 
+ */
+  static _insertClearButton(placeable, control){
+    const metadata = WIPEABLES[placeable];
+    if(game.settings.get(dangerZone.ID, metadata.setting) && control){
+      control.tools[metadata.id] = {
+        name: metadata.id,
+        title: game.i18n.localize(metadata.title),
+        icon: "fas fa-radiation",
+        visible: game.user.isActiveGM,
+        onChange: async () => {
+          dangerZone.wipe(metadata.wipeId)
+        },
+        button: true
+      }
+    }
+  }
+
+  /**
+   * sets global variables that indicate which modules that danger zone integrates with are available
+   */
+  static _setModsAvailable () {
+    if (game.modules.get("dae")?.active){dangerZone.MODULES.daeOn = true} ;
+    if (game.modules.get("item-piles")?.active){dangerZone.MODULES.itemPileOn = true};
+    if (game.modules.get("monks-active-tiles")?.active){dangerZone.MODULES.monksActiveTilesOn = true} ;
+    if (game.modules.get("token-says")?.active){dangerZone.MODULES.tokenSaysOn = true} ;
+    if (game.modules.get("portal-lib")?.active){dangerZone.MODULES.portalOn = true} ;
+    if (game.modules.get("fxmaster")?.active){dangerZone.MODULES.fxMasterOn = true} ;
+    if (game.modules.get("sequencer")?.active){dangerZone.MODULES.sequencerOn = true} ;
+    if (game.modules.get("tagger")?.active){dangerZone.MODULES.taggerOn = true} ;
+    if (game.modules.get("wall-height")?.active){dangerZone.MODULES.wallHeightOn = true} ;
+    if (game.modules.get("times-up")?.active){dangerZone.MODULES.timesUpOn = true};
+    if (game.modules.get("perfect-vision")?.active) dangerZone.MODULES.perfectVisionOn = true;
+    if (game.modules.get("socketlib")?.active) dangerZone.MODULES.socketLibOn = true
+    if(['pf1', 'pf2e'].includes(game.world.system)) dangerZone.MODULES.activeEffectOn = false
   }
 
   /**
@@ -288,6 +362,10 @@ export class dangerZone {
     }
   }
 
+  static toggleMasterButtonActive(){
+    dangerZone.dzMActive ? dangerZone.dzMActive = false : dangerZone.dzMActive = true
+  }
+
   static async wipe(documentName){
     const ids=canvas.scene[PLACEABLESBYDOCUMENT[documentName]].filter(t => t.flags[dangerZone.ID]).map(t => t.id);
     if(ids.length) await canvas.scene.deleteEmbeddedDocuments(documentName, ids)
@@ -296,7 +374,7 @@ export class dangerZone {
   static async wipeAll(){
     for (var documentName in PLACEABLESBYDOCUMENT) {
       if(documentName === 'fxmaster-particle'){
-        if(fxMasterOn) await Hooks.call("fxmaster.updateParticleEffects", []); break;
+        if(dangerZone.MODULES.fxMasterOn) await Hooks.call("fxmaster.updateParticleEffects", []); break;
       } else {
         await dangerZone.wipe(documentName)
       }
@@ -758,10 +836,10 @@ export class zone {
       if(document === 'fxmaster-particle'){ 
         switch (rep) {
           case 'A': 
-              await this.clearWeather({includeFXMaster: fxMasterOn, includeFoundry: !this.danger.weatherIsFoundry})
+              await this.clearWeather({includeFXMaster: dangerZone.MODULES.fxMasterOn, includeFoundry: !this.danger.weatherIsFoundry})
           break;
           case 'T': 
-              await this.clearWeather({includeFXMaster: fxMasterOn, includeFoundry: false, effect: this.dangerId})
+              await this.clearWeather({includeFXMaster: dangerZone.MODULES.fxMasterOn, includeFoundry: false, effect: this.dangerId})
           break;
           default: return false
         }
@@ -878,8 +956,8 @@ export class zone {
         resolve(false)
       }
       window.addEventListener('auxclick', _cancel);
-      canvas.app.stage.once('mousedown', event => {
-        let selected = event.data.getLocalPosition(canvas.app.stage);
+      canvas.application.stage.once('mousedown', event => {
+        let selected = event.data.getLocalPosition(canvas.application.stage);
         window.removeEventListener('auxclick', _cancel);
         resolve(selected)
       });

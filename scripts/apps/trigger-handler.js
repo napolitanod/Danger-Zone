@@ -213,7 +213,7 @@ export class triggerManager {
 
     static async findcombatEvents(combat, hook, options){
         const sceneId = combat.scene?.id ?? canvas.scene.id
-        if(game.user.isGM && sceneId && (combat.started || hook === 'combatStart')) {
+        if(game.user.isActiveGM && sceneId && (combat.started || hook === 'combatStart')) {
             const sceneZones = dangerZone.getCombatZonesFromScene(sceneId);
             if(sceneZones.length){
                 const scene = game.scenes.get(sceneId);
@@ -304,7 +304,7 @@ export class triggerManager {
 
     async next(){
         if(canvas.scene.id !== this.sceneId){ 
-           if(game.user.isGM) ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.no-trigger-if-not-on-combat-scene"));
+           if(game.user.isActiveGM) ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.no-trigger-if-not-on-combat-scene"));
            return
         }
         for(const zn of this.zones){

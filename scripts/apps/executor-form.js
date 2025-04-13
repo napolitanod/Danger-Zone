@@ -482,7 +482,7 @@ export class ExecutorForm extends FormApplication {
 
     async _setHook(){
         Hooks.on("canvasReady", async(app) => {
-            if(game.user.isGM && this.rendered && app.scene?.id){
+            if(game.user.isActiveGM && this.rendered && app.scene?.id){
                const rendered = await this.renderOnScene(app.scene.id);
                if(!rendered) this.close();
             }
@@ -508,7 +508,7 @@ export class ExecutorForm extends FormApplication {
     
     async renderOnScene(sceneId, zoneId, zones){
         this.sceneId = sceneId ? sceneId : canvas.scene.id;
-        if(game.user.isGM && this.scene.active && this.scene.grid.type){
+        if(game.user.isActiveGM && this.scene.active && this.scene.grid.type){
             this.zones = zones ? zones : dangerZone.getExtendedZones(this.sceneId);
             if(this.zones.length){
                 this.executor = zoneId ? await this.setExecutor() : await this.zones[0].executor(this.executorOptions);

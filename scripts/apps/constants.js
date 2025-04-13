@@ -1,4 +1,4 @@
-import {activeEffectOn, tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, portalOn, fxMasterOn, sequencerOn, taggerOn, wallHeightOn} from '../index.js';
+import { dangerZone } from '../danger-zone.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -510,9 +510,6 @@ export const ITEMTARGET = {
     "U": "DANGERZONE.item.target.update"
 }
 
-
-export const DAEDuration = daeOn ? DAE.daeSpecialDurations() : {}
-
 export const DOORSTATES = {
     0: "DANGERZONE.doorStates.closed",
     1: "DANGERZONE.doorStates.open",
@@ -677,7 +674,7 @@ export const TILESBLOCK = {
 }
 
 export function setModOptions(){
-    if(taggerOn){
+    if(dangerZone.MODULES.taggerOn){
         SOURCEAREA["C"] = "DANGERZONE.source.area.danger.tile"; 
         SOURCEAREAGLOBALZONE["C"] = "DANGERZONE.source.area.danger.tile"; 
         SOURCEAREA["Y"] = "DANGERZONE.source.area.zone.tile";  
@@ -697,12 +694,12 @@ export function getCompendiumOps(fileType){
 export function weatherTypes() {
     const obj = {'':''}
     Object.assign(obj, Object.fromEntries(Object.entries(CONFIG.weatherEffects).filter(w => !w[1].id.includes('fxmaster')).map(k=> [`foundry.${k[0]}`,`${game.i18n.localize(k[1].label)} (Foundry)`])))
-    if(fxMasterOn) Object.assign(obj,Object.fromEntries(Object.entries(CONFIG.fxmaster.particleEffects).map(k=> [k[0],`${k[1].name.replace('ParticleEffect','')} (FXMaster)`])))
+    if(dangerZone.MODULES.fxMasterOn) Object.assign(obj,Object.fromEntries(Object.entries(CONFIG.fxmaster.particleEffects).map(k=> [k[0],`${k[1].name.replace('ParticleEffect','')} (FXMaster)`])))
     return obj
 }
 
 export function weatherParameters(type) {
-    if(fxMasterOn) return CONFIG.fxmaster.particleEffects[type]?.parameters
+    if(dangerZone.MODULES.fxMasterOn) return CONFIG.fxmaster.particleEffects[type]?.parameters
 }
 
 export const ZONEEXTENSIONINTERACTIONOPTIONS = {
@@ -728,25 +725,25 @@ export function setExecutableOptions(){
             'effect': {
                 title: "Active Effect", 
                 icon: "fas fa-hand-sparkles",
-                modules: [{active: activeEffectOn, name: "game-system", dependent: true}],
+                modules: [{active: dangerZone.MODULES.activeEffectOn, name: "game-system", dependent: true}],
                 scope: "token"
             },
             'audio': {
                 title: "Audio", 
                 icon: "fas fa-music", 
-                modules: [{active: sequencerOn, name: "sequencer", dependent: false}],
+                modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: false}],
                 scope: "scene"
             },
             'combat': {
                 title: "Combat", 
                 icon: "fas fa-swords", 
-                modules: [{active: portalOn, name: "portal", dependent: false}],
+                modules: [{active: dangerZone.MODULES.portalOn, name: "portal", dependent: false}],
                 scope: "scene"
             },
             'foregroundEffect': {
                 title: "Primary Effect", 
                 icon: "fas fa-bolt", 
-                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
             'ambientLight': {
@@ -755,8 +752,8 @@ export function setExecutableOptions(){
                 document: "AmbientLight", 
                 wipeable: true, 
                 modules: [
-                    {active: perfectVisionOn, name: "perfect-vision", dependent: false},
-                    {active: taggerOn, name: "tagger", dependent: false}
+                    {active: dangerZone.MODULES.perfectVisionOn, name: "perfect-vision", dependent: false},
+                    {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
             },
@@ -764,7 +761,7 @@ export function setExecutableOptions(){
                 title: "Canvas", 
                 icon: "fas fa-wind", 
                 modules: [
-                    {active: sequencerOn, name: "sequencer", dependent: true}
+                    {active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}
                 ],
                 scope: "scene"
             },
@@ -776,7 +773,7 @@ export function setExecutableOptions(){
             'item': {
                 title: "Item", 
                 icon: "fas fa-suitcase", 
-                modules: [{active: taggerOn, name: "tagger", dependent: false},{active: itemPileOn, name: "item-piles", dependent: false}],
+                modules: [{active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false},{active: dangerZone.MODULES.itemPileOn, name: "item-piles", dependent: false}],
                 scope: "token"
             },
             'lastingEffect': {
@@ -785,8 +782,8 @@ export function setExecutableOptions(){
                 document: "Tile",  
                 wipeable: true, 
                 modules: [
-                    {active: monksActiveTilesOn, name: "monks-active-tiles", dependent: false},
-                    {active: taggerOn, name: "tagger", dependent: false}
+                    {active: dangerZone.MODULES.monksActiveTilesOn, name: "monks-active-tiles", dependent: false},
+                    {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
             },
@@ -799,14 +796,14 @@ export function setExecutableOptions(){
                 title: "Mutate", 
                 icon: "fas fa-pastafarianism", 
                 modules:[
-                    {active: taggerOn, name: "tagger", dependent: false}
+                    {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "token"
             },
             'backgroundEffect': {
                 title: "Secondary Effect", 
                 icon: "fas fa-bomb", 
-                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
             'region': {
@@ -845,15 +842,15 @@ export function setExecutableOptions(){
             'sourceEffect': {
                 title: "Source Effect", 
                 icon: "fas fa-dragon", 
-                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
             'warpgate': {
                 title: "Spawn", 
                 icon: "fas fa-circle-notch", 
                 modules:[
-                    {active: portalOn, name: "portal", dependent: true}, 
-                    {active: taggerOn, name: "tagger", dependent: false}
+                    {active: dangerZone.MODULES.portalOn, name: "portal", dependent: true}, 
+                    {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
             },
@@ -865,13 +862,13 @@ export function setExecutableOptions(){
             'tokenEffect': {
                 title: "Token Effect", 
                 icon: "fas fa-male", 
-                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "token"
             },
             'tokenSays': {
                 title: "Token Says", 
                 icon: "fas fa-comment", 
-                modules: [{active: tokenSaysOn, name: "token-says", dependent: true}],
+                modules: [{active: dangerZone.MODULES.tokenSaysOn, name: "token-says", dependent: true}],
                 scope: "token"
             },
             'wall': {
@@ -880,8 +877,8 @@ export function setExecutableOptions(){
                 document: "Wall",  
                 wipeable: true,
                 modules:[
-                    {active: wallHeightOn, name: "wall-height", dependent: false}, 
-                    {active: taggerOn, name: "tagger", dependent: false}
+                    {active: dangerZone.MODULES.wallHeightOn, name: "wall-height", dependent: false}, 
+                    {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
             },
@@ -891,7 +888,7 @@ export function setExecutableOptions(){
                 document: 'fxmaster-particle',
                 wipeable: true,
                 modules:[
-                    {active: fxMasterOn, name: "fxmaster", dependent: false}
+                    {active: dangerZone.MODULES.fxMasterOn, name: "fxmaster", dependent: false}
                 ],
                 scope: "scene"
             },
@@ -901,4 +898,43 @@ export function setExecutableOptions(){
                 scope: "scene"
             } 
         });
+  }
+
+  export const WIPEABLES = {
+        tiles: {
+            name: 'tiles',
+            setting: 'scene-control-button-display',
+            id: 'danger-zone-tile-effects-clear',
+            title: "DANGERZONE.controls.clearEffectsTile.label",
+            wipeId: 'Tile' 
+        },
+        lighting: {
+            name: 'lighting',
+            setting: 'scene-control-light-button-display',
+            id: 'danger-zone-lighting-effects-clear',
+            title: "DANGERZONE.controls.clearAmbientLight.label",
+            wipeId: 'AmbientLight' 
+        },
+        sounds: {
+            name: 'sounds',
+            setting: 'scene-control-sound-button-display',
+            id: 'danger-zone-sounds-clear',
+            title: "DANGERZONE.controls.clearAmbientSound.label",
+            wipeId: 'AmbientSound' 
+        },
+        regions: {
+            name: 'regions',
+            setting: 'scene-control-region-button-display',
+            id: 'danger-zone-regions-clear',
+            title: "DANGERZONE.controls.clearRegion.label",
+            wipeId: 'Region' 
+        },
+        walls: {
+            name: 'walls',
+            setting: 'scene-control-wall-button-display',
+            id: 'danger-zone-wall-effects-clear',
+            title: "DANGERZONE.controls.clearWall.label",
+            wipeId: 'Wall' 
+        }
+
   }

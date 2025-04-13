@@ -1,12 +1,11 @@
 import {dangerZone} from '../danger-zone.js';
-import {toggleMasterButtonActive, dzMActive} from '../index.js';
 import {dangerZoneType} from './zone-type.js';
 import {dangerZoneDimensions} from './dimensions.js';
 import {triggerManager} from './trigger-handler.js';
 import {DangerZoneForm} from './zone-form.js';
 
 export function addTriggersToHotbar() {
-    if(game.user.isGM){
+    if(game.user.isActiveGM){
         const scene = game.scenes.find(scene => scene.active);
         const id = 'danger-zone-hotbar-trigger';
         $('#ui-bottom').find(`#${id}`).remove();
@@ -55,7 +54,7 @@ function _setDangerZoneButton(html, scene, clss) {
         }
         if((hasEx || hasClear) ? zones.length : zones.length > 1){
             let btn = $('<li>').addClass(`danger-zone-scene-trigger-master`).append($('<i class="fas fa-radiation"></i>')).click(_handleMasterClick)
-            if(dzMActive){btn.addClass('active')}
+            if(dangerZone.dzMActive){btn.addClass('active')}
             triggerList.prepend(btn);
         }
         triggerList.append(btnWrap);
@@ -70,7 +69,7 @@ async function _handleTriggerClick(event) {
 
 function _handleMasterClick(event){
     $(event.currentTarget).toggleClass('active')
-    toggleMasterButtonActive()
+    dangerZone.toggleMasterButtonActive()
 }
 
 function _showZoneHighlight(event){
