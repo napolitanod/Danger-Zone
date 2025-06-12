@@ -1,13 +1,12 @@
 import {dangerZoneDimensions} from './apps/dimensions.js';
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
-import {addTriggersToSceneNavigation} from './apps/scene-navigation.js';
-import {addTriggersToHotbar} from './apps/hotbar.js';
-import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WIPEABLES, WORLDZONE} from './apps/constants.js';
+import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, CONTROLTRIGGERS, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WIPEABLES, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
+import {triggerManager} from './apps/trigger-handler.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -83,8 +82,8 @@ export class dangerZone {
     DANGER: 2
   }
 
-  /**
-   * A small helper function which leverages developer mode flags to gate debug logs.
+  /** V13
+   * Used to generate debug logs.
    * @param {boolean} force - forces the log even if the debug flag is not on
    * @param  {...any} args - what to log
   */
@@ -96,15 +95,28 @@ export class dangerZone {
       }
   }
 
-  static _addQuickZonesLaunch(app) {
-    if (game.user.isActiveGM && app.id == "scenes" && game.settings.get('danger-zone', 'types-button-display') === true) {
-      let button = $('<div class="header-actions action-buttons flexrow"><button class="danger-zone-types-launcher"><i class="fas fa-radiation"></i> ' + game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.name")+ '</button></div>');
-    
-      button.click(async () => {
-        dangerZone.DangerZoneTypesForm.render(true);
-      });
-      if(!$(app.element).find(".danger-zone-types-launcher")?.length) {$(app.element).find(".directory-footer").append(button);}
-    }
+  /** V13
+   * Adds the Dangers button to the scenes side menu if the user settings allows for this.
+   * @param {object} app 
+   * @param {object} html 
+   * @returns 
+   */
+  static addDangersLaunch(app, html) {
+    if (!game.user.isActiveGM 
+        || app.options.id !== "scenes" 
+        || game.settings.get('danger-zone', 'types-button-display') === false
+      ) return;
+    //create the button  
+    const button = document.createElement("button");
+    button.type = "button";
+    button.classList.add("danger-zone-types-launcher");
+    button.innerHTML = `<i class="fas fa-radiation"></i>${game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.name")}`;
+    button.addEventListener("click", async (_event) => {
+      dangerZone.DangerZoneTypesForm.render(true);
+    });
+    //append the button to footer
+    const header = html.querySelector(".header-actions");
+    header.append(button);
   }
 
   static _initialize() {
@@ -116,9 +128,8 @@ export class dangerZone {
 
   /**
  * adds the clear buttons to the controls on the canvas
- * @param {object} controls 
- * @param {*} b 
- * @param {*} c 
+ * @param {placeable} string 
+ * @param {control} object
  */
   static _insertClearButton(placeable, control){
     const metadata = WIPEABLES[placeable];
@@ -132,6 +143,75 @@ export class dangerZone {
           dangerZone.wipe(metadata.wipeId)
         },
         button: true
+      }
+    }
+  }
+
+    /**
+ * adds the clear buttons to the controls on the canvas
+ * @param {object} controls 
+ 
+ unction _showZoneHighlight(event){
+     const data = $(event.currentTarget).data("data-id");
+     dangerZoneDimensions.addHighlightZone(data.zone, data.scene, '', data.dangerId);
+ } 
+ 
+ function _hideZoneHighlight(event){
+     const data = $(event.currentTarget).data("data-id");
+     dangerZoneDimensions.destroyHighlightZone(data.zone, '', data.dangerId);
+ }
+ 
+ function _contextMenu(event){
+     const data = $(event.currentTarget).data("data-id");
+     new DangerZoneForm(null, data.zone, data.scene, data.dangerId).render(true);
+ }
+ 
+    */
+  static _insertZoneButtons(controls){
+    controls[dangerZone.ID] = CONTROLTRIGGERS['main']
+    const tools = controls[dangerZone.ID].tools;
+    tools['config'] = CONTROLTRIGGERS['config']
+
+    if(game.settings.get(dangerZone.ID, 'display-executor')) tools['executor'] = CONTROLTRIGGERS['executor']
+    if(game.settings.get(dangerZone.ID, 'scene-control-clear-all-button-display')) tools['clear']  = CONTROLTRIGGERS['clear']
+      
+    //set triggers
+    let randomSet = false; //tracks whether a random trigger button is already set.
+    let isRandom = false; //tracks that the current danger is considered random trigger
+    const zones = dangerZone.getTriggerZonesFromScene(canvas.scene.id).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)});
+    
+    if (zones.length) {
+      for (const zn of zones){
+        isRandom = (zn.enabled && zn.hasManualEvent && zn.trigger.random) ? true : false 
+        if(isRandom && randomSet) continue; //random buttom already exists
+
+        if(!isRandom && !zn.hasAutomatedEvent && !zn.enabled) continue; //manual event is not random and not active
+        
+        const danger = dangerZoneType.getDanger(zn.dangerId);
+        if (!danger) continue; //danger doesn't exist
+
+        const trigger = {
+          active: (zn.enabled && zn.hasAutomatedEvent) ? true : false,
+          button: true,
+          icon: isRandom ? "fas fa-radiation-alt" : `<i>${danger.icon}'</i>`,
+          name: isRandom ? random : zn.id,
+          title: isRandom ? "DANGERZONE.scene.random-trigger.label" : zn.title + (zn.scene.dangerId ? ' (' + game.i18n.localize("DANGERZONE.type-form.global-zone.label") + ') ' :' ') + zn.eventsDescription + ' ' + game.i18n.localize("DANGERZONE.scene.trigger"),
+          onClick: (active) => {
+              const data = {
+                dangerId: zn.scene.dangerId,
+                zone: isRandom ? 'random' : zn.id, 
+                scene: zn.scene.sceneId
+              }
+              dangerZone.handleTriggerClick(data)
+          },
+          visible: game.user.isActiveGM
+        }                  
+        if(isRandom) {
+          tools['random'] = trigger
+          randomSet = 1;                
+        } else {
+          tools[zn.id] = trigger;          
+        }
       }
     }
   }
@@ -276,6 +356,32 @@ export class dangerZone {
       return this.getAllZonesFromScene(sceneId, false, false).find(zn => zn.title === zoneName)
     }
 
+  static async handleClear(event) {
+    new Dialog({
+        title: game.i18n.localize("DANGERZONE.controls.clear.label"),
+        content: game.i18n.localize("DANGERZONE.controls.clear.description"),
+        buttons: {
+          yes: {
+            icon: '<i class="fas fa-check"></i>',
+            label: game.i18n.localize("DANGERZONE.yes"),
+            callback: async () => {
+                await dangerZone.wipeAll();
+            }
+          },
+          no: {
+            icon: '<i class="fas fa-times"></i>',
+            label: game.i18n.localize("DANGERZONE.cancel")
+          }
+        },
+        default: "no"
+      }, {
+        width: 400
+      }).render(true);
+  }
+
+  static async handleTriggerClick(data) {
+    await triggerManager.manualTrigger(data);
+  }
 
   static async checkSetMigration(scene){
     const hasMigration = scene.getFlag(this.ID, this.FLAGS.MIGRATION) ? true : false 
@@ -349,17 +455,6 @@ export class dangerZone {
     const updt = await scene.setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, flag);
     await dangerZone.checkSetMigration(scene)
     return updt
-  }
-
-  static initializeTriggerButtons(){
-    switch(game.settings.get(this.ID, 'scene-trigger-button-display')){
-      case "S":
-        addTriggersToSceneNavigation();
-        break
-      case "H":
-        addTriggersToHotbar();
-        break
-    }
   }
 
   static toggleMasterButtonActive(){
@@ -773,7 +868,6 @@ export class zone {
   async toggleZoneActive() {
     if(this.enabled){this.enabled = false} else {this.enabled = true}
     await this._setFlag();
-    dangerZone.initializeTriggerButtons()
     return
   }
 

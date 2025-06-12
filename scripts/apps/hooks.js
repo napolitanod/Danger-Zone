@@ -1,11 +1,8 @@
 import {api, _triggerZone} from "./api.js";
-import {setExecutableOptions, setModOptions, WIPEABLES} from './constants.js';
+import {setControlTriggers, setExecutableOptions, setModOptions, WIPEABLES} from './constants.js';
 import {dangerZone} from '../danger-zone.js';
-import {requestSavingThrow} from './helpers.js';
-import {addTriggersToHotbar} from './hotbar.js';
+import {addDangerButton, launchSceneForm, requestSavingThrow} from './helpers.js';
 import {migrateDanger, migrateScene} from './migration.js';
-import {DangerZoneScene} from "./scene-form.js";
-import {DangerZoneSceneForm} from './scene-zone-list-form.js';
 import {triggerManager}  from './trigger-handler.js';
 
 export function setHooks(){
@@ -30,10 +27,6 @@ export function setHooks(){
                 if(request.weather.play){canvas.weather.initializeEffects(CONFIG.weatherEffects[request.weather.play])}
             }
         });
-
-        Hooks.on('closeDangerZoneForm', (form, app) => {
-            dangerZone.initializeTriggerButtons()
-        });
         
         Hooks.on("renderDangerZoneForm", (app, html, options) => {
             app._handleSourceTag();
@@ -53,6 +46,11 @@ export function setHooks(){
             app._handleSuppress(html);
         });
 
+        /**
+         * Hooks on rendering the scene directory on the right side bar
+         */
+        Hooks.on("renderSceneDirectory", addDangerButton); 
+
         Hooks.on("token-says.sayingComplete", (saying) => {
             if(!saying.table?.id || !saying.scene?.id) return
             const chatMessage = {
@@ -67,13 +65,13 @@ export function setHooks(){
         setModOptions();
         await migrateDanger.migrate();
         await migrateScene.migrate();
-        dangerZone.initializeTriggerButtons()
     });
 
     /**
      * Registers the api and makes available
      */
     Hooks.once('setup', async function() {
+        setControlTriggers();
         api.register();
     });
 
@@ -118,83 +116,47 @@ export function setHooks(){
         triggerManager.findcombatEvents(combat, 'deleteCombat', options)
     });
 
+    /** V13
+     * Adds to the config menu of the Regions form a launch for zones
+     */
+    Hooks.on ("getHeaderControlsRegionConfig", (application, controls) => {
+        if(!game.user.isActiveGM) return
+        controls.push({
+            onClick: (event) => {
+                launchSceneForm(canvas.scene)
+            },
+            icon: 'fas fa-radiation',
+            label: 'DANGERZONE.zones'
+        })
+    })
+
+    /** V13
+     * Adds to the config menu of the Scenes configuration form a launch for zones
+     */
+    Hooks.on ("getHeaderControlsSceneConfig", (application, controls) => {
+        const scene = application?.document;
+        if(!scene?.id || !game.user.isActiveGM) return
+        controls.push({
+            onClick: (event) => {
+                launchSceneForm(scene, application)
+            },
+            icon: 'fas fa-radiation',
+            label: 'DANGERZONE.zones'
+        })
+    })
+
     /**
      * add zone clear button to canvas controls
      */
     Hooks.on("getSceneControlButtons", (controls) => {
         if(!game.user.isActiveGM) return
+        if(!canvas.scene?.grid?.type) return dangerZone.log(false,'No scene navigation when gridless ', {"scene": canvas.scene});
+
         for (const key of Object.keys(WIPEABLES)) {
             dangerZone._insertClearButton(key, controls[key])
         }
+        dangerZone._insertZoneButtons(controls)
     });
-
-    Hooks.on('getSceneDirectoryEntryContext', function (app, html, data) {
-        if (game.user.isActiveGM) {
-        html.push(
-            {
-            name: game.i18n.localize('DANGERZONE.zones'),
-            icon: '<i class="fas fa-radiation"></i>',
-            condition: (li) => {
-                return game.user.isActiveGM
-            },
-            callback: async (li) => {
-                let scene = game.scenes.get(li.data('documentId'));
-                if(scene){
-                    new DangerZoneSceneForm('', scene.id).render(true);
-                }
-            },
-            },
-        );
-        }
-    });
-
-    Hooks.on('getSceneNavigationContext', function (app, html) {
-        if (game.user.isActiveGM) {
-        html.push(
-            {
-            name: game.i18n.localize('DANGERZONE.zones'),
-            icon: '<i class="fas fa-radiation"></i>',
-            condition: (li) => {
-                return game.user.isActiveGM
-            },
-            callback: async (li) => {
-                let scene = game.scenes.get(li.data('sceneId'));
-                if(scene){
-                    new DangerZoneSceneForm( '', scene.id).render(true);
-                }
-            },
-            },
-        );
-        }
-    });
-
-    /**
-     * Hook for rendering the scene form. Adds zone list and CRUD to scene form
-     */
-    Hooks.on('renderSceneConfig', async (app, html, options) => {
-        DangerZoneScene._init(app, html, options);
-    });
-
-    /**
-    * Hook for the rendering of the hotbar, such as toggling it. 
-    */
-    Hooks.on('renderSceneControls', async(app, html, options) => {
-        switch(game.settings.get('danger-zone', 'scene-trigger-button-display')){
-            case "H":
-                addTriggersToHotbar();
-                break
-        }
-    });
-    /**
-     * Hook for the rendering of the scene list at top of canvas display. Adds zone trigger buttons to scene navigation bar on canvas
-     */
-    Hooks.on('renderSceneDirectory', async(app, html, options) => {
-        dangerZone.initializeTriggerButtons()
-    });
-
-    Hooks.on("renderSidebarTab", async(app,options,update) => {
-        if(update?.tabName ==='scenes') dangerZone._addQuickZonesLaunch(app);
-    }); 
 
     /**
      * in combat hook for when combat begins or round/turn changes. Used for managing in combat zone events

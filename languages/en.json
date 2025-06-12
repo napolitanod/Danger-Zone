@@ -462,21 +462,10 @@
             "scene-control-sound-button-display.description": "Toggles the display of the Clear Ambient Sound button within the scene control buttons ambient sound control grouping.",
             "scene-control-wall-button-display.label": "Display Clear Wall Button",
             "scene-control-wall-button-display.description": "Toggles the display of the Clear Wall button within the scene control buttons walls control grouping.",
-            "scene-trigger-button-display.label": "Zone Trigger Display Location",
-		    "scene-trigger-button-display.description": "Set the location where the zone triggers will display. Triggers only display for the GM when viewing the active scene.",
             "types-button-display.label": "Display Dangers Button",
-            "types-button-display.description": "Toggles the display of the Dangers button at the bottom of the scenes side bar.",
+            "types-button-display.description": "Displays the dangers form launch button within the Scenes sidebar actions.",
             "scene-enabled-default.label": "New Zone Active by Default",
             "scene-enabled-default.description": "Select whether or not new danger zones default to active when you first create them.",
-            "scene-header":{
-                "display": {
-                  "label": "Display Button in Token Form Header",
-                  "description": "Determine if and how to show a button in the scene form header. This button will launch the 'Configure Danger Zones' form.",
-                  "iconOnly": "Display icon only",
-                  "iconLabel": "Display icon and 'Zones' label",
-                  "none": "Do not display"
-                }
-              },
             "token-depth-multiplier.label": "Token Depth Multiplier",
 		    "token-depth-multiplier.description": "For purposes of zone depth targeting, set a multiplier that calculates how tall a token is in relation to the scene distance and the number of grid squares that that token takes up. A token in a single grid square with a scale of 1.0, a scene distance of 5, and a multiplier of 1.2 will have a tallness of 6 (1 * 1.0 * 5 * 1.2). If 'Wall Height' module is installed, this setting is ignored for tokens with a 'Token Height' > 0.",
             "zone-exclusion-tag.label": "Block Zone Tag",
@@ -531,10 +520,6 @@
             "friendly.label": "Friendly",
             "hostile.label": "Hostile",
             "neutral.label": "Neutral"
-        },
-        "trigger-display-options": {
-            "scene.label": "Scene Navigation In-line",
-            "hotbar.label": "Hotbar Adjacent"
         },
         "trigger-operation": {
             "sequential": "Sequential",

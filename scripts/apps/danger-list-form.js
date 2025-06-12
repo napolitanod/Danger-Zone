@@ -57,7 +57,6 @@ export class DangerZoneTypesForm extends FormApplication {
               label: game.i18n.localize("DANGERZONE.yes"),
               callback: async () => {
                 await dangerZoneType.deleteZoneType(dangerId);
-                dangerZone.initializeTriggerButtons();
                 this.refresh();
               }
             },
@@ -104,7 +103,6 @@ export class DangerZoneTypesForm extends FormApplication {
   async _activateWorld(dangerId){
     const danger = dangerZoneType.getDanger(dangerId);
     Object.keys(danger.options.globalZone).length ? await danger.toggleWorldZone() : await danger.activateWorldZone();
-    dangerZone.initializeTriggerButtons();
     this.refresh();
   }
 

@@ -1,5 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
 import {point} from './dimensions.js'
+import {DangerZoneSceneForm} from './scene-zone-list-form.js';
 
 export function circleAreaGrid(xLoc,yLoc, dimension = {w:w, h:h}){
   if((!xLoc &&!yLoc) || (yLoc===dimension.h&&!xLoc) || (xLoc===dimension.w&&!yLoc) || (xLoc===dimension.w&&yLoc===dimension.h)){return false}
@@ -58,15 +59,6 @@ export async function getFilesFromPattern(pattern) {
     return content.files;      
 }
 
-
-export function getSceneOptionButton(){
-  let opt = game.settings.get(dangerZone.ID, 'scene-header');   
-  if (!game.user.isActiveGM || opt === 'N') return
-  let icn = '<i class="fas fa-radiation"></i>';
-  if(opt === 'B') icn+='Zones'
-  return  $(`<a class="open-dangerzone" title="Danger Zone Config">` + icn + `</a>`);
-}
-
 export function getSceneRegionList(sceneId){
   let list = {'':'[Use Scene Dimensions]'};
   for (let region of game.scenes.get(sceneId).regions.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
@@ -105,6 +97,20 @@ export function rayIntersectsGrid(coords, r){
           return true
       }
   return false
+}
+
+/** V13
+ * Adds the dangers launch button to the Scenes sidebar
+ * @param {object} app 
+ * @param {object} html 
+ * @param {object} updates 
+ */
+export function addDangerButton(app, html, updates) {
+  dangerZone.addDangersLaunch(app, html);
+} 
+
+export function launchSceneForm(scene, application = ''){ 
+  new DangerZoneSceneForm(application, scene.id).render(true)
 }
 
 export async function requestSavingThrow(tokenUuid, saveType, time){

@@ -278,9 +278,9 @@ export class triggerManager {
         dangerZone.log(false,`${message}... `, {triggerManager: this, data:data});
     }
 
-    static async manualTrigger(event) {
-        let sceneId = $(event.currentTarget).data("data-id").scene; 
-        const tm = new triggerManager(sceneId, event);
+    static async manualTrigger(data) {
+        let sceneId = data.scene; 
+        const tm = new triggerManager(sceneId, data);
         return await tm.trigger();
     }
 
@@ -362,19 +362,17 @@ export class triggerManager {
     }
 
     async trigger() {
-        const data = $(this.data.currentTarget).data("data-id"); 
-        
-        if(data.zone ==='random') {
-            const zn = await dangerZone.getRandomZoneFromScene(data.scene, 'manual')
+        if(this.data.zone ==='random') {
+            const zn = await dangerZone.getRandomZoneFromScene(this.data.scene, 'manual')
             this.zones.push({zone: zn, event: 'manual'})
             if(!this.zones.length) {
-                this.log(`Random trigger zone not found...`, {eventData: data});
+                this.log(`Random trigger zone not found...`, {eventData: this.data});
                 return
             } else {
-                this.log(`Random trigger zone found...`, {eventData: data});
+                this.log(`Random trigger zone found...`, {eventData: this.data});
             }
         } else {
-            const zn = data.dangerId ? dangerZone.getGlobalZone(data.dangerId, data.scene) : dangerZone.getZoneFromScene(data.zone, data.scene)
+            const zn = this.data.dangerId ? dangerZone.getGlobalZone(this.data.dangerId, this.data.scene) : dangerZone.getZoneFromScene(this.data.zone, this.data.scene)
             this.zones.push({zone: zn, event: zn.hasManualEvent ? 'manual' : ''})
         } 
         

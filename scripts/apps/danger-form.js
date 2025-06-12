@@ -360,7 +360,6 @@ export class DangerForm extends FormApplication {
     if(Object.keys(this.weather).length) {expandedData.options.flags['weather'] = this.weather}
 
     await dangerZoneType.updateDangerZoneType(expandedData.id, expandedData);
-    dangerZone.initializeTriggerButtons();
     this.parent.refresh();
   }
 

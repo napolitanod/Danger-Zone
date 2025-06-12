@@ -1,14 +1,11 @@
 import {dangerZone} from './danger-zone.js';
-import {TRIGGERDISPLAYOPTIONS, SCENEFORMICONDISPLAYOPTIONS} from './apps/constants.js';
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 
 /**
  * Issues from V13
- ** Inline Scene zones no longer display
- ** Macro Adjacency is overlaid
- ** Dangers button does not show on scenes bar
- ** Header does not have Danger Zone on Scene form
- ** Header does not have zone form on region
+
+
+ css cleanup
  */
 
 /**
@@ -62,27 +59,6 @@ Hooks.once('init', async function() {
 		config: true,
 		default: true,
 		type: Boolean,
-		requiresReload: true
-	});
-
-    game.settings.register(modulename, 'scene-header', {
-		name: game.i18n.localize('DANGERZONE.setting.scene-header.display.label'),
-		hint: game.i18n.localize('DANGERZONE.setting.scene-header.display.description'),
-		scope: 'world',
-		config: true,
-		default: 'B',
-		type: String,
-		choices: SCENEFORMICONDISPLAYOPTIONS
-	});
-
-	game.settings.register(modulename, "scene-trigger-button-display", {
-		name: game.i18n.localize("DANGERZONE.setting.scene-trigger-button-display.label"),
-		hint: game.i18n.localize("DANGERZONE.setting.scene-trigger-button-display.description"),
-		scope: "world",
-		config: true,
-		default: 'S',
-        type: String,
-        choices: TRIGGERDISPLAYOPTIONS,
 		requiresReload: true
 	});
 

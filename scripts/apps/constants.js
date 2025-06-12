@@ -1,4 +1,5 @@
 import { dangerZone } from '../danger-zone.js';
+import {DangerZoneSceneForm} from './scene-zone-list-form.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -70,6 +71,51 @@ export const WORLDZONE = {
     enabled: true
   }
 
+export const CONTROLTRIGGERS = {};
+
+export function setControlTriggers(){
+    Object.assign(CONTROLTRIGGERS, {
+        main:{
+            icon: "fas fa-radiation-alt",
+            name: dangerZone.ID,
+            title: "Zones",
+            layer: "tokens",
+            visible: game.user.isActiveGM,
+            tools: {}
+        },
+        config: {
+            button: true,
+            icon: "fas fa-radiation",
+            name: "config",
+            title: "DANGERZONE.zones",
+            onClick: () => {
+                new DangerZoneSceneForm('', canvas.scene.id).render(true)
+            },
+            visible: game.user.isActiveGM
+        },
+        executor: {
+            button: true,
+            icon: "fas fa-list-alt",
+            name: "executor",
+            title: "DANGERZONE.scene.executor.label",
+            onClick: () => {
+                dangerZone.executorForm.renderOnScene();
+            },
+            visible: game.user.isActiveGM
+        },
+        clear: {
+            button: true,
+            icon: "fas fa-trash",
+            name: "clear",
+            title: "DANGERZONE.controls.clear.label",
+            onClick: (event) => {
+                dangerZone.handleClear(event)
+            },
+            visible: game.user.isActiveGM
+        }   
+    });
+}
+
 export const AMBIENTLIGHTCLEAROPS = {
     'D': 'DANGERZONE.light.clear-types.delete',
     'O': 'DANGERZONE.light.clear-types.off'
@@ -79,17 +125,6 @@ export const COMBATINITIATIVE = {
     '': "DANGERZONE.type-form.combat.initiative.type.options.none",
     "R": "DANGERZONE.type-form.combat.initiative.type.options.roll",
     "S": "DANGERZONE.type-form.combat.initiative.type.options.set"
-}
-
-export const SCENEFORMICONDISPLAYOPTIONS = {
-    'B': 'DANGERZONE.setting.scene-header.display.iconLabel', 
-    'I': 'DANGERZONE.setting.scene-header.display.iconOnly', 
-    'N': 'DANGERZONE.setting.scene-header.display.none'
-};
-
-export const TRIGGERDISPLAYOPTIONS = {
-    "S": "DANGERZONE.trigger-display-options.scene.label",
-    "H":"DANGERZONE.trigger-display-options.hotbar.label"
 }
 
 export const TOKENDISPOSITION = {
