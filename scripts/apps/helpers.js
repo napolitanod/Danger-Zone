@@ -1,3 +1,7 @@
+/**
+ * Reviewed for v13. All functions in use retained.
+ */
+
 import {dangerZone} from '../danger-zone.js';
 import {point} from './dimensions.js'
 import {DangerZoneSceneForm} from './scene-zone-list-form.js';
@@ -99,7 +103,7 @@ export function rayIntersectsGrid(coords, r){
   return false
 }
 
-/** V13
+/** v13
  * Adds the dangers launch button to the Scenes sidebar
  * @param {object} app 
  * @param {object} html 
@@ -109,6 +113,26 @@ export function addDangerButton(app, html, updates) {
   dangerZone.addDangersLaunch(app, html);
 } 
 
+/** V13
+ * Adds to the controls for the given appliactiona launch for zones form
+ */
+export function addSceneFormLaunch(application, controls){
+  const scene = application?.document?.documentName === 'Scene' ? application?.document : canvas.scene
+  if(!game.user.isActiveGM) return
+  controls.push({
+      onClick: (event) => {
+          launchSceneForm(scene, application)
+      },
+      icon: 'fas fa-radiation',
+      label: 'DANGERZONE.zones'
+  })
+}
+
+/**v13
+ * Launches the form that lists all zones associated to the given scene.
+ * @param {object} scene the scene class
+ * @param {object} application 
+ */
 export function launchSceneForm(scene, application = ''){ 
   new DangerZoneSceneForm(application, scene.id).render(true)
 }

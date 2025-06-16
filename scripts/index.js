@@ -1,17 +1,6 @@
 import {dangerZone} from './danger-zone.js';
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 
-/**
- * Issues from V13
-
-
- css cleanup
- */
-
-/**
- * global variables
- */
-
 Hooks.once('init', async function() {  
     
 	let modulename = "danger-zone";
@@ -40,76 +29,6 @@ Hooks.once('init', async function() {
 		config: true,
 		default: true,
 		type: Boolean,
-	});
-
-	game.settings.register(modulename, "display-executor", {
-		name: game.i18n.localize("DANGERZONE.setting.display-executor.label"),
-		hint: game.i18n.localize("DANGERZONE.setting.display-executor.description"),
-		scope: "world",
-		config: true,
-		default: false,
-		type: Boolean,
-		requiresReload: true
-	});
-
-	game.settings.register(modulename, "scene-control-clear-all-button-display", {
-		name: game.i18n.localize("DANGERZONE.setting.scene-control-clear-all-button-display.label"),
-		hint: game.i18n.localize("DANGERZONE.setting.scene-control-clear-all-button-display.description"),
-		scope: "world",
-		config: true,
-		default: true,
-		type: Boolean,
-		requiresReload: true
-	});
-
-	game.settings.register(modulename, "scene-control-button-display", {
-		name: game.i18n.localize("DANGERZONE.setting.scene-control-button-display.label"),
-		hint: game.i18n.localize("DANGERZONE.setting.scene-control-button-display.description"),
-		scope: "world",
-		config: true,
-		default: true,
-		type: Boolean,
-		requiresReload: true
-	});
-
-	game.settings.register(modulename, "scene-control-light-button-display", {
-		name: game.i18n.localize("DANGERZONE.setting.scene-control-light-button-display.label"),
-		hint: game.i18n.localize("DANGERZONE.setting.scene-control-light-button-display.description"),
-		scope: "world",
-		config: true,
-		default: false,
-		type: Boolean,
-		requiresReload: true
-	});
-
-	game.settings.register(modulename, "scene-control-sound-button-display", {
-		name: game.i18n.localize("DANGERZONE.setting.scene-control-sound-button-display.label"),
-		hint: game.i18n.localize("DANGERZONE.setting.scene-control-sound-button-display.description"),
-		scope: "world",
-		config: true,
-		default: false,
-		type: Boolean,
-		requiresReload: true
-	});
-
-	game.settings.register(modulename, "scene-control-region-button-display", {
-		name: game.i18n.localize("DANGERZONE.setting.scene-control-region-button-display.label"),
-		hint: game.i18n.localize("DANGERZONE.setting.scene-control-region-button-display.description"),
-		scope: "world",
-		config: true,
-		default: false,
-		type: Boolean,
-		requiresReload: true
-	});
-
-	game.settings.register(modulename, "scene-control-wall-button-display", {
-		name: game.i18n.localize("DANGERZONE.setting.scene-control-wall-button-display.label"),
-		hint: game.i18n.localize("DANGERZONE.setting.scene-control-wall-button-display.description"),
-		scope: "world",
-		config: true,
-		default: false,
-		type: Boolean,
-		requiresReload: true
 	});
 
 	game.settings.register(modulename, "types-button-display", {

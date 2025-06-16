@@ -2,11 +2,12 @@ import {dangerZone} from "../danger-zone.js";
 import {dangerZoneDimensions} from "./dimensions.js";
 import {DangerForm} from './danger-form.js';
 import {DangerZoneForm} from './zone-form.js';
+import {triggerManager} from './trigger-handler.js';
 
 export class ExecutorForm extends FormApplication {
     constructor(sceneId, executor = {}, zones, ...args) {
       super(...args);
-      this.sceneId = sceneId,
+      this.sceneId = sceneId, 
       this.zoneId = executor?.zone?.id ? executor.zone.id : '',
       this.zones = zones ? zones : dangerZone.getExtendedZones(sceneId),
       this.executor = executor,
@@ -17,7 +18,7 @@ export class ExecutorForm extends FormApplication {
           target: false
       };
 
-      this._setHook()
+      this._setHook();
     }
 
     get hasExecutor(){
@@ -29,11 +30,11 @@ export class ExecutorForm extends FormApplication {
     }
 
     get boundaryInfo(){
-        return this.boundary ? `x: ${this.boundary.A.x} y: ${this.boundary.A.y} bottom: ${this.boundary.bottom ?? '&infin;'} to x: ${this.boundary.B.x} y: ${this.boundary.B.y} top: ${this.boundary.top ?? '&infin;'}` : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.boundary.none.label")
+        return this.boundary ? `x: ${this.boundary.A.x} y: ${this.boundary.A.y} bottom: ${this.boundary.bottomIsInfinite ? '&infin;' : this.boundary.bottom} to x: ${this.boundary.B.x} y: ${this.boundary.B.y} top: ${this.boundary.topIsInfinite ? '&infin;' : this.boundary.top}` : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.boundary.none.label")
     }
 
     get dangerOps(){
-        return this.zones.filter(z => z.scene.dangerId).reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
+        return this.zones.filter(z => z.scene.isPseudoZone).reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
     }
 
     get worldId(){
@@ -46,6 +47,10 @@ export class ExecutorForm extends FormApplication {
 
     get eligibleZoneList(){
         return (this.hasExecutor && this.executor.zoneEligibleTokens.length) ? this.executor.zoneEligibleTokens.map(t => t.name).join(', ') : '&nbsp;'// game.i18n.localize("DANGERZONE.executor-form.zone.none.label")
+    }
+
+    get firstZone(){
+        return this.hasZones ? this.zones[0] : {}
     }
 
     get hasSave(){
@@ -76,6 +81,10 @@ export class ExecutorForm extends FormApplication {
         return (this.hasExecutor && this.executor.targets.length) ? true : false
     }
 
+    get hasZones(){
+        return this.zones.length ? true : false
+    }
+
     get executorOptions(){
         return {
             boundary: this.locked.boundary ? this.boundary  : false,
@@ -104,6 +113,10 @@ export class ExecutorForm extends FormApplication {
         return this.hasTargets ? this.executor.targets.map(t => t.name).join(', ') : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.targets.none.label")
     }
 
+    get triggerZones(){
+       return this.zones.filter(z => z.danger && z.hasEvents && !z.scene.isPseudoZone).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)})
+    }
+
     get userTargets(){
         return Array.from(game.user.targets.map(t=> t.document))
     }
@@ -128,7 +141,10 @@ export class ExecutorForm extends FormApplication {
             template : dangerZone.TEMPLATES.DANGERZONEEXECUTOR,
             width : 305,
             height : "auto",
-            closeOnSubmit: false
+            closeOnSubmit: false,
+            tabs : [
+                {navSelector: ".tabs", contentSelector: "form", initial: "list"}
+            ]   
             })
     }
 
@@ -138,36 +154,43 @@ export class ExecutorForm extends FormApplication {
         html.on('change', "[data-action]", this._handleChange.bind(this));
         html.on('mouseenter', "#dz-zoneId", this._showZoneHighlight.bind(this));
         html.on('mouseleave', "#dz-zoneId", this._hideZoneHighlight.bind(this));
+        html.on('mouseenter', ".danger-zone-scene-trigger-button", this._handleHover.bind(this));
+        html.on('mouseleave', ".danger-zone-scene-trigger-button", this._handleHover.bind(this));
+        html.on('contextmenu', ".danger-zone-scene-trigger-button", this._handleRightClick.bind(this));
+    }
+
+    draw(elementId, obj, setPosition = false){
+        const html = document.getElementById(elementId)
+        if(html) {
+            html.innerHTML = obj;
+            if(setPosition) this.setPosition()
+        }
     }
 
     drawBoundary(){
-        document.getElementById(`dz-boundary`).innerHTML = this.boundaryInfo
+        this.draw(`dz-boundary`, this.boundaryInfo, false);
         this.drawTargets();
     }
 
     drawBoundaryEligible(){
-        document.getElementById(`dz-eligible-target-list`).innerHTML = this.eligibleTargetList;
-        this.setPosition()
+        this.draw(`dz-eligible-target-list`, this.eligibleTargetList, true);
     }
 
     drawSaves(){
-        document.getElementById(`dz-save-list`).innerHTML = this.saveList;
-        this.setPosition()
+        this.draw(`dz-save-list`, this.saveList, true);
     }
 
     drawSources(){
-        document.getElementById(`dz-source-list`).innerHTML = this.sourceList;
-        this.setPosition()
+        this.draw(`dz-source-list`, this.sourceList, true);
     }
 
     drawTargets(){
-        document.getElementById(`dz-targets-list`).innerHTML = this.targetList
+        this.draw(`dz-targets-list`, this.targetList, false);
         this.drawSaves();
     }
 
     drawZoneEligible(){
-        document.getElementById(`dz-eligible-zone-list`).innerHTML = this.eligibleZoneList;
-        this.setPosition()
+        this.draw(`dz-eligible-zone-list`, this.eligibleZoneList, true);
     }
 
     getData(){
@@ -181,11 +204,14 @@ export class ExecutorForm extends FormApplication {
             hasSave: this.hasSave,
             hasSourcing: this.hasSourcing,
             hasTargeting: this.hasTargeting,
+            includesIncludeRandomTrigger: this.triggerZones.find(zn => zn.enabled && zn.hasManualEvent && zn.trigger.random) ? true : false,
             locked: this.locked,
+            randomTitle: game.i18n.localize("DANGERZONE.scene.random-trigger.label"),
             saveList: this.saveList,
             sceneId: this.sceneId,
             sourceList: this.sourceList,
             targetList: this.targetList,
+            triggerZones: this.triggerZones,
             worldZoneOps: this.worldZoneOps,
             zoneId: this.zoneId,
             zoneOps: this.zoneOps
@@ -193,12 +219,17 @@ export class ExecutorForm extends FormApplication {
     }
 
     async _handleButtonClick(event) {
+        event.preventDefault();
         if(!this.hasExecutor) return
         const clickedElement = $(event.currentTarget);
         const action = clickedElement.data().action;
+        const actionId = clickedElement.data()?.id;
         const executableId = clickedElement.parents('[data-id]')?.data()?.id;
         const executable = executableId ? this.executor.executable[executableId] : {}
         switch (action) {
+            case 'trigger':
+                await triggerManager.manualTrigger({scene: this.sceneId, dangerId: actionId, zone: executableId, event: event});
+                break;
             case 'edit-danger':
                 new DangerForm(this.zone.dangerId, this).render(true);
                 break;
@@ -293,7 +324,7 @@ export class ExecutorForm extends FormApplication {
         switch (action) {
           case 'zone': 
             this.zoneId = val;
-            await this.setExecutor();
+            await this._setExecutor();
             await this.refresh(false);
             break;
         }
@@ -315,6 +346,30 @@ export class ExecutorForm extends FormApplication {
                 await this.executor.updateLocation(this.userTargets?.[0], {clearTargets: !this.locked.target, highlight: false});
                 break
         }
+    }
+
+    async _handleHover(event){
+        const hoveredElement = $(event.currentTarget);
+        const zoneId = hoveredElement.parents('[data-id]')?.data()?.id;
+        const worldId = hoveredElement.data()?.id;
+        if(zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
+            switch(event.type){
+                case 'mouseenter':
+                    dangerZoneDimensions.addHighlightZone(zoneId, this.sceneId, '', worldId);
+                    break;
+                case 'mouseleave':
+                    dangerZoneDimensions.destroyHighlightZone(zoneId, '', worldId); 
+                    break;
+            }
+        }
+    }
+
+    async _handleRightClick(event){
+        const hoveredElement = $(event.currentTarget);
+        const zoneId = hoveredElement.parents('[data-id]')?.data()?.id;
+        if (zoneId === 'random') return
+        const worldId = hoveredElement.data()?.id;
+        new DangerZoneForm(this, zoneId, this.sceneId, worldId).render(true);
     }
 
     _handleLock(action){
@@ -464,8 +519,8 @@ export class ExecutorForm extends FormApplication {
     }
 
     async refresh(full = true){
-        if(full) await this.setExecutor()
-        this.render();
+        if(full) await this._setExecutor()
+        this.render(true);
     }
 
     refreshBoundary(){
@@ -475,9 +530,11 @@ export class ExecutorForm extends FormApplication {
     }
 
     async refreshZone(){
-        await this.executor.setZone(true);
-        this.drawZoneEligible();
-        this.drawBoundaryEligible();
+        await this.executor.setZone();
+        if(this.rendered){
+            this.drawZoneEligible();
+            this.drawBoundaryEligible();
+        }
     }
 
     async _setHook(){
@@ -501,20 +558,26 @@ export class ExecutorForm extends FormApplication {
         }
     }
 
-    async setExecutor(){
+
+    async _setExecutor(){
         this.executor = this.zoneId ? await this.zone.executor(this.executorOptions): {}
         await this.refreshZone();
     }
     
-    async renderOnScene(sceneId, zoneId, zones){
-        this.sceneId = sceneId ? sceneId : canvas.scene.id;
+    /**v13
+     * Called when executor is intended to be opened on scene
+     * @param {string} sceneId 
+     * @param {string} zoneId 
+     */
+    async renderOnScene(sceneId = canvas.scene.id, zoneId){
+        this.sceneId = sceneId;
+        this.zoneId = zoneId;
         if(game.user.isActiveGM && this.scene.active && this.scene.grid.type){
-            this.zones = zones ? zones : dangerZone.getExtendedZones(this.sceneId);
-            if(this.zones.length){
-                this.executor = zoneId ? await this.setExecutor() : await this.zones[0].executor(this.executorOptions);
-                this.zoneId = zoneId ? zoneId : this.executor.zone?.id;
+            this.zones = dangerZone.getExtendedZones(this.sceneId);
+            if(this.hasZones){
+                if(!this.zoneId) this.zoneId = this.firstZone.id;
+                await this._setExecutor();
                 this.render(true);
-                return true
             }
         }
     }

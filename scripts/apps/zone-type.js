@@ -453,7 +453,7 @@ export class dangerZoneType {
   }
 
   get hasGlobalZone(){
-    return Object.keys(this.options.globalZone).length ? true : false
+    return Object.keys(this.options.globalZone).length && this.options.globalZone?.enabled ? true : false
   }
 
   get hasRegion(){
@@ -570,7 +570,7 @@ export class dangerZoneType {
   }
 
   static get allGlobalZones() {
-    return this.allDangers.filter(d => d.globalZone?.enabled)
+    return this.allDangers.filter(d => d.hasGlobalZone)
   }
 
   static getDanger(id) {
@@ -619,6 +619,7 @@ export class dangerZoneType {
     let allTypes = dangerZoneType._allDangers; 
     allTypes[this.id] = this;
     await dangerZoneType.setZoneTypes(allTypes);
+    Hooks.call("dangerZone.updateDanger", this);
     return this
   }
 

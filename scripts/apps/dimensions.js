@@ -136,7 +136,7 @@ export class dangerZoneDimensions {
         }
     */
 export class boundary{
-    constructor (a = {x:0, y:0}, b = {x:0, y:0}, elevation = {bottom: null, top: null}, options = {}) {
+    constructor (a = {x:0, y:0}, b = {x:0, y:0}, elevation = {bottom: -Infinity, top: Infinity}, options = {}) {
         this.A = {
             x: a.x ? Math.min(a.x, a.x ? b.x : b.x) : 0,
             y: a.y ? Math.min(a.y, a.y ? b.y : b.y) : 0
@@ -161,6 +161,14 @@ export class boundary{
         return this.options.bottom ?? this.elevation.bottom
     }
 
+    get bottomIsInfinite(){
+        return this.bottom === -Infinity || this.bottom === null
+    }
+    
+    get bottomToElevation(){
+        return this.bottomIsInfinite ? 0 : this.bottom
+    }
+
     get center(){
         return {x: this.A.x + (this.width/2), y: this.A.y + (this.height/2)}
     }
@@ -170,7 +178,7 @@ export class boundary{
     }
 
     get depthIsInfinite(){
-        return this.bottom === null || this.top === null
+        return this.topIsInfinite || this.bottomIsInfinite
     }
 
     get dimensions(){
@@ -182,6 +190,15 @@ export class boundary{
         const h = Math.max(bottom.i,left.i) - Math.min(top.i,right.i);
 
         return {w: w, h: h, j:top.j, i:top.i, top: top, left: left, right: right, bottom: bottom}
+    }
+
+    get elevationArray(){
+        if (this.depthIsInfinite) return [0]
+        const arr = []
+        for (let i = 0; i < this.depth; i++) {
+            arr.push(this.depth + i);
+        }
+        return arr
     }
 
     get exclude(){
@@ -214,6 +231,14 @@ export class boundary{
 
     get top(){
         return this.options.top ?? this.elevation.top
+    }
+
+    get topIsInfinite(){
+        return this.top === Infinity || this.top === null
+    }
+    
+    get topToElevation(){
+        return this.topIsInfinite ? 0 : this.top
     }
 
     get width(){
@@ -287,9 +312,13 @@ export class boundary{
         if(this.range.w > 1) vertices = vertices.concat(canvas.grid.getCenterPoint(canvas.grid.getTopLeftPoint({i: dim.i, j: dim.j + (this.range.w - 1)})))//vertices = vertices.concat(canvas.grid.getVertices({i: dim.i, j: dim.j + (this.range.w - 1)}))
         if(this.range.h > 1 && this.range.w  > 1) vertices = vertices.concat(canvas.grid.getCenterPoint(canvas.grid.getTopLeftPoint({i: dim.i + (this.range.h-1), j: dim.j + (this.range.w - 1)}))) //vertices = vertices.concat(canvas.grid.getVertices({i: dim.i + (this.range.h-1), j: dim.j + (this.range.w - 1)}))
         vertices.push(canvas.grid.getCenterPoint(dim))
-        //dangerZone.log(true, "Testing Grid to Region", {dimensions: this, coord: dim, vertices: vertices})
+        dangerZone.log(true, "Testing Grid to Region", {dimensions: this, region: this.region, coord: dim, vertices: vertices})
         do {
-            inRegion = this.region.object.testPoint(vertices[i])
+            const testPoint = vertices[i];
+            for(const d of this.elevationArray){
+                inRegion = this.region.testPoint({x: testPoint.x, y: testPoint.y, elevation: d})
+                if(inRegion) break;
+            }
             i++
         } while (!inRegion && i < vertices.length)
         return inRegion
@@ -334,7 +363,8 @@ export class boundary{
             const topLeft = canvas.grid.getTopLeftPoint(test); 
             const bottomRight = point.shiftPoint(topLeft, this.range);
             const e = test.e + Math.floor(Math.random() * this.depth);
-            yield new boundary(topLeft, bottomRight, {bottom: e, top: e + zAdj}, ops)
+            const top = e === -Infinity ? Infinity : e + zAdj;
+            yield new boundary(topLeft, bottomRight, {bottom: e, top: top}, ops)
         }
 
     }
@@ -443,7 +473,7 @@ export class boundary{
     } 
 
     intersectsBoundary(bound = boundary){
-        if((this.bottom === null || this.bottom < bound.top) && (this.top === null || this.top >= bound.bottom)) {
+        if((this.bottomIsInfinite || this.bottom < bound.top) && (this.topIsInfinite || this.top >= bound.bottom)) {
             const grids = bound.grids()
             for(const grid of grids){
                 if(this.gridIndex.has(grid.index)) return true

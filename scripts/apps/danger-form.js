@@ -72,27 +72,15 @@ export class DangerForm extends FormApplication {
       }
       case 'delete': {
         label = clickedElement.prev().text();
-        new Dialog({
-          title: `${game.i18n.localize("DANGERZONE.type-form.clear")} ${label}`,
-          content: `${game.i18n.localize("DANGERZONE.type-form.confirm")} ${label}?`,
-          buttons: {
-            yes: {
-              icon: '<i class="fas fa-check"></i>',
-              label: game.i18n.localize("DANGERZONE.yes"),
-              callback: async () => {
-                parent.removeClass('active');
-                await this._deleteDangerPart(event, parent, partId, label);
-              }
-            },
-            no: {
-              icon: '<i class="fas fa-times"></i>',
-              label: game.i18n.localize("DANGERZONE.cancel")
-            }
-          },
-          default: "no"
-        }, {
-          width: 400
-        }).render(true);
+        const choice = await foundry.applications.api.DialogV2.confirm({
+          content: `${game.i18n.localize("DANGERZONE.type-form.clear")} ${label}?`,
+          rejectClose: false,
+          modal: true
+        });
+        if(choice){
+          parent.removeClass('active');
+          this._deleteDangerPart(event, parent, partId, label);
+        }
         break;
       }
       default:
@@ -299,7 +287,7 @@ export class DangerForm extends FormApplication {
       hasCombat: instance.hasCombat ? true : false,
       hasCanvas: (this.canvas.effect.type || this.canvas.pan.active) ? true : false,
       hasForegroundEffect: this.foregroundEffect?.file ? true : false,
-      hasGlobalZone: Object.keys(this.globalZone).length ? true : false,
+      hasGlobalZone: Object.keys(this.globalZone).length && this.globalZone?.enabled ? true : false,
       hasItem: this.item?.name?.length ? true : false,
       hasLastingEffect: this.lastingEffect?.file ? true : false,
       hasLight: (this.light.bright || this.light.dim) ? true : false,

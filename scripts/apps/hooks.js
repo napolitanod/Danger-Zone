@@ -1,7 +1,7 @@
 import {api, _triggerZone} from "./api.js";
-import {setControlTriggers, setExecutableOptions, setModOptions, WIPEABLES} from './constants.js';
+import {setControlTriggers, setExecutableOptions, setModOptions} from './constants.js';
 import {dangerZone} from '../danger-zone.js';
-import {addDangerButton, launchSceneForm, requestSavingThrow} from './helpers.js';
+import {addSceneFormLaunch, addDangerButton, requestSavingThrow} from './helpers.js';
 import {migrateDanger, migrateScene} from './migration.js';
 import {triggerManager}  from './trigger-handler.js';
 
@@ -42,9 +42,17 @@ export function setHooks(){
         });
 
         //hook to ensure that, on executor form render, appropriate field flagging is done
-        Hooks.on("renderExecutorForm", (app, html, options) => {
-            app._handleSuppress(html);
-        });
+        Hooks.on("dangerZone.updateZone", (zone) => {
+            dangerZone.log(false, 'Zone update hook...', zone)
+            dangerZone.executorForm.renderOnScene(zone.scene.sceneId, zone.id);
+        })
+
+        //hook to ensure that, on executor form render, appropriate field flagging is done
+        Hooks.on("dangerZone.updateDanger", (dangers) => {
+            dangerZone.log(false, 'Danger update hook...', dangers)
+            dangerZone.executorForm.renderOnScene();
+        })
+
 
         /**
          * Hooks on rendering the scene directory on the right side bar
@@ -119,31 +127,12 @@ export function setHooks(){
     /** V13
      * Adds to the config menu of the Regions form a launch for zones
      */
-    Hooks.on ("getHeaderControlsRegionConfig", (application, controls) => {
-        if(!game.user.isActiveGM) return
-        controls.push({
-            onClick: (event) => {
-                launchSceneForm(canvas.scene)
-            },
-            icon: 'fas fa-radiation',
-            label: 'DANGERZONE.zones'
-        })
-    })
+    Hooks.on("getHeaderControlsRegionConfig", addSceneFormLaunch); 
 
     /** V13
      * Adds to the config menu of the Scenes configuration form a launch for zones
      */
-    Hooks.on ("getHeaderControlsSceneConfig", (application, controls) => {
-        const scene = application?.document;
-        if(!scene?.id || !game.user.isActiveGM) return
-        controls.push({
-            onClick: (event) => {
-                launchSceneForm(scene, application)
-            },
-            icon: 'fas fa-radiation',
-            label: 'DANGERZONE.zones'
-        })
-    })
+    Hooks.on ("getHeaderControlsSceneConfig", addSceneFormLaunch);
 
     /**
      * add zone clear button to canvas controls
@@ -151,10 +140,6 @@ export function setHooks(){
     Hooks.on("getSceneControlButtons", (controls) => {
         if(!game.user.isActiveGM) return
         if(!canvas.scene?.grid?.type) return dangerZone.log(false,'No scene navigation when gridless ', {"scene": canvas.scene});
-
-        for (const key of Object.keys(WIPEABLES)) {
-            dangerZone._insertClearButton(key, controls[key])
-        }
         dangerZone._insertZoneButtons(controls)
     });
 

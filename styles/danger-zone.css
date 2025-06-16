@@ -424,6 +424,40 @@ form ol.danger-setting-group .active:hover label {
 }
 
 
+.danger-zone-scene-trigger-button {
+    justify-content: center;
+    align-items: center;
+    height: 50px;
+    width: 50px;
+    font-size: 14px;
+    background-size: 35px;
+    background-repeat: no-repeat;
+    background-position: center;
+    box-shadow: 0 0 10px #000;
+    white-space: normal;
+}
+
+.danger-zone-scene-trigger-button.global-zone{
+    background-color: rgba(120, 112, 0, 0.329);
+}
+.danger-zone-scene-trigger-button.global-zone:hover {
+    background-color: rgba(120, 112, 0, 0.329);
+    box-shadow: 0 0 10px #9b9928;
+    border: 1px solid yellow;
+}
+
+.danger-zone-scene-trigger-button:hover {
+    color: #FFF;
+    border: 1px solid red;
+    border-bottom: 1px solid #ff6400;
+    box-shadow: 0 0 10px #ff6400;
+}
+
+.danger-zone-scene-trigger-button > i {
+    margin: 7px 0 0 0;
+    font-size: 20px;
+}
+
 .location-picker > i {
     margin-right: 0px;
 }

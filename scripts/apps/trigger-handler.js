@@ -69,6 +69,30 @@ export class triggerManager {
         return arr
     }
 
+    /**V13
+     * method called by manual trigger. Runs through determining the random trigger to generate or the provided on
+     * @returns trigger manager
+     */
+    async _manualTrigger() {
+        if(this.data.zone ==='random') {
+            this.randomEvents.add('manual')
+            await this.reconcileRandomZones()
+        } else {
+            const zn = this.data.dangerId ? dangerZone.getGlobalZone(this.data.dangerId, this.data.scene) : dangerZone.getZoneFromScene(this.data.zone, this.data.scene)
+            if(zn) this.zones.push({zone: zn, event: zn.hasManualEvent ? 'manual' : ''})
+        } 
+        
+        if(!this.zones.length) return
+
+        if(this.zones[0].event === 'manual'){
+            await this.next();
+        } else {
+            await this.zones[0].zone.toggleZoneActive();
+        }
+    
+        return this
+    }
+
     _options(zone, event){
         const options = {}
         if(!['move'].includes(event)){
@@ -278,10 +302,15 @@ export class triggerManager {
         dangerZone.log(false,`${message}... `, {triggerManager: this, data:data});
     }
 
+    /**v13
+     * method called by a manual trigger (for example, using the executor)
+     * @param {object} data 
+     * @returns trigger manager
+     */
     static async manualTrigger(data) {
         let sceneId = data.scene; 
         const tm = new triggerManager(sceneId, data);
-        return await tm.trigger();
+        return await tm._manualTrigger();
     }
 
     async movementTrigger(){
@@ -317,11 +346,19 @@ export class triggerManager {
         this.log(`Trigger manager finished...`, this._cancels);
     }
 
+    /**V13
+     * from the array of events that have randomized zones, selects a zone at random that is eligible for each given event and adds as a zone to trigger
+     */
     async reconcileRandomZones() {
         if(this.randomZones.length) {
             for (let event of this.randomEvents){
                 const zone = await dangerZone.getRandomZoneFromScene(this.sceneId, event, this.randomZones.filter(z => z.event === event).map(z => z.zone))
-                if(zone){this.zones.push({zone: zone, event: event})}
+                if(zone){
+                    this.zones.push({zone: zone, event: event})
+                    this.log(`Random trigger zone not found...`, {eventData: this.data, event: event})
+                } else{
+                    this.log(`Random trigger zone found...`, {eventData: this.data, event: event});
+                }
             }
         } 
     }
@@ -359,30 +396,6 @@ export class triggerManager {
             this.randomZones.push({zone: zone, event: event})
             this.addZoneEvent(event, zone.trigger.initiative ?? 0)
         }
-    }
-
-    async trigger() {
-        if(this.data.zone ==='random') {
-            const zn = await dangerZone.getRandomZoneFromScene(this.data.scene, 'manual')
-            this.zones.push({zone: zn, event: 'manual'})
-            if(!this.zones.length) {
-                this.log(`Random trigger zone not found...`, {eventData: this.data});
-                return
-            } else {
-                this.log(`Random trigger zone found...`, {eventData: this.data});
-            }
-        } else {
-            const zn = this.data.dangerId ? dangerZone.getGlobalZone(this.data.dangerId, this.data.scene) : dangerZone.getZoneFromScene(this.data.zone, this.data.scene)
-            this.zones.push({zone: zn, event: zn.hasManualEvent ? 'manual' : ''})
-        } 
-        
-        if(this.zones[0].event === 'manual'){
-            await this.next();
-        } else {
-            await this.zones[0].zone.toggleZoneActive();
-        }
-    
-        return this
     }
 
 }

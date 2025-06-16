@@ -71,47 +71,102 @@ export const WORLDZONE = {
     enabled: true
   }
 
+/**v13 CONTROLTRIGGERS
+ * holds objects that are then loaded to the scene controls
+ */
 export const CONTROLTRIGGERS = {};
 
+/**v13 setControlTriggers
+ * loads the CONTROLTRIGGERS object. Intended to be called after Foundry initializes so that classes are available.
+ */
 export function setControlTriggers(){
     Object.assign(CONTROLTRIGGERS, {
-        main:{
-            icon: "fas fa-radiation-alt",
-            name: dangerZone.ID,
-            title: "Zones",
-            layer: "tokens",
-            visible: game.user.isActiveGM,
-            tools: {}
-        },
-        config: {
-            button: true,
-            icon: "fas fa-radiation",
-            name: "config",
-            title: "DANGERZONE.zones",
-            onClick: () => {
-                new DangerZoneSceneForm('', canvas.scene.id).render(true)
+        activeTool: 'executor',
+        icon: "fas fa-radiation",
+        name: dangerZone.ID,
+        title: "Zones",
+        visible: game.user.isActiveGM,
+        tools: {
+            config: {
+                button: true,
+                icon: "fa-solid fa-gear",
+                name: "config",
+                title: "DANGERZONE.zones",
+                onChange: (event, active) => {
+                    if(active) new DangerZoneSceneForm('', canvas.scene.id).render(true)
+                },
+                visible: game.user.isActiveGM
             },
-            visible: game.user.isActiveGM
-        },
-        executor: {
-            button: true,
-            icon: "fas fa-list-alt",
-            name: "executor",
-            title: "DANGERZONE.scene.executor.label",
-            onClick: () => {
-                dangerZone.executorForm.renderOnScene();
+            executor: {
+                button: true,
+                icon: "fas fa-list-alt",
+                name: "executor",
+                title: "DANGERZONE.scene.executor.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.executorForm.renderOnScene();
+                },
+                visible: game.user.isActiveGM
             },
-            visible: game.user.isActiveGM
-        },
-        clear: {
-            button: true,
-            icon: "fas fa-trash",
-            name: "clear",
-            title: "DANGERZONE.controls.clear.label",
-            onClick: (event) => {
-                dangerZone.handleClear(event)
+            clear: {
+                button: true,
+                icon: "fas fa-trash",
+                name: "clear",
+                title: "DANGERZONE.controls.clear.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.handleClear(event)
+                },
+                visible: game.user.isActiveGM
             },
-            visible: game.user.isActiveGM
+            tiles: {
+                button: true,
+                icon: "fa-solid fa-cubes", 
+                name: 'tiles',
+                title: "DANGERZONE.controls.clearEffectsTile.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.wipe('Tile' )
+                },
+                visible: game.user.isActiveGM
+            },
+            lighting: {
+                button: true,
+                icon: "fa-regular fa-lightbulb", 
+                name: 'lighting',
+                title: "DANGERZONE.controls.clearAmbientLight.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.wipe('AmbientLight' )
+                },
+                visible: game.user.isActiveGM
+            },
+            sounds: {
+                button: true,
+                icon: "fa-solid fa-music", 
+                name: 'sounds',
+                title: "DANGERZONE.controls.clearAmbientSound.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.wipe('AmbientSound' )
+                },
+                visible: game.user.isActiveGM
+            },
+            regions: {
+                button: true,
+                icon: "fa-regular fa-game-board",
+                name: 'regions',
+                title: "DANGERZONE.controls.clearRegion.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.wipe('Region' )
+                },
+                visible: game.user.isActiveGM
+            },
+            walls: {
+                button: true,
+                icon: "fa-solid fa-block-brick", 
+                name: 'walls',
+                title: "DANGERZONE.controls.clearWall.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.wipe('Wall' )
+                },
+                visible: game.user.isActiveGM
+            }
         }   
     });
 }
@@ -783,7 +838,7 @@ export function setExecutableOptions(){
             },
             'ambientLight': {
                 title: "Ambient Light", 
-                icon: "fas fa-lightbulb", 
+                icon: "fa-regular fa-lightbulb", 
                 document: "AmbientLight", 
                 wipeable: true, 
                 modules: [
@@ -813,7 +868,7 @@ export function setExecutableOptions(){
             },
             'lastingEffect': {
                 title: "Lasting Effect", 
-                icon: "fas fa-cube", 
+                icon: "fa-solid fa-cubes", 
                 document: "Tile",  
                 wipeable: true, 
                 modules: [
@@ -844,7 +899,7 @@ export function setExecutableOptions(){
             'region': {
                 document: "Region", 
                 title: "Region", 
-                icon: "fa-solid fa-expand",
+                icon: "fa-regular fa-game-board",
                 scope: "boundary",
                 wipeable: true
             },
@@ -868,7 +923,7 @@ export function setExecutableOptions(){
             },
             'sound': {
                 title: "Sound", 
-                icon: "fas fa-volume-high", 
+                icon: "fa-solid fa-music", 
                 document: "AmbientSound", 
                 modules:[],
                 wipeable: true, 
@@ -908,7 +963,7 @@ export function setExecutableOptions(){
             },
             'wall': {
                 title: "Wall", 
-                icon: "fas fa-university", 
+                icon: "fa-solid fa-block-brick", 
                 document: "Wall",  
                 wipeable: true,
                 modules:[
@@ -933,43 +988,4 @@ export function setExecutableOptions(){
                 scope: "scene"
             } 
         });
-  }
-
-  export const WIPEABLES = {
-        tiles: {
-            name: 'tiles',
-            setting: 'scene-control-button-display',
-            id: 'danger-zone-tile-effects-clear',
-            title: "DANGERZONE.controls.clearEffectsTile.label",
-            wipeId: 'Tile' 
-        },
-        lighting: {
-            name: 'lighting',
-            setting: 'scene-control-light-button-display',
-            id: 'danger-zone-lighting-effects-clear',
-            title: "DANGERZONE.controls.clearAmbientLight.label",
-            wipeId: 'AmbientLight' 
-        },
-        sounds: {
-            name: 'sounds',
-            setting: 'scene-control-sound-button-display',
-            id: 'danger-zone-sounds-clear',
-            title: "DANGERZONE.controls.clearAmbientSound.label",
-            wipeId: 'AmbientSound' 
-        },
-        regions: {
-            name: 'regions',
-            setting: 'scene-control-region-button-display',
-            id: 'danger-zone-regions-clear',
-            title: "DANGERZONE.controls.clearRegion.label",
-            wipeId: 'Region' 
-        },
-        walls: {
-            name: 'walls',
-            setting: 'scene-control-wall-button-display',
-            id: 'danger-zone-wall-effects-clear',
-            title: "DANGERZONE.controls.clearWall.label",
-            wipeId: 'Wall' 
-        }
-
   }

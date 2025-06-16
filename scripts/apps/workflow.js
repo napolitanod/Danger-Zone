@@ -363,8 +363,8 @@ class executorData {
                 `;
             if(this.hasBoundary){
                 content += `
-                <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.bottom}</span></div>
-                <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.top}</span></div>
+                <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.bottomIsInfinite ? '-&infin;' : this.boundary.bottom}</span></div>
+                <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.topIsInfinite ? '&infin;' : this.boundary.top}</span></div>
                 <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => t.name)}</span></div>
                 <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => t.name)}</span></div></div>`
             } 
@@ -1116,8 +1116,12 @@ class executable {
     }
     
     get targets(){
-        return this.data.zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.data.sources);
-    }   
+        return this.zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.data.sources);
+    }  
+
+    get zone(){
+        return this.data.zone
+    }
 
     _setBoundary(){
         if(!this.offset){
@@ -1173,11 +1177,11 @@ class executable {
     }
 
     async wipe(){
-        this.data.zone.wipe(this._document)
+        this.zone.wipe(this._document)
     }
 
     async wipeType(){
-        this.data.zone.wipe(this._document, 'T')
+        this.zone.wipe(this._document, 'T')
     }
 }
 
@@ -1438,7 +1442,7 @@ class ambientLight extends executable{
                 saturation: this.saturation,
                 shadows: this.shadows
             },   
-            elevation: this.boundary.bottom ?? 0,            
+            elevation: this.boundary.bottomToElevation,            
             hidden: false,
             rotation: this._flipRotation(),
             vision: false,
@@ -2127,7 +2131,7 @@ class lastingEffect extends executableWithFile{
     _tile(boundary, index = 0){
         const tile = {
             alpha: this.alpha,
-            elevation: boundary.bottom ?? 0, 
+            elevation: boundary.bottomToElevation, 
             flags: this.data.flag,
             hidden: this.hidden,
             locked: false,
@@ -2365,7 +2369,7 @@ class primaryEffect extends executableWithFile {
     _sequence(boundary, s, source = {}){
         s = s.effect()
             .file(this._file)
-            .zIndex(boundary.top ?? 0)
+            .zIndex(boundary.topToElevation)
             .mirrorX(this.flipContent('x'))
             .mirrorY(this.flipContent('y'))
             if(source.center){
@@ -2564,7 +2568,7 @@ class region extends executable{
         let shape = this._buildShape(boundary);
         const rg = {
             color: this.color,
-            elevation: {bottom: boundary.bottom ?? 0, top: boundary.top ?? 0}, 
+            elevation: {bottom: boundary.bottom, top: boundary.top}, 
             flags: this.data.flag,
             name: this.regionName,
             shapes: [shape],
@@ -2976,7 +2980,7 @@ class secondaryEffect extends executableWithFile {
     _sequence(boundary, s){
         s = s.effect()
             .file(this._file)
-            .zIndex(boundary.bottom ?? 0)
+            .zIndex(boundary.bottomToElevation)
             .atLocation(boundary.center)
             .mirrorX(this.flipContent('x'))
             .mirrorY(this.flipContent('y'))
@@ -3145,7 +3149,7 @@ class sourceEffect extends executableWithFile {
     _sequence(boundary, s){
         s = s.effect()
             .file(this._file)
-            .zIndex(boundary.bottom ?? 0)
+            .zIndex(boundary.bottomToElevation)
             .atLocation(boundary.center)
             .mirrorX(this.flipContent('x'))
             .mirrorY(this.flipContent('y'))
@@ -3212,7 +3216,7 @@ class spawn extends executable {
     }
 
     get location(){
-        return {x:this.boundary.center.x, y:this.boundary.center.y, elevation: this.boundary.bottom}
+        return {x:this.boundary.center.x, y:this.boundary.center.y, elevation: this.boundary.bottomToElevation}
     }
 
     get range(){
@@ -3391,7 +3395,7 @@ class tokenMove extends executable {
                     let location = this.boundary.center;
                     let tokenBoundary = boundary.documentBoundary("Token", token);
                     x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
-                    e = this.boundary.bottom;
+                    e = this.boundary.bottomToElevation;
                 } else if (this.movesTargets) {
                     const shift = this.walls ? furthestShiftPosition(token, [w, h]) : point.shiftPoint(token, {w: w, h: h})
                     x = shift.x; y = shift.y;
@@ -3604,7 +3608,7 @@ class wall extends executable {
             threshold: this.threshold,
             flags: this.data.flag
         }
-        if(dangerZone.MODULES.wallHeightOn && (this.boundary.bottom || this.boundary.top)) wall.flags['wall-height'] = {"top": this.boundary.top, "bottom": this.boundary.bottom}
+        if(dangerZone.MODULES.wallHeightOn && this.boundary.depthIsInfinite) wall.flags['wall-height'] = {"top": this.boundary.top, "bottom": this.boundary.bottom}
         if(dangerZone.MODULES.taggerOn && this.tag) wall.flags['tagger'] = this.taggerTag
         return wall;
     }  

@@ -1,12 +1,11 @@
 import {dangerZoneDimensions} from './apps/dimensions.js';
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
-import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, CONTROLTRIGGERS, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WIPEABLES, WORLDZONE} from './apps/constants.js';
+import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, CONTROLTRIGGERS, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
-import {triggerManager} from './apps/trigger-handler.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -126,94 +125,13 @@ export class dangerZone {
     setHooks()
   }
 
-  /**
- * adds the clear buttons to the controls on the canvas
- * @param {placeable} string 
- * @param {control} object
- */
-  static _insertClearButton(placeable, control){
-    const metadata = WIPEABLES[placeable];
-    if(game.settings.get(dangerZone.ID, metadata.setting) && control){
-      control.tools[metadata.id] = {
-        name: metadata.id,
-        title: game.i18n.localize(metadata.title),
-        icon: "fas fa-radiation",
-        visible: game.user.isActiveGM,
-        onChange: async () => {
-          dangerZone.wipe(metadata.wipeId)
-        },
-        button: true
-      }
-    }
-  }
 
-    /**
- * adds the clear buttons to the controls on the canvas
+  /**V13
+ * adds the Danger Zone buttons to the controls on the canvas
  * @param {object} controls 
- 
- unction _showZoneHighlight(event){
-     const data = $(event.currentTarget).data("data-id");
-     dangerZoneDimensions.addHighlightZone(data.zone, data.scene, '', data.dangerId);
- } 
- 
- function _hideZoneHighlight(event){
-     const data = $(event.currentTarget).data("data-id");
-     dangerZoneDimensions.destroyHighlightZone(data.zone, '', data.dangerId);
- }
- 
- function _contextMenu(event){
-     const data = $(event.currentTarget).data("data-id");
-     new DangerZoneForm(null, data.zone, data.scene, data.dangerId).render(true);
- }
- 
     */
   static _insertZoneButtons(controls){
-    controls[dangerZone.ID] = CONTROLTRIGGERS['main']
-    const tools = controls[dangerZone.ID].tools;
-    tools['config'] = CONTROLTRIGGERS['config']
-
-    if(game.settings.get(dangerZone.ID, 'display-executor')) tools['executor'] = CONTROLTRIGGERS['executor']
-    if(game.settings.get(dangerZone.ID, 'scene-control-clear-all-button-display')) tools['clear']  = CONTROLTRIGGERS['clear']
-      
-    //set triggers
-    let randomSet = false; //tracks whether a random trigger button is already set.
-    let isRandom = false; //tracks that the current danger is considered random trigger
-    const zones = dangerZone.getTriggerZonesFromScene(canvas.scene.id).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)});
-    
-    if (zones.length) {
-      for (const zn of zones){
-        isRandom = (zn.enabled && zn.hasManualEvent && zn.trigger.random) ? true : false 
-        if(isRandom && randomSet) continue; //random buttom already exists
-
-        if(!isRandom && !zn.hasAutomatedEvent && !zn.enabled) continue; //manual event is not random and not active
-        
-        const danger = dangerZoneType.getDanger(zn.dangerId);
-        if (!danger) continue; //danger doesn't exist
-
-        const trigger = {
-          active: (zn.enabled && zn.hasAutomatedEvent) ? true : false,
-          button: true,
-          icon: isRandom ? "fas fa-radiation-alt" : `<i>${danger.icon}'</i>`,
-          name: isRandom ? random : zn.id,
-          title: isRandom ? "DANGERZONE.scene.random-trigger.label" : zn.title + (zn.scene.dangerId ? ' (' + game.i18n.localize("DANGERZONE.type-form.global-zone.label") + ') ' :' ') + zn.eventsDescription + ' ' + game.i18n.localize("DANGERZONE.scene.trigger"),
-          onClick: (active) => {
-              const data = {
-                dangerId: zn.scene.dangerId,
-                zone: isRandom ? 'random' : zn.id, 
-                scene: zn.scene.sceneId
-              }
-              dangerZone.handleTriggerClick(data)
-          },
-          visible: game.user.isActiveGM
-        }                  
-        if(isRandom) {
-          tools['random'] = trigger
-          randomSet = 1;                
-        } else {
-          tools[zn.id] = trigger;          
-        }
-      }
-    }
+    controls[dangerZone.ID] = CONTROLTRIGGERS
   }
 
   /**
@@ -304,7 +222,79 @@ export class dangerZone {
     return this.getMovementZonesFromScene(sceneId).filter(zn => !zn.hasMovementComplete)
   }
 
-  /**
+  
+  /**V13
+   * fall all dangers, makes a call to convert each to a zone on the scene
+   * @param {string} sceneId 
+   * @returns array of zones
+   */
+  static getAllDangersAsGlobalZones(sceneId) {
+    return dangerZoneType.allDangers.map(danger => {
+      return this._convertZoneGlobalToScene(danger, sceneId, false);
+      }
+    )
+  }
+  
+  /**V13
+   * for a single instance of a danger with a global zone, makes call to convert the danger into a zone on scene
+   * @param {string} dangerId 
+   * @param {string} sceneId 
+   * @returns a zone
+   */
+  static getGlobalZone(dangerId, sceneId){
+    return this._convertZoneGlobalToScene(dangerZoneType.getDanger(dangerId), sceneId, true);
+  }
+
+  /**V13
+   * for all instances of a danger with a global zone, makes call to convert the danger into a zone on scene
+   * @param {string} dangerId 
+   * @param {string} sceneId 
+   * @returns 
+   */
+  static getGlobalZones(sceneId) {
+    return dangerZoneType.allGlobalZones.map(danger => {
+      return this._convertZoneGlobalToScene(danger, sceneId, true);
+      }
+    )
+  }
+
+  /**V13
+   * for the given scene and zone event, returns a zone from the list of eligible random zones
+   * @param {string} sceneId 
+   * @param {string} event 
+   * @param {array} eligibaleZones 
+   * returns a zone
+   */
+  static async getRandomZoneFromScene(sceneId, event, eligibaleZones = []) {
+    let keptZones = [], max = 0;
+    let zones = this.getRandomZonesFromScene(sceneId);
+    for (const zn of zones) {
+      if(zn.eventsIncludingInitiative.includes(event) && (!eligibaleZones.length || eligibaleZones.find(z => z.id === zn.id))){
+        let min = max + 1;
+        max += zn.weight;
+        keptZones.push({zone: zn, min: min, max: max});
+      }
+    }
+
+    if(!keptZones.length) return
+    const maybe = await new Roll(`1d${max}`).evaluate()
+    const randomResult = maybe.result;
+
+    this.log(false,'Random Zone Search ', {zones:keptZones, roll: randomResult, range: {min: 1, max:max}});
+    return keptZones.find(zn => randomResult >= zn.min && randomResult <= zn.max).zone
+  }
+  
+
+  /**V13
+   * returns an array of zones on the scene that have the random field set to true (zones that trigger randomly from the set of zones)
+   * @param {string} sceneId 
+   * @returns array of zones
+   */
+  static getRandomZonesFromScene(sceneId) {
+    return this.getAllZonesFromScene(sceneId).filter(zn => zn.random)
+  }
+
+  /**V13
    * Returns all zones on a given scene that are either manual and enabled or triggered in an automated fashion
    * @param {string} sceneId  the scene id
    * @returns array of zones
@@ -312,39 +302,17 @@ export class dangerZone {
   static getTriggerZonesFromScene(sceneId) {
       return this.getAllZonesFromScene(sceneId, {enabled: false, typeRequired: true}).filter(zn => zn.enabled || zn.hasAutomatedEvent).concat(this.getGlobalZones(sceneId))
   }
-  
-  static getRandomZonesFromScene(sceneId) {
-    return this.getAllZonesFromScene(sceneId).filter(zn => zn.random)
-  }
-  
-  static getAllDangersAsGlobalZones(sceneId) {
-    return dangerZoneType.allDangers.map(danger => {
-      return this._convertZoneGlobalToScene(danger, sceneId);
-      }
-    )
-  }
 
-  static getGlobalZones(sceneId) {
-    return dangerZoneType.allGlobalZones.map(danger => {
-      return this._convertZoneGlobalToScene(danger, sceneId);
-      }
-    )
-  }
-  
- /**
+ /**V13
    * Returns a specific zone from the given scene
    * @param {string} zoneId the danger zone id
    * @param {string} sceneId  the scene id
-   * @returns 
+   * @returns zone
    */
   static getZoneFromScene(zoneId, sceneId) {
     let flag = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE + `.${zoneId}`);
     return flag ? this._toClass(flag) : undefined
   } 
-  
-  static getGlobalZone(dangerId, sceneId){
-    return this._convertZoneGlobalToScene(dangerZoneType.getDanger(dangerId), sceneId);
-  }
 
    /**
    * Returns a specific zone from the given scene using its name
@@ -356,31 +324,17 @@ export class dangerZone {
       return this.getAllZonesFromScene(sceneId, false, false).find(zn => zn.title === zoneName)
     }
 
+  /**v13
+   * launches dialog confirming they want to delete all DZ placeables
+   * @param {*} event 
+   */
   static async handleClear(event) {
-    new Dialog({
-        title: game.i18n.localize("DANGERZONE.controls.clear.label"),
-        content: game.i18n.localize("DANGERZONE.controls.clear.description"),
-        buttons: {
-          yes: {
-            icon: '<i class="fas fa-check"></i>',
-            label: game.i18n.localize("DANGERZONE.yes"),
-            callback: async () => {
-                await dangerZone.wipeAll();
-            }
-          },
-          no: {
-            icon: '<i class="fas fa-times"></i>',
-            label: game.i18n.localize("DANGERZONE.cancel")
-          }
-        },
-        default: "no"
-      }, {
-        width: 400
-      }).render(true);
-  }
-
-  static async handleTriggerClick(data) {
-    await triggerManager.manualTrigger(data);
+    const proceed = await foundry.applications.api.DialogV2.confirm({
+      content: game.i18n.localize("DANGERZONE.controls.clear.description"),
+      rejectClose: false,
+      modal: true
+    });
+    if ( proceed ) await dangerZone.wipeAll();;
   }
 
   static async checkSetMigration(scene){
@@ -388,9 +342,17 @@ export class dangerZone {
     if(!hasMigration) await scene.setFlag(dangerZone.ID, dangerZone.FLAGS.MIGRATION, dangerZone.MIGRATION.ZONE);
   }
 
+  /**V13
+   * method supporting the copy of a zone on a scene
+   * @param {string} sourceSceneId 
+   * @param {string} sourceZoneId 
+   * @param {string} targetSceneId 
+   * @returns 
+   */
   static async copyZone(sourceSceneId, sourceZoneId, targetSceneId){
     const source = foundry.utils.deepClone(this.getZoneFromScene(sourceZoneId,sourceSceneId));
-    delete source['id']; delete source['scene'];
+    delete source['id']; 
+    delete source['scene'];
     const zn = new zone(targetSceneId);
     const updt = await zn.update(source); 
     dangerZone.log(false,'Copying Zone ', {update: updt, zone: zn})
@@ -414,42 +376,22 @@ export class dangerZone {
    * deletes the given flag for this zone from a zone, effectively deleting it
    * @param {string} zoneId the id of the zone class to be deleted 
    * @param {string} sceneId the id of the scene that holds the zone as a flag
+   * @param {boolen} isGlobal indicates that the danger being converted is being treated as a global zone
    * @returns 
    */
   static async deleteZoneFromScene(zoneId, sceneId) {
     return await this.getZoneFromScene(zoneId, sceneId).delete();
   }
 
-  static _convertZoneGlobalToScene(danger, sceneId){
-    const zn = danger?.options?.globalZone;
-    let worldZone = false;
-    !zn ? zn = WORLDZONE : worldZone = true;
-    zn.scene = {sceneId: sceneId, dangerId: danger.id};
+  static _convertZoneGlobalToScene(danger, sceneId, isGlobal = true){
+    const zn = danger.hasGlobalZone ? danger.options.globalZone : WORLDZONE;
+    zn.scene = {sceneId: sceneId, dangerId: danger.id, isPseudoZone: !isGlobal};
     zn.dangerId = danger.id;
     zn.title = danger.name;
-    worldZone ? zn.id = 'w_' + danger.id : zn.id = 'd_' + danger.id
+    isGlobal ? zn.id = 'w_' + danger.id : zn.id = 'd_' + danger.id
     return this._toClass(zn);
   }
 
-  static async getRandomZoneFromScene(sceneId, event, eligibaleZones = []) {
-    let keptZones = [], max = 0;
-    let zones = this.getRandomZonesFromScene(sceneId);
-    for (const zn of zones) {
-      if(zn.eventsIncludingInitiative.includes(event) && (!eligibaleZones.length || eligibaleZones.find(z => z.id === zn.id))){
-        let min = max + 1;
-        max += zn.weight;
-        keptZones.push({zone: zn, min: min, max: max});
-      }
-    }
-
-    if(!keptZones) return
-    const maybe = await new Roll(`1d${max}`).evaluate()
-    const randomResult = maybe.result;
-
-    this.log(false,'Random Zone Search ', {zones:keptZones, roll: randomResult, range: {min: 1, max:max}});
-    return keptZones.find(zn => randomResult >= zn.min && randomResult <= zn.max).zone
-  }
-  
   static async updateAllSceneZones(sceneId,flag){
     const scene = game.scenes.get(sceneId)
     const updt = await scene.setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, flag);
@@ -575,6 +517,10 @@ export class zone {
     return dangerZoneType.getDanger(this.dangerId)
   }
 
+  get eventsDescription(){
+    return this.hasEvents ? joinWithAnd(this.trigger.events.map(e => game.i18n.localize(EVENTS[e]?.label))) : ''
+  }
+
   get eventsIncludingInitiative(){
     return this.combatEvents.map(i => COMBAT_PERIOD_INITIATIVE_EVENTS.includes(i) ? (i + '-' + (this.trigger.initiative ? this.trigger.initiative.toString() : '0')) : i)
   }
@@ -662,8 +608,8 @@ export class zone {
     return this.scene.scene.tokens.filter(t => this.isSourceActor(t)) 
   }
 
-  get eventsDescription(){
-    return this.hasEvents ? joinWithAnd(this.trigger.events.map(e => game.i18n.localize(EVENTS[e]?.label))) : ''
+  get titleLong(){
+      return this.title + (this.scene.dangerId ? ' (' + game.i18n.localize("DANGERZONE.type-form.global-zone.label") + ') ' :' ') + this.eventsDescription + ' ' + game.i18n.localize("DANGERZONE.scene.trigger")
   }
 
   /**
@@ -674,6 +620,7 @@ export class zone {
     const scene = game.scenes.get(this.scene.sceneId)
     const updt = await scene.setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, {[this.id]: this});
     await dangerZone.checkSetMigration(scene)
+    Hooks.call("dangerZone.updateZone", this);
     return updt
   }
 
@@ -798,9 +745,15 @@ export class zone {
   }
 
 
+  /**V13
+   * called by zone to collect a source area
+   * @returns object holding eligible documents for the given source area and the source target
+   */
   async sourceArea(){
-    const obj = {documents: [], target: this.source.target}
-    switch(this.source.area){
+    const obj = {documents: [], target: ''}
+    if(this.source.area){
+      obj.target = this.source.target
+      switch(this.source.area){
         case 'A':
           obj['documents'] = this.scene.scene.tokens.filter(t => this.isSourceActor(t));
           break;
@@ -819,7 +772,8 @@ export class zone {
         case 'Z':
           obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].zoneId && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId));
           break;
-    }
+      }
+    }    
     return obj
   }
 
@@ -852,7 +806,7 @@ export class zone {
           options.bottom = 0
           break;
       case "S":
-          options.top = null
+          options.top = Infinity
           break;
       case "T":
           options.top = this.scene.top
@@ -887,26 +841,16 @@ export class zone {
     return eligible.length ? true : false
   }
 
+  /**v13
+   * Launches the confirmation dialog for checking if trigger should proceed.
+   * @returns choice
+   */
   async triggerCheck(){
     if(!this.trigger.prompt) return true
-    const choice = await new Promise((resolve, reject) => {
-        new Dialog({
-        title: game.i18n.localize("DANGERZONE.alerts.trigger-zone"),
-        content: `<p>${game.i18n.localize("DANGERZONE.alerts.trigger-zone-confirm")} ${this.title}?</p>`,
-        buttons: {
-            one: {
-                icon: '<i class="fas fa-check"></i>',
-                label: game.i18n.localize("DANGERZONE.continue"),
-                callback: () => resolve(true)
-            },
-            two: {
-                icon: '<i class="fas fa-times"></i>',
-                label: game.i18n.localize("DANGERZONE.cancel"),
-                callback: () => {resolve(false)}
-            }
-        },
-        default: "two"
-        }).render(true);
+    const choice = await foundry.applications.api.DialogV2.confirm({
+      content: `${game.i18n.localize("DANGERZONE.alerts.trigger-zone")} ${this.title}?`,
+      rejectClose: false,
+      modal: true
     });
     return choice
   }
@@ -1007,30 +951,20 @@ export class zone {
   }
 
   async _promptElevation(){
-    const elevation = await new Promise((resolve, reject) => {
-      new Dialog({
-          title: game.i18n.localize("DANGERZONE.alerts.input-z"),
-          content: `<p>${game.i18n.localize("DANGERZONE.alerts.enter-z")}</p><center><input type="number" id="zInput" min="0" steps="1" value="0"></center><br>`,
-          buttons: {
-              submit: {
-                  label: game.i18n.localize("DANGERZONE.yes"),
-                  icon: '<i class="fas fa-check"></i>',
-                  callback: async (html) => {
-                      const elevation = parseInt(html.find("#zInput")[0].value);
-                      resolve(elevation)
-                      }
-                  },
-              cancel:  {
-                  label: game.i18n.localize("DANGERZONE.cancel"),
-                  icon: '<i class="fas fa-times"></i>',
-                  callback: () => {
-                      resolve(0)
-                      }
-                  }
-              },
-          default: 'submit'
-          }, {width: 75}).render(true);
-    });  
+    let elevation
+    try{
+        elevation = await foundry.applications.api.DialogV2.prompt({
+          window: {title: game.i18n.localize("DANGERZONE.alerts.enter-z")},
+          content: `<input name="elevation" type="number" id="zInput" min="0" steps="1" value="0">`,
+          ok: {
+                label: game.i18n.localize("DANGERZONE.yes"),
+                icon: '<i class="fas fa-check"></i>',
+                callback: (event, button, dialog) => button.form.elements.elevation.valueAsNumber 
+                }
+      });  
+    } catch {
+      dangerZone.log(false, `No value entered.`)
+    }
     return elevation
   }
 
@@ -1050,8 +984,8 @@ export class zone {
         resolve(false)
       }
       window.addEventListener('auxclick', _cancel);
-      canvas.application.stage.once('mousedown', event => {
-        let selected = event.data.getLocalPosition(canvas.application.stage);
+      canvas.app.stage.once('mousedown', event => {
+        let selected = event.data.getLocalPosition(canvas.app.stage);
         window.removeEventListener('auxclick', _cancel);
         resolve(selected)
       });
