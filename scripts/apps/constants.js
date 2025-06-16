@@ -84,6 +84,9 @@ export function setControlTriggers(){
         activeTool: 'executor',
         icon: "fas fa-radiation",
         name: dangerZone.ID,
+        onChange: (event, active) => {
+            if(active) dangerZone.executorForm.renderOnScene();
+        },
         title: "Zones",
         visible: game.user.isActiveGM,
         tools: {
@@ -103,6 +106,7 @@ export function setControlTriggers(){
                 name: "executor",
                 title: "DANGERZONE.scene.executor.label",
                 onChange: (event, active) => {
+                    dangerZone.log(false, 'executor control launch', event, active)
                     if(active) dangerZone.executorForm.renderOnScene();
                 },
                 visible: game.user.isActiveGM

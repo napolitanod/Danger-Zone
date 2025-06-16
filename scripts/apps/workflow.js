@@ -2718,7 +2718,7 @@ class save extends executable{
     }
 
     async _rollAbilitySave(token){
-        let result;
+        let result, roll;
         const owner = getActorOwner(token), fastforward = game.settings.get(dangerZone.ID, 'saving-throw-fast-forward');
         if (!fastforward && dangerZone.MODULES.socketLibOn && owner) {
             const time = this.timeAlloted
@@ -2729,8 +2729,10 @@ class save extends executable{
                 await Promise.race([query, race]).then((value) => {result = value})
             }
         }
-        if(!result) result = await token.actor.rollAbilitySave(this.type, {chatMessage: false, fastForward: fastforward}) 
-       
+        if(!result) {
+            roll = await token.actor.rollSavingThrow({ability: this.type}, {chatMessage: false, configure: !fastforward, fastForward: fastforward})  
+            result = roll?.[0]
+        }
         const saved = (!result || result.total < this.diff) ? false : true
         !saved ? this.data.save.failed.push(token) : this.data.save.succeeded.push(token)
         const text = `<div>${token.name} <span class="danger-zone-label">${saved ? 'succeeds' : 'fails'}</span> with a ${result.total}.</div>`

@@ -145,9 +145,9 @@ export async function requestSavingThrow(tokenUuid, saveType, time){
     dialog = app
   })
   
-  const query = token.actor.rollAbilitySave(saveType, {chatMessage: false})
+  const query = token.actor.rollSavingThrow({ability: saveType}, {chatMessage: false})
   const race = wait(time)
-  await Promise.race([query, race]).then((value) => {result = value; dialog?.close()})
+  await Promise.race([query, race]).then((value) => {result = value?.[0] ; dialog?.close()})
   return result
 }
 
