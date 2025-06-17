@@ -2730,7 +2730,8 @@ class save extends executable{
             }
         }
         if(!result) {
-            roll = await token.actor.rollSavingThrow({ability: this.type}, {chatMessage: false, configure: !fastforward, fastForward: fastforward})  
+            roll = await token.actor.rollSavingThrow({ability: this.type}, {chatMessage: false, configure: !fastforward})  
+            dangerZone.log(false, 'Saving throw rolls', roll)
             result = roll?.[0]
         }
         const saved = (!result || result.total < this.diff) ? false : true

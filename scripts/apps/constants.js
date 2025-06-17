@@ -74,40 +74,48 @@ export const WORLDZONE = {
 /**v13 CONTROLTRIGGERS
  * holds objects that are then loaded to the scene controls
  */
-export const CONTROLTRIGGERS = {};
+export const CONTROLTRIGGERS = {
+    visible: false,
+    controls: {}
+};
 
 /**v13 setControlTriggers
  * loads the CONTROLTRIGGERS object. Intended to be called after Foundry initializes so that classes are available.
  */
 export function setControlTriggers(){
-    Object.assign(CONTROLTRIGGERS, {
+    CONTROLTRIGGERS['controls'] = {
         activeTool: 'executor',
         icon: "fas fa-radiation",
         name: dangerZone.ID,
-        onChange: (event, active) => {
-            if(active) dangerZone.executorForm.renderOnScene();
-        },
         title: "Zones",
-        visible: game.user.isActiveGM,
+        visible: game.user.isActiveGM &&  canvas.scene?.id,
         tools: {
+            executor: {
+                active: dangerZone.executorForm.visible,
+                button: true,
+                icon: "fas fa-list-alt",
+                name: "executor",
+                title: "DANGERZONE.scene.executor.label",
+                toggle: true,
+                onChange: (event, toggle) => {
+                    dangerZone.log(false, 'executor control launch', event, toggle)
+                    if(toggle){
+                        if(!canvas.scene.active) {
+                            ui.notifications?.info(`Danger zones cannot be triggered on an inactive scene.`)
+                            return
+                        }
+                        dangerZone.executorForm.renderOnScene();
+                    } 
+                },
+                visible: game.user.isActiveGM 
+            },
             config: {
                 button: true,
                 icon: "fa-solid fa-gear",
                 name: "config",
                 title: "DANGERZONE.zones",
                 onChange: (event, active) => {
-                    if(active) new DangerZoneSceneForm('', canvas.scene.id).render(true)
-                },
-                visible: game.user.isActiveGM
-            },
-            executor: {
-                button: true,
-                icon: "fas fa-list-alt",
-                name: "executor",
-                title: "DANGERZONE.scene.executor.label",
-                onChange: (event, active) => {
-                    dangerZone.log(false, 'executor control launch', event, active)
-                    if(active) dangerZone.executorForm.renderOnScene();
+                    if(active && dangerZone.executorForm.visible) new DangerZoneSceneForm('', canvas.scene?.id).render(true)
                 },
                 visible: game.user.isActiveGM
             },
@@ -172,7 +180,7 @@ export function setControlTriggers(){
                 visible: game.user.isActiveGM
             }
         }   
-    });
+    }
 }
 
 export const AMBIENTLIGHTCLEAROPS = {

@@ -3,6 +3,7 @@ import {dangerZoneDimensions} from "./dimensions.js";
 import {DangerForm} from './danger-form.js';
 import {DangerZoneForm} from './zone-form.js';
 import {triggerManager} from './trigger-handler.js';
+import {CONTROLTRIGGERS} from './constants.js';
 
 export class ExecutorForm extends FormApplication {
     constructor(sceneId, executor = {}, zones, ...args) {
@@ -31,6 +32,10 @@ export class ExecutorForm extends FormApplication {
 
     get boundaryInfo(){
         return this.boundary ? `x: ${this.boundary.A.x} y: ${this.boundary.A.y} bottom: ${this.boundary.bottomIsInfinite ? '&infin;' : this.boundary.bottom} to x: ${this.boundary.B.x} y: ${this.boundary.B.y} top: ${this.boundary.topIsInfinite ? '&infin;' : this.boundary.top}` : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.boundary.none.label")
+    }
+
+    get control(){
+        return ui.controls?.controls[dangerZone.ID]?.tools?.executor
     }
 
     get dangerOps(){
@@ -125,6 +130,10 @@ export class ExecutorForm extends FormApplication {
         return this.zones.filter(z => z.danger.hasGlobalZone).reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
     }
 
+    get visible(){
+        return CONTROLTRIGGERS.visible
+    }
+
     get zoneOps(){
         return this.zones.filter(z => !z.scene.dangerId).reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
     }
@@ -157,6 +166,10 @@ export class ExecutorForm extends FormApplication {
         html.on('mouseenter', ".danger-zone-scene-trigger-button", this._handleHover.bind(this));
         html.on('mouseleave', ".danger-zone-scene-trigger-button", this._handleHover.bind(this));
         html.on('contextmenu', ".danger-zone-scene-trigger-button", this._handleRightClick.bind(this));
+    }
+
+    close(...args){
+        super.close(...args)
     }
 
     draw(elementId, obj, setPosition = false){
@@ -563,6 +576,11 @@ export class ExecutorForm extends FormApplication {
         this.executor = this.zoneId ? await this.zone.executor(this.executorOptions): {}
         await this.refreshZone();
     }
+
+    setVisible(isVisible = true){
+        CONTROLTRIGGERS.visible = isVisible
+        this.control.active = CONTROLTRIGGERS.visible
+    }
     
     /**v13
      * Called when executor is intended to be opened on scene
@@ -577,6 +595,7 @@ export class ExecutorForm extends FormApplication {
             if(this.hasZones){
                 if(!this.zoneId) this.zoneId = this.firstZone.id;
                 await this._setExecutor();
+                this.setVisible(true);
                 this.render(true);
             }
         }

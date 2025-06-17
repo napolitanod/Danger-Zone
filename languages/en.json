@@ -424,7 +424,7 @@
             "delete-danger-zone": "Delete danger zone",
             "description": "Zones define where a danger can happen, when and to whom. Each zone contains a danger. Documentation at https://github.com/napolitanod/Danger-Zone/wiki/Zones.",
             "edit-danger-zone": "Edit danger zone",
-            "executor.label": "Launch Danger Zone Executor",
+            "executor.label": "Zone Executor",
             "header.name": "Configure Scene Zones",
             "label": "Danger Zone",
             "random": "Random",

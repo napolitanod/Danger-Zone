@@ -521,7 +521,8 @@ class DangerZoneDangerFormActiveEffect extends FormApplication {
         uuid: `ActiveEffect.${this.parent.dangerId}`
       });
       
-      new DangerZoneActiveEffectForm(this, eventParent, this.parent.dangerId, effect).render(true);
+      const doc = new ActiveEffect(effect, {})
+      new DangerZoneActiveEffectForm(this, eventParent, this.parent.dangerId, doc).render(true);
     }
 
     async _updateObject(event, formData) {

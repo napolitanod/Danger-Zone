@@ -131,7 +131,8 @@ export class dangerZone {
  * @param {object} controls 
     */
   static _insertZoneButtons(controls){
-    controls[dangerZone.ID] = CONTROLTRIGGERS
+    dangerZone.log(false, 'Adding control buttons', controls)
+    controls[dangerZone.ID] = CONTROLTRIGGERS.controls
   }
 
   /**
