@@ -51,47 +51,59 @@ Like a wide lake of lava, a zone is the boundary within which dangers are genera
 
 <img src="https://github.com/napolitanod/Danger-Zone/blob/main/.gitImage/r9/configureSceneZones.JPG"  height="300px">
 
-Access zones from the scene configuration form's header or by right clicking on the scene in the navigation or within the side menu and selecting 'Configure Zones' from the context menu. This will present the form where you can create new zones or edit existing ones. See [Zones](../../wiki/Zones) for more info.
+Access zones by clicking the Danger Zone scene controls configure button. See "Danger Zone Scene Controls" below and [Zones](../../wiki/Zones) for more info.
 
 ### 3. Trigger Zone
 The trigger defines the conditions under which lava bubble (danger) erupts from the lava field (zone). A trigger can be invoked either manually or as part of a defined event.
 
 See [Triggers](../../wiki/Triggers) for more info.
 
+
 ## Added to Foundry
 
-### Danger Zone Trigger Buttons
-<img src="https://user-images.githubusercontent.com/22696153/132107140-2fb0f79d-ab56-425f-8733-c01677602ad5.png" height="70px">
-When a scene is activated, if you are a GM and viewing that activated scene, you will see an array of buttons located to the right of that scene in the scene top navigation. Note, you may override this display location within the module configuration settings and instead choose to display the triggers adjacent to the macro bar.
+### Danger Zone Scene Controls
+A Danger Zone button is added to the scene controls. Select this to access Danger Zone features for the scene, including adding, editing and triggering zones.
 
-Each button is a zone in that scene and displays the icon for the danger held within. The buttons function as follows:
+![image](https://github.com/user-attachments/assets/9ca06e93-ab0d-40da-8174-45e32f18db05)
 
-#### Manually triggered zones
-* Zones that are active are listed individually here except for those which have the 'Randomize' enabled. 
-* All active randomized zones are grouped and only a single random button (using the Danger Zone radiation logo) is displayed for all of them. 
-* Inactive zones are not displayed.
-* Selecting a button triggers ths zone.
+#### Zone Executor
+Selecting the Danger Zone scene control button will launch the Zone Executor and present other scene actions. 
 
-#### Automatically triggered zones (e.g. combat turn start trigger)
-* All zones are listed individually here.
-* Active zones are displayed with a blue highlight effect. Inactive are displayed without the highlight effect.
-* Selecting a button toggles it from active to inactive or vice versa.
+**Trigger Zones Tab**: Each button is a zone in that scene and displays the icon for the danger held within. The buttons function as follows:
+* Manually triggered zones
+    * Zones that are active are listed individually here except for those which have the 'Randomize' enabled. 
+    * All active randomized zones are grouped and only a single random button (using the Danger Zone radiation logo) is displayed for all of them. 
+    * Inactive zones are not displayed.
+    * Selecting a button triggers ths zone.
+* Automatically triggered zones (e.g. combat turn start trigger)
+  * Active zones are displayed with a blue highlight effect. Inactive are displayed without the highlight effect.
+  * Selecting a button toggles it from active to inactive or vice versa.
 
-#### On Hover
+**Executor Tab**: here all zones are availble, including world zones and all dangers. Use this tab for more control over zone targeting, triggering, and to selectively trigger parts of an overall danger.
+
+**On Hover**
 Hovering over any button, aside from the manual trigger grouping, will highlight it's area within the scene grid.
 
-### Danger Zone Tile Clear
-<img src="https://user-images.githubusercontent.com/22696153/132107176-928adf83-cd37-47e4-a3b3-c792cbdb2151.png">
-A button is added to the tile controls. Selecting this will clear all lasting effects (tiles) on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
+#### Configure Zones
+Launches the scene's zone list form, where zones can be added to scene, editied, deleted, or copied from another scene.
 
-### Danger Zone Ambient Light Clear
-A button is added to the lighting controls with the same icon as the tile clear button shown in the above section. Selecting this will clear all ambient lights on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
+#### Clear Danger Zone Placeables
+Deletes all tiles, lights, regions, and walls that were created on the scene by a danger.
 
-### Danger Zone Region Clear
-A button is added to the region controls. Selecting this will clear all regions on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
+### Clear Danger Zone Lasting Effects
+Selecting this will clear all lasting effects (tiles) on the scene created by Danger Zone. 
 
-### Danger Zone Wall Clear
-A button is added to the walls controls with the same icon as the tile clear button shown in the above Danger Zone Lasting Effect Clear section. Selecting this will clear all walls on the scene that were placed there by Danger Zone. You can suppress this button as an option within the module configurations.
+### Clear Danger Zone Ambient Lighting
+Selecting this will clear all lighting on the scene created by Danger Zone. 
+
+### Clear Danger Zone Regions
+Selecting this will clear all regions on the scene created by Danger Zone. 
+
+### Clear Danger Zone Ambient Sounds
+Selecting this will clear all sounds on the scene created by Danger Zone. 
+
+### Clear Danger Zone Walls
+Selecting this will clear all walls on the scene created by Danger Zone. 
 
 ### Dangers Button
 Aside from accessing dangers from the Danger Zone Configuration area in the Foundry Module Configurations, you can also add these by selecting the button located in the footer of the scenes sidebar. This button can be suppressed as an option within the Danger Zone Configurations.
