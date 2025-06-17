@@ -1,6 +1,5 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {dangerZoneSocket, monksActiveTilesOn, sequencerOn, socketLibOn, fxMasterOn, perfectVisionOn, taggerOn, portalOn, wallHeightOn, itemPileOn} from '../index.js';
 import {damageTypes, EVENTS, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
@@ -352,7 +351,7 @@ class executorData {
     }
 
     about() {
-        if(game.user.isGM && game.settings.get(dangerZone.ID, 'chat-details-to-gm')) {   
+        if(game.user.isActiveGM && game.settings.get(dangerZone.ID, 'chat-details-to-gm')) {   
             let content =
                 `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Workflow Details</div><div class="danger-zone-chat-message-body">
                 <div><label class="danger-zone-label">Danger:</label><span> ${this.danger.name}</span></div>
@@ -364,8 +363,8 @@ class executorData {
                 `;
             if(this.hasBoundary){
                 content += `
-                <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.bottom}</span></div>
-                <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.top}</span></div>
+                <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.bottomIsInfinite ? '-&infin;' : this.boundary.bottom}</span></div>
+                <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.topIsInfinite ? '&infin;' : this.boundary.top}</span></div>
                 <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => t.name)}</span></div>
                 <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => t.name)}</span></div></div>`
             } 
@@ -394,7 +393,7 @@ class executorData {
     }
 
     async highlightBoundary(override = false){
-        if(this.hasBoundary && game.user.isGM && (override || game.settings.get(dangerZone.ID, 'display-danger-boundary'))){
+        if(this.hasBoundary && game.user.isActiveGM && (override || game.settings.get(dangerZone.ID, 'display-danger-boundary'))){
             this.boundary.highlight(this.id, 16711719)
             await wait(1000)
             this.boundary.destroyHighlight(this.id);
@@ -843,7 +842,7 @@ export class executor {
     }
 
     async load(){
-        if(!sequencerOn || this.previouslyExecuted) return true
+        if(!dangerZone.MODULES.sequencerOn || this.previouslyExecuted) return true
         const promises = this.parts.filter(p => p._file).map(p => p.file).concat(this.parts.filter(p => p._fileB).map(p => p.fileB).concat(this.parts.filter(p => p._fileF).map(p => p.fileF)));
         const files = await Promise.all(promises).then((results) => {return results.filter(r => r)}).catch((e) => {return console.log('Danger Zone file caching failed.')});
         if(files.length) this.promises.load.push(Sequencer.Preloader.preloadForClients(files))
@@ -1117,8 +1116,12 @@ class executable {
     }
     
     get targets(){
-        return this.data.zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.data.sources);
-    }   
+        return this.zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.data.sources);
+    }  
+
+    get zone(){
+        return this.data.zone
+    }
 
     _setBoundary(){
         if(!this.offset){
@@ -1174,11 +1177,11 @@ class executable {
     }
 
     async wipe(){
-        this.data.zone.wipe(this._document)
+        this.zone.wipe(this._document)
     }
 
     async wipeType(){
-        this.data.zone.wipe(this._document, 'T')
+        this.zone.wipe(this._document, 'T')
     }
 }
 
@@ -1207,7 +1210,7 @@ class executableWithFile extends executable{
 
     async load() {
         this._file = await this.file;
-        return (this._file && sequencerOn) ? Sequencer.Preloader.preloadForClients(this._file) : true
+        return (this._file && dangerZone.MODULES.sequencerOn) ? Sequencer.Preloader.preloadForClients(this._file) : true
     }
 
     async play(){
@@ -1363,7 +1366,7 @@ class ambientLight extends executable{
 
     get flag(){
         const flg = foundry.utils.mergeObject({}, this.data.flag)
-        if(perfectVisionOn){
+        if(dangerZone.MODULES.perfectVisionOn){
             const pv = this._part.flags['perfect-vision']
             if(pv?.sightLimit) flg['perfect-vision.sightLimit'] = pv.sightLimit
             if(pv?.priority) flg['core.priority'] = pv.priority
@@ -1439,7 +1442,7 @@ class ambientLight extends executable{
                 saturation: this.saturation,
                 shadows: this.shadows
             },   
-            elevation: this.boundary.bottom ?? 0,            
+            elevation: this.boundary.bottomToElevation,            
             hidden: false,
             rotation: this._flipRotation(),
             vision: false,
@@ -1449,7 +1452,7 @@ class ambientLight extends executable{
             walls: this.walls,
             flags: this.flag
         }
-        if(taggerOn && this.tag) light.flags['tagger'] = this.taggerTag
+        if(dangerZone.MODULES.taggerOn && this.tag) light.flags['tagger'] = this.taggerTag
         return light
     }
     
@@ -1625,7 +1628,7 @@ class combat extends executable {
     _setTargets(){
         if(this.addTargets) this.initiativeTargets = this.targets
         if(this.addSource && this.data.hasSources) this.initiativeTargets = this.initiativeTargets.concat(this.data.sources.filter(s => !this.initiativeTargets.find(t => t.id === s.id)))
-        if(portalOn && this.spawn){
+        if(dangerZone.MODULES.portalOn && this.spawn){
             for(const token of this.data.spawn.tokens){
                 if(!this.initiativeTargets.find(t => t.id === token.id)) this.initiativeTargets.push(this.data.sceneTokens.get(token.id))
             }
@@ -1925,7 +1928,7 @@ class Canvas extends executable{
     async play(){
         await super.play()
         if(this._cancel) return
-        if(sequencerOn && (this.type === 'shake' || this.pan.active)){
+        if(dangerZone.MODULES.sequencerOn && (this.type === 'shake' || this.pan.active)){
             let s = new Sequence().canvasPan()
             if(this.pan.active){
                 s = s.atLocation(this.boundary.center)
@@ -2005,7 +2008,7 @@ class item extends executable {
             this.getItems()
             if(!this.items.length) return 
         }
-        if(this.pile && itemPileOn) {
+        if(this.pile && dangerZone.MODULES.itemPileOn) {
             const pilePos = canvas.grid.getTopLeftPoint({x:this.boundary.center.x, y:this.boundary.center.y})
             await ItemPiles.API.createItemPile({position: {x: pilePos.x, y: pilePos.y}, sceneId: this.data.scene.id, items: this.items, pileActorName: false})
             return
@@ -2128,7 +2131,7 @@ class lastingEffect extends executableWithFile{
     _tile(boundary, index = 0){
         const tile = {
             alpha: this.alpha,
-            elevation: boundary.bottom ?? 0, 
+            elevation: boundary.bottomToElevation, 
             flags: this.data.flag,
             hidden: this.hidden,
             locked: false,
@@ -2150,8 +2153,8 @@ class lastingEffect extends executableWithFile{
             x: boundary.A.x,
             y: boundary.A.y
         };
-        if(taggerOn && this.tag) tile.flags['tagger'] = this.taggerTag
-        if(monksActiveTilesOn && this.hasActiveTiles){
+        if(dangerZone.MODULES.taggerOn && this.tag) tile.flags['tagger'] = this.taggerTag
+        if(dangerZone.MODULES.monksActiveTilesOn && this.hasActiveTiles){
             tile.flags["monks-active-tiles"] = {
                 "actions": [],
                 "active": true,
@@ -2366,7 +2369,7 @@ class primaryEffect extends executableWithFile {
     _sequence(boundary, s, source = {}){
         s = s.effect()
             .file(this._file)
-            .zIndex(boundary.top ?? 0)
+            .zIndex(boundary.topToElevation)
             .mirrorX(this.flipContent('x'))
             .mirrorY(this.flipContent('y'))
             if(source.center){
@@ -2565,13 +2568,13 @@ class region extends executable{
         let shape = this._buildShape(boundary);
         const rg = {
             color: this.color,
-            elevation: {bottom: boundary.bottom ?? 0, top: boundary.top ?? 0}, 
+            elevation: {bottom: boundary.bottom, top: boundary.top}, 
             flags: this.data.flag,
             name: this.regionName,
             shapes: [shape],
             visibility: this.visibility
         };
-        if(taggerOn && this.tag) rg.flags['tagger'] = this.taggerTag
+        if(dangerZone.MODULES.taggerOn && this.tag) rg.flags['tagger'] = this.taggerTag
         if(index) {
             rg.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].istwin = true
         } else {
@@ -2715,19 +2718,22 @@ class save extends executable{
     }
 
     async _rollAbilitySave(token){
-        let result;
+        let result, roll;
         const owner = getActorOwner(token), fastforward = game.settings.get(dangerZone.ID, 'saving-throw-fast-forward');
-        if (!fastforward && socketLibOn && owner) {
+        if (!fastforward && dangerZone.MODULES.socketLibOn && owner) {
             const time = this.timeAlloted
             if(time){ 
                 this._playerPrompted.push(`${token.name} (${owner.name})`)
-                const query = dangerZoneSocket.executeAsUser("requestSavingThrow", owner.id, token.uuid, this.type, time)
+                const query = dangerZone.dangerZoneSocket.executeAsUser("requestSavingThrow", owner.id, token.uuid, this.type, time)
                 const race = wait(time)
                 await Promise.race([query, race]).then((value) => {result = value})
             }
         }
-        if(!result) result = await token.actor.rollAbilitySave(this.type, {chatMessage: false, fastForward: fastforward}) 
-       
+        if(!result) {
+            roll = await token.actor.rollSavingThrow({ability: this.type}, {chatMessage: false, configure: !fastforward})  
+            dangerZone.log(false, 'Saving throw rolls', roll)
+            result = roll?.[0]
+        }
         const saved = (!result || result.total < this.diff) ? false : true
         !saved ? this.data.save.failed.push(token) : this.data.save.succeeded.push(token)
         const text = `<div>${token.name} <span class="danger-zone-label">${saved ? 'succeeds' : 'fails'}</span> with a ${result.total}.</div>`
@@ -2839,7 +2845,7 @@ class scene extends executable{
         this._fileB = await this.fileB;
         this._fileF = await this.fileF;
         let ret = true
-        if(sequencerOn){
+        if(dangerZone.MODULES.sequencerOn){
             if(this._fileB){
                 if(this._fileF){
                     ret = Sequencer.Preloader.preloadForClients([this._fileB, this._fileF])
@@ -2945,7 +2951,7 @@ class secondaryEffect extends executableWithFile {
         this._file = await this.file;
         this._fileB = await this.fileB;
         let ret = true
-        if(sequencerOn){
+        if(dangerZone.MODULES.sequencerOn){
             if(this._fileB){
                 if(this._file){
                     ret = Sequencer.Preloader.preloadForClients([this._fileB, this._file])
@@ -2977,7 +2983,7 @@ class secondaryEffect extends executableWithFile {
     _sequence(boundary, s){
         s = s.effect()
             .file(this._file)
-            .zIndex(boundary.bottom ?? 0)
+            .zIndex(boundary.bottomToElevation)
             .atLocation(boundary.center)
             .mirrorX(this.flipContent('x'))
             .mirrorY(this.flipContent('y'))
@@ -3110,7 +3116,7 @@ class sourceEffect extends executableWithFile {
         this._file = await this.file;
         this._fileB = await this.fileB;
         let ret = true
-        if(sequencerOn){
+        if(dangerZone.MODULES.sequencerOn){
             if(this._fileB){
                 if(this._file){
                     ret = Sequencer.Preloader.preloadForClients([this._fileB, this._file])
@@ -3146,7 +3152,7 @@ class sourceEffect extends executableWithFile {
     _sequence(boundary, s){
         s = s.effect()
             .file(this._file)
-            .zIndex(boundary.bottom ?? 0)
+            .zIndex(boundary.bottomToElevation)
             .atLocation(boundary.center)
             .mirrorX(this.flipContent('x'))
             .mirrorY(this.flipContent('y'))
@@ -3213,7 +3219,7 @@ class spawn extends executable {
     }
 
     get location(){
-        return {x:this.boundary.center.x, y:this.boundary.center.y, elevation: this.boundary.bottom}
+        return {x:this.boundary.center.x, y:this.boundary.center.y, elevation: this.boundary.bottomToElevation}
     }
 
     get range(){
@@ -3392,7 +3398,7 @@ class tokenMove extends executable {
                     let location = this.boundary.center;
                     let tokenBoundary = boundary.documentBoundary("Token", token);
                     x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
-                    e = this.boundary.bottom;
+                    e = this.boundary.bottomToElevation;
                 } else if (this.movesTargets) {
                     const shift = this.walls ? furthestShiftPosition(token, [w, h]) : point.shiftPoint(token, {w: w, h: h})
                     x = shift.x; y = shift.y;
@@ -3605,8 +3611,8 @@ class wall extends executable {
             threshold: this.threshold,
             flags: this.data.flag
         }
-        if(wallHeightOn && (this.boundary.bottom || this.boundary.top)) wall.flags['wall-height'] = {"top": this.boundary.top, "bottom": this.boundary.bottom}
-        if(taggerOn && this.tag) wall.flags['tagger'] = this.taggerTag
+        if(dangerZone.MODULES.wallHeightOn && this.boundary.depthIsInfinite) wall.flags['wall-height'] = {"top": this.boundary.top, "bottom": this.boundary.bottom}
+        if(dangerZone.MODULES.taggerOn && this.tag) wall.flags['tagger'] = this.taggerTag
         return wall;
     }  
 
@@ -3694,7 +3700,7 @@ class weather extends executable{
                 game.socket.emit('module.danger-zone', {weather: {stop: true}})
                 game.canvas.weather.clearEffects()
             }
-            else if(fxMasterOn) {
+            else if(dangerZone.MODULES.fxMasterOn) {
                 if(this.fxEffect) {
                     Hooks.call("fxmaster.switchParticleEffect", {
                         name: this.flagName,
@@ -3711,7 +3717,7 @@ class weather extends executable{
         if(this.isFoundryType && this.duration) {
             game.canvas.weather.initializeEffects(CONFIG.weatherEffects[this.type])
             game.socket.emit('module.danger-zone', {weather: {sceneId: this.data.scene.id, play: this.type}})
-        } else if(fxMasterOn) {
+        } else if(dangerZone.MODULES.fxMasterOn) {
             if(!this.fxEffect)  {
                     Hooks.call("fxmaster.switchParticleEffect", {
                     name: this.flagName,

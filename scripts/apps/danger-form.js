@@ -1,6 +1,5 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
-import {activeEffectOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, sequencerOn, socketLibOn, taggerOn, timesUpOn, tokenSaysOn, portalOn} from '../index.js';
 import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, CANVASTYPES, COMBATINITIATIVE, DAMAGEONSAVE, damageTypes, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, ITEMTARGET, TRIGGEROPERATION, DANGERZONEWALLREPLACE,determineMacroList, determineMacroListUuid,  REGIONSHAPETYPEOPTIONS, dirTypes, doorTypes, ELEVATIONMOVEMENT, getCompendiumOps, HORIZONTALMOVEMENT, MIRRORIMAGEOPTIONS, MIRRORROTATIONOPTIONS, MOVETYPES, OFFSETOPTIONS, regionEvents, REGIONVISIBILITY, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEDANGERLOCATION, SOURCEAREATARGET, SOURCEAREAGLOBALZONE, SOURCETREATMENT, STRETCH, TILESBLOCK, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, VERTICALMOVEMENT, WALLSBLOCK, weatherTypes, weatherParameters, WORLDZONE} from './constants.js';
 import {stringToObj} from './helpers.js';
 
@@ -73,27 +72,15 @@ export class DangerForm extends FormApplication {
       }
       case 'delete': {
         label = clickedElement.prev().text();
-        new Dialog({
-          title: `${game.i18n.localize("DANGERZONE.type-form.clear")} ${label}`,
-          content: `${game.i18n.localize("DANGERZONE.type-form.confirm")} ${label}?`,
-          buttons: {
-            yes: {
-              icon: '<i class="fas fa-check"></i>',
-              label: game.i18n.localize("DANGERZONE.yes"),
-              callback: async () => {
-                parent.removeClass('active');
-                await this._deleteDangerPart(event, parent, partId, label);
-              }
-            },
-            no: {
-              icon: '<i class="fas fa-times"></i>',
-              label: game.i18n.localize("DANGERZONE.cancel")
-            }
-          },
-          default: "no"
-        }, {
-          width: 400
-        }).render(true);
+        const choice = await foundry.applications.api.DialogV2.confirm({
+          content: `${game.i18n.localize("DANGERZONE.type-form.clear")} ${label}?`,
+          rejectClose: false,
+          modal: true
+        });
+        if(choice){
+          parent.removeClass('active');
+          this._deleteDangerPart(event, parent, partId, label);
+        }
         break;
       }
       default:
@@ -300,7 +287,7 @@ export class DangerForm extends FormApplication {
       hasCombat: instance.hasCombat ? true : false,
       hasCanvas: (this.canvas.effect.type || this.canvas.pan.active) ? true : false,
       hasForegroundEffect: this.foregroundEffect?.file ? true : false,
-      hasGlobalZone: Object.keys(this.globalZone).length ? true : false,
+      hasGlobalZone: Object.keys(this.globalZone).length && this.globalZone?.enabled ? true : false,
       hasItem: this.item?.name?.length ? true : false,
       hasLastingEffect: this.lastingEffect?.file ? true : false,
       hasLight: (this.light.bright || this.light.dim) ? true : false,
@@ -317,12 +304,12 @@ export class DangerForm extends FormApplication {
       hasWall: (this.wall?.top || this.wall?.bottom || this.wall?.left || this.wall?.right) ? true : false,
       hasWarpgate: this.warpgate?.actor ? true : false,
       hasWeather: this.weather.type ? true : false,
-      activeEffectOnNot: !activeEffectOn,
-      tokenSaysOnNot: !tokenSaysOn, 
-      sequencerOnNot: !sequencerOn,
-      portalOnNot: !portalOn, 
-      canvasOnNot: !sequencerOn, 
-      taggerOnNot: !taggerOn,
+      activeEffectOnNot: !dangerZone.MODULES.activeEffectOn,
+      tokenSaysOnNot: !dangerZone.MODULES.tokenSaysOn, 
+      sequencerOnNot: !dangerZone.MODULES.sequencerOn,
+      portalOnNot: !dangerZone.MODULES.portalOn, 
+      canvasOnNot: !dangerZone.MODULES.sequencerOn, 
+      taggerOnNot: !dangerZone.MODULES.taggerOn,
       tokenResponseOnNot: Object.keys(saveTypes()).length ? false : true
     } 
     
@@ -361,7 +348,6 @@ export class DangerForm extends FormApplication {
     if(Object.keys(this.weather).length) {expandedData.options.flags['weather'] = this.weather}
 
     await dangerZoneType.updateDangerZoneType(expandedData.id, expandedData);
-    dangerZone.initializeTriggerButtons();
     this.parent.refresh();
   }
 
@@ -493,7 +479,7 @@ class DangerZoneDangerFormActiveEffect extends FormApplication {
         data: this.data,
         origin: this.parent.dangerId,
         sourceOps: SOURCETREATMENT,
-        timesUpOn: daeOn ? timesUpOn : false,
+        timesUpOn: dangerZone.MODULES.daeOn ? dangerZone.MODULES.timesUpOn : false,
         macroRepeatOps: TIMESUPMACROREPEAT
       }
     }
@@ -535,7 +521,8 @@ class DangerZoneDangerFormActiveEffect extends FormApplication {
         uuid: `ActiveEffect.${this.parent.dangerId}`
       });
       
-      new DangerZoneActiveEffectForm(this, eventParent, this.parent.dangerId, effect).render(true);
+      const doc = new ActiveEffect(effect, {})
+      new DangerZoneActiveEffectForm(this, eventParent, this.parent.dangerId, doc).render(true);
     }
 
     async _updateObject(event, formData) {
@@ -636,7 +623,7 @@ class DangerZoneDangerFormCombat extends FormApplication {
         initiativeOps: COMBATINITIATIVE,
         isInitiativeRoll: this.data.initiative.type === 'R' ? true : false,
         isInitiativeSet: this.data.initiative.type === 'S' ? true : false,
-        portalOnNot: !portalOn
+        portalOnNot: !dangerZone.MODULES.portalOn
         }
     }
 
@@ -758,7 +745,7 @@ class DangerZoneDangerFormCanvas extends FormApplication {
       return {
         data: this.data,
         canvasOps: CANVASTYPES,
-        hasSequencer: sequencerOn
+        hasSequencer: dangerZone.MODULES.sequencerOn
       }
     }
 
@@ -798,7 +785,7 @@ class DangerZoneDangerFormForegroundEffect extends FormApplication {
     getData(options) {
       return {
         data: this.data,
-        taggerOnNot: !taggerOn,
+        taggerOnNot: !dangerZone.MODULES.taggerOn,
         targetOps: SOURCEDANGERLOCATION,
         offsetOps: OFFSETOPTIONS,
         mirrorOps: MIRRORIMAGEOPTIONS
@@ -956,9 +943,9 @@ class DangerZoneDangerFormItem extends FormApplication {
         actionOps: ITEMTARGET,
         compendiumOps: getCompendiumOps('item'),
         data: this.data,
-        itemPileOnNot: !itemPileOn,
+        itemPileOnNot: !dangerZone.MODULES.itemPileOn,
         sourceOps: SOURCETREATMENT,
-        taggerOnNot: !taggerOn
+        taggerOnNot: !dangerZone.MODULES.taggerOn
         }
     }
 
@@ -1019,9 +1006,9 @@ class DangerZoneDangerFormLastingEffect extends FormApplication {
         lastingEffect: this.data.lastingEffect,
         macroOps: determineMacroList(),
         monksActiveTiles: this.data.monksActiveTiles,
-        monksActiveTilesOnNot: !monksActiveTilesOn,
+        monksActiveTilesOnNot: !dangerZone.MODULES.monksActiveTilesOn,
         occlusionModesOps: TILEOCCLUSIONMODES,
-        taggerOnNot: !taggerOn,
+        taggerOnNot: !dangerZone.MODULES.taggerOn,
         offsetOps: OFFSETOPTIONS,
         mirrorOps: MIRRORIMAGEOPTIONS
       }
@@ -1074,9 +1061,9 @@ class DangerZoneDangerFormLight extends FormApplication {
         clearOps: AMBIENTLIGHTCLEAROPS,
         colorationOps: AdaptiveLightingShader.SHADER_TECHNIQUES,
         data: this.data,
-        hasPerfectVision: perfectVisionOn,
+        hasPerfectVision: dangerZone.MODULES.perfectVisionOn,
         lightAnimations: animationTypes(),
-        taggerOnNot: !taggerOn,
+        taggerOnNot: !dangerZone.MODULES.taggerOn,
         offsetOps: OFFSETOPTIONS,
         mirrorOps: MIRRORROTATIONOPTIONS
         }
@@ -1167,7 +1154,7 @@ class DangerZoneDangerFormRegion extends FormApplication {
         data: this.data,
         eventOps: regionEvents(),
         macroOps: determineMacroListUuid(),
-        taggerOnNot: !taggerOn,
+        taggerOnNot: !dangerZone.MODULES.taggerOn,
         visibilityOps: REGIONVISIBILITY,
         offsetOps: OFFSETOPTIONS,
         mirrorOps: MIRRORIMAGEOPTIONS,
@@ -1358,7 +1345,7 @@ class DangerZoneDangerFormSourceEffect extends FormApplication {
     getData(options) {
       return {
         data: this.data,
-        taggerOnNot: !taggerOn,
+        taggerOnNot: !dangerZone.MODULES.taggerOn,
         targetOps: SOURCEDANGERLOCATION,
         offsetOps: OFFSETOPTIONS,
         mirrorOps: MIRRORIMAGEOPTIONS
@@ -1519,9 +1506,9 @@ class DangerZoneDangerFormTokenResponse extends FormApplication {
         saveOps: saveTypes(),
         saveResultOps: SAVERESULT,
         sourceOps: SOURCETREATMENT,
-        tokenSaysOnNot: !tokenSaysOn, 
-        sequencerOnNot: !sequencerOn,
-        socketLibOn: socketLibOn
+        tokenSaysOnNot: !dangerZone.MODULES.tokenSaysOn, 
+        sequencerOnNot: !dangerZone.MODULES.sequencerOn,
+        socketLibOn: dangerZone.MODULES.socketLibOn
       }
     }
 

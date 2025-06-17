@@ -1,6 +1,10 @@
-import {taggerOn} from '../index.js';
+/**
+ * Reviewed for v13. All functions in use retained.
+ */
+
 import {dangerZone} from '../danger-zone.js';
 import {point} from './dimensions.js'
+import {DangerZoneSceneForm} from './scene-zone-list-form.js';
 
 export function circleAreaGrid(xLoc,yLoc, dimension = {w:w, h:h}){
   if((!xLoc &&!yLoc) || (yLoc===dimension.h&&!xLoc) || (xLoc===dimension.w&&!yLoc) || (xLoc===dimension.w&&yLoc===dimension.h)){return false}
@@ -69,7 +73,7 @@ export function getSceneRegionList(sceneId){
 
 export async function getTagEntities(tag, scene){
   const d = scene.getEmbeddedCollection("Drawing").filter(d => d.text === tag);
-  if(taggerOn){
+  if(dangerZone.MODULES.taggerOn){
       const t = await Tagger.getByTag(tag, {caseInsensitive: false, matchAll: false, sceneId: scene.id })
       return d.concat(t)
   }
@@ -99,6 +103,40 @@ export function rayIntersectsGrid(coords, r){
   return false
 }
 
+/** v13
+ * Adds the dangers launch button to the Scenes sidebar
+ * @param {object} app 
+ * @param {object} html 
+ * @param {object} updates 
+ */
+export function addDangerButton(app, html, updates) {
+  dangerZone.addDangersLaunch(app, html);
+} 
+
+/** V13
+ * Adds to the controls for the given appliactiona launch for zones form
+ */
+export function addSceneFormLaunch(application, controls){
+  const scene = application?.document?.documentName === 'Scene' ? application?.document : canvas.scene
+  if(!game.user.isActiveGM) return
+  controls.push({
+      onClick: (event) => {
+          launchSceneForm(scene, application)
+      },
+      icon: 'fas fa-radiation',
+      label: 'DANGERZONE.zones'
+  })
+}
+
+/**v13
+ * Launches the form that lists all zones associated to the given scene.
+ * @param {object} scene the scene class
+ * @param {object} application 
+ */
+export function launchSceneForm(scene, application = ''){ 
+  new DangerZoneSceneForm(application, scene.id).render(true)
+}
+
 export async function requestSavingThrow(tokenUuid, saveType, time){
   const token = await fromUuid(tokenUuid)
   if(!token?.actor) return 
@@ -107,9 +145,9 @@ export async function requestSavingThrow(tokenUuid, saveType, time){
     dialog = app
   })
   
-  const query = token.actor.rollAbilitySave(saveType, {chatMessage: false})
+  const query = token.actor.rollSavingThrow({ability: saveType}, {chatMessage: false})
   const race = wait(time)
-  await Promise.race([query, race]).then((value) => {result = value; dialog?.close()})
+  await Promise.race([query, race]).then((value) => {result = value?.[0] ; dialog?.close()})
   return result
 }
 

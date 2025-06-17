@@ -2,7 +2,6 @@ import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {boundary, dangerZoneDimensions} from './dimensions.js';
 import {triggerManager} from './trigger-handler.js';
-import {dangerZoneSocket} from '../index.js';
 
 export class api {
     static register() {
@@ -99,9 +98,9 @@ export class api {
         if(zn.enabled) await zn.toggleZoneActive()
     }
 
-    static _tokensInBoundary(A,B, elevation = {bottom: null, top: null}){
-        if(elevation.bottom === null && A.z) elevation.bottom = A.z
-        if(elevation.top === null && B.z) elevation.top = B.z
+    static _tokensInBoundary(A,B, elevation = {bottom: -Infinity, top: Infinity}){
+        if(elevation.bottom === -Infinity && A.z) elevation.bottom = A.z
+        if(elevation.top === Infinity && B.z) elevation.top = B.z
         const b = new boundary(A,B,elevation);
         return b.tokensIn(canvas.scene.tokens);
     }
@@ -129,10 +128,10 @@ export class api {
      *                          targets {array} an array of token documents that will be the targets (overrides any zone targeting)
      */
      static async _triggerZone(zoneName, sceneId, options = {activeOnly: false, scope: '', location: {}, targets: [], sources: [], boundary: {}}){
-        if (!game.user.isGM){
-            if( game.modules.get("socketlib")?.active && dangerZoneSocket){
+        if (!game.user.isActiveGM){
+            if( game.modules.get("socketlib")?.active && dangerZone.dangerZoneSocket){
                 if(game.settings.get(dangerZone.ID, 'open-socket')) {
-                    await dangerZoneSocket.executeAsGM("_triggerZone", zoneName, sceneId, options)
+                    await dangerZone.dangerZoneSocket.executeAsGM("_triggerZone", zoneName, sceneId, options)
                     return
                 }
                 return console.log("The GM does not allow players to trigger Danger Zones in this world.")

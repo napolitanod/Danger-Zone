@@ -1,6 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
 import {circleAreaGrid, getTagEntities, rayIntersectsGrid} from './helpers.js';
-import { wallHeightOn } from '../index.js';
 
 export class dangerZoneDimensions {
     /**
@@ -137,7 +136,7 @@ export class dangerZoneDimensions {
         }
     */
 export class boundary{
-    constructor (a = {x:0, y:0}, b = {x:0, y:0}, elevation = {bottom: null, top: null}, options = {}) {
+    constructor (a = {x:0, y:0}, b = {x:0, y:0}, elevation = {bottom: -Infinity, top: Infinity}, options = {}) {
         this.A = {
             x: a.x ? Math.min(a.x, a.x ? b.x : b.x) : 0,
             y: a.y ? Math.min(a.y, a.y ? b.y : b.y) : 0
@@ -162,6 +161,14 @@ export class boundary{
         return this.options.bottom ?? this.elevation.bottom
     }
 
+    get bottomIsInfinite(){
+        return this.bottom === -Infinity || this.bottom === null
+    }
+    
+    get bottomToElevation(){
+        return this.bottomIsInfinite ? 0 : this.bottom
+    }
+
     get center(){
         return {x: this.A.x + (this.width/2), y: this.A.y + (this.height/2)}
     }
@@ -171,7 +178,7 @@ export class boundary{
     }
 
     get depthIsInfinite(){
-        return this.bottom === null || this.top === null
+        return this.topIsInfinite || this.bottomIsInfinite
     }
 
     get dimensions(){
@@ -183,6 +190,15 @@ export class boundary{
         const h = Math.max(bottom.i,left.i) - Math.min(top.i,right.i);
 
         return {w: w, h: h, j:top.j, i:top.i, top: top, left: left, right: right, bottom: bottom}
+    }
+
+    get elevationArray(){
+        if (this.depthIsInfinite) return [0]
+        const arr = []
+        for (let i = 0; i < this.depth; i++) {
+            arr.push(this.depth + i);
+        }
+        return arr
     }
 
     get exclude(){
@@ -215,6 +231,14 @@ export class boundary{
 
     get top(){
         return this.options.top ?? this.elevation.top
+    }
+
+    get topIsInfinite(){
+        return this.top === Infinity || this.top === null
+    }
+    
+    get topToElevation(){
+        return this.topIsInfinite ? 0 : this.top
     }
 
     get width(){
@@ -288,9 +312,13 @@ export class boundary{
         if(this.range.w > 1) vertices = vertices.concat(canvas.grid.getCenterPoint(canvas.grid.getTopLeftPoint({i: dim.i, j: dim.j + (this.range.w - 1)})))//vertices = vertices.concat(canvas.grid.getVertices({i: dim.i, j: dim.j + (this.range.w - 1)}))
         if(this.range.h > 1 && this.range.w  > 1) vertices = vertices.concat(canvas.grid.getCenterPoint(canvas.grid.getTopLeftPoint({i: dim.i + (this.range.h-1), j: dim.j + (this.range.w - 1)}))) //vertices = vertices.concat(canvas.grid.getVertices({i: dim.i + (this.range.h-1), j: dim.j + (this.range.w - 1)}))
         vertices.push(canvas.grid.getCenterPoint(dim))
-        //dangerZone.log(true, "Testing Grid to Region", {dimensions: this, coord: dim, vertices: vertices})
+        //dangerZone.log(true, "Testing Grid to Region", {dimensions: this, region: this.region, coord: dim, vertices: vertices})
         do {
-            inRegion = this.region.object.testPoint(vertices[i])
+            const testPoint = vertices[i];
+            for(const d of this.elevationArray){
+                inRegion = this.region.testPoint({x: testPoint.x, y: testPoint.y, elevation: d})
+                if(inRegion) break;
+            }
             i++
         } while (!inRegion && i < vertices.length)
         return inRegion
@@ -324,7 +352,7 @@ export class boundary{
         if('top' in this.options){ops.top = this.options.top}
         if('range' in this.options) ops.range = this.range
         if(all.length < 1 || this.depth < 0){
-            if(this.depth < 0 && game.user.isGM){
+            if(this.depth < 0 && game.user.isActiveGM){
                 ui.notifications?.error(game.i18n.localize("DANGERZONE.alerts.danger-depth-exceeds-zone"));
             }
             return dangerZone.log(false,'Invalid zone settings ', {boundary: this})
@@ -335,7 +363,8 @@ export class boundary{
             const topLeft = canvas.grid.getTopLeftPoint(test); 
             const bottomRight = point.shiftPoint(topLeft, this.range);
             const e = test.e + Math.floor(Math.random() * this.depth);
-            yield new boundary(topLeft, bottomRight, {bottom: e, top: e + zAdj}, ops)
+            const top = e === -Infinity ? Infinity : e + zAdj;
+            yield new boundary(topLeft, bottomRight, {bottom: e, top: top}, ops)
         }
 
     }
@@ -355,7 +384,7 @@ export class boundary{
         let dim;
         switch(documentName){
             case "Wall":
-                const wallHeight = (wallHeightOn && document.flags?.['wall-height']) ? document.flags?.['wall-height'] : {bottom: 0, top: 0}
+                const wallHeight = (dangerZone.MODULES.wallHeightOn && document.flags?.['wall-height']) ? document.flags?.['wall-height'] : {bottom: 0, top: 0}
                 dim={x: document.object.bounds.x, y:document.object.bounds.y, width: document.object.bounds.width, height: document.object.bounds.height, bottom: wallHeight.bottom, top: wallHeight.top}
                 break
             case "AmbientLight":
@@ -380,7 +409,7 @@ export class boundary{
                 const position = canvas.grid.getOffset(document);
                 const topLeft = canvas.grid.getTopLeftPoint({j:position.j + document.width, i:position.i + document.height}); 
                 const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
-                const Td = (wallHeightOn && document.getFlag('wall-height', 'tokenHeight')) ? document.getFlag('wall-height', 'tokenHeight') : (distance * Math.max(document.width, document.height) * multiplier);
+                const Td = (dangerZone.MODULES.wallHeightOn && document.getFlag('wall-height', 'tokenHeight')) ? document.getFlag('wall-height', 'tokenHeight') : (distance * Math.max(document.width, document.height) * multiplier);
                 dim = {x:document.x, y:document.y, width: topLeft.x - document.x, height: topLeft.y - document.y, bottom:document.elevation, top: document.elevation + Td};
                 break
             default: 
@@ -444,7 +473,7 @@ export class boundary{
     } 
 
     intersectsBoundary(bound = boundary){
-        if((this.bottom === null || this.bottom < bound.top) && (this.top === null || this.top >= bound.bottom)) {
+        if((this.bottomIsInfinite || this.bottom < bound.top) && (this.topIsInfinite || this.top >= bound.bottom)) {
             const grids = bound.grids()
             for(const grid of grids){
                 if(this.gridIndex.has(grid.index)) return true

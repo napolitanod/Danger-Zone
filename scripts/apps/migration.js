@@ -17,7 +17,7 @@ export class migrateDanger {
     }
 
     static async migrate(){
-        if(game.user.isGM) {
+        if(game.user.isActiveGM) {
             const migration = new migrateDanger()
             await migration.go()
         } 
@@ -141,7 +141,7 @@ export class migrateScene {
     }
 
     static async migrate(scene = false){
-        if(game.user.isGM){
+        if(game.user.isActiveGM){
             if(scene){
                 const migrate = new migrateScene(scene)
                 await migrate.go()

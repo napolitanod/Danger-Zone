@@ -48,28 +48,15 @@ export class DangerZoneTypesForm extends FormApplication {
         this.exportToJSON(event, dangerId)
         break;
       case 'delete':
-        new Dialog({
-          title: game.i18n.localize("DANGERZONE.types-form.clear"),
-          content: game.i18n.localize("DANGERZONE.types-form.confirm"),
-          buttons: {
-            yes: {
-              icon: '<i class="fas fa-check"></i>',
-              label: game.i18n.localize("DANGERZONE.yes"),
-              callback: async () => {
-                await dangerZoneType.deleteZoneType(dangerId);
-                dangerZone.initializeTriggerButtons();
-                this.refresh();
-              }
-            },
-            no: {
-              icon: '<i class="fas fa-times"></i>',
-              label: game.i18n.localize("DANGERZONE.cancel")
-            }
-          },
-          default: "no"
-        }, {
-          width: 400
-        }).render(true);
+        const choice = await foundry.applications.api.DialogV2.confirm({
+          content: `${game.i18n.localize("DANGERZONE.delete")}?`,
+          rejectClose: false,
+          modal: true
+        });
+        if(choice){
+          await dangerZoneType.deleteZoneType(dangerId);
+          this.refresh();
+        }
         break;
       case 'active':
         await this._activateWorld(dangerId);
@@ -104,7 +91,6 @@ export class DangerZoneTypesForm extends FormApplication {
   async _activateWorld(dangerId){
     const danger = dangerZoneType.getDanger(dangerId);
     Object.keys(danger.options.globalZone).length ? await danger.toggleWorldZone() : await danger.activateWorldZone();
-    dangerZone.initializeTriggerButtons();
     this.refresh();
   }
 

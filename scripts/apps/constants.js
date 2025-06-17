@@ -1,4 +1,5 @@
-import {activeEffectOn, tokenSaysOn, daeOn, itemPileOn, monksActiveTilesOn, perfectVisionOn, portalOn, fxMasterOn, sequencerOn, taggerOn, wallHeightOn} from '../index.js';
+import { dangerZone } from '../danger-zone.js';
+import {DangerZoneSceneForm} from './scene-zone-list-form.js';
 
 export const WORKFLOWSTATES = {
     NONE: 0,
@@ -70,6 +71,118 @@ export const WORLDZONE = {
     enabled: true
   }
 
+/**v13 CONTROLTRIGGERS
+ * holds objects that are then loaded to the scene controls
+ */
+export const CONTROLTRIGGERS = {
+    visible: false,
+    controls: {}
+};
+
+/**v13 setControlTriggers
+ * loads the CONTROLTRIGGERS object. Intended to be called after Foundry initializes so that classes are available.
+ */
+export function setControlTriggers(){
+    CONTROLTRIGGERS['controls'] = {
+        activeTool: 'executor',
+        icon: "fas fa-radiation",
+        name: dangerZone.ID,
+        title: "Zones",
+        visible: game.user.isActiveGM &&  canvas.scene?.id,
+        tools: {
+            executor: {
+                active: dangerZone.executorForm.visible,
+                button: true,
+                icon: "fas fa-list-alt",
+                name: "executor",
+                title: "DANGERZONE.scene.executor.label",
+                toggle: true,
+                onChange: (event, toggle) => {
+                    dangerZone.log(false, 'executor control launch', event, toggle)
+                    if(toggle){
+                        if(!canvas.scene.active) {
+                            ui.notifications?.info(`Danger zones cannot be triggered on an inactive scene.`)
+                            return
+                        }
+                        dangerZone.executorForm.renderOnScene();
+                    } 
+                },
+                visible: game.user.isActiveGM 
+            },
+            config: {
+                button: true,
+                icon: "fa-solid fa-gear",
+                name: "config",
+                title: "DANGERZONE.zones",
+                onChange: (event, active) => {
+                    if(active && dangerZone.executorForm.visible) new DangerZoneSceneForm('', canvas.scene?.id).render(true)
+                },
+                visible: game.user.isActiveGM
+            },
+            clear: {
+                button: true,
+                icon: "fas fa-trash",
+                name: "clear",
+                title: "DANGERZONE.controls.clear.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.handleClear(event)
+                },
+                visible: game.user.isActiveGM
+            },
+            tiles: {
+                button: true,
+                icon: "fa-solid fa-cubes", 
+                name: 'tiles',
+                title: "DANGERZONE.controls.clearEffectsTile.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.wipe('Tile' )
+                },
+                visible: game.user.isActiveGM
+            },
+            lighting: {
+                button: true,
+                icon: "fa-regular fa-lightbulb", 
+                name: 'lighting',
+                title: "DANGERZONE.controls.clearAmbientLight.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.wipe('AmbientLight' )
+                },
+                visible: game.user.isActiveGM
+            },
+            sounds: {
+                button: true,
+                icon: "fa-solid fa-music", 
+                name: 'sounds',
+                title: "DANGERZONE.controls.clearAmbientSound.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.wipe('AmbientSound' )
+                },
+                visible: game.user.isActiveGM
+            },
+            regions: {
+                button: true,
+                icon: "fa-regular fa-game-board",
+                name: 'regions',
+                title: "DANGERZONE.controls.clearRegion.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.wipe('Region' )
+                },
+                visible: game.user.isActiveGM
+            },
+            walls: {
+                button: true,
+                icon: "fa-solid fa-block-brick", 
+                name: 'walls',
+                title: "DANGERZONE.controls.clearWall.label",
+                onChange: (event, active) => {
+                    if(active) dangerZone.wipe('Wall' )
+                },
+                visible: game.user.isActiveGM
+            }
+        }   
+    }
+}
+
 export const AMBIENTLIGHTCLEAROPS = {
     'D': 'DANGERZONE.light.clear-types.delete',
     'O': 'DANGERZONE.light.clear-types.off'
@@ -79,17 +192,6 @@ export const COMBATINITIATIVE = {
     '': "DANGERZONE.type-form.combat.initiative.type.options.none",
     "R": "DANGERZONE.type-form.combat.initiative.type.options.roll",
     "S": "DANGERZONE.type-form.combat.initiative.type.options.set"
-}
-
-export const SCENEFORMICONDISPLAYOPTIONS = {
-    'B': 'DANGERZONE.setting.scene-header.display.iconLabel', 
-    'I': 'DANGERZONE.setting.scene-header.display.iconOnly', 
-    'N': 'DANGERZONE.setting.scene-header.display.none'
-};
-
-export const TRIGGERDISPLAYOPTIONS = {
-    "S": "DANGERZONE.trigger-display-options.scene.label",
-    "H":"DANGERZONE.trigger-display-options.hotbar.label"
 }
 
 export const TOKENDISPOSITION = {
@@ -510,9 +612,6 @@ export const ITEMTARGET = {
     "U": "DANGERZONE.item.target.update"
 }
 
-
-export const DAEDuration = daeOn ? DAE.daeSpecialDurations() : {}
-
 export const DOORSTATES = {
     0: "DANGERZONE.doorStates.closed",
     1: "DANGERZONE.doorStates.open",
@@ -677,7 +776,7 @@ export const TILESBLOCK = {
 }
 
 export function setModOptions(){
-    if(taggerOn){
+    if(dangerZone.MODULES.taggerOn){
         SOURCEAREA["C"] = "DANGERZONE.source.area.danger.tile"; 
         SOURCEAREAGLOBALZONE["C"] = "DANGERZONE.source.area.danger.tile"; 
         SOURCEAREA["Y"] = "DANGERZONE.source.area.zone.tile";  
@@ -697,12 +796,12 @@ export function getCompendiumOps(fileType){
 export function weatherTypes() {
     const obj = {'':''}
     Object.assign(obj, Object.fromEntries(Object.entries(CONFIG.weatherEffects).filter(w => !w[1].id.includes('fxmaster')).map(k=> [`foundry.${k[0]}`,`${game.i18n.localize(k[1].label)} (Foundry)`])))
-    if(fxMasterOn) Object.assign(obj,Object.fromEntries(Object.entries(CONFIG.fxmaster.particleEffects).map(k=> [k[0],`${k[1].name.replace('ParticleEffect','')} (FXMaster)`])))
+    if(dangerZone.MODULES.fxMasterOn) Object.assign(obj,Object.fromEntries(Object.entries(CONFIG.fxmaster.particleEffects).map(k=> [k[0],`${k[1].name.replace('ParticleEffect','')} (FXMaster)`])))
     return obj
 }
 
 export function weatherParameters(type) {
-    if(fxMasterOn) return CONFIG.fxmaster.particleEffects[type]?.parameters
+    if(dangerZone.MODULES.fxMasterOn) return CONFIG.fxmaster.particleEffects[type]?.parameters
 }
 
 export const ZONEEXTENSIONINTERACTIONOPTIONS = {
@@ -728,35 +827,35 @@ export function setExecutableOptions(){
             'effect': {
                 title: "Active Effect", 
                 icon: "fas fa-hand-sparkles",
-                modules: [{active: activeEffectOn, name: "game-system", dependent: true}],
+                modules: [{active: dangerZone.MODULES.activeEffectOn, name: "game-system", dependent: true}],
                 scope: "token"
             },
             'audio': {
                 title: "Audio", 
                 icon: "fas fa-music", 
-                modules: [{active: sequencerOn, name: "sequencer", dependent: false}],
+                modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: false}],
                 scope: "scene"
             },
             'combat': {
                 title: "Combat", 
                 icon: "fas fa-swords", 
-                modules: [{active: portalOn, name: "portal", dependent: false}],
+                modules: [{active: dangerZone.MODULES.portalOn, name: "portal", dependent: false}],
                 scope: "scene"
             },
             'foregroundEffect': {
                 title: "Primary Effect", 
                 icon: "fas fa-bolt", 
-                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
             'ambientLight': {
                 title: "Ambient Light", 
-                icon: "fas fa-lightbulb", 
+                icon: "fa-regular fa-lightbulb", 
                 document: "AmbientLight", 
                 wipeable: true, 
                 modules: [
-                    {active: perfectVisionOn, name: "perfect-vision", dependent: false},
-                    {active: taggerOn, name: "tagger", dependent: false}
+                    {active: dangerZone.MODULES.perfectVisionOn, name: "perfect-vision", dependent: false},
+                    {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
             },
@@ -764,7 +863,7 @@ export function setExecutableOptions(){
                 title: "Canvas", 
                 icon: "fas fa-wind", 
                 modules: [
-                    {active: sequencerOn, name: "sequencer", dependent: true}
+                    {active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}
                 ],
                 scope: "scene"
             },
@@ -776,17 +875,17 @@ export function setExecutableOptions(){
             'item': {
                 title: "Item", 
                 icon: "fas fa-suitcase", 
-                modules: [{active: taggerOn, name: "tagger", dependent: false},{active: itemPileOn, name: "item-piles", dependent: false}],
+                modules: [{active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false},{active: dangerZone.MODULES.itemPileOn, name: "item-piles", dependent: false}],
                 scope: "token"
             },
             'lastingEffect': {
                 title: "Lasting Effect", 
-                icon: "fas fa-cube", 
+                icon: "fa-solid fa-cubes", 
                 document: "Tile",  
                 wipeable: true, 
                 modules: [
-                    {active: monksActiveTilesOn, name: "monks-active-tiles", dependent: false},
-                    {active: taggerOn, name: "tagger", dependent: false}
+                    {active: dangerZone.MODULES.monksActiveTilesOn, name: "monks-active-tiles", dependent: false},
+                    {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
             },
@@ -799,20 +898,20 @@ export function setExecutableOptions(){
                 title: "Mutate", 
                 icon: "fas fa-pastafarianism", 
                 modules:[
-                    {active: taggerOn, name: "tagger", dependent: false}
+                    {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "token"
             },
             'backgroundEffect': {
                 title: "Secondary Effect", 
                 icon: "fas fa-bomb", 
-                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
             'region': {
                 document: "Region", 
                 title: "Region", 
-                icon: "fa-solid fa-expand",
+                icon: "fa-regular fa-game-board",
                 scope: "boundary",
                 wipeable: true
             },
@@ -836,7 +935,7 @@ export function setExecutableOptions(){
             },
             'sound': {
                 title: "Sound", 
-                icon: "fas fa-volume-high", 
+                icon: "fa-solid fa-music", 
                 document: "AmbientSound", 
                 modules:[],
                 wipeable: true, 
@@ -845,15 +944,15 @@ export function setExecutableOptions(){
             'sourceEffect': {
                 title: "Source Effect", 
                 icon: "fas fa-dragon", 
-                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
             'warpgate': {
                 title: "Spawn", 
                 icon: "fas fa-circle-notch", 
                 modules:[
-                    {active: portalOn, name: "portal", dependent: true}, 
-                    {active: taggerOn, name: "tagger", dependent: false}
+                    {active: dangerZone.MODULES.portalOn, name: "portal", dependent: true}, 
+                    {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
             },
@@ -865,23 +964,23 @@ export function setExecutableOptions(){
             'tokenEffect': {
                 title: "Token Effect", 
                 icon: "fas fa-male", 
-                modules: [{active: sequencerOn, name: "sequencer", dependent: true}],
+                modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "token"
             },
             'tokenSays': {
                 title: "Token Says", 
                 icon: "fas fa-comment", 
-                modules: [{active: tokenSaysOn, name: "token-says", dependent: true}],
+                modules: [{active: dangerZone.MODULES.tokenSaysOn, name: "token-says", dependent: true}],
                 scope: "token"
             },
             'wall': {
                 title: "Wall", 
-                icon: "fas fa-university", 
+                icon: "fa-solid fa-block-brick", 
                 document: "Wall",  
                 wipeable: true,
                 modules:[
-                    {active: wallHeightOn, name: "wall-height", dependent: false}, 
-                    {active: taggerOn, name: "tagger", dependent: false}
+                    {active: dangerZone.MODULES.wallHeightOn, name: "wall-height", dependent: false}, 
+                    {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
             },
@@ -891,7 +990,7 @@ export function setExecutableOptions(){
                 document: 'fxmaster-particle',
                 wipeable: true,
                 modules:[
-                    {active: fxMasterOn, name: "fxmaster", dependent: false}
+                    {active: dangerZone.MODULES.fxMasterOn, name: "fxmaster", dependent: false}
                 ],
                 scope: "scene"
             },

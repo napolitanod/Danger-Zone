@@ -50,27 +50,15 @@ export class DangerZoneSceneForm extends FormApplication {
         break;
       }
       case 'delete': {
-        new Dialog({
-          title: game.i18n.localize("DANGERZONE.types-form.clear"),
-          content: game.i18n.localize("DANGERZONE.types-form.confirm"),
-          buttons: {
-            yes: {
-              icon: '<i class="fas fa-check"></i>',
-              label: game.i18n.localize("DANGERZONE.yes"),
-              callback: async () => {
-                await dangerZone.deleteZoneFromScene(zoneId, this.sceneId)
-                this.refresh();
-              }
-            },
-            no: {
-              icon: '<i class="fas fa-times"></i>',
-              label: game.i18n.localize("DANGERZONE.cancel")
-            }
-          },
-          default: "no"
-        }, {
-          width: 400
-        }).render(true);
+        const choice = await foundry.applications.api.DialogV2.confirm({
+          content: `${game.i18n.localize("DANGERZONE.delete")}?`,
+          rejectClose: false,
+          modal: true
+        });
+        if(choice){
+          await dangerZone.deleteZoneFromScene(zoneId, this.sceneId)
+          this.refresh();
+        }
         break;
       }
       default:

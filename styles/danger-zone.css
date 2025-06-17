@@ -60,13 +60,6 @@ form.danger-zone-type-form .dz-hidden,
     display: flex;
 }
 
-.danger-zone-scene-trigger-button.dz-hidden {
-    visibility: hidden;
-    opacity: 0;
-    transition: visibility 0s, opacity 0.75s ease;
-    position: absolute;
-}
-
 .danger-zone-scene-header, 
 .danger-zone-types-header {
     flex: 1 1 100%;
@@ -293,118 +286,6 @@ form.danger-zone-type-form .main-danger {
     color: #FFF;
 } 
 
-/*hotbar*/
-.danger-zone-hotbar-trigger {
-    position: absolute;
-    right: 160px;
-    bottom: 11px;
-    list-style: none;
-    border-width: 0px;
-    background-color: transparent;
-    float: left;
-    pointer-events: auto;
-    display:flex;
-    flex-direction: column-reverse;
-    flex-wrap: wrap;
-    max-height: 300px;
-}
-
-
-.danger-zone-hotbar-trigger > ol {
-    list-style: none;
-    max-height: 250px;
-    margin: 0 0 0 6px;
-    padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    flex-direction: column-reverse;
-}
-
-.danger-zone-sidebar-trigger {
-    position: absolute;
-    right: 350px;
-    bottom: 2px;
-    list-style: none;
-    border-width: 0px;
-    background-color: transparent;
-    float: left;
-    pointer-events: auto;
-    display:flex;
-    flex-direction: column-reverse;
-    flex-wrap: wrap;
-}
-
-.danger-zone-hotbar-trigger .danger-zone-scene-trigger-button, 
-.danger-zone-sidebar-trigger > .danger-zone-scene-trigger-button
- {
-    margin: 4px 0px 0px 0px;
-    align-self: center;
-}
-
-.danger-zone-scene-trigger-master {
-    position: relative;
-    background-color: rgba(0, 0, 0, 0.5);
-    box-shadow: 0 0 10px #000;
-    color: #FFF;
-    width: 48px;
-    height: 48px;
-    border-radius: 24px;
-    cursor: pointer;
-    font-size: 34px;
-    padding-top: 3px;
-    margin-top: 4px;
-    text-align: center;
-    bottom: -7px;
-}
-
-/*scene navigation*/
-.danger-zone-scene-trigger {
-    pointer-events: auto;
-}
-
-.danger-zone-scene-trigger > ol {
-    margin: 0 4px 8px 0;
-    float: left;
-}
-
-.danger-zone-scene-trigger-button  > .fas {
-    line-height: 33px;
-}
-
-.danger-zone-scene-trigger-button {
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 28px 28px;
-    background-color: rgba(0, 0, 0, 0.5);
-    box-shadow: 0 0 10px #000;
-    color: #FFF;
-    width: 33px;
-    height: 33px;
-    border-radius: 5px;
-    cursor: pointer;
-    text-align: center;
-    font-size: 24px;
-    padding: 0;
-}
-
-.danger-zone-scene-trigger-button.global-zone{
-    background-color: rgba(120, 112, 0, 0.329);
-}
-.danger-zone-scene-trigger-button.global-zone:hover {
-    background-color: rgba(120, 112, 0, 0.329);
-    box-shadow: 0 0 10px #9b9928;
-    border: 1px solid yellow;
-}
-
-.danger-zone-scene-trigger-button:hover, 
-.danger-zone-scene-trigger-master:hover, 
-.danger-zone-scene-trigger-master.active {
-    color: #FFF;
-    border: 1px solid red;
-    border-bottom: 1px solid #ff6400;
-    box-shadow: 0 0 10px #ff6400;
-}
-
 form ol.danger-setting-group button {
     background-color: rgba(0, 0, 0, 0.5);
     box-shadow: 0 0 10px var(--color-shadow-dark);
@@ -444,23 +325,6 @@ form ol.danger-setting-group .active:hover a.danger-zone-type-delete {
 
 form ol.danger-setting-group .active:hover label {
     visibility: hidden;
-}
-
-.danger-zone-hotbar-trigger:hover li.dz-hidden, 
-.danger-zone-sidebar-trigger:hover li.dz-hidden, 
-.danger-zone-scene-trigger-master.active ~ ol > li.dz-hidden {
-    visibility: visible;
-    opacity: 1;
-    position: relative;
-}
-
-.danger-zone-scene-trigger-button.active{
-    background-color: rgba(60, 0, 120, 0.5);
-    box-shadow: 0 0 10px #9b8dff;
-}
-
-.danger-zone-scene-trigger-button.random {
-    font-size: 28px;
 }
 
 /*danger zone type form*/
@@ -559,6 +423,40 @@ form ol.danger-setting-group .active:hover label {
     font-size: 18px;
 }
 
+
+.danger-zone-scene-trigger-button {
+    justify-content: center;
+    align-items: center;
+    height: 50px;
+    width: 50px;
+    font-size: 14px;
+    background-size: 35px;
+    background-repeat: no-repeat;
+    background-position: center;
+    box-shadow: 0 0 10px #000;
+    white-space: normal;
+}
+
+.danger-zone-scene-trigger-button.global-zone{
+    background-color: rgba(120, 112, 0, 0.329);
+}
+.danger-zone-scene-trigger-button.global-zone:hover {
+    background-color: rgba(120, 112, 0, 0.329);
+    box-shadow: 0 0 10px #9b9928;
+    border: 1px solid yellow;
+}
+
+.danger-zone-scene-trigger-button:hover {
+    color: #FFF;
+    border: 1px solid red;
+    border-bottom: 1px solid #ff6400;
+    box-shadow: 0 0 10px #ff6400;
+}
+
+.danger-zone-scene-trigger-button > i {
+    margin: 7px 0 0 0;
+    font-size: 20px;
+}
 
 .location-picker > i {
     margin-right: 0px;
