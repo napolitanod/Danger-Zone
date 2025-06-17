@@ -65,10 +65,9 @@ See [Triggers](../../wiki/Triggers) for more info.
 A Danger Zone button is added to the scene controls. Select this to access Danger Zone features for the scene, including adding, editing and triggering zones.
 
 ![image](https://github.com/user-attachments/assets/9ca06e93-ab0d-40da-8174-45e32f18db05)
-
-#### Zone Executor
 Selecting the Danger Zone scene control button will launch the Zone Executor and present other scene actions. 
 
+#### Zone Executor
 **Trigger Zones Tab**: Each button is a zone in that scene and displays the icon for the danger held within. The buttons function as follows:
 * Manually triggered zones
     * Zones that are active are listed individually here except for those which have the 'Randomize' enabled. 
