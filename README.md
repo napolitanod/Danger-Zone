@@ -59,16 +59,15 @@ The trigger defines the conditions under which lava bubble (danger) erupts from 
 See [Triggers](../../wiki/Triggers) for more info.
 
 
-## Added to Foundry
 
-### Danger Zone Scene Controls
+## Danger Zone Scene Controls
 A Danger Zone button is added to the scene controls. Select this to access Danger Zone features for the scene, including adding, editing and triggering zones.
 
 ![image](https://github.com/user-attachments/assets/9ca06e93-ab0d-40da-8174-45e32f18db05)
 
 Selecting the Danger Zone scene control button will launch the Zone Executor and present other scene actions. 
 
-#### Zone Executor
+### Zone Executor
 **Trigger Zones Tab**: Each button is a zone in that scene and displays the icon for the danger held within. The buttons function as follows:
 * Manually triggered zones
     * Zones that are active are listed individually here except for those which have the 'Randomize' enabled. 
@@ -84,10 +83,10 @@ Selecting the Danger Zone scene control button will launch the Zone Executor and
 **On Hover**
 Hovering over any button, aside from the manual trigger grouping, will highlight it's area within the scene grid.
 
-#### Configure Zones
+### Configure Zones
 Launches the scene's zone list form, where zones can be added to scene, editied, deleted, or copied from another scene.
 
-#### Clear Danger Zone Placeables
+### Clear Danger Zone Placeables
 Deletes all tiles, lights, regions, and walls that were created on the scene by a danger.
 
 ### Clear Danger Zone Lasting Effects
@@ -105,8 +104,8 @@ Selecting this will clear all sounds on the scene created by Danger Zone.
 ### Clear Danger Zone Walls
 Selecting this will clear all walls on the scene created by Danger Zone. 
 
-### Dangers Button
-Aside from accessing dangers from the Danger Zone Configuration area in the Foundry Module Configurations, you can also add these by selecting the button located in the footer of the scenes sidebar. This button can be suppressed as an option within the Danger Zone Configurations.
+## Dangers Button
+In addition to managing dangers through the Danger Zone Configuration section in Foundry Module Configurations, you can also add them using the button found in the header of the scenes sidebar. This button can be disabled as an option within the Danger Zone Configurations.
 
 ![image](https://user-images.githubusercontent.com/22696153/132788217-c98c6ac9-6a57-48cb-95d2-f7885322c698.png)
 
