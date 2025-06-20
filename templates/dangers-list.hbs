@@ -1,0 +1,20 @@
+<div class="scrollable">
+    <ol class="danger-zone-types-list" data-dangers>
+        {{#each dangerZoneTypes }}
+        <li class="type-record flexrow" data-id="{{this.id}}" data-container="types" draggable="true">
+            <div class="danger-zone-type-details flexrow">
+                <img src="{{this.icon}}">
+                <div class="name">{{this.name}}</div>
+            </div>
+                <input type="checkbox" name="{{this.id}}.isActive" data-action="active" data-dtype="Boolean" {{checked this.globalZone.enabled}} />
+            
+            <div class="danger-zone-controls flexrow" data-id="{{this.id}}" title="{{this.name}}">
+                <a class="danger-zone-type-edit" title="{{localize 'DANGERZONE.edit'}}" data-action="edit"><i class="fas fa-edit"></i></a>&nbsp;&nbsp;&nbsp;
+                <a class="danger-zone-type-copy" title="{{localize 'DANGERZONE.copy'}}" data-action="copy"><i class="fas fa-copy"></i></a>&nbsp;&nbsp;&nbsp;
+                <a class="danger-zone-type-export" title="{{localize 'DANGERZONE.export-danger'}}" data-action="export"><i class="fas fa-file-export"></i></a>&nbsp;&nbsp;&nbsp;
+                <a class="danger-zone-type-delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            </div>
+        </li>
+        {{/each}}
+    </ol>
+</div>

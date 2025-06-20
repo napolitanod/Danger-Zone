@@ -1,0 +1,26 @@
+<div>
+    <div id="danger-zone-type-primary-controls">
+        <div class="danger-zone-type-search">
+            <div id="danger-zone-type-search-icon"><i class="fas fa-search"></i></div>
+            <input id="danger-zone-type-search-input" type="text" name="search" value="{{lastSearch}}" placeholder="{{localize 'DANGERZONE.types-form.search.placeholder'}}" spellcheck="false" autocomplete="off" />
+            <button type="button" id="danger-zone-type-search-clear" data-action="searchClear" class="dz-hidden" title="{{localize 'DANGERZONE.types-form.search.clear'}}"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="danger-zone-type-json-export">
+            <button type="button" id="danger-zone-type-export-config" data-action="exportAll" title="{{localize "DANGERZONE.types-form.export.title"}}"><i class="fas fa-file-export fa-fw"></i></button>  
+        </div>
+        <div class="danger-zone-type-json-import">
+            <button type="button" id="danger-zone-type-import-config" data-action="import" title="{{localize "DANGERZONE.types-form.import.title"}}"><i class="fas fa-file-import fa-fw"></i></button>  
+        </div>
+    </div>
+    <div class="danger-zone-types-header flexrow">
+        <div class="danger-zone-type-details">
+            <div class="name">{{localize 'DANGERZONE.types-form.type.name.label'}}</div>
+        </div>
+        <div>{{localize 'DANGERZONE.types-form.world.label'}}</div>
+        <div class="danger-zone-controls">
+            <a class="danger-zone-type-add" title="{{localize 'DANGERZONE.add'}}" data-type="type" data-action="add">
+                <i class="fas fa-plus"></i> {{localize 'DANGERZONE.add'}}
+            </a>
+        </div>
+    </div>
+</div>

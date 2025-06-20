@@ -1,75 +1,147 @@
 import { dangerZone } from '../danger-zone.js';
 import {DangerZoneSceneForm} from './scene-zone-list-form.js';
 
-export const WORKFLOWSTATES = {
-    NONE: 0,
-    INITIALIZE: 1,
-    EXECUTE: 2,
-    INFORM: 3,
-    CANCEL: 98,
-    COMPLETE: 99
-}
-
-export const PLACEABLESBYDOCUMENT =  {
-    'Tile': 'tiles',
-    'Wall': 'walls',
-    'AmbientLight': 'lights',
-    'AmbientSound': 'sounds',
-    'Region': 'regions',
-    'fxmaster-particle':'fxmaster-particle'
-}
-
-export const WORLDZONE = {
-    dimensions: {
-        bleed: false,
-        bottom: 0,
-        stretch: '',
-        top: 0
-    },
-    source: {
-        area: '',
-        actors: [],
-        dispositions: [],
-        exclusion: {
-          conditions: []
-        },
-        limit: {
-          min: 0,
-          max: 0
-        },
-        tags: [],
-        target: ''
-    },
-    replace: {
-        light: 'N',
-        region: 'N',
-        sound: 'N',
-        tile: 'N',
-        wall: 'N',
-        weather: 'N'
-    },
-    target: {
-        actors: [],
-        all: false,
-        always: false,
-        choose:{
-          enable: false,
-          prompt: true
-        },
-        dispositions: [],
-        exclusion: {
-          conditions: []
+export const DANGERZONECONFIG = {
+    CLASSES: {
+        DANGERPART: {
+            _default: ''
         }
     },
-    trigger: {
-        delay: {min: 0, max: 0},
-        likelihood: 100,
-        loop: 1,
-        operation: "Q"
+    ID: {
+        MODULE: 'danger-zone',
+        FORM: {
+            DANGER: 'danger-zone-type-form',
+            DANGERPART: {
+                _default: 'id',
+                audio: 'danger-part-form-audio',
+                backgroundEffect: 'danger-part-form-backgroundEffect',
+                combat: 'danger-part-form-combat',
+                LIGHT: ''
+            },
+            DANGERS: 'danger-zone-types',
+        }
     },
-    flavor: "",
-    enabled: true
-  }
+    ICON: {
+        AUDIO: 'fa-solid fa-volume',
+        DANGERPART:{
+            _default: '',
+            audio: 'fa-solid fa-volume',
+            backgroundEffect: 'fas fa-bomb',
+            combat: 'fas fa-swords',
+            AMBIENTLIGHT: 'fa-regular fa-lightbulb'
+        },
+        DANGER: "fas fa-radiation",
+        OFFSET: 'fa-solid fa-rotate',
+        TRASH: 'fas fa-trash',
+        VISUAL: 'fa-solid fa-eye'
+    },
+    LABEL: {
+        AUDIO: 'DANGERZONE.audio.label',
+        DANGERPART:{
+            _default: '',
+            audio: 'DANGERZONE.type-form.audio.label',
+            backgroundEffect: 'DANGERZONE.type-form.backgroundEffect.label',
+            combat: 'DANGERZONE.type-form.combat.label',
+            AMBIENTLIGHT: ''
+        },
+        DANGER: "DANGERZONE.zone-type-form.form-name",
+        OFFSET: 'DANGERZONE.offset.label',
+        VISUAL: 'DANGERZONE.visual.label'
+    },
+    RANDOM: {
+        'dz-danger-part-audio-random': {
+            CHECKED: {
+                LABEL: "DANGERZONE.type-form.audio.playlist.label",
+                PLACEHOLDER: ""
+            },
+            NOTCHECKED: {
+                LABEL: "DANGERZONE.type-form.audio.file.label",
+                PLACEHOLDER: "DANGERZONE.type-form.audio.file.placeholder"
+            },
+            SELECTOR: `#dz-audio-file`
+        },
+        'dz-danger-part-background-effect-random-audio': {
+            CHECKED: {
+                LABEL: "DANGERZONE.type-form.backgroundEffect.audio.playlist.label",
+                PLACEHOLDER: ""
+            },
+            NOTCHECKED: {
+                LABEL: "DANGERZONE.type-form.backgroundEffect.audio.file.label",
+                PLACEHOLDER: "DANGERZONE.type-form.backgroundEffect.audio.file.placeholder"
+            },
+            SELECTOR: `#dz-backgroundEffect-audio-file`
+        }
+    },
+    TEMPLATE: {
+        DANGERCONFIG: `modules/danger-zone/templates/danger-form.hbs`,
+        DANGERSLIST: `modules/danger-zone/templates/dangers-list.hbs`,
+        DANGERSLISTFOOTER: `modules/danger-zone/templates/dangers-list-footer.hbs`,
+        DANGERSLISTHEADER: `modules/danger-zone/templates/dangers-list-header.hbs`,
+        DANGERPART: {
+            _default: 'modules/danger-zone/templates/dangers-list-footer.hbs',
+            audio: `modules/danger-zone/templates/danger-form-audio.hbs`,
+            backgroundEffect: {
+                VISUAL: 'modules/danger-zone/templates/danger-form-background-effect-visual.hbs',
+                AUDIO: 'modules/danger-zone/templates/danger-form-background-effect-audio.hbs',
+                OFFSET: 'modules/danger-zone/templates/danger-form-background-effect-offset.hbs'
+            },
+            combat: 'modules/danger-zone/templates/danger-form-combat.hbs',
+            LIGHT: `modules/danger-zone/templates/danger-form-light.hbs`
+        },
+        FOOTER: `modules/danger-zone/templates/footer.hbs`,
+        TABNAV: `modules/danger-zone/templates/tab-navigation.hbs`,
+        DANGERZONECONFIG: `modules/danger-zone/templates/danger-zone-form.hbs`,
+        DANGERZONEEXTENSION: `modules/danger-zone/templates/danger-zone-extension-form.hbs`,
+        DANGERZONEEXECUTOR: `modules/danger-zone/templates/danger-zone-executor-form.hbs`,
+        DANGERZONESCENE: `modules/danger-zone/templates/danger-zone-scene-form.hbs`,
+        DANGERZONEACTIVEEFFECT: `modules/danger-zone/templates/active-effect-form.hbs`,
+        DANGERZONEDANGERACTIVEEFFECT: `modules/danger-zone/templates/danger-form-active-effect.hbs`,
+        DANGERZONEDANGERCANVAS: `modules/danger-zone/templates/danger-form-canvas.hbs`,
+        DANGERZONEDANGERFOREGROUNDEFFECT: `modules/danger-zone/templates/danger-form-foreground-effect.hbs`,
+        DANGERZONEDANGERGLOBALZONE: `modules/danger-zone/templates/danger-form-global-zone.hbs`,
+        DANGERZONEDANGERITEM: `modules/danger-zone/templates/danger-form-item.hbs`,
+        DANGERZONEDANGERLASTINGEFFECT: `modules/danger-zone/templates/danger-form-lasting-effect.hbs`,
+        DANGERZONEDANGERMUTATE: `modules/danger-zone/templates/danger-form-mutate.hbs`,
+        DANGERZONEDANGERREGION: `modules/danger-zone/templates/danger-form-region.hbs`,
+        DANGERZONEDANGERROLLTABLE: `modules/danger-zone/templates/danger-form-rolltable.hbs`,
+        DANGERZONEDANGERSCENE: `modules/danger-zone/templates/danger-form-scene.hbs`,
+        DANGERZONEDANGERSOUND: `modules/danger-zone/templates/danger-form-sound.hbs`,
+        DANGERZONEDANGERSOURCEEFFECT: `modules/danger-zone/templates/danger-form-source-effect.hbs`,
+        DANGERZONEDANGERTOKENRESPONSE: `modules/danger-zone/templates/danger-form-token-response.hbs`,
+        DANGERZONEDANGERTOKENSAYS: `modules/danger-zone/templates/danger-form-token-says.hbs`,
+        DANGERZONEDANGERTOKENEFFECT: `modules/danger-zone/templates/danger-form-token-effect.hbs`,
+        DANGERZONEDANGERTOKENMOVE: `modules/danger-zone/templates/danger-form-token-move.hbs`,
+        DANGERZONEDANGERWALL: `modules/danger-zone/templates/danger-form-wall.hbs`,
+        DANGERZONEDANGERWARPGATE: `modules/danger-zone/templates/danger-form-warpgate.hbs`,
+        DANGERZONEDANGERWEATHER: `modules/danger-zone/templates/danger-form-weather.hbs`,
+        DANGERZONEZONECOPY: `modules/danger-zone/templates/danger-zone-scene-zone-copy.hbs`
+    }
+}
+
+export const DANGERZONEFORMOPTIONS = {
+    COMBAT:{
+        INITIATIVE: {
+        '': "DANGERZONE.type-form.combat.initiative.type.options.none",
+        "R": "DANGERZONE.type-form.combat.initiative.type.options.roll",
+        "S": "DANGERZONE.type-form.combat.initiative.type.options.set"
+        }
+    },
+    MIRRORIMAGEOPTIONS: {
+        "": "DANGERZONE.type-form.offset.flip.options.none.label",
+        "L": "DANGERZONE.type-form.offset.flip.options.location.label",
+        "A": "DANGERZONE.type-form.offset.flip.options.image-always.label",
+        "S": "DANGERZONE.type-form.offset.flip.options.image-sometimes.label",
+        "B": "DANGERZONE.type-form.offset.flip.options.both.label",
+        "N": "DANGERZONE.type-form.offset.flip.options.any.label"
+    },
+    OFFSETOPTIONS: {
+        "": "DANGERZONE.type-form.offset.type.options.non.label",
+        "pct": "DANGERZONE.type-form.offset.type.options.pct.label",
+        "pxl": "DANGERZONE.type-form.offset.type.options.pxl.label"
+    }
+}
+
+/** Foundry Configurations**/
 
 /**v13 CONTROLTRIGGERS
  * holds objects that are then loaded to the scene controls
@@ -77,7 +149,7 @@ export const WORLDZONE = {
 export const CONTROLTRIGGERS = {
     visible: false,
     controls: {}
-};
+}
 
 /**v13 setControlTriggers
  * loads the CONTROLTRIGGERS object. Intended to be called after Foundry initializes so that classes are available.
@@ -183,15 +255,80 @@ export function setControlTriggers(){
     }
 }
 
+
+export const WORKFLOWSTATES = {
+    NONE: 0,
+    INITIALIZE: 1,
+    EXECUTE: 2,
+    INFORM: 3,
+    CANCEL: 98,
+    COMPLETE: 99
+}
+
+export const PLACEABLESBYDOCUMENT =  {
+    'Tile': 'tiles',
+    'Wall': 'walls',
+    'AmbientLight': 'lights',
+    'AmbientSound': 'sounds',
+    'Region': 'regions',
+    'fxmaster-particle':'fxmaster-particle'
+}
+
+export const WORLDZONE = {
+    dimensions: {
+        bleed: false,
+        bottom: 0,
+        stretch: '',
+        top: 0
+    },
+    source: {
+        area: '',
+        actors: [],
+        dispositions: [],
+        exclusion: {
+          conditions: []
+        },
+        limit: {
+          min: 0,
+          max: 0
+        },
+        tags: [],
+        target: ''
+    },
+    replace: {
+        light: 'N',
+        region: 'N',
+        sound: 'N',
+        tile: 'N',
+        wall: 'N',
+        weather: 'N'
+    },
+    target: {
+        actors: [],
+        all: false,
+        always: false,
+        choose:{
+          enable: false,
+          prompt: true
+        },
+        dispositions: [],
+        exclusion: {
+          conditions: []
+        }
+    },
+    trigger: {
+        delay: {min: 0, max: 0},
+        likelihood: 100,
+        loop: 1,
+        operation: "Q"
+    },
+    flavor: "",
+    enabled: true
+  }
+
 export const AMBIENTLIGHTCLEAROPS = {
     'D': 'DANGERZONE.light.clear-types.delete',
     'O': 'DANGERZONE.light.clear-types.off'
-}
-
-export const COMBATINITIATIVE = {
-    '': "DANGERZONE.type-form.combat.initiative.type.options.none",
-    "R": "DANGERZONE.type-form.combat.initiative.type.options.roll",
-    "S": "DANGERZONE.type-form.combat.initiative.type.options.set"
 }
 
 export const TOKENDISPOSITION = {
@@ -555,21 +692,6 @@ export const SCENEGLOBALILLUMINATION = {
 export const CANVASTYPES = {
     "": "",
     "shake": "DANGERZONE.type-form.canvas.types.shake"
-}
-
-export const OFFSETOPTIONS = {
-    "": "DANGERZONE.type-form.offset.type.options.non.label",
-    "pct": "DANGERZONE.type-form.offset.type.options.pct.label",
-    "pxl": "DANGERZONE.type-form.offset.type.options.pxl.label"
-}
-
-export const MIRRORIMAGEOPTIONS = {
-    "": "DANGERZONE.type-form.offset.flip.options.none.label",
-    "L": "DANGERZONE.type-form.offset.flip.options.location.label",
-    "A": "DANGERZONE.type-form.offset.flip.options.image-always.label",
-    "S": "DANGERZONE.type-form.offset.flip.options.image-sometimes.label",
-    "B": "DANGERZONE.type-form.offset.flip.options.both.label",
-    "N": "DANGERZONE.type-form.offset.flip.options.any.label"
 }
 
 export const MIRRORROTATIONOPTIONS = {

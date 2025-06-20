@@ -141,5 +141,5 @@ Hooks.once('init', async function() {
 		type: Boolean
 	}); 
 
-	dangerZone._initialize();
+	dangerZone.initialize();
 });

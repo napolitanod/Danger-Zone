@@ -22,7 +22,8 @@ export class dangerZoneDimensions {
     }
 
     get region(){
-        return this.regionId ? this.scene.getEmbeddedDocument("Region",this.regionId) : {}
+        const region = this.regionId ? this.scene.getEmbeddedDocument("Region",this.regionId) : {}
+        return region ?? {}
     }
 
     get scene(){

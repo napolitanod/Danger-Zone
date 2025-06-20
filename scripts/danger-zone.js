@@ -1,11 +1,12 @@
 import {dangerZoneDimensions} from './apps/dimensions.js';
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
-import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, CONTROLTRIGGERS, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
+import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, CONTROLTRIGGERS, DANGERZONECONFIG, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
+import {AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CombatDangerPartConfig} from './apps/danger-form.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -82,19 +83,6 @@ export class dangerZone {
   }
 
   /** V13
-   * Used to generate debug logs.
-   * @param {boolean} force - forces the log even if the debug flag is not on
-   * @param  {...any} args - what to log
-  */
-  static log(force, ...args) {  
-     // const shouldLog = force || game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.ID);
-  
-      if (force || (game.user.isActiveGM && game.settings.get(dangerZone.ID, 'logging'))) {
-        console.log(this.ID, '|', ...args);
-      }
-  }
-
-  /** V13
    * Adds the Dangers button to the scenes side menu if the user settings allows for this.
    * @param {object} app 
    * @param {object} html 
@@ -118,27 +106,54 @@ export class dangerZone {
     header.append(button);
   }
 
-  static _initialize() {
+  /**v13
+   * Performs routines to initialize resources used by module
+   */
+  static initialize() {
     this.DangerZoneTypesForm = new DangerZoneTypesForm();
     this.executorForm = new ExecutorForm();
-    dangerZone._setModsAvailable();
+    dangerZone.#setModsAvailable();
     setHooks()
+    dangerZone.#setDangerZoneConfig()
   }
-
 
   /**V13
  * adds the Danger Zone buttons to the controls on the canvas
  * @param {object} controls 
     */
-  static _insertZoneButtons(controls){
+  static insertZoneButtons(controls){
     dangerZone.log(false, 'Adding control buttons', controls)
     controls[dangerZone.ID] = CONTROLTRIGGERS.controls
+  }
+  
+  /** V13
+   * Used to generate debug logs.
+   * @param {boolean} force - forces the log even if the debug flag is not on
+   * @param  {...any} args - what to log
+  */
+  static log(force, ...args) {  
+     // const shouldLog = force || game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.ID);
+  
+      if (force || (game.user.isActiveGM && game.settings.get(dangerZone.ID, 'logging'))) {
+        console.log(this.ID, '|', ...args);
+      }
+  }
+
+  /**v13
+   * loads the constant with classes after initialization has completed
+   */
+  static #setDangerZoneConfig() {
+    DANGERZONECONFIG.CLASSES.DANGERPART = {
+            audio: AudioDangerPartConfig,
+            backgroundEffect: BackgroundEffectDangerPartConfig,
+            combat: CombatDangerPartConfig
+        }
   }
 
   /**
    * sets global variables that indicate which modules that danger zone integrates with are available
    */
-  static _setModsAvailable () {
+  static #setModsAvailable () {
     if (game.modules.get("dae")?.active){dangerZone.MODULES.daeOn = true} ;
     if (game.modules.get("item-piles")?.active){dangerZone.MODULES.itemPileOn = true};
     if (game.modules.get("monks-active-tiles")?.active){dangerZone.MODULES.monksActiveTilesOn = true} ;
@@ -154,12 +169,13 @@ export class dangerZone {
     if(['pf1', 'pf2e'].includes(game.world.system)) dangerZone.MODULES.activeEffectOn = false
   }
 
-  /**
+
+  /**v13
    * converts a JSON object to a zone class
    * @param {object} flag 
    * @returns 
    */
-  static _toClass(flag){
+  static #toClass(flag){
     if(!flag.scene?.sceneId){return {}}
     let zn =  new zone(flag.scene.sceneId);
     return foundry.utils.mergeObject(zn, flag, {insertKeys: false, enforceTypes: true})
@@ -174,7 +190,7 @@ export class dangerZone {
     const scene = game.scenes?.get(sceneId);
     const flag = scene ? scene.getFlag(this.ID, this.FLAGS.SCENEZONE) : ar; 
     for (var zn in flag) {
-        if((!options.enabled || flag[zn].enabled) && (!options.triggerRequired || flag[zn].trigger.events.length) && flag[zn].scene?.sceneId) ar.push(this._toClass(flag[zn]));
+        if((!options.enabled || flag[zn].enabled) && (!options.triggerRequired || flag[zn].trigger.events.length) && flag[zn].scene?.sceneId) ar.push(dangerZone.#toClass(flag[zn]));
     }
     return ar.filter(z => !options.typeRequired || z.danger)
   }
@@ -312,7 +328,7 @@ export class dangerZone {
    */
   static getZoneFromScene(zoneId, sceneId) {
     let flag = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE + `.${zoneId}`);
-    return flag ? this._toClass(flag) : undefined
+    return flag ? dangerZone.#toClass(flag) : undefined
   } 
 
    /**
@@ -390,7 +406,7 @@ export class dangerZone {
     zn.dangerId = danger.id;
     zn.title = danger.name;
     isGlobal ? zn.id = 'w_' + danger.id : zn.id = 'd_' + danger.id
-    return this._toClass(zn);
+    return dangerZone.#toClass(zn);
   }
 
   static async updateAllSceneZones(sceneId,flag){
@@ -418,6 +434,7 @@ export class dangerZone {
       }
     }
   }
+
 
 }
 

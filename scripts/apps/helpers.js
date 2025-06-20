@@ -46,6 +46,22 @@ export function getActorOwner(document){
     return user  
 }
 
+/**v13
+ * intakes a pointer event and outputs key data elements used in forms
+ * @param {object} event 
+ * @returns 
+ */
+export function getEventData(event){
+  const data = {}
+  data.target = event.target.dataset.action ? event.target : event.target.parentElement;
+  data.targetId = data.target.id;
+  data.parent = data.target.parentElement;
+  data.action = data.target.dataset.action;
+  data.parentId =  data.parent.dataset.id;
+  data.label = data.parent.title;
+  return data
+}
+
 export async function getFilesFromPattern(pattern) {
     let source = "data";
     const browseOptions = { wildcard: true };

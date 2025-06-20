@@ -1526,8 +1526,10 @@ class audio extends executableWithFile {
     async stop(){
         if(this.sound?.id){
             game.socket.emit('module.danger-zone', {stop: this.sound.id})
+            dangerZone.log(false, 'Stopping sound...', this.sound)
             await this.sound.fade(0, {duration: 250})
             this.sound.stop();
+            dangerZone.log(false, 'Stopped sound...', this.sound)
         }  
     }
 
@@ -2991,12 +2993,12 @@ class secondaryEffect extends executableWithFile {
             if(this.duration) s = s.duration(this.duration)
             if(this.repeat) s = s.repeats(this.repeat)
             if(this.rotate) s = s.randomRotation()
+            if(this.below) s = s.belowTokens()
         if(this._fileB){
             s = s.sound()
             .file(this._fileB)
             .volume(this.audio.volume)
         }
-        if(this.below) s = s.belowTokens()
         return s
     }
 

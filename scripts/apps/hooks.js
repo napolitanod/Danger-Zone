@@ -140,7 +140,7 @@ export function setHooks(){
     Hooks.on("getSceneControlButtons", (controls) => {
         if(!game.user.isActiveGM) return
         if(!canvas.scene?.grid?.type) return dangerZone.log(false,'No scene navigation when gridless ', {"scene": canvas.scene});
-        dangerZone._insertZoneButtons(controls)
+        dangerZone.insertZoneButtons(controls)
     });
 
     /**
