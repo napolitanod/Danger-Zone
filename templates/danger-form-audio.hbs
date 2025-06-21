@@ -1,21 +1,21 @@
 <div class="danger-part-group">
     <p class="notes">{{localize "DANGERZONE.type-form.audio.description"}}</p>
     <div class="form-group">
-        <label for="randomFile">{{localize "DANGERZONE.type-form.audio.random.label"}}</label>
+        <label for="randomFile">{{localize random.audio.LABEL}}</label>
         <div class="form-fields">
-            <input type="checkbox" id="dz-danger-part-audio-random" data-action="random" data-dtype="Boolean" name="randomFile" {{checked data.randomFile}}>
+            <input type="checkbox" data-id="audio" data-action="random" data-dtype="Boolean" name="randomFile" {{checked data.randomFile}}>
         </div>
     </div>
-    <div id="dz-audio-file" class="form-group {{#if data.randomFile}}hidden-picker{{/if}}">
-        <label for="file">{{#if data.randomFile}}{{localize "DANGERZONE.type-form.audio.playlist.label"}}{{/if}}{{#unless data.randomFile}}{{localize "DANGERZONE.type-form.audio.file.label"}}{{/unless}}</label>
+    <div data-id="audio-file" class="form-group {{#if data.randomFile}}hidden-picker{{/if}}">
+        <label for="file">{{#if data.randomFile}}{{localize random.audio.CHECKED.LABEL}}{{else}}{{localize random.audio.NOTCHECKED.LABEL}}{{/if}}</label>
         <div class="form-fields">
-            <file-picker name="file" type="audio" class="image" placeholder="{{#unless data.randomFile}}{{localize "DANGERZONE.type-form.audio.file.placeholder"}}{{/unless}}" value="{{data.file}}"></file-picker>
+            <file-picker name="file" type="audio" class="image" placeholder="{{#if data.randomFile}}{{localize random.audio.CHECKED.PLACEHOLDER}}{{else}}{{localize random.audio.NOTCHECKED.PLACEHOLDER}}{{/if}}" value="{{data.file}}"></file-picker>
         </div>
     </div>
     <div class="form-group">
         <label for="volume">{{localize "DANGERZONE.type-form.audio.volume.label"}}&nbsp;&nbsp;<i class="volume-icon fas fa-volume-down"></i></label>
         <div class="form-fields">
-            <input type="range" title="{{localize "DANGERZONE.type-form.audio.volume.label"}}" name="volume" value="{{data.volume}}" min="0" max="1" step="0.05">
+            <range-picker title="{{localize "DANGERZONE.type-form.audio.volume.label"}}" name="volume" value="{{data.volume}}" min="0" max="1" step="0.05"></range-picker>
         </div>
     </div>
     <div class="form-group">

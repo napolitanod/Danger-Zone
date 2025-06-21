@@ -54,7 +54,7 @@ export function getActorOwner(document){
 export function getEventData(event){
   const data = {}
   data.target = event.target.dataset.action ? event.target : event.target.parentElement;
-  data.targetId = data.target.id;
+  data.targetId = data.target.dataset.id;
   data.parent = data.target.parentElement;
   data.action = data.target.dataset.action;
   data.parentId =  data.parent.dataset.id;

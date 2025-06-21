@@ -1,6 +1,19 @@
 import { dangerZone } from '../danger-zone.js';
 import {DangerZoneSceneForm} from './scene-zone-list-form.js';
 
+export const DANGERZONEPARTS = new Map([
+    ['audio', {icon: 'fa-solid fa-volume'}], 
+    ['backgroundEffect', {icon:'fas fa-bomb', templates: new Map([[1, 'visual'], [2, 'audio'], [3,'offset']])}], 
+    ['canvas', {icon:'fas fa-wind'}], 
+    ['combat', {icon: 'fas fa-swords'}], 
+    ['item', {icon: 'fas fa-suitcase'}], 
+    ['foregroundEffect', {icon:'fas fa-bolt', templates: new Map([[1, 'visual'], [2, 'source'], [3,'offset']])}],
+    ['sound', {icon:'fa-solid fa-music', templates: new Map([[1, 'audio'], [2,'offset']])}],
+    ['sourceEffect', {icon: 'fas fa-dragon', templates: new Map([[1, 'visual'], [2, 'audio'], [3,'offset']])}],
+    ['tokenMove', {icon: 'fas fa-arrows-alt', templates: new Map([[1, 'movement'], [2, 'settings']])}],
+    ['tokenEffect', {icon: 'fas fa-male'}]
+    ]);
+
 export const DANGERZONECONFIG = {
     CLASSES: {
         DANGERPART: {
@@ -11,119 +24,106 @@ export const DANGERZONECONFIG = {
         MODULE: 'danger-zone',
         FORM: {
             DANGER: 'danger-zone-type-form',
-            DANGERPART: {
-                _default: 'id',
-                audio: 'danger-part-form-audio',
-                backgroundEffect: 'danger-part-form-backgroundEffect',
-                combat: 'danger-part-form-combat',
-                LIGHT: ''
-            },
+            DANGERPART: {_default: 'id'},
             DANGERS: 'danger-zone-types',
         }
     },
     ICON: {
         AUDIO: 'fa-solid fa-volume',
         DANGERPART:{
-            _default: '',
-            audio: 'fa-solid fa-volume',
-            backgroundEffect: 'fas fa-bomb',
-            combat: 'fas fa-swords',
-            AMBIENTLIGHT: 'fa-regular fa-lightbulb'
+            _default: ''
         },
         DANGER: "fas fa-radiation",
+        MOVEMENT: 'fas fa-arrows-alt',
         OFFSET: 'fa-solid fa-rotate',
+        SOURCE: 'fas fa-dragon',
         TRASH: 'fas fa-trash',
-        VISUAL: 'fa-solid fa-eye'
+        VISUAL: 'fa-solid fa-eye',
+        SETTINGS: 'fa-solid fa-gear'
     },
     LABEL: {
         AUDIO: 'DANGERZONE.audio.label',
-        DANGERPART:{
-            _default: '',
-            audio: 'DANGERZONE.type-form.audio.label',
-            backgroundEffect: 'DANGERZONE.type-form.backgroundEffect.label',
-            combat: 'DANGERZONE.type-form.combat.label',
-            AMBIENTLIGHT: ''
-        },
+        DANGERPART:{ _default: ''},
         DANGER: "DANGERZONE.zone-type-form.form-name",
+        DELETE: 'DANGERZONE.delete',
+        MOVEMENT: 'DANGERZONE.movement.label',
         OFFSET: 'DANGERZONE.offset.label',
+        SETTINGS: 'DANGERZONE.settings.label',
+        SOURCE: 'DANGERZONE.source.label',
         VISUAL: 'DANGERZONE.visual.label'
     },
     RANDOM: {
-        'dz-danger-part-audio-random': {
+        audio : {
             CHECKED: {
-                LABEL: "DANGERZONE.type-form.audio.playlist.label",
+                LABEL: "DANGERZONE.file.audio.playlist.label",
                 PLACEHOLDER: ""
             },
             NOTCHECKED: {
-                LABEL: "DANGERZONE.type-form.audio.file.label",
-                PLACEHOLDER: "DANGERZONE.type-form.audio.file.placeholder"
+                LABEL: "DANGERZONE.file.audio.label",
+                PLACEHOLDER: "DANGERZONE.file.audio.placeholder"
             },
-            SELECTOR: `#dz-audio-file`
+            LABEL: "DANGERZONE.file.audio.random.label",
+            SELECTOR: `audio-file`
         },
-        'dz-danger-part-background-effect-random-audio': {
-            CHECKED: {
-                LABEL: "DANGERZONE.type-form.backgroundEffect.audio.playlist.label",
-                PLACEHOLDER: ""
-            },
-            NOTCHECKED: {
-                LABEL: "DANGERZONE.type-form.backgroundEffect.audio.file.label",
-                PLACEHOLDER: "DANGERZONE.type-form.backgroundEffect.audio.file.placeholder"
-            },
-            SELECTOR: `#dz-backgroundEffect-audio-file`
+        visual : {
+            FILE: "DANGERZONE.file.visual.label",
+            PLACEHOLDER: "DANGERZONE.file.visual.placeholder",
+            LABEL: "DANGERZONE.file.visual.random.label"
         }
     },
+    TAB: {}, 
     TEMPLATE: {
         DANGERCONFIG: `modules/danger-zone/templates/danger-form.hbs`,
         DANGERSLIST: `modules/danger-zone/templates/dangers-list.hbs`,
         DANGERSLISTFOOTER: `modules/danger-zone/templates/dangers-list-footer.hbs`,
         DANGERSLISTHEADER: `modules/danger-zone/templates/dangers-list-header.hbs`,
-        DANGERPART: {
-            _default: 'modules/danger-zone/templates/dangers-list-footer.hbs',
-            audio: `modules/danger-zone/templates/danger-form-audio.hbs`,
-            backgroundEffect: {
-                VISUAL: 'modules/danger-zone/templates/danger-form-background-effect-visual.hbs',
-                AUDIO: 'modules/danger-zone/templates/danger-form-background-effect-audio.hbs',
-                OFFSET: 'modules/danger-zone/templates/danger-form-background-effect-offset.hbs'
-            },
-            combat: 'modules/danger-zone/templates/danger-form-combat.hbs',
-            LIGHT: `modules/danger-zone/templates/danger-form-light.hbs`
-        },
+        DANGERPART: {_default: 'modules/danger-zone/templates/dangers-list-footer.hbs'},
         FOOTER: `modules/danger-zone/templates/footer.hbs`,
         TABNAV: `modules/danger-zone/templates/tab-navigation.hbs`,
         DANGERZONECONFIG: `modules/danger-zone/templates/danger-zone-form.hbs`,
         DANGERZONEEXTENSION: `modules/danger-zone/templates/danger-zone-extension-form.hbs`,
         DANGERZONEEXECUTOR: `modules/danger-zone/templates/danger-zone-executor-form.hbs`,
-        DANGERZONESCENE: `modules/danger-zone/templates/danger-zone-scene-form.hbs`,
-        DANGERZONEACTIVEEFFECT: `modules/danger-zone/templates/active-effect-form.hbs`,
-        DANGERZONEDANGERACTIVEEFFECT: `modules/danger-zone/templates/danger-form-active-effect.hbs`,
-        DANGERZONEDANGERCANVAS: `modules/danger-zone/templates/danger-form-canvas.hbs`,
-        DANGERZONEDANGERFOREGROUNDEFFECT: `modules/danger-zone/templates/danger-form-foreground-effect.hbs`,
-        DANGERZONEDANGERGLOBALZONE: `modules/danger-zone/templates/danger-form-global-zone.hbs`,
-        DANGERZONEDANGERITEM: `modules/danger-zone/templates/danger-form-item.hbs`,
-        DANGERZONEDANGERLASTINGEFFECT: `modules/danger-zone/templates/danger-form-lasting-effect.hbs`,
-        DANGERZONEDANGERMUTATE: `modules/danger-zone/templates/danger-form-mutate.hbs`,
-        DANGERZONEDANGERREGION: `modules/danger-zone/templates/danger-form-region.hbs`,
-        DANGERZONEDANGERROLLTABLE: `modules/danger-zone/templates/danger-form-rolltable.hbs`,
-        DANGERZONEDANGERSCENE: `modules/danger-zone/templates/danger-form-scene.hbs`,
-        DANGERZONEDANGERSOUND: `modules/danger-zone/templates/danger-form-sound.hbs`,
-        DANGERZONEDANGERSOURCEEFFECT: `modules/danger-zone/templates/danger-form-source-effect.hbs`,
-        DANGERZONEDANGERTOKENRESPONSE: `modules/danger-zone/templates/danger-form-token-response.hbs`,
-        DANGERZONEDANGERTOKENSAYS: `modules/danger-zone/templates/danger-form-token-says.hbs`,
-        DANGERZONEDANGERTOKENEFFECT: `modules/danger-zone/templates/danger-form-token-effect.hbs`,
-        DANGERZONEDANGERTOKENMOVE: `modules/danger-zone/templates/danger-form-token-move.hbs`,
-        DANGERZONEDANGERWALL: `modules/danger-zone/templates/danger-form-wall.hbs`,
-        DANGERZONEDANGERWARPGATE: `modules/danger-zone/templates/danger-form-warpgate.hbs`,
-        DANGERZONEDANGERWEATHER: `modules/danger-zone/templates/danger-form-weather.hbs`,
         DANGERZONEZONECOPY: `modules/danger-zone/templates/danger-zone-scene-zone-copy.hbs`
     }
 }
 
+ DANGERZONEPARTS.forEach((part, key, map) => {
+    DANGERZONECONFIG.ID.FORM.DANGERPART[key] = `danger-zone-danger-${key}`;
+    DANGERZONECONFIG.ICON.DANGERPART[key] = part.icon;
+    DANGERZONECONFIG.LABEL.DANGERPART[key] = `DANGERZONE.type-form.${key}.label`;
+    if(part.templates) {
+        DANGERZONECONFIG.TEMPLATE.DANGERPART[key] = {}
+        part.templates.forEach((template, order, map) => {
+            DANGERZONECONFIG.TEMPLATE.DANGERPART[key][template] = `modules/danger-zone/templates/danger-form-${key}-${template}.hbs`
+        });
+    } else {DANGERZONECONFIG.TEMPLATE.DANGERPART[key] = `modules/danger-zone/templates/danger-form-${key}.hbs`}
+  });
+
+new Set(['visual', 'audio', 'offset', 'source', 'movement', 'settings']).forEach((tab) => {
+    DANGERZONECONFIG.TAB[tab] =  {icon: DANGERZONECONFIG.ICON[tab.toUpperCase()], id: tab, label: DANGERZONECONFIG.LABEL[tab.toUpperCase()]}
+})
+
 export const DANGERZONEFORMOPTIONS = {
+    CANVAS:{
+        TYPE: {
+            "": "",
+            "shake": "DANGERZONE.type-form.canvas.types.shake"
+        }
+    },
     COMBAT:{
         INITIATIVE: {
         '': "DANGERZONE.type-form.combat.initiative.type.options.none",
         "R": "DANGERZONE.type-form.combat.initiative.type.options.roll",
         "S": "DANGERZONE.type-form.combat.initiative.type.options.set"
+        }
+    },
+     ITEM: {
+        TARGET: {
+            "A": "DANGERZONE.item.target.add",
+            "B": "DANGERZONE.item.target.add-unless",
+            "D": "DANGERZONE.item.target.delete",
+            "E": "DANGERZONE.item.target.delete-all",
+            "U": "DANGERZONE.item.target.update"
         }
     },
     MIRRORIMAGEOPTIONS: {
@@ -138,6 +138,47 @@ export const DANGERZONEFORMOPTIONS = {
         "": "DANGERZONE.type-form.offset.type.options.non.label",
         "pct": "DANGERZONE.type-form.offset.type.options.pct.label",
         "pxl": "DANGERZONE.type-form.offset.type.options.pxl.label"
+    },
+    SOURCEDANGERLOCATION: {
+        "A": "DANGERZONE.source.danger.location.actor",
+        "R": "DANGERZONE.source.danger.location.area",
+        "B": "DANGERZONE.source.danger.location.both"
+    },
+    SOURCETREATMENT: {
+        "": "DANGERZONE.source.treatment.none",
+        "I": "DANGERZONE.source.treatment.ignore",
+        "S": "DANGERZONE.source.treatment.also",
+        "O": "DANGERZONE.source.treatment.only"
+    },
+    TOKENMOVE: {
+        HORIZONTALMOVEMENT: {
+            "": "",
+            "D": "DANGERZONE.type-form.tokenMove.horizontal-directions.left.label",
+            "U": "DANGERZONE.type-form.tokenMove.horizontal-directions.right.label",
+            "R": "DANGERZONE.type-form.tokenMove.horizontal-directions.random.label"
+        },
+        VERTICALMOVEMENT: {
+            "": "",
+            "D": "DANGERZONE.type-form.tokenMove.vertical-directions.down.label",
+            "U": "DANGERZONE.type-form.tokenMove.vertical-directions.up.label",
+            "R": "DANGERZONE.type-form.tokenMove.vertical-directions.random.label"
+        },
+        ELEVATIONMOVEMENT: {
+            "": "",
+            "R": "DANGERZONE.type-form.tokenMove.elevation-types.relative.label",
+            "S": "DANGERZONE.type-form.tokenMove.elevation-types.set.label"
+        },
+        WALLSBLOCK: {
+            "" : "DANGERZONE.walls-block.none.label",
+            "A" : "DANGERZONE.walls-block.all.label"
+        },
+        TILESBLOCK: {
+            "" : "DANGERZONE.tiles-block.none.label",
+            "A" : "DANGERZONE.tiles-block.all.label",
+            "R" : "DANGERZONE.tiles-block.roof.label",
+            "B" : "DANGERZONE.tiles-block.bottom.label",
+            "T" : "DANGERZONE.tiles-block.top.label"
+        }
     }
 }
 
@@ -613,13 +654,6 @@ export const TRIGGEROPERATION = {
     "T": "DANGERZONE.trigger-operation.together"
 }
 
-export const SOURCETREATMENT = {
-    "": "DANGERZONE.source.treatment.none",
-    "I": "DANGERZONE.source.treatment.ignore",
-    "S": "DANGERZONE.source.treatment.also",
-    "O": "DANGERZONE.source.treatment.only"
-}
-
 //a few options are added via the setModOptions function if tagger is on
 export const SOURCEAREA = {
     "": "DANGERZONE.source.area.none",
@@ -643,12 +677,6 @@ export const SOURCEAREATARGET = {
     "B": "DANGERZONE.source.target.both"
 }
 
-export const SOURCEDANGERLOCATION = {
-    "A": "DANGERZONE.source.danger.location.actor",
-    "R": "DANGERZONE.source.danger.location.area",
-    "B": "DANGERZONE.source.danger.location.both"
-}
-
 export const STRETCH = {
     "": "",
     "B": "DANGERZONE.stretch.bottom.label",
@@ -657,25 +685,7 @@ export const STRETCH = {
     "T": "DANGERZONE.stretch.top.label"
 }
 
-export const HORIZONTALMOVEMENT = {
-    "": "",
-    "D": "DANGERZONE.type-form.tokenMove.horizontal-directions.left.label",
-    "U": "DANGERZONE.type-form.tokenMove.horizontal-directions.right.label",
-    "R": "DANGERZONE.type-form.tokenMove.horizontal-directions.random.label"
-}
 
-export const VERTICALMOVEMENT = {
-    "": "",
-    "D": "DANGERZONE.type-form.tokenMove.vertical-directions.down.label",
-    "U": "DANGERZONE.type-form.tokenMove.vertical-directions.up.label",
-    "R": "DANGERZONE.type-form.tokenMove.vertical-directions.random.label"
-}
-
-export const ELEVATIONMOVEMENT = {
-    "": "",
-    "R": "DANGERZONE.type-form.tokenMove.elevation-types.relative.label",
-    "S": "DANGERZONE.type-form.tokenMove.elevation-types.set.label"
-}
 
 export const SCENEFOREGROUNDELEVATIONMOVEMENT = {
     "": "",
@@ -687,11 +697,6 @@ export const SCENEGLOBALILLUMINATION = {
     "": "",
     "Y": "DANGERZONE.type-form.scene.globalLight.options.Y.label",
     "N": "DANGERZONE.type-form.scene.globalLight.options.N.label"
-}
-
-export const CANVASTYPES = {
-    "": "",
-    "shake": "DANGERZONE.type-form.canvas.types.shake"
 }
 
 export const MIRRORROTATIONOPTIONS = {
@@ -724,14 +729,6 @@ export const SAVERESULT = {
     0: "DANGERZONE.type-form.tokenResponse.save.result.both",
     2: "DANGERZONE.type-form.tokenResponse.save.result.fail",
     1: "DANGERZONE.type-form.tokenResponse.save.result.success"
-}
-
-export const ITEMTARGET = {
-    "A": "DANGERZONE.item.target.add",
-    "B": "DANGERZONE.item.target.add-unless",
-    "D": "DANGERZONE.item.target.delete",
-    "E": "DANGERZONE.item.target.delete-all",
-    "U": "DANGERZONE.item.target.update"
 }
 
 export const DOORSTATES = {
@@ -884,18 +881,6 @@ export const TIMESUPMACROREPEAT = {
     "endEveryTurn": "DANGERZONE.times-up-macro.end"
 }
 
-export const WALLSBLOCK = {
-    "" : "DANGERZONE.walls-block.none.label",
-    "A" : "DANGERZONE.walls-block.all.label"
-}
-
-export const TILESBLOCK = {
-    "" : "DANGERZONE.tiles-block.none.label",
-    "A" : "DANGERZONE.tiles-block.all.label",
-    "R" : "DANGERZONE.tiles-block.roof.label",
-    "B" : "DANGERZONE.tiles-block.bottom.label",
-    "T" : "DANGERZONE.tiles-block.top.label"
-}
 
 export function setModOptions(){
     if(dangerZone.MODULES.taggerOn){

@@ -1,0 +1,69 @@
+<div class="tab active danger-part-group" data-tab="movement" data-group="sheet">
+    <p class="notes">{{localize "DANGERZONE.type-form.tokenMove.description"}}</p>
+    <div class="form-group">
+        <h4>{{localize "DANGERZONE.type-form.tokenMove.horizontal.label"}}</h4>
+    </div>
+    <div class="form-group">
+        <label for="hz.dir">{{localize "DANGERZONE.type-form.tokenMove.horizontal-direction.label"}}</label>
+        <div class="form-fields">
+            <select name="hz.dir" value="{{data.hz.dir}}"> 
+                {{selectOptions options.TOKENMOVE.HORIZONTALMOVEMENT selected=data.hz.dir localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize "DANGERZONE.type-form.tokenMove.horizontal-distance.label"}}
+            <span class="units">{{localize 'DANGERZONE.grids'}}</span>
+        </label>
+        <div class="form-fields">
+            <label for="hz.min">{{localize "DANGERZONE.type-form.tokenMove.horizontal-distance-min.label"}}</label>
+            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="hz.min" min="0" step="1" value={{data.hz.min}}>
+            <label for="hz.max">{{localize "DANGERZONE.type-form.tokenMove.horizontal-distance-max.label"}}</label>
+            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="hz.max" min="0" step="1" value={{data.hz.max}}>
+        </div>
+    </div>
+    <div class="form-group">
+        <h4>{{localize "DANGERZONE.type-form.tokenMove.vertical.label"}}</h4>
+    </div>
+    <div class="form-group">
+        <label for="v.dir">{{localize "DANGERZONE.type-form.tokenMove.vertical-direction.label"}}</label>
+        <div class="form-fields">
+            <select name="v.dir" value="{{data.v.dir}}"> 
+                {{selectOptions options.TOKENMOVE.VERTICALMOVEMENT selected=data.v.dir localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize "DANGERZONE.type-form.tokenMove.vertical-distance.label"}}
+            <span class="units">{{localize 'DANGERZONE.grids'}}</span>
+        </label>
+        <div class="form-fields">
+            <label for="v.min">{{localize "DANGERZONE.type-form.tokenMove.vertical-distance-min.label"}}</label>
+            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="v.min" min="0" step="1" value={{data.v.min}}>
+            <label for="v.max">{{localize "DANGERZONE.type-form.tokenMove.vertical-distance-max.label"}}</label>
+            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}"  data-dtype="Number" name="v.max" min="0" step="1" value={{data.v.max}}>
+        </div>
+    </div>
+    <div class="form-group">
+        <h4>{{localize "DANGERZONE.type-form.tokenMove.elevation.label"}}</h4>
+    </div>
+    <div class="form-group">
+        <label for="e.type">{{localize "DANGERZONE.type-form.tokenMove.elevation-type.label"}}</label>
+        <div class="form-fields">
+            <select name="e.type" value="{{data.e.type}}"> 
+                {{selectOptions options.TOKENMOVE.ELEVATIONMOVEMENT selected=data.e.type localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize "DANGERZONE.type-form.tokenMove.elevation-distance.label"}}
+            <span class="units">{{localize 'DANGERZONE.distance'}}</span>
+        </label>
+        <div class="form-fields">
+            <label for="e.min">{{localize "DANGERZONE.type-form.tokenMove.elevation-distance-min.label"}}</label>
+            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="e.min" step="1" value={{data.e.min}}>
+            <label for="e.max">{{localize "DANGERZONE.type-form.tokenMove.elevation-distance-max.label"}}</label>
+            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="e.max" step="1" value={{data.e.max}}>
+        </div>
+    </div>
+</div>

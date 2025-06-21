@@ -1,13 +1,13 @@
 <div class="tab active danger-part-group" data-tab="visual" data-group="sheet">
     <p class="notes">{{localize "DANGERZONE.type-form.backgroundEffect.description"}}</p>
     <div class="form-group">
-        <label for="file">{{localize "DANGERZONE.type-form.backgroundEffect.file.label"}}</label>
+        <label for="file">{{localize random.visual.FILE}}</label>
         <div class="form-fields">
-            <file-picker name="file" type="imagevideo" class="image" placeholder="{{localize "DANGERZONE.type-form.backgroundEffect.file.placeholder"}}" value="{{data.file}}"></file-picker>
+            <file-picker name="file" type="imagevideo" class="image" placeholder="{{localize random.visual.PLACEHOLDER}}" value="{{data.file}}"></file-picker>
         </div>
     </div>
     <div class="form-group">
-        <label for="randomFile">{{localize "DANGERZONE.type-form.backgroundEffect.randomFile.label"}}</label>
+        <label for="randomFile">{{localize random.visual.LABEL}}</label>
         <div class="form-fields">
             <input type="checkbox" data-dtype="Boolean" name="randomFile" {{checked data.randomFile}}>
         </div>

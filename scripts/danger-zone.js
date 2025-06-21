@@ -6,7 +6,7 @@ import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
-import {AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CombatDangerPartConfig} from './apps/danger-form.js';
+import {AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, ForegroundEffectDangerPartConfig, ItemDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig} from './apps/danger-form.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -110,11 +110,11 @@ export class dangerZone {
    * Performs routines to initialize resources used by module
    */
   static initialize() {
-    this.DangerZoneTypesForm = new DangerZoneTypesForm();
-    this.executorForm = new ExecutorForm();
     dangerZone.#setModsAvailable();
     setHooks()
     dangerZone.#setDangerZoneConfig()
+    this.DangerZoneTypesForm = new DangerZoneTypesForm();
+    this.executorForm = new ExecutorForm();
   }
 
   /**V13
@@ -144,10 +144,17 @@ export class dangerZone {
    */
   static #setDangerZoneConfig() {
     DANGERZONECONFIG.CLASSES.DANGERPART = {
-            audio: AudioDangerPartConfig,
-            backgroundEffect: BackgroundEffectDangerPartConfig,
-            combat: CombatDangerPartConfig
-        }
+        audio: AudioDangerPartConfig,
+        backgroundEffect: BackgroundEffectDangerPartConfig,
+        canvas: CanvasDangerPartConfig,
+        combat: CombatDangerPartConfig,
+        foregroundEffect: ForegroundEffectDangerPartConfig,
+        item: ItemDangerPartConfig,
+        sound: SoundDangerPartConfig,
+        sourceEffect: SourceEffectDangerPartConfig,
+        tokenEffect: TokenEffectDangerPartConfig,
+        tokenMove: TokenMoveDangerPartConfig
+    }
   }
 
   /**

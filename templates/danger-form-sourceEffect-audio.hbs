@@ -1,0 +1,20 @@
+<div class="tab danger-part-group" data-tab="audio" data-group="sheet">
+    <div class="form-group">
+        <label for="audio.randomFile">{{localize random.audio.LABEL}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-id="audio" data-action="random" data-dtype="Boolean" name="audio.randomFile" {{checked data.audio.randomFile}}>
+        </div>
+    </div>
+    <div data-id="audio-file" class="form-group {{#if data.audio.randomFile}}hidden-picker{{/if}}">
+        <label for="audio.file">{{#if data.audio.randomFile}}{{localize random.audio.CHECKED.LABEL}}{{else}}{{localize random.audio.NOTCHECKED.LABEL}}{{/if}}</label>
+        <div class="form-fields">
+            <file-picker name="audio.file" type="audio" class="image" placeholder="{{#if data.audio.randomFile}}{{localize random.audio.CHECKED.PLACEHOLDER}}{{else}}{{localize random.audio.NOTCHECKED.PLACEHOLDER}}{{/if}}" value="{{data.audio.file}}"></file-picker>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="audio.volume">{{localize "DANGERZONE.type-form.sourceEffect.audio.volume.label"}}&nbsp;&nbsp;<i class="volume-icon fas fa-volume-down"></i></label>
+        <div class="form-fields">
+            <input type="range" title="{{localize "DANGERZONE.type-form.sourceEffect.audio.volume.label"}}" name="audio.volume" value="{{data.audio.volume}}" min="0" max="1" step="0.05">
+        </div>
+    </div>
+</div>

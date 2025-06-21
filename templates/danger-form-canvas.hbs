@@ -1,75 +1,68 @@
-<form autocomplete="off">
-    <div class="tab">
-        <p class="notes">{{localize "DANGERZONE.type-form.canvas.description"}}</p>
-        <hr>
-        <div class="form-group">
-            <h3>{{localize "DANGERZONE.type-form.canvas.effect.label"}}</h3>
+<div class="danger-part-group">
+    <p class="notes">{{localize "DANGERZONE.type-form.canvas.description"}}</p>
+    <hr>
+    <div class="form-group">
+        <h4>{{localize "DANGERZONE.type-form.canvas.effect.label"}}</h4>
+    </div>
+    <div class="form-group">
+        <label for="type">{{localize "DANGERZONE.type-form.canvas.type.label"}}</label>
+        <div class="form-fields">
+            <select name="effect.type" value="{{data.effect.type}}"> 
+                {{selectOptions options.CANVAS.TYPE selected=data.effect.type localize=true}}
+            </select>   
         </div>
-        <div class="form-group">
-            <label for="type">{{localize "DANGERZONE.type-form.canvas.type.label"}}</label>
-            <div class="form-fields">
-                <select name="effect.type" value="{{data.effect.type}}"> 
-                    {{selectOptions canvasOps selected=data.effect.type localize=true}}
-                </select>   
-            </div>
+    </div>
+    <div class="form-group">
+        <label for="intensity">{{localize "DANGERZONE.type-form.canvas.intensity.label"}}</label>
+        <div class="form-fields">
+            <input type="number" data-dtype="Number" name="effect.intensity" min="0" step="1" value={{data.effect.intensity}}>
         </div>
-        <div class="form-group">
-            <label for="intensity">{{localize "DANGERZONE.type-form.canvas.intensity.label"}}</label>
-            <div class="form-fields">
-                <input type="number" data-dtype="Number" name="effect.intensity" min="0" step="1" value={{data.effect.intensity}}>
-            </div>
+    </div>
+    <div class="form-group">
+        <label for="iteration">{{localize "DANGERZONE.type-form.canvas.iteration.label"}}</label>
+        <div class="form-fields">
+            <input type="number" data-dtype="Number" name="effect.iteration" min="0" step="1" value={{data.effect.iteration}}>
         </div>
-        <div class="form-group">
-            <label for="iteration">{{localize "DANGERZONE.type-form.canvas.iteration.label"}}</label>
-            <div class="form-fields">
-                <input type="number" data-dtype="Number" name="effect.iteration" min="0" step="1" value={{data.effect.iteration}}>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="duration">{{localize "DANGERZONE.type-form.canvas.duration.label"}}</label>
-            <div class="form-fields">
-                <input type="number" required data-dtype="Number" name="effect.duration" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.effect.duration}}>
-            </div>
+    </div>
+    <div class="form-group">
+        <label for="duration">{{localize "DANGERZONE.type-form.canvas.duration.label"}}</label>
+        <div class="form-fields">
+            <input type="number" required data-dtype="Number" name="effect.duration" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.effect.duration}}>
         </div>
     </div>
     <hr>
-    <div class="{{#unless hasSequencer}}hidden{{/unless}}">
-        <div class="form-group">
-            <h3>{{localize "DANGERZONE.type-form.canvas.pan.label"}}</h3>
-        </div>
-        <div class="form-group">
-            <label for="active">{{localize "DANGERZONE.type-form.canvas.active.label"}}</label>
-            <div class="form-fields">
-                <input type="checkbox" data-dtype="Boolean" name="pan.active" {{checked data.pan.active}}>
-            </div>
-        </div> 
-        <div class="form-group">
-            <label for="lock">{{localize "DANGERZONE.type-form.canvas.lock.label"}}</label>
-            <div class="form-fields">
-                <input type="number" required data-dtype="Number" name="pan.lock" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.pan.lock}}>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="speed">{{localize "DANGERZONE.type-form.canvas.speed.label"}}</label>
-            <div class="form-fields">
-                <input type="number" data-dtype="Number" name="pan.speed" min="0" step="1" placeholder="{{localize "DANGERZONE.ms"}}" value={{data.pan.speed}}>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="scale">{{localize "DANGERZONE.type-form.canvas.scale.label"}}</label>
-            <div class="form-fields">
-                <input type="number" data-dtype="Number" name="pan.scale" min="0" step="0.01" value={{data.pan.scale}}>
-            </div>
-        </div>
-        <hr>
+    <div class="form-group">
+        <h4>{{localize "DANGERZONE.type-form.canvas.pan.label"}}</h4>
     </div>
+    <div class="form-group">
+        <label for="active">{{localize "DANGERZONE.type-form.canvas.active.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="pan.active" {{checked data.pan.active}}>
+        </div>
+    </div> 
+    <div class="form-group">
+        <label for="lock">{{localize "DANGERZONE.type-form.canvas.lock.label"}}</label>
+        <div class="form-fields">
+            <input type="number" required data-dtype="Number" name="pan.lock" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.pan.lock}}>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="speed">{{localize "DANGERZONE.type-form.canvas.speed.label"}}</label>
+        <div class="form-fields">
+            <input type="number" data-dtype="Number" name="pan.speed" min="0" step="1" placeholder="{{localize "DANGERZONE.ms"}}" value={{data.pan.speed}}>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="scale">{{localize "DANGERZONE.type-form.canvas.scale.label"}}</label>
+        <div class="form-fields">
+            <input type="number" data-dtype="Number" name="pan.scale" min="0" step="0.01" value={{data.pan.scale}}>
+        </div>
+    </div>
+    <hr>
     <div class="form-group">
         <label for="delay">{{localize "DANGERZONE.type-form.canvas.delay.label"}}</label>
         <div class="form-fields">
             <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
         </div>
     </div>
-    <footer class="sheet-footer flexrow">
-        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
-    </footer>
-</form>
+</div>

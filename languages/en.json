@@ -14,10 +14,24 @@
         "distance": "(Distance)",
         "edit": "Edit",
         "export-danger": "Export Danger",
+        "file": {
+            "audio": {
+                "label": "Audio Source",
+                "placeholder": "path/to/audio.mp3",
+                "playlist.label": "Playlist Name",
+                "random.label": "Random from Playlist"
+            },
+            "visual":{
+                "label": "Image or Video",
+                "placeholder": "path/image.webm",
+                "random.label": "Randomize Wildcard webm"
+            }
+        },
         "grids": "(Grids)",
         "gridUnits": "units",
         "gridUnits2": "(Grid Units)",
         "location-picker": "Select the zone dimensions",
+        "movement.label": "Movement",
         "ms": "ms",
         "none": "None",
         "offset.label": "Offset",
@@ -26,6 +40,8 @@
         "ratio": "(Ratio)",
         "save": "Save",
         "sec": "sec",
+        "settings.label": "Settings",
+        "source.label": "Source",
         "stop": "Stop",
         "view": "View",
         "visual.label": "Visual",
@@ -561,34 +577,20 @@
             "audio":{
                 "description": "Plays a sound when the danger triggers.",
                 "label": "Audio",
-                "file.label": "Audio Source",
-                "file.placeholder": "path/to/audio.mp3",
-                "file.find": "Browse for Audio File",
-                "playlist.label": "Playlist Name",
                 "delay.label": "Delay Start",
                 "duration.description": "If the sound file is longer than the duration (in seconds) entered, then it will stop the sound at the provided duration following start of play. If duration = 0 then the sound plays for the entire length.",
                 "duration.label": "Duration",
-                "random.label": "Random from Playlist",
                 "volume.label": "Sound Volume"
             },
             "backgroundEffect":{
                 "audio":{
                     "label": "Audio",
-                    "file.label": "Audio Source",
-                    "file.placeholder": "path/audio.mp3",
-                    "file.find": "Browse for Audio File",
-                    "playlist.label": "Playlist Name",
-                    "random.label": "Random from Playlist",
                     "volume.label": "Sound Volume"
                 },
                 "below.label": "Display Below Token",
                 "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays beneath the target area, such as an explosion or impact animation.",
                 "label": "Target Effect",
-                "file.find": "Browse for Effect",
-                "file.label": "Image or Video",
-                "file.placeholder": "path/image.webm",
-                "randomFile.label": "Randomize Wildcard webm",
                 "rotate.label": "Random Rotation",
                 "scale.label": "Scale",
                 "repeat.label": "Number of Repeats",
@@ -649,10 +651,6 @@
                 "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays above the target area, such as a lightning bolt or falling rocks animation.",
                 "label": "Primary Effect",
-                "file.label": "Image or Video",
-                "file.placeholder": "path/image.webm",
-                "file.find": "Browse for Effect",
-                "randomFile.label": "Randomize Wildcard webm",
                 "scale.label": "Scale",
                 "source": {
                     "enabled.label": "Source to Target",
@@ -874,11 +872,6 @@
                 "active.label": "Enable Scene Modifications",
                 "description": "Modifiy scene settings and global illumination",
                 "label": "Scene",
-                "background": {
-                    "file.label": "Background Image",
-                    "randomFile.label": "Randomize Wildcard Image",
-                    "file.placeholder":"File Path"
-                },
                 "darkness":{
                     "animate.label": "Animate Over Time",
                     "enable.label": "Update Darkness Level",
@@ -898,10 +891,7 @@
                             "relative.label": "Change Relative to Current Elevation",
                             "set.label": "Set to Elevation"
                         }
-                    },
-                    "randomFile.label": "Randomize Wildcard Image",
-                    "file.label":"Foreground Image",
-                    "file.placeholder":"File Path"
+                    }
                 },
                 "globalLight": {
                     "label": "Toggle Global Illumination",
@@ -915,10 +905,6 @@
             "sound":{
                 "description": "Adds an ambient sound to the scene at the target location.",
                 "label": "Sound",
-                "file.label": "Audio Source",
-                "file.placeholder": "path/audio.mp3",
-                "file.find": "Browse for Audio File",
-                "playlist.label": "Playlist Name",
                 "delay.label": "Delay Start",
                 "easing.label": "Volume Easing",
                 "random.label": "Random from Playlist",
@@ -928,21 +914,11 @@
             },
             "sourceEffect":{
                 "audio":{
-                    "label": "Audio",
-                    "file.label": "Audio Source",
-                    "file.placeholder": "path/audio.mp3",
-                    "file.find": "Browse for Audio File",
-                    "playlist.label": "Playlist Name",
-                    "random.label": "Random from Playlist",
                     "volume.label": "Sound Volume"
                 },
                 "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays beneath the source area, such as an puff of smoke or waving wand.",
                 "label": "Source Effect",
-                "file.find": "Browse for Effect",
-                "file.label": "Image or Video",
-                "file.placeholder": "path/image.webm",
-                "randomFile.label": "Randomize Wildcard webm",
                 "rotate.label": "Random Rotation",
                 "scale.label": "Scale",
                 "repeat.label": "Number of Repeats",
@@ -960,8 +936,6 @@
                 "description": "Create a tile with an embedded video or image in the target area.",
                 "effect.description": "This field is required in order for the tile to generate. To generate a blank tile, use a transparent image.",
                 "effect.label": "Tile Image or Video",
-                "file.placeholder": "path/image.png",
-                "file.find": "Browse for Image or Video",
                 "hidden.label":"Hidden",
                 "label": "Lasting Effect",
                 "occlusion":{
@@ -971,7 +945,6 @@
                 "overhead.label": "Overhead Tile",
                 "is-overhead.label": "Is Overhead?",
                 "loop.label": "Loop Video",
-                "randomFile.label": "Randomize Wildcard Image",
                 "restrictsLight.label": "Restricts Light",
                 "restrictsWeather.label": "Restricts Weather",
                 "scale.label": "Effect Scale",
@@ -1031,10 +1004,6 @@
                 "delay.label": "Delay Start",
                 "description": "Create an effect that plays upon the targeted token and, if made permanent, moves with the token.",
                 "label": "Token Effect",
-                "file.label": "Image or Video",
-                "file.placeholder": "path/image.webm",
-                "file.find": "Browse for Effect",
-                "randomFile.label": "Randomize Wildcard webm",
                 "scale.label": "Scale",
                 "duration.label": "Duration"
             },  
@@ -1063,10 +1032,10 @@
                     },
                 "label": "Move Tokens",
                 "overrides.label": "Movement Overrides",
-                "source-to-target.label": "Move Source to Targeted Area",
+                "source-to-target.label": "Move Source to Targeted",
                 "teleport.label": "Teleport",
                 "tiles-block.label": "Tiles Block Target Depth Move",
-                "walls-block.label": "Walls Block Target X/Y Move",
+                "walls-block.label": "Walls Block Move",
                 "vertical.label": "Vertical Movement",
                 "vertical-distance.label": "Movement Distance",
                 "vertical-distance-max.label": "Maximum",
@@ -1157,14 +1126,10 @@
                 "color.label": "Portal Color",
                 "duplicates.label": "Number to Spawn",
                 "delay.label": "Portal Delay Start",
-                "file.description": "Add an image or video to display for the pointer.",
-                "file.label": "Pointer Image",
-                "file.placeholder": "path/image.webm",
                 "isRolltable.label": "Is Rollable Table",
                 "label": "Token Spawn",
                 "mutate.label": "Is Mutation Target",
                 "mutate.description": "If this danger includes a Mutate danger part, enabling this will apply the mutation to the spawned tokens instead of the normal zone targets. Be sure that the Mutate danger part 'Delay Start' is set to occur after this part's 'Delay Start'.",
-                "randomFile.label": "Randomize Wildcard webm",
                 "range.description": "Sets the range of the portal. If = 0, range will be the scene's distance * the danger's maximum width or height.",
                 "range.label": "Range",
                 "spawnDelay.label": "Token Spawn Delay",
