@@ -1366,11 +1366,6 @@ class ambientLight extends executable{
 
     get flag(){
         const flg = foundry.utils.mergeObject({}, this.data.flag)
-        if(dangerZone.MODULES.perfectVisionOn){
-            const pv = this._part.flags['perfect-vision']
-            if(pv?.sightLimit) flg['perfect-vision.sightLimit'] = pv.sightLimit
-            if(pv?.priority) flg['core.priority'] = pv.priority
-        }
         return flg
     }
 
@@ -2771,7 +2766,7 @@ class scene extends executable{
     }
 
     get e(){
-        return this._part.e ? this._part.e : {type: '', min: 0, max: 0}
+        return this._part.foreground.e ? this._part.foreground.e : {type: '', min: 0, max: 0}
     }
 
     get filePathB(){
@@ -3030,6 +3025,7 @@ class sound extends executableWithFile {
 
     get _sound() {
         const sound = {
+            elevation: this.boundary.bottomToElevation,  
             easing: this.easing,
             flags: this.data.flag,
             path: this._file,

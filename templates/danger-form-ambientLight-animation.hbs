@@ -1,0 +1,28 @@
+<div class="tab danger-part-group" data-tab="animation" data-group="sheet">
+    <div class="form-group">
+        <label for="lightAnimation.type">{{localize "DANGERZONE.type-form.ambientLight.animation.label"}}</label>
+        <div class="form-fields">
+            <select name="lightAnimation.type" value="{{data.lightAnimation.type}}"> 
+                {{selectOptions options.AMBIENTLIGHT.ANIMATION selected=data.lightAnimation.type localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="lightAnimation.speed">{{localize "DANGERZONE.type-form.ambientLight.speed.label"}}</label>
+        <div class="form-fields">
+            <range-picker name="lightAnimation.speed" value="{{data.lightAnimation.speed}}" min="1" max="10" step="1"></range-picker> 
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="lightAnimation.reverse">{{localize "DANGERZONE.type-form.ambientLight.reverseAnimation.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="lightAnimation.reverse" {{checked data.lightAnimation.reverse}}/>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="lightAnimation.intensity">{{localize "DANGERZONE.type-form.ambientLight.animationIntensity.label"}}</label>
+        <div class="form-fields">
+            <range-picker name="lightAnimation.intensity" value="{{data.lightAnimation.intensity}}" min="1" max="10" step="1"></range-picker>  
+        </div>
+    </div>
+</div>

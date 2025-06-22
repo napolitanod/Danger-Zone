@@ -73,6 +73,7 @@ export function setHooks(){
         setModOptions();
         await migrateDanger.migrate();
         await migrateScene.migrate();
+        
     });
 
     /**

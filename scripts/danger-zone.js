@@ -6,7 +6,7 @@ import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
-import {AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, ForegroundEffectDangerPartConfig, ItemDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig} from './apps/danger-form.js';
+import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, ForegroundEffectDangerPartConfig, ItemDangerPartConfig, RolltableDangerPartConfig, SceneDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig, WallDangerPartConfig} from './apps/danger-form.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -31,7 +31,6 @@ export class dangerZone {
     activeEffectOn: true, 
     timesUpOn: false, 
     daeOn: false, 
-    perfectVisionOn: false, 
     socketLibOn: false, 
     taggerOn: false, 
     sequencerOn: false, 
@@ -144,16 +143,20 @@ export class dangerZone {
    */
   static #setDangerZoneConfig() {
     DANGERZONECONFIG.CLASSES.DANGERPART = {
+        ambientLight: AmbientLightDangerPartConfig,
         audio: AudioDangerPartConfig,
         backgroundEffect: BackgroundEffectDangerPartConfig,
         canvas: CanvasDangerPartConfig,
         combat: CombatDangerPartConfig,
         foregroundEffect: ForegroundEffectDangerPartConfig,
         item: ItemDangerPartConfig,
+        rolltable: RolltableDangerPartConfig,
+        scene: SceneDangerPartConfig,
         sound: SoundDangerPartConfig,
         sourceEffect: SourceEffectDangerPartConfig,
         tokenEffect: TokenEffectDangerPartConfig,
-        tokenMove: TokenMoveDangerPartConfig
+        tokenMove: TokenMoveDangerPartConfig,
+        wall: WallDangerPartConfig
     }
   }
 
@@ -171,7 +174,6 @@ export class dangerZone {
     if (game.modules.get("tagger")?.active){dangerZone.MODULES.taggerOn = true} ;
     if (game.modules.get("wall-height")?.active){dangerZone.MODULES.wallHeightOn = true} ;
     if (game.modules.get("times-up")?.active){dangerZone.MODULES.timesUpOn = true};
-    if (game.modules.get("perfect-vision")?.active) dangerZone.MODULES.perfectVisionOn = true;
     if (game.modules.get("socketlib")?.active) dangerZone.MODULES.socketLibOn = true
     if(['pf1', 'pf2e'].includes(game.world.system)) dangerZone.MODULES.activeEffectOn = false
   }

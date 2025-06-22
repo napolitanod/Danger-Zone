@@ -1,6 +1,6 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
-import {actorOps, AMBIENTLIGHTCLEAROPS, animationTypes, DAMAGEONSAVE, damageTypes, DANGERZONEPARTS, DANGERZONECONFIG, DANGERZONEFORMOPTIONS, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, DOORSTATES, TRIGGEROPERATION, DANGERZONEWALLREPLACE,determineMacroList, determineMacroListUuid,  REGIONSHAPETYPEOPTIONS, dirTypes, doorTypes, getCompendiumOps, MIRRORROTATIONOPTIONS, MOVETYPES, regionEvents, REGIONVISIBILITY, SAVERESULT, saveTypes, SCENEFOREGROUNDELEVATIONMOVEMENT, SCENEGLOBALILLUMINATION, SENSETYPES, SOURCEAREATARGET, SOURCEAREAGLOBALZONE, STRETCH, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, weatherTypes, weatherParameters, WORLDZONE} from './constants.js';
+import {actorOps, DAMAGEONSAVE, damageTypes, DANGERZONEPARTS, DANGERZONECONFIG, DANGERZONEFORMOPTIONS, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, TRIGGEROPERATION, DANGERZONEWALLREPLACE,determineMacroList, determineMacroListUuid,  REGIONSHAPETYPEOPTIONS, getCompendiumOps,  regionEvents, REGIONVISIBILITY, SAVERESULT, saveTypes, SOURCEAREATARGET, SOURCEAREAGLOBALZONE, STRETCH, TILEOCCLUSIONMODES, TIMESUPMACROREPEAT, TOKENDISPOSITION, TOKENSAYSTYPES, weatherTypes, weatherParameters, WORLDZONE} from './constants.js';
 import {getEventData, stringToObj} from './helpers.js';
 
 /**v13
@@ -15,15 +15,11 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
     this.system,
     this.globalZone = {},
     this.lastingEffect,
-    this.light,
     this.monksActiveTiles,
     this.mutate,
     this.region,
-    this.rolltable,
-    this.scene,
     this.tokenResponse = {},
     this.tokenSays = {},
-    this.wall,
     this.warpgate = {},
     this.weather = {},
     this.dangerId = dangerId;
@@ -81,16 +77,12 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
     this.effect = instance.options.effect;
     this.globalZone = instance.options.globalZone ?? {};
     this.lastingEffect = instance.options.lastingEffect;
-    this.light = instance.options.ambientLight;
     this.monksActiveTiles = instance.options.flags?.['monks-active-tiles'] ? instance.options.flags['monks-active-tiles'] : {};
     this.mutate = instance.options.flags?.mutate ? instance.options.flags.mutate : {};
     this.region = instance.options.region;
-    this.rolltable = instance.options.rolltable;
-    this.scene = instance.options.scene;
     this.tokenSays = instance.options.flags.tokenSays ? instance.options.flags.tokenSays : {};
     this.tokenResponse = instance.options.flags?.tokenResponse ? instance.options.flags.tokenResponse : {};
     this.tokenSays = instance.options.flags.tokenSays ? instance.options.flags.tokenSays : {};
-    this.wall = instance.options.wall;
     this.warpgate = instance.options.flags.warpgate ? instance.options.flags.warpgate : {};
     this.weather = instance.options.flags.weather ? instance.options.flags.weather : {};
 
@@ -102,14 +94,10 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
       hasActiveEffect: Object.keys(this.effect).length ? true : false,
       hasGlobalZone: Object.keys(this.globalZone).length && this.globalZone?.enabled ? true : false,
       hasLastingEffect: this.lastingEffect?.file ? true : false,
-      hasLight: (this.light.bright || this.light.dim) ? true : false,
       hasMutate: this.mutate?.permanent,
       hasRegion: this.region?.active ? true : false,
-      hasRolltable: this.rolltable.name ? true : false,
-      hasScene: this.scene.active ? true : false,
       hasTokenResponse: (this.tokenResponse?.save?.enable || this.tokenResponse?.damage?.enable) ? true : false,
       hasTokenSays: this.tokenSays?.fileType ? true : false,
-      hasWall: (this.wall?.top || this.wall?.bottom || this.wall?.left || this.wall?.right) ? true : false,
       hasWarpgate: this.warpgate?.actor ? true : false,
       hasWeather: this.weather.type ? true : false,
       activeEffectOnNot: !dangerZone.MODULES.activeEffectOn,
@@ -164,29 +152,17 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
       case 'lasting-effect':
         new DangerZoneDangerFormLastingEffect(this, data.parent, {lastingEffect: this.lastingEffect, monksActiveTiles: this.monksActiveTiles}).render(true);
         break;
-      case 'light':
-        new DangerZoneDangerFormLight(this, data.parent, this.light).render(true);
-        break;
       case 'mutate':
         new DangerZoneDangerFormMutate(this, data.parent, this.mutate).render(true);
         break;
       case 'region':
         new DangerZoneDangerFormRegion(this, data.parent, this.region).render(true);
         break;
-      case 'rolltable':
-        new DangerZoneDangerFormRolltable(this, data.parent, this.rolltable).render(true);
-        break;
-      case 'scene':
-        new DangerZoneDangerFormScene(this, data.parent, this.scene).render(true);
-        break;
       case 'token-response':
         new DangerZoneDangerFormTokenResponse(this, data.parent, this.tokenResponse).render(true);
         break;
       case 'token-says':
         new DangerZoneDangerFormTokenSays(this, data.parent, this.tokenSays).render(true);
-        break;
-      case 'wall':
-        new DangerZoneDangerFormWall(this, data.parent, this.wall).render(true);
         break;
       case 'warpgate':
         new DangerZoneDangerFormWarpgate(this, data.parent, this.warpgate).render(true);
@@ -227,29 +203,17 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
         this.lastingEffect = Object.assign(this.lastingEffect, danger.options.lastingEffect)
         this.monksActiveTiles = {}
         break;
-      case 'light':
-        this.light = Object.assign(this.light, danger.options.ambientLight)
-        break;
       case 'mutate':
         this.mutate = {}
         break;
       case 'region':
         this.region = Object.assign(this.region, danger.options.region)
         break;
-      case 'rolltable':
-        this.rolltable = Object.assign(this.rolltable, danger.options.rolltable)
-        break;
-      case 'scene':
-        this.scene = Object.assign(this.scene, danger.options.scene)
-        break;
       case 'token-response':
         this.tokenResponse = {}
         break;
       case 'token-says':
         this.tokenSays = {}
-        break;
-      case 'wall':
-        this.wall = Object.assign(this.wall, danger.options.wall)
         break;
       case 'warpgate':
         this.warpgate = {}
@@ -278,11 +242,7 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
     expandedData.options.effect = this.effect; 
     expandedData.options.globalZone = this.globalZone;
     expandedData.options.lastingEffect = this.lastingEffect;
-    expandedData.options.ambientLight = this.light;
     expandedData.options.region = this.region;
-    expandedData.options.rolltable = this.rolltable;
-    expandedData.options.scene = this.scene;
-    expandedData.options.wall = this.wall;
     //set integrations
     expandedData.options['flags']={};
     if(Object.keys(this.monksActiveTiles).length) {expandedData.options.flags['monks-active-tiles'] = this.monksActiveTiles}
@@ -311,26 +271,23 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
       case 'canvas': return (part.effect.type || part.pan.active) 
       case 'global-zone':
         break;
-      case 'item': return  part.name?.length ? true : false
+      case 'item': 
+      case 'rolltable':
+        return  part.name?.length ? true : false
       case 'lasting-effect':
         break;
-      case 'light':
-        break;
+      case 'ambientLight': return (part.dim || part.bright) ? true : false
       case 'mutate':
         break;
       case 'region':
         break;
-      case 'rolltable':
-        break;
-      case 'scene':
-        break;
+      case 'scene': return part.active ? true : false
       case 'tokenMove': return (part.v.dir || part.hz.dir || part.e.type || part.sToT) ? true : false
       case 'token-response':
         break;
       case 'token-says':
         break;
-      case 'wall':
-        break;
+      case 'wall': return (part.top || part.bottom || part.left || part.right) ? true : false
       case 'warpgate':
         break;
       case 'weather':
@@ -395,7 +352,7 @@ export class DangerPartConfig extends foundry.applications.api.HandlebarsApplica
   static TABS = {};
 
    /** @override */
-  async _prepareContext(options) {
+  async _prepareContext() {
     return {
       compendiums: {
         ITEM: getCompendiumOps('item')
@@ -508,11 +465,29 @@ export class DangerPartConfig extends foundry.applications.api.HandlebarsApplica
    * @param {string} initial    the key for the initial tab on form load
    * @returns object in format expected by mixin TABS 
    */
-  static _tabs(tabs = [], initial){
+  static _tabs(id){
+    const tabs = DANGERZONEPARTS.get(id).templates.values()
+    const initial = DANGERZONEPARTS.get(id).templates.get(1)
     const _obj = {sheet: {initial: initial, tabs: []}}
     for(let tab of tabs){_obj.sheet.tabs.push(DANGERZONECONFIG.TAB[tab])}
     return _obj
   }
+}
+
+/**v13
+ * Configures the ambient light danger part
+ */
+export class AmbientLightDangerPartConfig extends DangerPartConfig {
+  static #partId = 'ambientLight'
+
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId);
+
+  /** @override */
+  static PARTS = this._parts(this.#partId)
+
+  /** @override */
+  static TABS = this._tabs(this.#partId) 
 }
 
 /**v13
@@ -538,7 +513,7 @@ export class BackgroundEffectDangerPartConfig extends DangerPartConfig {
   static PARTS = this._parts(this.#partId)
 
   /** @override */
-  static TABS = this._tabs(['visual', 'audio', 'offset'], 'visual') 
+  static TABS = this._tabs(this.#partId) 
 }
 
 /**v13
@@ -570,17 +545,17 @@ export class CombatDangerPartConfig extends DangerPartConfig {
    /** @override */
   _onRender(context, options) {
       super._onRender(context, options);
-      this.element.querySelector(`#dz-initiative-type`).addEventListener("change", (event => {this.#togglInitiativeFieldsDisplay(event)}));
+      this.element.querySelector(`#dz-initiative-type`).addEventListener("change", (event => {this.#toggleInitiativeFieldsDisplay(event)}));
   }
 
   /*******           CUSTOM             ********/
 
-  /*******          PPIVATE METHODS *************/
+  /*******          PRIVATE METHODS *************/
   /**v13
    * Dynamic handling of dropdowns pertaining to initiative
    * @param {SubmitEvent} event         The pointer event.
    */
-  #togglInitiativeFieldsDisplay(event) {
+  #toggleInitiativeFieldsDisplay(event) {
     const data = getEventData(event)
     const op = this.element.querySelector(`#dz-initiative-value`)
     const pc = this.element.querySelector(`#dz-initiative-player`)
@@ -638,11 +613,38 @@ export class ForegroundEffectDangerPartConfig extends DangerPartConfig {
   static PARTS = this._parts(this.#partId)
 
   /** @override */
-  static TABS = this._tabs(['visual', 'source', 'offset'], 'visual') 
+  static TABS = this._tabs(this.#partId) 
 }
 
+/**v13
+ * Configures the rolltable danger part
+ */
+export class RolltableDangerPartConfig extends DangerPartConfig {
+  static #partId = 'rolltable'
 
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId)
 
+  /** @override */
+  static PARTS = this._parts(this.#partId)
+}
+
+/**v13
+ * Configures the scene danger part
+ */
+export class SceneDangerPartConfig extends DangerPartConfig {
+static #partId = 'scene'
+
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId)
+
+  /** @override */
+  static PARTS = this._parts(this.#partId)
+
+  /** @override */
+  static TABS = this._tabs(this.#partId) 
+}
+    
 /**v13
  * Configures the sound danger part
  */
@@ -656,7 +658,7 @@ static #partId = 'sound'
   static PARTS = this._parts(this.#partId)
 
   /** @override */
-  static TABS = this._tabs(['audio', 'offset'], 'audio') 
+  static TABS = this._tabs(this.#partId) 
 
 }
 
@@ -673,7 +675,7 @@ static #partId = 'sourceEffect'
   static PARTS = this._parts(this.#partId)
 
   /** @override */
-  static TABS = this._tabs(['visual', 'audio', 'offset'], 'visual') 
+  static TABS = this._tabs(this.#partId) 
 
 }
 
@@ -705,8 +707,83 @@ export class TokenMoveDangerPartConfig extends DangerPartConfig {
   static PARTS = this._parts(this.#partId)
   
   /** @override */
-  static TABS = this._tabs(['movement', 'settings'], 'movement') 
+  static TABS = this._tabs(this.#partId) 
 }
+
+/**v13
+ * Configures the wall danger part
+ */
+export class WallDangerPartConfig extends DangerPartConfig {
+  
+  static #partId = 'wall'
+
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId);
+
+  /** @override */
+  static PARTS = this._parts(this.#partId)
+  
+  /** @override */
+  static TABS = this._tabs(this.#partId) 
+
+  /** @override */
+  _onRender(context, options) {
+      super._onRender(context, options);
+      this.element.querySelectorAll(`[data-action]`).forEach((el) => {
+        el.addEventListener("change", (event => {this.#toggleProximity(event)}))
+      });
+  }
+
+  /** @override */
+  async _prepareContext() {
+    const parentData = await super._prepareContext();
+      return foundry.utils.mergeObject(parentData,
+        {
+          suppress: {
+            lightProx : this.#notProximity(this.data.light),
+            senseProx : this.#notProximity(this.data.sense),
+            soundProx : this.#notProximity(this.data.sound)
+         }
+        }  
+      )
+    }
+  /*******           CUSTOM             ********/
+
+  /*******          PRIVATE METHODS *************/
+
+  /**v13
+   * Test for element proximity value
+   * @param {Boolean} test 
+   * @returns true if not a proximity value
+   */
+  #notProximity(test){
+    return Number(test) < 3
+  }
+
+  /**v13
+   * Dynamic handling of display of proximity fields related to the given wall setting
+   * @param {SubmitEvent} event         The pointer event.
+   */
+  #toggleProximity(event) {
+    const data = getEventData(event)
+    switch(data.action){
+      case "door":
+        this.element.querySelector(".door-options").classList.toggle("hidden", data.target.value === '0' ? true : false)
+        this.setPosition({height: "auto"});
+        break;
+      case "light":
+      case "sense":
+      case "sound":
+        this.element.querySelector(`.${data.action}-proximity`).classList.toggle("hidden", this.#notProximity(data.target.value)) 
+      break;
+    }
+    this.setPosition()
+  }
+
+}
+
+
+
 
 class DangerZoneActiveEffectForm extends ActiveEffectConfig {
   constructor(app, eventParent, origin, ...args) {
@@ -1055,60 +1132,6 @@ class DangerZoneDangerFormLastingEffect extends FormApplication {
     }
 }
 
-class DangerZoneDangerFormLight extends FormApplication {
-  constructor(app, eventParent, data, ...args) {
-    super(...args);
-    this.data = data,
-    this.eventParent = eventParent,
-    this.parent = app;
-    }
-
-    static get defaultOptions(){
-        const defaults = super.defaultOptions;
-
-        return foundry.utils.mergeObject(defaults, {
-          title : game.i18n.localize("DANGERZONE.type-form.light.label"),
-          id : "danger-zone-danger-light",
-          classes: ["sheet","danger-part-form"],
-          template : dangerZone.TEMPLATES.DANGERZONEDANGERLIGHT,
-          height : "auto",
-          width: 425,
-          closeOnSubmit: true,
-          tabs : [
-            {navSelector: ".tabs", contentSelector: "form", initial: "basic"}
-          ]
-        });
-      }
-
-    getData(options) {
-      if(this.data.luminosity < 0) {//FvTT 11 and backwards compat
-        this.data.negative = true;
-        this.data.luminosity = 0
-      }
-
-      return {
-        clearOps: AMBIENTLIGHTCLEAROPS,
-        colorationOps: AdaptiveLightingShader.SHADER_TECHNIQUES,
-        data: this.data,
-        hasPerfectVision: dangerZone.MODULES.perfectVisionOn,
-        lightAnimations: animationTypes(),
-        taggerOnNot: !dangerZone.MODULES.taggerOn,
-        offsetOps: DANGERZONEFORMOPTIONS.OFFSETOPTIONS,
-        mirrorOps: MIRRORROTATIONOPTIONS
-        }
-    }
-
-    activateListeners(html) {
-      super.activateListeners(html);
-    }
-  
-    async _updateObject(event, formData) {
-      const expandedData = foundry.utils.expandObject(formData);
-      this.parent.light = expandedData;
-      if(expandedData.flags?.['perfect-vision']?.priority === undefined && !expandedData.flags?.['perfect-vision']?.sightLimit) this.parent.light.flags = {}
-      if(expandedData.dim || expandedData.bright) {this.eventParent.classList.add('active')} else {this.eventParent.classList.remove('active')}
-    }
-}
 
 class DangerZoneDangerFormMutate extends FormApplication {
   constructor(app, eventParent, data, ...args) {
@@ -1203,86 +1226,9 @@ class DangerZoneDangerFormRegion extends FormApplication {
 }
 
 
-class DangerZoneDangerFormRolltable extends FormApplication {
-  constructor(app, eventParent, data, ...args) {
-    super(...args);
-    this.data = data,
-    this.eventParent = eventParent,
-    this.parent = app;
-    }
-
-    static get defaultOptions(){
-        const defaults = super.defaultOptions;
-
-        return foundry.utils.mergeObject(defaults, {
-          title : game.i18n.localize("DANGERZONE.type-form.rolltable.label"),
-          id : "danger-zone-danger-rolltable",
-          classes: ["sheet","danger-part-form"],
-          template : dangerZone.TEMPLATES.DANGERZONEDANGERROLLTABLE,
-          height : "auto",
-          width: 425,
-          closeOnSubmit: true
-        });
-      }
-
-    getData(options) {
-      return {
-        data: this.data
-      }
-    }
-
-    activateListeners(html) {
-      super.activateListeners(html);
-    }
-  
-    async _updateObject(event, formData) {
-      const expandedData = foundry.utils.expandObject(formData);
-      this.parent.rolltable = expandedData;
-      expandedData.name ? this.eventParent.classList.add('active') : this.eventParent.classList.remove('active');
-    }
-}
 
 
-class DangerZoneDangerFormScene extends FormApplication {
-  constructor(app, eventParent, data, ...args) {
-    super(...args);
-    this.data = data,
-    this.eventParent = eventParent,
-    this.parent = app;
-    }
 
-    static get defaultOptions(){
-        const defaults = super.defaultOptions;
-
-        return foundry.utils.mergeObject(defaults, {
-          title : game.i18n.localize("DANGERZONE.type-form.scene.label"),
-          id : "danger-zone-danger-scene",
-          classes: ["sheet","danger-part-form"],
-          template : dangerZone.TEMPLATES.DANGERZONEDANGERSCENE,
-          height : "auto",
-          width: 425,
-          closeOnSubmit: true
-        });
-      }
-
-    getData(options) {
-      return{
-        data: this.data,
-        foregroundElevationTypeOps: SCENEFOREGROUNDELEVATIONMOVEMENT,
-        globalIlluminationOps: SCENEGLOBALILLUMINATION
-      }
-    }
-
-    activateListeners(html) {
-      super.activateListeners(html);
-    }
-  
-    async _updateObject(event, formData) {
-      const expandedData = foundry.utils.expandObject(formData);
-      this.parent.scene = expandedData;
-      expandedData.active ? this.eventParent.classList.add('active') : this.eventParent.classList.remove('active');
-    }
-}
 
 
 
@@ -1416,78 +1362,6 @@ class DangerZoneDangerFormWarpgate extends FormApplication {
       const expandedData = foundry.utils.expandObject(formData);
       this.parent.warpgate = expandedData;
       expandedData.actor ? this.eventParent.classList.add('active') : this.eventParent.classList.remove('active');
-    }
-}
-
-class DangerZoneDangerFormWall extends FormApplication {
-  constructor(app, eventParent, data, ...args) {
-    super(...args);
-    this.data = data,
-    this.eventParent = eventParent,
-    this.parent = app;
-    }
-
-    static get defaultOptions(){
-        const defaults = super.defaultOptions;
-
-        return foundry.utils.mergeObject(defaults, {
-          title : game.i18n.localize("DANGERZONE.type-form.wall.label"),
-          id : "danger-zone-danger-wall",
-          classes: ["sheet","danger-part-form"],
-          template : dangerZone.TEMPLATES.DANGERZONEDANGERWALL,
-          height : "auto",
-          width: 425,
-          closeOnSubmit: true
-        });
-      }
-
-    getData(options) {
-      return {
-        data: this.data,
-        doorSounds: CONFIG.Wall.doorSounds,
-        doorStates: DOORSTATES,
-        suppressDoorOptions: this.data.door ? false : true,
-        suppressLightProx : this._notProximity(this.data.light),
-        suppressSenseProx : this._notProximity(this.data.sense),
-        suppressSoundProx : this._notProximity(this.data.sound),
-        moveTypes: MOVETYPES,
-        senseTypes: SENSETYPES,
-        dirTypes: dirTypes(),
-        doorTypes: doorTypes(),
-        offsetOps: DANGERZONEFORMOPTIONS.OFFSETOPTIONS,
-        mirrorOps: DANGERZONEFORMOPTIONS.MIRRORIMAGEOPTIONS
-        }
-    }
-
-    activateListeners(html) {
-      html.on('change', "[data-action]", this._handleChange.bind(this));
-      super.activateListeners(html);
-    }
-
-    async _handleChange(event) {
-      const changedElement = $(event.currentTarget);
-      const action = changedElement.data().action;
-      switch(action){
-        case "door":
-          this.form.querySelector(".door-options").classList.toggle("hidden", event.currentTarget.value === '0' ? true : false)
-          this.setPosition({height: "auto"});
-          break;
-        case "light":
-        case "sense":
-        case "sound":
-          this.form.querySelector(`.${action}-proximity`).classList.toggle("hidden", this._notProximity(event.currentTarget.value)) 
-        break;
-      }
-    }
-
-    _notProximity(test){
-      return Number(test) < 3
-    }
-
-    async _updateObject(event, formData) {
-      const expandedData = foundry.utils.expandObject(formData);
-      this.parent.wall = expandedData;
-      (expandedData.top ||expandedData.left ||expandedData.right ||expandedData.bottom) ? this.eventParent.classList.add('active') : this.eventParent.classList.remove('active');
     }
 }
 

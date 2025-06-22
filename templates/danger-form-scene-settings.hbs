@@ -1,0 +1,63 @@
+<div class="tab active danger-part-group" data-tab="settings" data-group="sheet">
+    <p class="notes">{{localize "DANGERZONE.type-form.scene.description"}}</p>
+    <div class="form-group">
+        <label for="active">{{localize "DANGERZONE.type-form.scene.active.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="active" {{checked data.active}}>
+        </div>
+    </div> 
+    <div class="form-group">
+        <label for="delay">{{localize "DANGERZONE.type-form.scene.delay.label"}}</label>
+        <div class="form-fields">
+            <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
+        </div>
+    </div>
+    <h4>{{localize "DANGERZONE.type-form.scene.background.label"}}</h4>   
+    <div class="form-group">
+        <label for="background.file">{{localize random.visual.FILE}}</label>
+        <div class="form-fields">
+            <file-picker name="background.file" type="imagevideo" class="image" placeholder="{{localize random.visual.PLACEHOLDER}}" value="{{data.background.file}}"></file-picker>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="background.randomFile">{{localize random.visual.LABEL}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="background.randomFile" {{checked data.background.randomFile}}>
+        </div>
+    </div>
+    <h4>{{localize "DANGERZONE.type-form.scene.foreground.label"}}</h4>   
+    <div class="form-group">
+        <label for="foreground.file">{{localize random.visual.FILE}}</label>
+        <div class="form-fields">
+            <file-picker name="foreground.file" type="imagevideo" class="image" placeholder="{{localize random.visual.PLACEHOLDER}}" value="{{data.foreground.file}}"></file-picker>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="foreground.randomFile">{{localize random.visual.LABEL}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="foreground.randomFile" {{checked data.foreground.randomFile}}>
+        </div>
+    </div>
+    <div class="form-group">
+        <label><b>{{localize "DANGERZONE.type-form.scene.foreground.e.label"}}</b></label>
+    </div>
+    <div class="form-group">
+        <label for="foreground.e.type">{{localize "DANGERZONE.type-form.scene.foreground.e.type.label"}}</label>
+        <div class="form-fields">
+            <select name="foreground.e.type" value="{{data.foreground.e.type}}"> 
+                {{selectOptions options.SCENE.FOREGROUNDELEVATIONMOVEMENT selected=data.foreground.e.type localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize "DANGERZONE.type-form.scene.foreground.e.distance.label"}}
+            <span class="units">{{localize 'DANGERZONE.distance'}}</span>
+        </label>
+        <div class="form-fields">
+            <label for="foreground.e.min">{{localize "DANGERZONE.type-form.scene.foreground.e.distance.min.label"}}</label>
+            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="foreground.e.min" step="1" value={{data.foreground.e.min}}>
+            <label for="foreground.e.max">{{localize "DANGERZONE.type-form.scene.foreground.e.distance.max.label"}}</label>
+            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="foreground.e.max" step="1" value={{data.foreground.e.max}}>
+        </div>
+    </div>
+</div>

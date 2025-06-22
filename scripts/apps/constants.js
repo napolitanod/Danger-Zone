@@ -2,16 +2,20 @@ import { dangerZone } from '../danger-zone.js';
 import {DangerZoneSceneForm} from './scene-zone-list-form.js';
 
 export const DANGERZONEPARTS = new Map([
+    ['ambientLight', {icon: 'fa-regular fa-lightbulb', templates: new Map([[1, 'light'], [2, 'offset'], [3, 'animation'], [4,'advanced']])}],
     ['audio', {icon: 'fa-solid fa-volume'}], 
     ['backgroundEffect', {icon:'fas fa-bomb', templates: new Map([[1, 'visual'], [2, 'audio'], [3,'offset']])}], 
     ['canvas', {icon:'fas fa-wind'}], 
     ['combat', {icon: 'fas fa-swords'}], 
     ['item', {icon: 'fas fa-suitcase'}], 
     ['foregroundEffect', {icon:'fas fa-bolt', templates: new Map([[1, 'visual'], [2, 'source'], [3,'offset']])}],
+    ['rolltable', {icon: 'fas fa-th-list'}], 
+    ['scene', {icon: 'fas fa-map', templates: new Map([[1, 'settings'], [2,'light']])}], 
     ['sound', {icon:'fa-solid fa-music', templates: new Map([[1, 'audio'], [2,'offset']])}],
     ['sourceEffect', {icon: 'fas fa-dragon', templates: new Map([[1, 'visual'], [2, 'audio'], [3,'offset']])}],
     ['tokenMove', {icon: 'fas fa-arrows-alt', templates: new Map([[1, 'movement'], [2, 'settings']])}],
-    ['tokenEffect', {icon: 'fas fa-male'}]
+    ['tokenEffect', {icon: 'fas fa-male'}],
+    ['wall', {icon: 'fa-solid fa-block-brick', templates: new Map([[1, 'wall'], [2, 'offset']])}]
     ]);
 
 export const DANGERZONECONFIG = {
@@ -29,28 +33,36 @@ export const DANGERZONECONFIG = {
         }
     },
     ICON: {
+        ADVANCED: 'fas fa-cogs',
+        ANIMATION: 'fas fa-play',
         AUDIO: 'fa-solid fa-volume',
+        LIGHT: DANGERZONEPARTS.get('ambientLight').icon,
         DANGERPART:{
             _default: ''
         },
         DANGER: "fas fa-radiation",
-        MOVEMENT: 'fas fa-arrows-alt',
+        MOVEMENT: DANGERZONEPARTS.get('tokenMove').icon,
         OFFSET: 'fa-solid fa-rotate',
         SOURCE: 'fas fa-dragon',
         TRASH: 'fas fa-trash',
         VISUAL: 'fa-solid fa-eye',
-        SETTINGS: 'fa-solid fa-gear'
+        SETTINGS: 'fa-solid fa-gear',
+        WALL: DANGERZONEPARTS.get('wall').icon
     },
     LABEL: {
+        ADVANCED: 'DANGERZONE.advanced.label',
+        ANIMATION: 'DANGERZONE.animation.label',
         AUDIO: 'DANGERZONE.audio.label',
         DANGERPART:{ _default: ''},
         DANGER: "DANGERZONE.zone-type-form.form-name",
         DELETE: 'DANGERZONE.delete',
+        LIGHT: 'DANGERZONE.light.label',
         MOVEMENT: 'DANGERZONE.movement.label',
         OFFSET: 'DANGERZONE.offset.label',
         SETTINGS: 'DANGERZONE.settings.label',
         SOURCE: 'DANGERZONE.source.label',
-        VISUAL: 'DANGERZONE.visual.label'
+        VISUAL: 'DANGERZONE.visual.label',
+        WALL: 'DANGERZONE.wall.label'
     },
     RANDOM: {
         audio : {
@@ -99,11 +111,19 @@ export const DANGERZONECONFIG = {
     } else {DANGERZONECONFIG.TEMPLATE.DANGERPART[key] = `modules/danger-zone/templates/danger-form-${key}.hbs`}
   });
 
-new Set(['visual', 'audio', 'offset', 'source', 'movement', 'settings']).forEach((tab) => {
+new Set(['visual', 'audio', 'advanced', 'light', 'animation', 'offset', 'source', 'movement', 'settings', 'wall']).forEach((tab) => {
     DANGERZONECONFIG.TAB[tab] =  {icon: DANGERZONECONFIG.ICON[tab.toUpperCase()], id: tab, label: DANGERZONECONFIG.LABEL[tab.toUpperCase()]}
 })
 
 export const DANGERZONEFORMOPTIONS = {
+    AMBIENTLIGHT: {
+        ANIMATION: animationTypes(),
+        CLEAR: {
+            'D': 'DANGERZONE.light.clear-types.delete',
+            'O': 'DANGERZONE.light.clear-types.off'
+        },
+        COLORATION: foundry.canvas.rendering.shaders.AdaptiveLightingShader.SHADER_TECHNIQUES,
+    },
     CANVAS:{
         TYPE: {
             "": "",
@@ -138,6 +158,18 @@ export const DANGERZONEFORMOPTIONS = {
         "": "DANGERZONE.type-form.offset.type.options.non.label",
         "pct": "DANGERZONE.type-form.offset.type.options.pct.label",
         "pxl": "DANGERZONE.type-form.offset.type.options.pxl.label"
+    },
+    SCENE: {
+        FOREGROUNDELEVATIONMOVEMENT: {
+            "": "",
+            "R": "DANGERZONE.type-form.scene.foreground.e.types.relative.label",
+            "S": "DANGERZONE.type-form.scene.foreground.e.types.set.label"
+        },
+        GLOBALILLUMINATION: {
+            "": "",
+            "Y": "DANGERZONE.type-form.scene.globalLight.options.Y.label",
+            "N": "DANGERZONE.type-form.scene.globalLight.options.N.label"
+        }
     },
     SOURCEDANGERLOCATION: {
         "A": "DANGERZONE.source.danger.location.actor",
@@ -179,7 +211,48 @@ export const DANGERZONEFORMOPTIONS = {
             "B" : "DANGERZONE.tiles-block.bottom.label",
             "T" : "DANGERZONE.tiles-block.top.label"
         }
+    },
+    WALL: {
+        DIRECTIONTYPES: Object.keys(CONST.WALL_DIRECTIONS).reduce((obj, key) => {
+                let k = CONST.WALL_DIRECTIONS[key];
+                obj[k] = key.titleCase();
+                return obj;
+            }, {}),
+        DOORSOUNDS: CONFIG.Wall.doorSounds,
+        DOORSTATES: {
+            0: "DANGERZONE.doorStates.closed",
+            1: "DANGERZONE.doorStates.open",
+            2: "DANGERZONE.doorStates.locked"
+        },
+        DOORTYPES: Object.keys(CONST.WALL_DOOR_TYPES).reduce((obj, key) => {
+                let k = CONST.WALL_DOOR_TYPES[key];
+                obj[k] = key.titleCase();
+                return obj;
+            }, {}),
+        MOVETYPES: {
+            0: "DANGERZONE.restrictions.none",
+            1: "DANGERZONE.restrictions.normal"
+        },
+        SENSETYPES: {
+            0: "DANGERZONE.restrictions.none",
+            2: "DANGERZONE.restrictions.limited",
+            1: "DANGERZONE.restrictions.normal",
+            3: "DANGERZONE.restrictions.proximity",
+            4: "DANGERZONE.restrictions.distance",
+        }
     }
+}
+
+/**v13
+ * function used to populate DANGERZONEFORMOPTIONS 
+ * @returns obj
+ */
+function animationTypes() {
+    const animationTypes = {"": "DANGERZONE.none"};
+    for ( let [k, v] of Object.entries(CONFIG.Canvas.lightAnimations) ) {
+      animationTypes[k] = v.label;
+    }
+    return animationTypes;
 }
 
 /** Foundry Configurations**/
@@ -367,10 +440,6 @@ export const WORLDZONE = {
     enabled: true
   }
 
-export const AMBIENTLIGHTCLEAROPS = {
-    'D': 'DANGERZONE.light.clear-types.delete',
-    'O': 'DANGERZONE.light.clear-types.off'
-}
 
 export const TOKENDISPOSITION = {
     "0": "DANGERZONE.token-disposition.neutral.label",
@@ -686,19 +755,6 @@ export const STRETCH = {
 }
 
 
-
-export const SCENEFOREGROUNDELEVATIONMOVEMENT = {
-    "": "",
-    "R": "DANGERZONE.type-form.scene.foreground.e.types.relative.label",
-    "S": "DANGERZONE.type-form.scene.foreground.e.types.set.label"
-}
-
-export const SCENEGLOBALILLUMINATION = {
-    "": "",
-    "Y": "DANGERZONE.type-form.scene.globalLight.options.Y.label",
-    "N": "DANGERZONE.type-form.scene.globalLight.options.N.label"
-}
-
 export const MIRRORROTATIONOPTIONS = {
     "": "DANGERZONE.type-form.offset.flip.options.none.label",
     "L": "DANGERZONE.type-form.offset.flip.options.location.label",
@@ -731,17 +787,7 @@ export const SAVERESULT = {
     1: "DANGERZONE.type-form.tokenResponse.save.result.success"
 }
 
-export const DOORSTATES = {
-    0: "DANGERZONE.doorStates.closed",
-    1: "DANGERZONE.doorStates.open",
-    2: "DANGERZONE.doorStates.locked"
-}
 
-export const FVTTDOORSTATES = {
-    0: 0,
-    1: 1,
-    2: 2
-}
 
 export function actorOps(){
     return game.actors.reduce((obj, a) => {obj[a.id] = a.name; return obj;}, {})
@@ -753,11 +799,6 @@ export function regionOps(sceneId){
 
 export function sceneOps(){
     return game.scenes.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
-}
-
-export const MOVETYPES = {
-    0: "DANGERZONE.restrictions.none",
-    1: "DANGERZONE.restrictions.normal"
 }
 
 export const FVTTMOVETYPES = {
@@ -776,15 +817,6 @@ export const REGIONVISIBILITY = {
     'ALWAYS': "DANGERZONE.type-form.region.visibility.options.always"
 }
 
-export const SENSETYPES = {
-    0: "DANGERZONE.restrictions.none",
-    2: "DANGERZONE.restrictions.limited",
-    1: "DANGERZONE.restrictions.normal",
-    3: "DANGERZONE.restrictions.proximity",
-    4: "DANGERZONE.restrictions.distance",
-
-}
-
 export const FVTTSENSETYPES = {
     0: 0,
     1: 20,
@@ -793,29 +825,11 @@ export const FVTTSENSETYPES = {
     4: 40
 }
 
-export function dirTypes(){ 
-    return Object.keys(CONST.WALL_DIRECTIONS).reduce((obj, key) => {
-        let k = CONST.WALL_DIRECTIONS[key];
-        obj[k] = key.titleCase();
-        return obj;
-    }, {})
-}
 
-export function doorTypes(){
-    return Object.keys(CONST.WALL_DOOR_TYPES).reduce((obj, key) => {
-        let k = CONST.WALL_DOOR_TYPES[key];
-        obj[k] = key.titleCase();
-        return obj;
-    }, {})
-}
 
-export function animationTypes() {
-    const animationTypes = {"": game.i18n.localize("DANGERZONE.none")};
-    for ( let [k, v] of Object.entries(CONFIG.Canvas.lightAnimations) ) {
-      animationTypes[k] = v.label;
-    }
-    return animationTypes;
-}
+
+
+
 
 export function determineMacroList() {
   let list = {};
@@ -961,7 +975,6 @@ export function setExecutableOptions(){
                 document: "AmbientLight", 
                 wipeable: true, 
                 modules: [
-                    {active: dangerZone.MODULES.perfectVisionOn, name: "perfect-vision", dependent: false},
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"

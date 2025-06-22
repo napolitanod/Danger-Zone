@@ -1,0 +1,46 @@
+<div class="tab danger-part-group" data-tab="advanced" data-group="sheet">
+    <div class="form-group">
+        <label for="coloration">{{localize 'DANGERZONE.type-form.ambientLight.coloration.label'}}</label>
+        <div class="form-fields">
+            <select name="coloration" data-dtype="Number">
+                {{selectOptions options.AMBIENTLIGHT.COLORATION selected=data.coloration valueAttr="id" labelAttr="label" localize=true}}
+            </select>
+        </div>
+        <p class="hint">{{ localize 'DANGERZONE.type-form.ambientLight.coloration.description' }}</p>
+    </div>
+    <div class="form-group">
+        <label for="luminosity">{{localize 'DANGERZONE.type-form.ambientLight.luminosity.label'}}</label>
+        <div class="form-fields">
+            <range-picker name="luminosity" value="{{data.luminosity}}" min="0" max="1" step="0.05"></range-picker>
+        </div>
+        <p class="hint">{{ localize 'DANGERZONE.type-form.ambientLight.luminosity.description' }}</p>
+    </div>
+    <div class="form-group">
+        <label for="attenuation">{{ localize 'DANGERZONE.type-form.ambientLight.attenuation.label' }}</label>
+        <div class="form-fields">
+            <range-picker name="attenuation" value="{{data.attenuation}}" min="0" max="1" step="0.05"></range-picker>
+        </div>
+        <p class="hint">{{ localize 'DANGERZONE.type-form.ambientLight.attenuation.description' }}</p>
+    </div>
+    <div class="form-group">
+        <label>{{localize 'DANGERZONE.type-form.ambientLight.saturation.label'}}</label>
+        <div class="form-fields">
+            <range-picker name="saturation" value="{{data.saturation}}" min="-1" max="1" step="0.05"></range-picker>
+        </div>
+        <p class="hint">{{ localize 'DANGERZONE.type-form.ambientLight.saturation.description' }}</p>
+    </div>
+    <div class="form-group">
+        <label>{{localize 'DANGERZONE.type-form.ambientLight.contrast.label'}}</label>
+        <div class="form-fields">
+            <range-picker name="contrast" value="{{data.contrast}}" min="-1" max="1" step="0.05"></range-picker>
+        </div>
+        <p class="hint">{{ localize 'DANGERZONE.type-form.ambientLight.contrast.description' }}</p>
+    </div>
+    <div class="form-group">
+        <label>{{localize 'DANGERZONE.type-form.ambientLight.shadows.label'}}</label>
+        <div class="form-fields">
+            <range-picker name="shadows" value="{{data.shadows}}" min="0" max="1" step="0.05"></range-picker>
+        </div>
+        <p class="hint">{{ localize 'DANGERZONE.type-form.ambientLight.shadows.description' }}</p>
+    </div>
+</div>
