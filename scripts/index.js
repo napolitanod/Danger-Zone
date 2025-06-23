@@ -1,6 +1,22 @@
 import {dangerZone} from './danger-zone.js';
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 
+/*
+	issues
+		region twin teleport not added to both regions
+		Light 
+      if(this.data.luminosity < 0) {//FvTT 11 and backwards compat
+        this.data.negative = true;
+        this.data.luminosity = 0
+      }
+		Filepicker 
+
+		lastingeffect 
+      if(this.data.lastingEffect.roof) {//FvTT 11 and backwards compat
+        this.data.lastingEffect.restrictions = {light: true, weather: true}
+      }
+*/
+
 Hooks.once('init', async function() {  
     
 	let modulename = "danger-zone";

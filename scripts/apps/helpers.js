@@ -68,7 +68,7 @@ export async function getFilesFromPattern(pattern) {
     
     if ( /\.s3\./.test(pattern) ) {
       source = "s3";
-      const {bucket, keyPrefix} = FilePicker.parseS3URL(pattern);
+      const {bucket, keyPrefix} = foundry.utils.parseS3URL(pattern);
       if ( bucket ) {
         browseOptions.bucket = bucket;
         pattern = keyPrefix;

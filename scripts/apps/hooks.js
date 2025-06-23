@@ -1,5 +1,5 @@
 import {api, _triggerZone} from "./api.js";
-import {setControlTriggers, setExecutableOptions, setModOptions} from './constants.js';
+import {runOnSetup, setExecutableOptions, setModOptions} from './constants.js';
 import {dangerZone} from '../danger-zone.js';
 import {addSceneFormLaunch, addDangerButton, requestSavingThrow} from './helpers.js';
 import {migrateDanger, migrateScene} from './migration.js';
@@ -80,7 +80,7 @@ export function setHooks(){
      * Registers the api and makes available
      */
     Hooks.once('setup', async function() {
-        setControlTriggers();
+        runOnSetup();
         api.register();
     });
 

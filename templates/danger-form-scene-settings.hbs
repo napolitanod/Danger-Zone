@@ -55,9 +55,9 @@
         </label>
         <div class="form-fields">
             <label for="foreground.e.min">{{localize "DANGERZONE.type-form.scene.foreground.e.distance.min.label"}}</label>
-            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="foreground.e.min" step="1" value={{data.foreground.e.min}}>
+            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="foreground.e.min" min="0" step="1" value={{data.foreground.e.min}}>
             <label for="foreground.e.max">{{localize "DANGERZONE.type-form.scene.foreground.e.distance.max.label"}}</label>
-            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="foreground.e.max" step="1" value={{data.foreground.e.max}}>
+            <input type="number" required placeholder="{{localize 'DANGERZONE.gridUnits'}}" data-dtype="Number" name="foreground.e.max" min="0" step="1" value={{data.foreground.e.max}}>
         </div>
     </div>
 </div>

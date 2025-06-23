@@ -6,7 +6,7 @@ import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
-import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, ForegroundEffectDangerPartConfig, ItemDangerPartConfig, RolltableDangerPartConfig, SceneDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig, WallDangerPartConfig} from './apps/danger-form.js';
+import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, ForegroundEffectDangerPartConfig, ItemDangerPartConfig, LastingEffectDangerPartConfig, RegionDangerPartConfig, RolltableDangerPartConfig, SceneDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig, TokenResponseDangerPartConfig, TokenSaysDangerPartConfig, WallDangerPartConfig, WarpgateDangerPartConfig} from './apps/danger-form.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -36,7 +36,6 @@ export class dangerZone {
     sequencerOn: false, 
     wallHeightOn: false, 
     portalOn: false, 
-    monksActiveTilesOn: false, 
     tokenSaysOn: false, 
     fxMasterOn: false, 
     itemPileOn: false
@@ -150,13 +149,18 @@ export class dangerZone {
         combat: CombatDangerPartConfig,
         foregroundEffect: ForegroundEffectDangerPartConfig,
         item: ItemDangerPartConfig,
+        lastingEffect: LastingEffectDangerPartConfig,
+        region: RegionDangerPartConfig,
         rolltable: RolltableDangerPartConfig,
         scene: SceneDangerPartConfig,
         sound: SoundDangerPartConfig,
         sourceEffect: SourceEffectDangerPartConfig,
         tokenEffect: TokenEffectDangerPartConfig,
         tokenMove: TokenMoveDangerPartConfig,
-        wall: WallDangerPartConfig
+        tokenResponse: TokenResponseDangerPartConfig,
+        tokenSays: TokenSaysDangerPartConfig,
+        wall: WallDangerPartConfig,
+        warpgate: WarpgateDangerPartConfig
     }
   }
 
@@ -166,7 +170,6 @@ export class dangerZone {
   static #setModsAvailable () {
     if (game.modules.get("dae")?.active){dangerZone.MODULES.daeOn = true} ;
     if (game.modules.get("item-piles")?.active){dangerZone.MODULES.itemPileOn = true};
-    if (game.modules.get("monks-active-tiles")?.active){dangerZone.MODULES.monksActiveTilesOn = true} ;
     if (game.modules.get("token-says")?.active){dangerZone.MODULES.tokenSaysOn = true} ;
     if (game.modules.get("portal-lib")?.active){dangerZone.MODULES.portalOn = true} ;
     if (game.modules.get("fxmaster")?.active){dangerZone.MODULES.fxMasterOn = true} ;

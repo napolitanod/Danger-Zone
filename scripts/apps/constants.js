@@ -9,13 +9,18 @@ export const DANGERZONEPARTS = new Map([
     ['combat', {icon: 'fas fa-swords'}], 
     ['item', {icon: 'fas fa-suitcase'}], 
     ['foregroundEffect', {icon:'fas fa-bolt', templates: new Map([[1, 'visual'], [2, 'source'], [3,'offset']])}],
+    ['lastingEffect', {icon:'fa-solid fa-cubes', templates: new Map([[1, 'tile'], [2,'overhead'], [3,'offset']])}], 
+    ['region', {icon:'fa-regular fa-game-board', templates: new Map([[1, 'settings'], [2, 'offset'], [3, 'behaviors']])}],
     ['rolltable', {icon: 'fas fa-th-list'}], 
     ['scene', {icon: 'fas fa-map', templates: new Map([[1, 'settings'], [2,'light']])}], 
     ['sound', {icon:'fa-solid fa-music', templates: new Map([[1, 'audio'], [2,'offset']])}],
     ['sourceEffect', {icon: 'fas fa-dragon', templates: new Map([[1, 'visual'], [2, 'audio'], [3,'offset']])}],
     ['tokenMove', {icon: 'fas fa-arrows-alt', templates: new Map([[1, 'movement'], [2, 'settings']])}],
     ['tokenEffect', {icon: 'fas fa-male'}],
-    ['wall', {icon: 'fa-solid fa-block-brick', templates: new Map([[1, 'wall'], [2, 'offset']])}]
+    ['tokenResponse', {icon: 'fas fa-shield-alt', flag: true, templates: new Map([[1, 'save'], [2, 'damage']])}],
+    ['tokenSays', {icon: 'fas fa-comment', flag: true, templates: new Map([[1, 'settings'], [2, 'chat'], [3,'audio']])}],
+    ['wall', {icon: 'fa-solid fa-block-brick', templates: new Map([[1, 'wall'], [2, 'offset']])}],
+    ['warpgate', {flag: true, icon: 'fas fa-circle-notch'}]
     ]);
 
 export const DANGERZONECONFIG = {
@@ -36,6 +41,9 @@ export const DANGERZONECONFIG = {
         ADVANCED: 'fas fa-cogs',
         ANIMATION: 'fas fa-play',
         AUDIO: 'fa-solid fa-volume',
+        BEHAVIORS: 'fa-solid fa-child-reaching',
+        CHAT: DANGERZONEPARTS.get('tokenSays').icon,
+        DAMAGE: 'fas fa-skull',
         LIGHT: DANGERZONEPARTS.get('ambientLight').icon,
         DANGERPART:{
             _default: ''
@@ -43,7 +51,10 @@ export const DANGERZONECONFIG = {
         DANGER: "fas fa-radiation",
         MOVEMENT: DANGERZONEPARTS.get('tokenMove').icon,
         OFFSET: 'fa-solid fa-rotate',
+        OVERHEAD: 'fa-solid fa-house',
+        SAVE: 'fas fa-shield-alt',
         SOURCE: 'fas fa-dragon',
+        TILE: DANGERZONEPARTS.get('lastingEffect').icon,
         TRASH: 'fas fa-trash',
         VISUAL: 'fa-solid fa-eye',
         SETTINGS: 'fa-solid fa-gear',
@@ -52,13 +63,19 @@ export const DANGERZONECONFIG = {
     LABEL: {
         ADVANCED: 'DANGERZONE.advanced.label',
         ANIMATION: 'DANGERZONE.animation.label',
+        BEHAVIORS: 'DANGERZONE.behaviors.label',
         AUDIO: 'DANGERZONE.audio.label',
+        CHAT: 'DANGERZONE.chat.label',
+        DAMAGE: 'DANGERZONE.damage.label',
         DANGERPART:{ _default: ''},
         DANGER: "DANGERZONE.zone-type-form.form-name",
         DELETE: 'DANGERZONE.delete',
         LIGHT: 'DANGERZONE.light.label',
         MOVEMENT: 'DANGERZONE.movement.label',
         OFFSET: 'DANGERZONE.offset.label',
+        OVERHEAD: 'DANGERZONE.overhead.label',
+        TILE: 'DANGERZONE.tile.label',
+        SAVE: 'DANGERZONE.save.label',
         SETTINGS: 'DANGERZONE.settings.label',
         SOURCE: 'DANGERZONE.source.label',
         VISUAL: 'DANGERZONE.visual.label',
@@ -99,22 +116,6 @@ export const DANGERZONECONFIG = {
     }
 }
 
- DANGERZONEPARTS.forEach((part, key, map) => {
-    DANGERZONECONFIG.ID.FORM.DANGERPART[key] = `danger-zone-danger-${key}`;
-    DANGERZONECONFIG.ICON.DANGERPART[key] = part.icon;
-    DANGERZONECONFIG.LABEL.DANGERPART[key] = `DANGERZONE.type-form.${key}.label`;
-    if(part.templates) {
-        DANGERZONECONFIG.TEMPLATE.DANGERPART[key] = {}
-        part.templates.forEach((template, order, map) => {
-            DANGERZONECONFIG.TEMPLATE.DANGERPART[key][template] = `modules/danger-zone/templates/danger-form-${key}-${template}.hbs`
-        });
-    } else {DANGERZONECONFIG.TEMPLATE.DANGERPART[key] = `modules/danger-zone/templates/danger-form-${key}.hbs`}
-  });
-
-new Set(['visual', 'audio', 'advanced', 'light', 'animation', 'offset', 'source', 'movement', 'settings', 'wall']).forEach((tab) => {
-    DANGERZONECONFIG.TAB[tab] =  {icon: DANGERZONECONFIG.ICON[tab.toUpperCase()], id: tab, label: DANGERZONECONFIG.LABEL[tab.toUpperCase()]}
-})
-
 export const DANGERZONEFORMOPTIONS = {
     AMBIENTLIGHT: {
         ANIMATION: animationTypes(),
@@ -146,6 +147,14 @@ export const DANGERZONEFORMOPTIONS = {
             "U": "DANGERZONE.item.target.update"
         }
     },
+    LASTINGEFFECT: {
+        TILEOCCLUSIONMODES: {
+            "NONE": "DANGERZONE.occlusionmodes.none",
+            "FADE": "DANGERZONE.occlusionmodes.fade",
+            "RADIAL": "DANGERZONE.occlusionmodes.radial",
+            "VISION": "DANGERZONE.occlusionmodes.vision"
+        }
+    },
     MIRRORIMAGEOPTIONS: {
         "": "DANGERZONE.type-form.offset.flip.options.none.label",
         "L": "DANGERZONE.type-form.offset.flip.options.location.label",
@@ -158,6 +167,23 @@ export const DANGERZONEFORMOPTIONS = {
         "": "DANGERZONE.type-form.offset.type.options.non.label",
         "pct": "DANGERZONE.type-form.offset.type.options.pct.label",
         "pxl": "DANGERZONE.type-form.offset.type.options.pxl.label"
+    },
+    REGION: {
+        EVENTS: Object.keys(CONST.REGION_EVENTS).reduce((obj, key) => {
+                let k = CONST.REGION_EVENTS[key];
+                let v = `DANGERZONE.region.events.options.${k}`
+                obj[k] = v === key ? key.titleCase().replace('_',' ').replace('_',' ') : v;
+                return obj;
+            }, {}),
+        SHAPETYPE: {
+            "ellipse": "DANGERZONE.type-form.region.type.options.ellipse",
+            "rectangle": "DANGERZONE.type-form.region.type.options.rectangle"
+        },
+        VISIBILITY: {
+            'LAYER': "DANGERZONE.type-form.region.visibility.options.layer",
+            'GAMEMASTER': "DANGERZONE.type-form.region.visibility.options.gamemaster",
+            'ALWAYS': "DANGERZONE.type-form.region.visibility.options.always"
+        }
     },
     SCENE: {
         FOREGROUNDELEVATIONMOVEMENT: {
@@ -212,6 +238,26 @@ export const DANGERZONEFORMOPTIONS = {
             "T" : "DANGERZONE.tiles-block.top.label"
         }
     },
+    TOKENRESPONSE: {
+        DAMAGEONSAVE: {
+            "N": "DANGERZONE.type-form.tokenResponse.damage.save.options.none",
+            "H":"DANGERZONE.type-form.tokenResponse.damage.save.options.half",
+            "F": "DANGERZONE.type-form.tokenResponse.damage.save.options.full"
+        },
+        DAMAGETYPE: {},
+        SAVERESULT: {
+            0: "DANGERZONE.type-form.tokenResponse.save.result.both",
+            2: "DANGERZONE.type-form.tokenResponse.save.result.fail",
+            1: "DANGERZONE.type-form.tokenResponse.save.result.success"
+        },
+        SAVETYPE: {}
+    },
+    TOKENSAYS: {
+        TYPE: {
+            "audio":  "DANGERZONE.type-form.tokenSays.rule-type-option.playlist",
+            "rollTable":  "DANGERZONE.type-form.tokenSays.rule-type-option.roll-table"
+        }
+    },
     WALL: {
         DIRECTIONTYPES: Object.keys(CONST.WALL_DIRECTIONS).reduce((obj, key) => {
                 let k = CONST.WALL_DIRECTIONS[key];
@@ -243,18 +289,6 @@ export const DANGERZONEFORMOPTIONS = {
     }
 }
 
-/**v13
- * function used to populate DANGERZONEFORMOPTIONS 
- * @returns obj
- */
-function animationTypes() {
-    const animationTypes = {"": "DANGERZONE.none"};
-    for ( let [k, v] of Object.entries(CONFIG.Canvas.lightAnimations) ) {
-      animationTypes[k] = v.label;
-    }
-    return animationTypes;
-}
-
 /** Foundry Configurations**/
 
 /**v13 CONTROLTRIGGERS
@@ -265,10 +299,34 @@ export const CONTROLTRIGGERS = {
     controls: {}
 }
 
+/**v13 
+ * Perform initializations of constants that must occur immediately on module load
+ */
+function runOnInit(){
+    new Set(['visual', 'audio', 'advanced', 'damage', 'save', 'chat', 'light', 'animation', 'offset', 'overhead', 'behaviors', 'source', 'tile', 'movement', 'settings', 'wall']).forEach((tab) => {
+        DANGERZONECONFIG.TAB[tab] =  {icon: DANGERZONECONFIG.ICON[tab.toUpperCase()], id: tab, label: DANGERZONECONFIG.LABEL[tab.toUpperCase()]}
+    })
+
+
+    DANGERZONEPARTS.forEach((part, key, map) => {
+        DANGERZONECONFIG.ID.FORM.DANGERPART[key] = `danger-zone-danger-${key}`;
+        DANGERZONECONFIG.ICON.DANGERPART[key] = part.icon;
+        DANGERZONECONFIG.LABEL.DANGERPART[key] = `DANGERZONE.type-form.${key}.label`;
+        if(part.templates) {
+            DANGERZONECONFIG.TEMPLATE.DANGERPART[key] = {}
+            part.templates.forEach((template, order, map) => {
+                DANGERZONECONFIG.TEMPLATE.DANGERPART[key][template] = `modules/danger-zone/templates/danger-form-${key}-${template}.hbs`
+            });
+        } else {DANGERZONECONFIG.TEMPLATE.DANGERPART[key] = `modules/danger-zone/templates/danger-form-${key}.hbs`}
+    });
+}
+
+runOnInit()
+
 /**v13 setControlTriggers
  * loads the CONTROLTRIGGERS object. Intended to be called after Foundry initializes so that classes are available.
  */
-export function setControlTriggers(){
+export function runOnSetup(){
     CONTROLTRIGGERS['controls'] = {
         activeTool: 'executor',
         icon: "fas fa-radiation",
@@ -367,7 +425,81 @@ export function setControlTriggers(){
             }
         }   
     }
+
+    DANGERZONEFORMOPTIONS.TOKENRESPONSE.DAMAGETYPE = damageTypes();
+    DANGERZONEFORMOPTIONS.TOKENRESPONSE.SAVETYPE = saveTypes()
 }
+
+
+/**v13
+ * function used to populate DANGERZONEFORMOPTIONS 
+ * @returns obj
+ */
+function animationTypes() {
+    const animationTypes = {"": "DANGERZONE.none"};
+    for ( let [k, v] of Object.entries(CONFIG.Canvas.lightAnimations) ) {
+      animationTypes[k] = v.label;
+    }
+    return animationTypes;
+}
+
+
+/**v13
+ * Outputs what can be used as a dropdown of compendium options
+ * @param {string} fileType 
+ * @returns compendium options for the given filetype
+ */
+export function getCompendiumOps(fileType){
+    return game.packs.filter((x) => x.documentName == TOKENSAYSFILETYPEENTITYTYPE[fileType]).reduce((obj, p) => {obj['']=''; obj[p.collection] = p.title; return obj;}, {})
+}
+
+/**v13
+ * Outputs what can be used as a dropdown of macro options
+ * @param {keyIsUuid} Boolean      //if the dropdown keys should be the macro Uuid or just the id 
+ * @returns macro options 
+ */
+export function determineMacroList(keyIsUuid = false) {
+  let list = {};
+  for (let macro of game.macros.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
+    list[keyIsUuid ? macro.uuid : macro.id] = macro.name;
+  }
+  return list;
+}
+
+/** v13
+ * outputs a list of save types for use in dropdowns, based on the system
+ * @returns save type options 
+ */
+export function saveTypes() {
+    switch(game.world.system){
+        case "dnd5e":
+            const saveEntries = {};
+            for ( let [k, v] of Object.entries(game.dnd5e.config.abilities) ) {
+                saveEntries[k] = v.label;
+            }
+            return saveEntries;
+        default:
+            return {}
+    }
+}
+
+/** v13
+ * outputs a list of damage types for use in dropdowns, based on the system
+ * @returns damage type options 
+ */
+function damageTypes() {
+    switch(game.world.system){
+        case "dnd5e":
+            const damageEntries = {};
+            for ( let [k, v] of Object.entries(Object.assign(game.dnd5e.config.damageTypes, game.dnd5e.config.healingTypes)) ) {
+                damageEntries[k] = v.label;
+            }
+            return damageEntries
+        default:
+            return {}
+    }
+}
+
 
 
 export const WORKFLOWSTATES = {
@@ -770,24 +902,6 @@ export const SOURCETRIGGERS = {
     "S": "DANGERZONE.edit-form.source.triggers.source"
 }
 
-export const TOKENSAYSTYPES = {
-    "audio":  "DANGERZONE.type-form.tokenSays.rule-type-option.playlist",
-    "rollTable":  "DANGERZONE.type-form.tokenSays.rule-type-option.roll-table"
-}
-
-export const DAMAGEONSAVE = {
-    "N": "DANGERZONE.type-form.tokenResponse.damage.save.options.none",
-    "H":"DANGERZONE.type-form.tokenResponse.damage.save.options.half",
-    "F": "DANGERZONE.type-form.tokenResponse.damage.save.options.full"
-}
-
-export const SAVERESULT = {
-    0: "DANGERZONE.type-form.tokenResponse.save.result.both",
-    2: "DANGERZONE.type-form.tokenResponse.save.result.fail",
-    1: "DANGERZONE.type-form.tokenResponse.save.result.success"
-}
-
-
 
 export function actorOps(){
     return game.actors.reduce((obj, a) => {obj[a.id] = a.name; return obj;}, {})
@@ -806,16 +920,7 @@ export const FVTTMOVETYPES = {
     1: 20
 }
 
-export const REGIONSHAPETYPEOPTIONS = {
-    "ellipse": "DANGERZONE.type-form.region.type.options.ellipse",
-    "rectangle": "DANGERZONE.type-form.region.type.options.rectangle"
-}
 
-export const REGIONVISIBILITY = {
-    'LAYER': "DANGERZONE.type-form.region.visibility.options.layer",
-    'GAMEMASTER': "DANGERZONE.type-form.region.visibility.options.gamemaster",
-    'ALWAYS': "DANGERZONE.type-form.region.visibility.options.always"
-}
 
 export const FVTTSENSETYPES = {
     0: 0,
@@ -831,64 +936,10 @@ export const FVTTSENSETYPES = {
 
 
 
-export function determineMacroList() {
-  let list = {};
-  for (let macro of game.macros.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
-    list[macro.id] = macro.name;
-  }
-  return list;
-}
-
-export function determineMacroListUuid() {
-    let list = {'': ''};
-    for (let macro of game.macros.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
-      list[macro.uuid] = macro.name;
-    }
-    return list;
-  }
-
-export function regionEvents(){
-    return Object.keys(CONST.REGION_EVENTS).reduce((obj, key) => {
-        let k = CONST.REGION_EVENTS[key];
-        let v = game.i18n.localize(`DANGERZONE.region.events.options.${k}`)
-        obj[k] = v === key ? key.titleCase().replace('_',' ').replace('_',' ') : v;
-        return obj;
-    }, {})
-}
 
 
-export function saveTypes() {
-    switch(game.world.system){
-        case "dnd5e":
-            const saveEntries = {};
-            for ( let [k, v] of Object.entries(game.dnd5e.config.abilities) ) {
-                saveEntries[k] = v.label;
-            }
-            return saveEntries;
-        default:
-            return {}
-    }
-}
 
-export function damageTypes() {
-    switch(game.world.system){
-        case "dnd5e":
-            const damageEntries = {};
-            for ( let [k, v] of Object.entries(Object.assign(game.dnd5e.config.damageTypes, game.dnd5e.config.healingTypes)) ) {
-                damageEntries[k] = v.label;
-            }
-            return damageEntries
-        default:
-            return {}
-    }
-}
 
-export const TILEOCCLUSIONMODES = {
-    "NONE": "DANGERZONE.occlusionmodes.none",
-    "FADE": "DANGERZONE.occlusionmodes.fade",
-    "RADIAL": "DANGERZONE.occlusionmodes.radial",
-    "VISION": "DANGERZONE.occlusionmodes.vision"
-}
 
 export const TIMESUPMACROREPEAT = {
     "startEveryTurn": "DANGERZONE.times-up-macro.start",
@@ -910,9 +961,6 @@ const TOKENSAYSFILETYPEENTITYTYPE = {
     item: "Item"
   }
 
-export function getCompendiumOps(fileType){
-    return game.packs.filter((x) => x.documentName == TOKENSAYSFILETYPEENTITYTYPE[fileType]).reduce((obj, p) => {obj['']=''; obj[p.collection] = p.title; return obj;}, {})
-}
 
 export function weatherTypes() {
     const obj = {'':''}
@@ -1004,7 +1052,6 @@ export function setExecutableOptions(){
                 document: "Tile",  
                 wipeable: true, 
                 modules: [
-                    {active: dangerZone.MODULES.monksActiveTilesOn, name: "monks-active-tiles", dependent: false},
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"

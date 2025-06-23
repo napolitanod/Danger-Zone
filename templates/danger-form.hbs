@@ -80,7 +80,7 @@
                 <label>{{localize labels.DANGERPART.item}}</label>
                 <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="lasting-effect" {{#if hasLastingEffect}}class="active"{{/if}} title="{{localize "DANGERZONE.type-form.tile.label"}}">
+            <li data-id="lastingEffect" {{#if has.lastingEffect}}class="active"{{/if}} title="{{localize "DANGERZONE.type-form.tile.label"}}">
                 <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tile.description"}}"><i class="fa-solid fa-cubes"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.tile.label'}}</label>
                 <a class="danger-zone-type-delete" data-action="delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
@@ -95,7 +95,7 @@
                 <label>{{localize 'DANGERZONE.type-form.mutate.label'}}</label>
                 <a class="danger-zone-type-delete"  title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="region" class="{{#if hasRegion}}active{{/if}}" title="{{localize "DANGERZONE.type-form.region.label"}}">
+            <li data-id="region" class="{{#if has.region}}active{{/if}}" title="{{localize "DANGERZONE.type-form.region.label"}}">
                 <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.region.description"}}"><i class="fa-regular fa-game-board"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.region.label'}}</label>
                 <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
@@ -135,17 +135,17 @@
                 <label>{{localize 'DANGERZONE.type-form.sound.label'}}</label>
                 <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="token-response" class="{{#if tokenResponseOnNot}}dz-hidden{{/if}} {{#if hasTokenResponse}}active{{/if}}" title="{{localize "DANGERZONE.type-form.tokenResponse.label"}}">
+            <li data-id="tokenResponse" class="{{#unless danger.tokenResponseAvailable}}dz-hidden{{/unless}} {{#if has.tokenResponse}}active{{/if}}" title="{{localize "DANGERZONE.type-form.tokenResponse.label"}}">
                 <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tokenResponse.description"}}"><i class="fas fa-shield-alt"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.tokenResponse.label'}}</label>
                 <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="token-says" class="{{#if tokenSaysOnNot}}dz-hidden{{/if}} {{#if hasTokenSays}}active{{/if}}" title="{{localize "DANGERZONE.type-form.tokenSays.label"}}">
+            <li data-id="tokenSays" class="{{#unless modules.tokenSaysOn}}dz-hidden{{/unless}} {{#if has.tokenSays}}active{{/if}}" title="{{localize "DANGERZONE.type-form.tokenSays.label"}}">
                 <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tokenSays.description"}}"><i class="fas fa-comment"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.tokenSays.label'}}</label>
                 <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="warpgate" class="{{#unless modules.portalOn}}dz-hidden{{/unless}} {{#if hasWarpgate}}active{{/if}}" title="{{localize "DANGERZONE.type-form.warpgate.label"}}">
+            <li data-id="warpgate" class="{{#unless modules.portalOn}}dz-hidden{{/unless}} {{#if has.warpgate}}active{{/if}}" title="{{localize "DANGERZONE.type-form.warpgate.label"}}">
                 <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.warpgate.description"}}"><i class="fas fa-circle-notch"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.warpgate.label'}}</label>
                 <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>

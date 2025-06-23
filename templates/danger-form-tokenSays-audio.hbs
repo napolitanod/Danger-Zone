@@ -1,0 +1,35 @@
+<div class="tab danger-part-group" data-tab="audio" data-group="sheet">
+    <div class="form-group">
+        <label for="{{#if isChat}}paired.{{/if}}compendiumName">{{localize "DANGERZONE.type-form.tokenSays.audio.compendium.label"}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenSays.audio.compendium.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <select name="{{#if isChat}}paired.{{/if}}compendiumName" value="data.{{#if isChat}}paired.{{/if}}compendiumName">  
+                {{#if isChat}}{{selectOptions compendiums.AUDIO selected=data.paired.compendiumName localize=true}}{{/if}}
+                {{#unless isChat}}{{selectOptions compendiums.AUDIO selected=data.compendiumName localize=true}}{{/unless}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="{{#if isChat}}paired.{{/if}}fileName">{{localize "DANGERZONE.type-form.tokenSays.audio.saying-source.label"}}</label>
+        <div class="form-fields">
+            <input type="text" name="{{#if isChat}}paired.{{/if}}fileName" placeholder="{{localize "DANGERZONE.type-form.tokenSays.audio.source.placeholder"}}" value="{{#if isChat}}{{data.paired.fileName}}{{else}}{{data.fileName}}{{/if}}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="{{#if isChat}}paired.{{/if}}fileTitle">{{localize "DANGERZONE.type-form.tokenSays.audio.says.label"}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenSays.audio.says.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+         <div class="form-fields">
+            <file-picker name="{{#if isChat}}paired.{{/if}}fileTitle" type="audio" class="image" placeholder="{{localize "DANGERZONE.type-form.tokenSays.audio.says.placeholder"}}" value="{{#if isChat}}{{data.paired.fileTitle}}{{else}}{{data.fileTitle}}{{/if}}"></file-picker>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>
+            <i class="volume-icon fas fa-volume-down"></i>
+        </label>
+        <div class="form-fields">
+            <range-picker name="volume" value="{{#if data.volume}}{{data.volume}}{{else}}0.50{{/if}}" min="0" max="1" step="0.05"></range-picker>
+        </div>
+    </div>
+</div>

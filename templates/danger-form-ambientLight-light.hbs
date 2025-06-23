@@ -41,8 +41,7 @@
     <div class="form-group">
         <label for="tintColor">{{localize "DANGERZONE.type-form.ambientLight.color.label"}}</label>
         <div class="form-fields">
-            <input type="text" name="tintColor"  min="0.00" step="0.01"  value={{data.tintColor}}>
-            <input type="color" value="{{data.tintColor}}" data-edit="tintColor">
+            <color-picker name="tintColor" value={{data.tintColor}}></color-picker>
         </div>
     </div>
     <div class="form-group">

@@ -6,11 +6,14 @@
         "and": "and",
         "animation.label": "Animation",
         "audio.label": "Audio",
+        "behaviors.label": "Behaviors",
         "between": "Between",
         "cancel": "Cancel",
+        "chat.label": "Chat",
         "clear": "Clear",
         "continue": "Continue",
         "copy": "Copy",
+        "damage.label": "Damage",
         "degrees": "(Degrees)",
         "delete": "Delete",
         "distance": "(Distance)",
@@ -37,14 +40,16 @@
         "ms": "ms",
         "none": "None",
         "offset.label": "Offset",
+        "overhead.label": "Overhead",
         "play": "Play",
         "preview": "Preview",
         "ratio": "(Ratio)",
-        "save": "Save",
+        "save.label": "Save",
         "sec": "sec",
         "settings.label": "Settings",
         "source.label": "Source",
         "stop": "Stop",
+        "tile.label": "Tile", 
         "view": "View",
         "wall.label": "Wall",
         "visual.label": "Visual",
@@ -734,23 +739,6 @@
             },
             "macro.label": "Macro",
             "macro.notes": "The macro in this world that will run when the danger zone triggers.",
-            "monks-active-tiles":{
-                "label": "Monk's Active Tiles",
-                "macro": {
-                    "args.label": "Macro Args",
-                    "description": "Embed a macro into the tile that executes when a token enters the space.",
-                    "label": "Run Macro"
-                },
-                "notes": "Adds triggers to the lasting effect tile by integrating with Monk's Active Tiles.",
-                "teleport":{
-                    "avoid.label": "Avoid Destination Tokens",
-                    "description": "Tile will teleport tokens to another random destination in the zone. If 'Twin' is selected then a second tile will be created and the two will teleport between each other.",
-                    "label": "Add Token Teleportion",
-                    "pan.label": "Pan Screen On Teleport",
-                    "source.label": "Delete Source Token",
-                    "twin.label": "Twin Tiles (i.e. Portal)"
-                }
-            },
             "mutate": {
                 "actor.label": "Token Actor Data",
                 "actor.description": "Updates token actor by passing in object data. Expects key: value pairs.",
@@ -842,10 +830,6 @@
                 "label": "Region",
                 "name.label": "Name",
                 "scale.label": "Region Scale",
-                "tab": {
-                    "main.title": "Main",
-                    "behaviors.title": "Behaviors"
-                },
                 "type.label": "Shape",
                 "type.options": {
                     "rectangle": "Rectangle",
@@ -949,10 +933,6 @@
                 "restrictsLight.label": "Restricts Light",
                 "restrictsWeather.label": "Restricts Weather",
                 "scale.label": "Effect Scale",
-                "tab": {
-                    "main.title": "Tile",
-                    "monks.title": "Monk's Active"
-                },
                 "tag.label": "Tile Tag",
                 "tag.description": "Tagger tag",
                 "z.label": "Sort"
@@ -1091,10 +1071,6 @@
                     "success.description": "Choose how a save success or failure affects other danger parts",
                     "success.label": "Based on Save Result",
                     "type.label": "Saving Throw Type"
-                },
-                "tab": {
-                    "save.title": "Saving Throw",
-                    "damage.title": "Token Damage"
                 }
             },
             "wall":{
