@@ -52,13 +52,22 @@ export function getActorOwner(document){
  * @returns 
  */
 export function getEventData(event){
-  const data = {}
-  data.target = event.target.dataset.action ? event.target : event.target.parentElement;
-  data.targetId = data.target.dataset.id;
-  data.parent = data.target.parentElement;
-  data.action = data.target.dataset.action;
-  data.parentId =  data.parent.dataset.id;
-  data.label = data.parent.title;
+  const data = {
+    target: '',
+    targetId: '',
+    parent: '',
+    action: '',
+    parentId: '',
+    label: ''
+  }
+  if(event){
+    data.target = event.target.dataset.action ? event.target : event.target.parentElement;
+    data.targetId = data.target.dataset.id;
+    data.parent = data.target.parentElement;
+    data.action = data.target.dataset.action;
+    data.parentId =  data.parent.dataset.id;
+    data.label = data.parent.title;
+  }
   return data
 }
 
