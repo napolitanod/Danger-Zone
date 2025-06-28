@@ -6,7 +6,7 @@ import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
-import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, ForegroundEffectDangerPartConfig, ItemDangerPartConfig, LastingEffectDangerPartConfig, RegionDangerPartConfig, RolltableDangerPartConfig, SceneDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig, TokenResponseDangerPartConfig, TokenSaysDangerPartConfig, WallDangerPartConfig, WarpgateDangerPartConfig} from './apps/danger-form.js';
+import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, EffectDangerPartConfig, ForegroundEffectDangerPartConfig, GlobalZoneDangerPartConfig, ItemDangerPartConfig, LastingEffectDangerPartConfig, MutateDangerPartConfig, RegionDangerPartConfig, RolltableDangerPartConfig, SceneDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig, TokenResponseDangerPartConfig, TokenSaysDangerPartConfig, WallDangerPartConfig, WarpgateDangerPartConfig, WeatherDangerPartConfig} from './apps/danger-form.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -17,8 +17,6 @@ export class dangerZone {
   static NAME = 'dangerZone';
 
   static dangerZoneSocket = '';
-
-  static dzMActive = false;
   
   static FLAGS = {
     SCENEZONE: 'sceneZone',
@@ -39,40 +37,6 @@ export class dangerZone {
     tokenSaysOn: false, 
     fxMasterOn: false, 
     itemPileOn: false
-  }
- 
-  static TEMPLATES = {
-    DANGERZONECONFIG: `modules/${this.ID}/templates/danger-zone-form.hbs`,
-    DANGERZONEEXTENSION: `modules/${this.ID}/templates/danger-zone-extension-form.hbs`,
-    DANGERZONEEXECUTOR: `modules/${this.ID}/templates/danger-zone-executor-form.hbs`,
-    DANGERZONESCENE: `modules/${this.ID}/templates/danger-zone-scene-form.hbs`,
-    DANGERZONETYPESCONFIG: `modules/${this.ID}/templates/danger-zone-types.hbs`,
-    DANGERZONETYPE: `modules/${this.ID}/templates/danger-form.hbs`,
-    DANGERZONEACTIVEEFFECT: `modules/${this.ID}/templates/active-effect-form.hbs`,
-    DANGERZONEDANGERACTIVEEFFECT: `modules/${this.ID}/templates/danger-form-active-effect.hbs`,
-    DANGERZONEDANGERAUDIO: `modules/${this.ID}/templates/danger-form-audio.hbs`,
-    DANGERZONEDANGERBACKGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-background-effect.hbs`,
-    DANGERZONEDANGERCOMBAT: `modules/${this.ID}/templates/danger-form-combat.hbs`,
-    DANGERZONEDANGERCANVAS: `modules/${this.ID}/templates/danger-form-canvas.hbs`,
-    DANGERZONEDANGERFOREGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-foreground-effect.hbs`,
-    DANGERZONEDANGERGLOBALZONE: `modules/${this.ID}/templates/danger-form-global-zone.hbs`,
-    DANGERZONEDANGERITEM: `modules/${this.ID}/templates/danger-form-item.hbs`,
-    DANGERZONEDANGERLASTINGEFFECT: `modules/${this.ID}/templates/danger-form-lasting-effect.hbs`,
-    DANGERZONEDANGERLIGHT: `modules/${this.ID}/templates/danger-form-light.hbs`,
-    DANGERZONEDANGERMUTATE: `modules/${this.ID}/templates/danger-form-mutate.hbs`,
-    DANGERZONEDANGERREGION: `modules/${this.ID}/templates/danger-form-region.hbs`,
-    DANGERZONEDANGERROLLTABLE: `modules/${this.ID}/templates/danger-form-rolltable.hbs`,
-    DANGERZONEDANGERSCENE: `modules/${this.ID}/templates/danger-form-scene.hbs`,
-    DANGERZONEDANGERSOUND: `modules/${this.ID}/templates/danger-form-sound.hbs`,
-    DANGERZONEDANGERSOURCEEFFECT: `modules/${this.ID}/templates/danger-form-source-effect.hbs`,
-    DANGERZONEDANGERTOKENRESPONSE: `modules/${this.ID}/templates/danger-form-token-response.hbs`,
-    DANGERZONEDANGERTOKENSAYS: `modules/${this.ID}/templates/danger-form-token-says.hbs`,
-    DANGERZONEDANGERTOKENEFFECT: `modules/${this.ID}/templates/danger-form-token-effect.hbs`,
-    DANGERZONEDANGERTOKENMOVE: `modules/${this.ID}/templates/danger-form-token-move.hbs`,
-    DANGERZONEDANGERWALL: `modules/${this.ID}/templates/danger-form-wall.hbs`,
-    DANGERZONEDANGERWARPGATE: `modules/${this.ID}/templates/danger-form-warpgate.hbs`,
-    DANGERZONEDANGERWEATHER: `modules/${this.ID}/templates/danger-form-weather.hbs`,
-    DANGERZONEZONECOPY: `modules/${this.ID}/templates/danger-zone-scene-zone-copy.hbs`
   }
 
   static MIGRATION = {
@@ -147,9 +111,12 @@ export class dangerZone {
         backgroundEffect: BackgroundEffectDangerPartConfig,
         canvas: CanvasDangerPartConfig,
         combat: CombatDangerPartConfig,
+        effect: EffectDangerPartConfig,
         foregroundEffect: ForegroundEffectDangerPartConfig,
+        globalZone: GlobalZoneDangerPartConfig,
         item: ItemDangerPartConfig,
         lastingEffect: LastingEffectDangerPartConfig,
+        mutate: MutateDangerPartConfig,
         region: RegionDangerPartConfig,
         rolltable: RolltableDangerPartConfig,
         scene: SceneDangerPartConfig,
@@ -160,7 +127,8 @@ export class dangerZone {
         tokenResponse: TokenResponseDangerPartConfig,
         tokenSays: TokenSaysDangerPartConfig,
         wall: WallDangerPartConfig,
-        warpgate: WarpgateDangerPartConfig
+        warpgate: WarpgateDangerPartConfig,
+        weather: WeatherDangerPartConfig
     }
   }
 
@@ -176,7 +144,7 @@ export class dangerZone {
     if (game.modules.get("sequencer")?.active){dangerZone.MODULES.sequencerOn = true} ;
     if (game.modules.get("tagger")?.active){dangerZone.MODULES.taggerOn = true} ;
     if (game.modules.get("wall-height")?.active){dangerZone.MODULES.wallHeightOn = true} ;
-    if (game.modules.get("times-up")?.active){dangerZone.MODULES.timesUpOn = true};
+    if (game.modules.get("times-up")?.active && dangerZone.MODULES.daeOn === true){dangerZone.MODULES.timesUpOn = true};
     if (game.modules.get("socketlib")?.active) dangerZone.MODULES.socketLibOn = true
     if(['pf1', 'pf2e'].includes(game.world.system)) dangerZone.MODULES.activeEffectOn = false
   }
@@ -428,11 +396,15 @@ export class dangerZone {
     return updt
   }
 
-  static toggleMasterButtonActive(){
-    dangerZone.dzMActive ? dangerZone.dzMActive = false : dangerZone.dzMActive = true
-  }
-
-  static async wipe(documentName){
+  static async wipe(documentName, confirm = false){
+    if(confirm){
+      const proceed = await foundry.applications.api.DialogV2.confirm({
+        content: game.i18n.localize("DANGERZONE.controls.clear.description"),
+        rejectClose: false,
+        modal: true
+      });
+      if (!proceed) return 
+    }
     const ids=canvas.scene[PLACEABLESBYDOCUMENT[documentName]].filter(t => t.flags[dangerZone.ID]).map(t => t.id);
     if(ids.length) await canvas.scene.deleteEmbeddedDocuments(documentName, ids)
   }
@@ -639,7 +611,7 @@ export class zone {
   }
 
   get titleLong(){
-      return this.title + (this.scene.dangerId ? ' (' + game.i18n.localize("DANGERZONE.type-form.global-zone.label") + ') ' :' ') + this.eventsDescription + ' ' + game.i18n.localize("DANGERZONE.scene.trigger")
+      return this.title + (this.scene.dangerId ? ' (' + game.i18n.localize("DANGERZONE.type-form.globalZone.label") + ') ' :' ') + this.eventsDescription + ' ' + game.i18n.localize("DANGERZONE.scene.trigger")
   }
 
   /**

@@ -1,7 +1,7 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {getSceneRegionList} from './helpers.js';
-import {CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, EVENT_OPTIONS, TOKENDISPOSITION, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWALLREPLACE, DANGERZONELIGHTREPLACE, DANGERZONEWEATHERREPLACE, SOURCEAREA, SOURCEAREATARGET, STRETCH, SOURCETRIGGERS, TRIGGEROPERATION, actorOps, ZONEEXTENSIONINTERACTIONOPTIONS, ZONEEXTENSIONSEQUENCEOPTIONS, MOVEMENT_EVENTS} from './constants.js';
+import {CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, DANGERZONECONFIG, EVENT_OPTIONS, SOURCEAREA, SOURCETRIGGERS, actorOps, ZONEEXTENSIONINTERACTIONOPTIONS, ZONEEXTENSIONSEQUENCEOPTIONS, MOVEMENT_EVENTS, ZONEFORMOPTIONS} from './constants.js';
 
 export class DangerZoneForm extends FormApplication {
   constructor(app, zoneId, sceneId, dangerId, ...args) {
@@ -23,7 +23,7 @@ export class DangerZoneForm extends FormApplication {
       title : game.i18n.localize("DANGERZONE.edit-form.name"),
       id : "danger-zone",
       classes: ["sheet","danger-zone-record"],
-      template : dangerZone.TEMPLATES.DANGERZONECONFIG,
+      template : DANGERZONECONFIG.TEMPLATE.ZONECONFIG,
       width : 500,
       height : "auto",
       closeOnSubmit: true,
@@ -57,22 +57,22 @@ export class DangerZoneForm extends FormApplication {
       hideTriggerMovementWait: this.zone.hasMovementEvent ? false : true,
       hideWeight: !this.zone.trigger.random,
       hideWorld: this.dangerId ? false : true,
-      replaceOps: DANGERZONEREPLACE,
-      lightReplaceOps: DANGERZONELIGHTREPLACE,
-      operationOps: TRIGGEROPERATION,
+      replaceOps: ZONEFORMOPTIONS.REPLACE.TILE,
+      lightReplaceOps: ZONEFORMOPTIONS.REPLACE.LIGHT,
+      operationOps: ZONEFORMOPTIONS.TRIGGEROPERATION,
       regionOps: getSceneRegionList(this.sceneId),
-      regionReplaceOps: DANGERZONEREGIONREPLACE,
-      soundReplaceOps: DANGERZONESOUNDREPLACE,
+      regionReplaceOps: ZONEFORMOPTIONS.REPLACE.REGION,
+      soundReplaceOps: ZONEFORMOPTIONS.REPLACE.SOUND,
       sourceAreaOps: SOURCEAREA,
-      sourceTargetOps: SOURCEAREATARGET,
+      sourceTargetOps: ZONEFORMOPTIONS.SOURCEAREATARGET,
       sourceTriggerOps: SOURCETRIGGERS,
-      stretchOps: STRETCH,
-      tokenDispositionOps: TOKENDISPOSITION,
+      stretchOps: ZONEFORMOPTIONS.STRETCH,
+      tokenDispositionOps: ZONEFORMOPTIONS.TOKENDISPOSITION,
       eventOps: EVENT_OPTIONS,
       zoneOps: dangerZone.getZoneList(this.sceneId),
       zoneTypeOps: dangerZoneType.dangerList,
-      wallReplaceOps: DANGERZONEWALLREPLACE,
-      weatherReplaceOps: DANGERZONEWEATHERREPLACE,
+      wallReplaceOps: ZONEFORMOPTIONS.REPLACE.WALL,
+      weatherReplaceOps: ZONEFORMOPTIONS.REPLACE.WEATHER,
       sceneInactive: (this.scene?.active && this.scene.grid.type) ? false : true,
       extensionsListHTML: this._createExtendsListHTML()
     } 
@@ -270,7 +270,7 @@ export class DangerZoneExtensionForm extends FormApplication {
       title : game.i18n.localize("DANGERZONE.edit-form.extension.add"),
       id : "danger-zone-extension",
       classes: ["sheet","danger-zone-record"],
-      template : dangerZone.TEMPLATES.DANGERZONEEXTENSION,
+      template : DANGERZONECONFIG.TEMPLATE.ZONEEXTENSION,
       width : 450,
       height : "auto",
       closeOnSubmit: true

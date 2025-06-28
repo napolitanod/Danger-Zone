@@ -1,6 +1,6 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
-import {actorOps,  DANGERZONEPARTS, DANGERZONECONFIG, DANGERZONEFORMOPTIONS, DANGERZONELIGHTREPLACE, DANGERZONEREPLACE, DANGERZONEREGIONREPLACE, DANGERZONESOUNDREPLACE, DANGERZONEWEATHERREPLACE, TRIGGEROPERATION, DANGERZONEWALLREPLACE,determineMacroList,  getCompendiumOps, SOURCEAREATARGET, SOURCEAREAGLOBALZONE, STRETCH, TIMESUPMACROREPEAT, TOKENDISPOSITION, weatherTypes, weatherParameters, WORLDZONE} from './constants.js';
+import {actorOps,  DANGERZONEPARTS, DANGERZONECONFIG, DANGERFORMOPTIONS,determineMacroList,  getCompendiumOps, weatherParameters, WORLDZONE, ZONEFORMOPTIONS} from './constants.js';
 import {getEventData, stringToObj} from './helpers.js';
 
 /**v13
@@ -9,14 +9,10 @@ import {getEventData, stringToObj} from './helpers.js';
 export class DangerForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
   constructor(dangerId, parent, ...args) {
     super(...args);
-    this.parent = parent,
+
     this._data = {flags:{}},
-    this.effect,
-    this.system,
-    this.globalZone = {},
-    this.mutate,
-    this.weather = {},
-    this.dangerId = dangerId;
+    this.dangerId = dangerId,
+    this.parent = parent;
   }
 
   /** @inheritDoc */
@@ -56,9 +52,6 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
   };
 
   /** @override */
-  static TABS = {};
-
-  /** @override */
   async _prepareContext() {
     const danger = this.dangerId ? dangerZoneType.getDanger(this.dangerId) : new dangerZoneType  
     const has = {}
@@ -73,25 +66,16 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
     })
     
 
-    this.effect = danger.options.effect;
     this.globalZone = danger.options.globalZone ?? {};
-    this.mutate = danger.options.flags?.mutate ? danger.options.flags.mutate : {};
-    this.weather = danger.options.flags.weather ? danger.options.flags.weather : {};
 
     const dataToSend =  {
+      buttons: [{ type: "submit", icon: "fa-solid fa-floppy-disk", label: "DANGERZONE.save.label" }],
       danger: danger,
       has: has,
-      migration: dangerZone.MIGRATION.DANGER,
-      macroOps: determineMacroList(),
-      hasActiveEffect: Object.keys(this.effect).length ? true : false,
-      hasGlobalZone: Object.keys(this.globalZone).length && this.globalZone?.enabled ? true : false,
-      hasMutate: this.mutate?.permanent,
-      hasWeather: this.weather.type ? true : false,
-      activeEffectOnNot: !dangerZone.MODULES.activeEffectOn,
-      taggerOnNot: !dangerZone.MODULES.taggerOn,
-      buttons: [{ type: "submit", icon: "fa-solid fa-floppy-disk", label: "DANGERZONE.save.label" }],
       icons: DANGERZONECONFIG.ICON,
       labels: DANGERZONECONFIG.LABEL,
+      macroOps: determineMacroList(),
+      migration: dangerZone.MIGRATION.DANGER,
       modules: dangerZone.MODULES
     } 
     
@@ -120,28 +104,15 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
   static async #edit(event) {
     event.preventDefault();
     const data = getEventData(event)
+    
     const options = {
       partId: data.parentId,
       parentApp: this, 
       parentHtml: data.parent, 
       data: (this.#isFlag(data.parentId) ? this._data.flags[data.parentId] : this._data[data.parentId])
     }
-    switch(options.partId){
-      case 'active-effect':
-        new DangerZoneDangerFormActiveEffect(this, data.parent, this.effect).render(true);
-        break;
-      case 'global-zone':
-        new DangerZoneDangerFormGlobalZone(this, data.parent, this.globalZone).render(true);
-        break;
-      case 'mutate':
-        new DangerZoneDangerFormMutate(this, data.parent, this.mutate).render(true);
-        break;
-      case 'weather':
-        new DangerZoneDangerFormWeather(this, data.parent, this.weather).render(true);
-        break;
-      default: 
-        DangerForm.#dynamicDangerPart(options.partId, options).render(true)
-    }
+
+    DangerForm.#dynamicDangerPart(options.partId, options).render(true)
   }
 
   /**v13
@@ -161,26 +132,13 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
     if(!choice) return
 
     const danger = new dangerZoneType;
-    switch(data.parentId){
-      case 'active-effect':
-        this.effect = {};
-        break;
-      case 'global-zone':
-        this.globalZone = {};
-        break;
-      case 'mutate':
-        this.mutate = {}
-        break;
-      case 'weather':
-        this.weather = {}
-        break;
-      default:
-        if(this.#isFlag(key)){
-          this._data.flags[key] = Object.assign(this._data.flags[key], danger.options.flags[key])
-        } else {
-          this._data[key] = Object.assign(this._data[key], danger.options[key])
-        }
+   
+    if(this.#isFlag(key)){
+      this._data.flags[key] = Object.assign(this._data.flags[key], danger.options.flags[key])
+    } else {
+      this._data[key] = Object.assign(this._data[key], danger.options[key])
     }
+    
     data.parent.classList.remove('active')
     ui.notifications?.info(`${data.label} ${game.i18n.localize("DANGERZONE.type-form.cleared.info")}`);
   }
@@ -195,20 +153,14 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
   static async #onSubmit(_event, _form, submitData) {
     const expandedData = foundry.utils.expandObject(submitData.object);
     expandedData.options = this._data 
-
-    expandedData.options.effect = this.effect; 
-    expandedData.options.globalZone = this.globalZone;
-    if(Object.keys(this.mutate).length) {expandedData.options.flags['mutate'] = this.mutate}
-    if(Object.keys(this.weather).length) {expandedData.options.flags['weather'] = this.weather}
-
     await dangerZoneType.updateDangerZoneType(expandedData.id, expandedData);
     this.parent.refresh();
   }
 
   #isActive(partId, part){
     switch(partId){
-      case 'active-effect':
-        break;
+      case 'effect':
+        return Object.keys(part).length
       case 'audio': 
       case 'backgroundEffect':
       case 'foregroundEffect':
@@ -219,23 +171,21 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
         return part.file ? true : false
       case 'combat': return (part.targets.add || part.source.add || part.spawn || part.new || part.initiative.type || part.start) ? true : false
       case 'canvas': return (part.effect.type || part.pan.active) 
-      case 'global-zone':
-        break;
       case 'item': 
       case 'rolltable':
         return  part.name?.length ? true : false
       case 'ambientLight': return (part.dim || part.bright) ? true : false
-      case 'mutate':
-        break;
+      case 'mutate': return part.permanent
       case 'region':
-      case 'scene': return part.active ? true : false
+      case 'scene': 
+        return part.active ? true : false
+      case 'globalZone': return part.enabled ? true : false
       case 'tokenMove': return (part.v.dir || part.hz.dir || part.e.type || part.sToT) ? true : false
       case 'tokenResponse': return (part.save?.enable || part.damage?.enable) ? true : false
       case 'tokenSays': return part.fileType ? true : false
       case 'wall': return (part.top || part.bottom || part.left || part.right) ? true : false
-      case 'warpgate': return (part.actor) ? true : false
-      case 'weather':
-        break;
+      case 'warpgate': return part.actor ? true : false
+      case 'weather': return part.type ? true : false
     }
   }
 
@@ -315,10 +265,11 @@ export class DangerPartConfig extends foundry.applications.api.HandlebarsApplica
       icons: DANGERZONECONFIG.ICON,
       macros: determineMacroList(true),
       modules: dangerZone.MODULES,
-      options: DANGERZONEFORMOPTIONS,
+      options: DANGERFORMOPTIONS,
       random: DANGERZONECONFIG.RANDOM,
       tabs: this._prepareTabs("sheet"),
-      buttons: [{ type: "submit", icon: "fa-solid fa-floppy-disk", label: "DANGERZONE.save.label" }]
+      buttons: [{ type: "submit", icon: "fa-solid fa-floppy-disk", label: "DANGERZONE.save.label" }],
+      zoneOptions: ZONEFORMOPTIONS
     }
   }
 
@@ -361,7 +312,7 @@ export class DangerPartConfig extends foundry.applications.api.HandlebarsApplica
       filepicker.querySelector('input').setAttribute("placeholder", game.i18n.localize(meta.NOTCHECKED.PLACEHOLDER))
     }
   }
-
+  
   /**v13
    * Save the changes to the danger part.
    * @this {ApplicationV2}
@@ -427,6 +378,13 @@ export class DangerPartConfig extends foundry.applications.api.HandlebarsApplica
     for(let tab of tabs){_obj.sheet.tabs.push(DANGERZONECONFIG.TAB[tab])}
     return _obj
   }
+
+  
+  /**         METHODS         **/
+  _mergeData(data){
+    Object.assign(this.#data.data, data);
+  }
+
 }
 
 /**v13
@@ -529,6 +487,164 @@ export class CombatDangerPartConfig extends DangerPartConfig {
 }
 
 /**v13
+ * Configures the combat danger part
+ */
+export class EffectDangerPartConfig extends DangerPartConfig {
+  static #partId = 'effect'
+
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId, {actions: {'edit': this.#activeEffectConfig}, form: {handler: this.#onSubmit}})
+
+  /** @override */
+  static PARTS = this._parts(this.#partId)
+
+  async _prepareContext() {
+    const parentData = await super._prepareContext();
+    const origin = this.parentApp.dangerId;
+    const merged = foundry.utils.mergeObject(parentData, {origin: origin})
+    return merged
+  }
+
+  static #activeEffectConfig(event) {
+    const data = getEventData(event)
+    if (!this.data.hasOwnProperty('name') && !this.data.hasOwnProperty('label')){
+      this._mergeData( {
+        name: this.parentApp.element.querySelector('input[name="name"]').value,
+        icon: this.parentApp.element.querySelector('file-picker').value,
+        origin: this.parentApp.dangerId
+      })
+    }
+  
+    const effect = Object.assign(this.data, {
+      documentName: "ActiveEffect",
+      testUserPermission: (...args) => { return true},
+      parent: {documentName: "Actor"},
+      apps: {},
+      isOwner: true,
+      uuid: `ActiveEffect.${this.parentApp.dangerId}`
+    });
+    
+    const doc = new ActiveEffect(effect, {})
+    new DangerZoneActiveEffectForm(this, data.parent, this.parentApp.dangerId, doc).render(true);
+  }
+
+  /**v13
+   * Save the changes to the danger part.
+   * @this {ApplicationV2}
+   * @param {SubmitEvent} _event         The form submission event.
+   * @param {HTMLFormElement} _form      The form element that was submitted.
+   * @param {FormDataExtended} submitData  Processed data for the submitted form.
+   */
+  static async #onSubmit(_event, _form, submitData) {
+    const expandedData = foundry.utils.expandObject(submitData.object);
+    this._mergeData(expandedData)
+    this.parentApp.updatePart(this.partId, this.data, this.parentHtml);
+  }
+}
+
+/**v13
+ * form that extends the activeeffectconfig form to collect active effect data
+ */
+class DangerZoneActiveEffectForm extends foundry.applications.sheets.ActiveEffectConfig {
+  constructor(app, eventParent, origin, ...args) {
+    super(...args);
+    this.parent = app,
+    this.eventParent = eventParent,
+    this.origin = origin
+    }
+
+    static get defaultOptions(){
+        const defaults = super.defaultOptions;
+
+        return foundry.utils.mergeObject(defaults, {
+          sheetConfig: false,
+          height: "600px"
+        });
+      }
+
+    get title() {
+      const reference = this.document.name ? ` ${this.document.name}` : "";
+      return `${game.i18n.localize("DANGERZONE.zone-active-effect-form.form-name")}${reference}`;
+    }
+
+    getData(options) {
+      const d = this.parent.data
+      const data = {
+        changes: d.changes ?? [],
+        description: d.description ?? "",
+        disabled: d.disabled ?? false,
+        duration: d.duration ?? {},
+        flags: d.flags ?? {},
+        img: d.icon,
+        isSuppressed: false,
+        name: d.name ?? d.label ?? "",
+        origin: this.origin,
+        tint: d.tint,
+        transfer: true
+      }
+      return {
+        cssClass: "editable",
+        data: data,
+        editable: true,
+        isActorEffect: true,
+        isItemEffect: false,
+        limited: false,
+        owner: true, 
+        submitText: "EFFECT.Submit",
+        modes: Object.entries(CONST.ACTIVE_EFFECT_MODES).reduce((obj, e) => {
+          obj[e[1]] = game.i18n.localize("EFFECT.MODE_"+e[0]);
+          return obj;
+        }, {}),
+        title: this.title
+      };
+    }
+
+    render(force=false, options={}) {
+      super.render(force, options)
+    }
+
+    activateListeners(html) {
+      super.activateListeners(html);
+    }
+    
+
+    _onEffectControl(event) {
+      event.preventDefault();
+      const button = event.currentTarget;
+      switch (button.dataset.action) {
+        case "add":
+          this._addEffectChange(button);
+          break;
+        case "delete":
+          button.closest(".effect-change").remove();
+          this.setPosition()
+          break;
+      }
+    }
+  
+   _addEffectChange(button) {
+      super._addEffectChange(button)
+      const changes = button.closest(".tab").querySelector(".changes-list");
+      const last = changes.lastElementChild;
+      const idx = last ? last.dataset.index + + 1 : 0;
+      const change = $(`<li class="effect-change flexrow" data-index="${idx}"><div class="key"><input type="text" name="changes.${idx}.key" value=""/></div><div class="mode"><select name="changes.${idx}.mode" data-dtype="Number">
+        <option value="0">Custom</option><option value="1">Multiply</option><option value="2" selected="">Add</option><option value="3">Downgrade</option><option value="4">Upgrade</option><option value="5">Override</option></select></div>
+        <div class="value"><input type="text" name="changes.${idx}.value" value="0"/></div>
+      </li>`);
+      let del = $('<div>').addClass("effect-controls").append($('<a>').addClass("effect-control").attr("data-action", "delete").click(this._onEffectControl).append($('<i>').addClass("fas fa-trash")))
+      change.append(del);
+      changes.appendChild(change[0]);
+      this.setPosition()
+    }  
+  
+    async _updateObject(event, formData) {
+      const expandedData = foundry.utils.expandObject(formData);
+      this.parent.data = expandedData;
+      this.parent.data['icon'] = this.parent.data['img']; delete this.parent.data['img'];//v12 compat
+    }
+}
+
+/**v13
  * Configures the item danger part
  */
 export class ItemDangerPartConfig extends DangerPartConfig {
@@ -571,6 +687,126 @@ export class ForegroundEffectDangerPartConfig extends DangerPartConfig {
   static TABS = this._tabs(this.#partId) 
 }
 
+/**v13
+ * Configures the world zone danger part
+ */
+export class GlobalZoneDangerPartConfig extends DangerPartConfig {
+  static #partId = 'globalZone'
+
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId)
+
+  /** @override */
+  static PARTS = this._parts(this.#partId)
+
+  /** @override */
+  static TABS = this._tabs(this.#partId) 
+
+  /** @override */
+  async _prepareContext() {
+    const parentData = await super._prepareContext();
+    const obj = foundry.utils.mergeObject(WORLDZONE, this.data)
+    return foundry.utils.mergeObject(parentData, {
+        zone: obj,
+        actorOps: actorOps(),
+        hideOperation: obj.trigger.loop > 1 ? false : true,
+        zoneTypeOps: dangerZoneType.dangerList
+      } )
+  }
+
+
+  /******* STATIC METHODS *************/
+  
+
+  /******* METHODS *************/
+    /** @override */
+  _onRender(context, options) {
+      super._onRender(context, options);
+      this.element.querySelector(`[data-action="loop-change"]`).addEventListener("change", (event => {this.#loopChange(event)}))
+      this.element.querySelector(`[data-action="source-area"]`).addEventListener("change", (event => {this.handleSourceTag(event)}))
+      this.element.querySelector(`[data-action="template-toggle"]`).addEventListener("change", (event => {this.#templateToggle(event)}))
+  }
+
+  handleSourceTag(event){
+    const data = getEventData(event)
+    const sourceArea = data.target.value ?? this.data?.source?.area ?? ''
+    const tag = this.element.querySelector('#dz-source-tag-global')
+    const sourceT = this.element.querySelector('#dz-source-tag-tag-global')
+    const sourceD = this.element.querySelector('#dz-source-tag-danger-global')
+    switch(sourceArea){
+      case 'C':
+      case 'D':
+        tag.classList.remove('dz-hidden');
+        sourceD.classList.remove('dz-hidden');
+        tag.querySelector('label').innerHTML = game.i18n.localize('DANGERZONE.edit-form.source.tag.danger.label')
+        sourceD.setAttribute("name", 'source.tags')
+        break;
+      case 'T':
+        tag.classList.remove('dz-hidden');
+        sourceT.classList.remove('dz-hidden');
+        tag.querySelector('label').innerHTML = game.i18n.localize('DANGERZONE.edit-form.source.tag.tag.label')
+        sourceD.setAttribute("name", 'source.tags')
+        break;
+      default:
+        tag.classList.add('dz-hidden');
+        break;
+    }
+    if(!['C','D'].includes(sourceArea)){
+      sourceD.classList.add('dz-hidden')
+      sourceD.removeAttribute('name')
+      sourceD.value = []
+    }
+    if(sourceArea !=='T'){
+      sourceT.classList.add('dz-hidden')
+      sourceT.removeAttribute('name')
+      sourceT.value = []
+    }
+    this.setPosition()
+  }
+
+  #loopChange(event){
+    const data = getEventData(event)
+    const op = this.element.querySelector(`#dz-operation-global`);
+    data.target.value > 1 ? op.classList.remove('dz-hidden') : op.classList.add('dz-hidden')
+    this.setPosition()
+  }
+
+  #templateToggle(event){
+    const data = getEventData(event)
+    const templt = this.element.querySelector(`#dz-elevation-prompt-global`);
+    data.checked ? templt.classList.remove('dz-hidden') : templt.classList.add('dz-hidden')
+    this.setPosition()
+  }
+  
+}
+
+/**v13
+ * Configures the mutate danger part
+ */
+export class MutateDangerPartConfig extends DangerPartConfig {
+  static #partId = 'mutate'
+
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId, {form: {handler: this.#onSubmit}})
+
+  /** @override */
+  static PARTS = this._parts(this.#partId)
+
+  /**v13
+   * Save the changes to the danger part.
+   * @this {ApplicationV2}
+   * @param {SubmitEvent} _event         The form submission event.
+   * @param {HTMLFormElement} _form      The form element that was submitted.
+   * @param {FormDataExtended} submitData  Processed data for the submitted form.
+   */
+  static async #onSubmit(_event, _form, submitData) {
+    const expandedData = foundry.utils.expandObject(submitData.object);
+    if (expandedData.token) stringToObj(expandedData.token, {type: 'Token', notify: true})
+    if (expandedData.actor) stringToObj(expandedData.actor, {type: 'Actor', notify: true})
+    if (expandedData.embedded) stringToObj(expandedData.embedded, {type:'Embedded', notify:true})
+    this.parentApp.updatePart(this.partId, expandedData, this.parentHtml);
+  }
+}
 
 /**v13
  * Configures the lasting effect danger part
@@ -719,7 +955,6 @@ export class TokenSaysDangerPartConfig extends DangerPartConfig {
     const parentData = await super._prepareContext();
     const isChat = this.data.fileType === 'rollTable' ? true : false
     const merged = foundry.utils.mergeObject(parentData, {isChat: isChat})
-    console.log(merged)
     return merged
     }
 }
@@ -830,435 +1065,67 @@ export class WarpgateDangerPartConfig extends DangerPartConfig {
 
 }
 
-
-class DangerZoneActiveEffectForm extends ActiveEffectConfig {
-  constructor(app, eventParent, origin, ...args) {
-    super(...args);
-    this.parent = app,
-    this.eventParent = eventParent,
-    this.origin = origin
-    }
-
-    static get defaultOptions(){
-        const defaults = super.defaultOptions;
-
-        return foundry.utils.mergeObject(defaults, {
-          sheetConfig: false,
-          height: "600px"
-        });
-      }
-
-    get title() {
-      const reference = this.document.name ? ` ${this.document.name}` : "";
-      return `${game.i18n.localize("DANGERZONE.zone-active-effect-form.form-name")}${reference}`;
-    }
-
-    getData(options) {
-      const d = this.parent.data
-      const data = {
-        changes: d.changes ?? [],
-        description: d.description ?? "",
-        disabled: d.disabled ?? false,
-        duration: d.duration ?? {},
-        flags: d.flags ?? {},
-        img: d.icon,
-        isSuppressed: false,
-        name: d.name ?? d.label ?? "",
-        origin: this.origin,
-        tint: d.tint,
-        transfer: true
-      }
-      return {
-        cssClass: "editable",
-        data: data,
-        editable: true,
-        isActorEffect: true,
-        isItemEffect: false,
-        limited: false,
-        owner: true, 
-        submitText: "EFFECT.Submit",
-        modes: Object.entries(CONST.ACTIVE_EFFECT_MODES).reduce((obj, e) => {
-          obj[e[1]] = game.i18n.localize("EFFECT.MODE_"+e[0]);
-          return obj;
-        }, {}),
-        title: this.title
-      };
-    }
-
-    render(force=false, options={}) {
-      super.render(force, options)
-    }
-
-    activateListeners(html) {
-      super.activateListeners(html);
-    }
-    
-
-    _onEffectControl(event) {
-      event.preventDefault();
-      const button = event.currentTarget;
-      switch (button.dataset.action) {
-        case "add":
-          this._addEffectChange(button);
-          break;
-        case "delete":
-          button.closest(".effect-change").remove();
-          this.setPosition()
-          break;
-      }
-    }
+/**v13
+ * Configures the token spawn part
+ */
+export class WeatherDangerPartConfig extends DangerPartConfig {
   
-   _addEffectChange(button) {
-      super._addEffectChange(button)
-      const changes = button.closest(".tab").querySelector(".changes-list");
-      const last = changes.lastElementChild;
-      const idx = last ? last.dataset.index + + 1 : 0;
-      const change = $(`<li class="effect-change flexrow" data-index="${idx}"><div class="key"><input type="text" name="changes.${idx}.key" value=""/></div><div class="mode"><select name="changes.${idx}.mode" data-dtype="Number">
-        <option value="0">Custom</option><option value="1">Multiply</option><option value="2" selected="">Add</option><option value="3">Downgrade</option><option value="4">Upgrade</option><option value="5">Override</option></select></div>
-        <div class="value"><input type="text" name="changes.${idx}.value" value="0"/></div>
-      </li>`);
-      let del = $('<div>').addClass("effect-controls").append($('<a>').addClass("effect-control").attr("data-action", "delete").click(this._onEffectControl).append($('<i>').addClass("fas fa-trash")))
-      change.append(del);
-      changes.appendChild(change[0]);
-      this.setPosition()
-    }  
+  static #partId = 'weather'
+
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId);
+
+  /** @override */
+  static PARTS = this._parts(this.#partId)
+
+     /** @override */
+  _onRender(context, options) {
+      super._onRender(context, options);
+      this.element.querySelector(`#danger-zone-weather-type`).addEventListener("change", (event => {this.#setParameters(event)}));
+  }
   
-    async _updateObject(event, formData) {
-      const expandedData = foundry.utils.expandObject(formData);
-      this.parent.data = expandedData;
-      this.parent.data['icon'] = this.parent.data['img']; delete this.parent.data['img'];//v12 compat
-    }
-}
+    /** @override */
+  async _prepareContext() {
+    const parentData = await super._prepareContext();
+    return foundry.utils.mergeObject(parentData, {parameters: this.#createParametersHTML(this.data.type, this.data)})
+  }
 
-class DangerZoneDangerFormActiveEffect extends FormApplication {
-  constructor(app, eventParent, data, ...args) {
-    super(...args);
-    this.data = data,
-    this.eventParent = eventParent,
-    this.parent = app;
-    }
-
-    static get defaultOptions(){
-        const defaults = super.defaultOptions;
-
-        return foundry.utils.mergeObject(defaults, {
-          title : game.i18n.localize("DANGERZONE.type-form.active-effect.label"),
-          id : "danger-zone-danger-form-active-effect",
-          classes: ["sheet","danger-part-form"],
-          template : dangerZone.TEMPLATES.DANGERZONEDANGERACTIVEEFFECT,
-          height : "auto",
-          width: 375,
-          closeOnSubmit: true
-        });
-      }
-
-    getData(options) {
-      return {
-        data: this.data,
-        origin: this.parent.dangerId,
-        sourceOps: DANGERZONEFORMOPTIONS.SOURCETREATMENT,
-        timesUpOn: dangerZone.MODULES.daeOn ? dangerZone.MODULES.timesUpOn : false,
-        macroRepeatOps: TIMESUPMACROREPEAT
-      }
-    }
-
-    activateListeners(html) {
-      super.activateListeners(html);
-      html.on('click', "[data-action]", this._handleButtonClick.bind(this));
-    }
-
-    async _handleButtonClick(event) {
-      const clickedElement = $(event.currentTarget);
-      const action = clickedElement.data().action;
-      const parent =  clickedElement.parents('[data-id]');
-  
-      switch (action) {
-        case 'edit': {
-          event.preventDefault();
-          this._activeEffectConfig(event, parent)
-          break;
-        }
-      }
-    }
-
-    async _activeEffectConfig(event, eventParent) {
-      if (!this.data.hasOwnProperty('name') && !this.data.hasOwnProperty('label')){
-        this.data = {
-          name: $(this.parent.form).find('input[name="name"]').val(),
-          icon: $(this.parent.form).find('input[name="icon"]').val(),
-          origin: this.parent.dangerId
-        }
-      }
-  
-      const effect = Object.assign(this.data, {
-        documentName: "ActiveEffect",
-        testUserPermission: (...args) => { return true},
-        parent: {documentName: "Actor"},
-        apps: {},
-        isOwner: true,
-        uuid: `ActiveEffect.${this.parent.dangerId}`
-      });
-      
-      const doc = new ActiveEffect(effect, {})
-      new DangerZoneActiveEffectForm(this, eventParent, this.parent.dangerId, doc).render(true);
-    }
-
-    async _updateObject(event, formData) {
-      const expandedData = foundry.utils.expandObject(formData);
-      this.data = Object.assign(this.data, expandedData);
-      this.parent.effect = this.data;
-      this.eventParent.classList.add('active');
-    }
-}
-
-class DangerZoneDangerFormGlobalZone extends FormApplication {
-  constructor(app, eventParent, data, ...args) {
-    super(...args);
-    this.data = data,
-    this.eventParent = eventParent,
-    this.parent = app;
-    }
-
-    static get defaultOptions(){
-        const defaults = super.defaultOptions;
-
-        return foundry.utils.mergeObject(defaults, {
-          title : game.i18n.localize("DANGERZONE.type-form.global-zone.label"),
-          id : "danger-zone-danger-global-zone",
-          classes: ["sheet","danger-part-form"],
-          template : dangerZone.TEMPLATES.DANGERZONEDANGERGLOBALZONE,
-          height : "auto",
-          width: 475,
-          tabs : [
-            {navSelector: ".tabs", contentSelector: "form", initial: "basics"}
-          ],
-          closeOnSubmit: true
-        });
-      }
-
-    getData(options) {
-      const obj = foundry.utils.mergeObject(WORLDZONE, this.data)
-      return {
-        zone: obj,
-        actorOps: actorOps(),
-        hideElevationPrompt: !obj.target.choose.enable,
-        hideOperation: obj.trigger.loop > 1 ? false : true,
-        replaceOps: DANGERZONEREPLACE,
-        lightReplaceOps: DANGERZONELIGHTREPLACE,
-        stretchOps: STRETCH,
-        tokenDispositionOps: TOKENDISPOSITION,
-        operationOps: TRIGGEROPERATION,
-        regionReplaceOps: DANGERZONEREGIONREPLACE,
-        soundReplaceOps: DANGERZONESOUNDREPLACE,
-        sourceAreaOps: SOURCEAREAGLOBALZONE,
-        sourceTargetOps: SOURCEAREATARGET,
-        wallReplaceOps: DANGERZONEWALLREPLACE,
-        weatherReplaceOps: DANGERZONEWEATHERREPLACE,
-        zoneTypeOps: dangerZoneType.dangerList
-      } 
-    }
-
-    activateListeners(html) {
-      super.activateListeners(html);
-      html.on('change', "[data-action]", this._handleChange.bind(this));
-    }
-
-    async _handleChange(event) {
-      const action = $(event.currentTarget).data().action, val = event.currentTarget.value, checked = event.currentTarget.checked;
-      switch (action) {
-        case 'loop-change': 
-          const op = document.getElementById(`dz-operation-global`);
-          val > 1 ? op.classList.remove('dz-hidden') : op.classList.add('dz-hidden')
-          this.setPosition()
-          break;
-        case 'source-area':
-          this._handleSourceTag(val)
-          break;  
-        case 'template-toggle': 
-          const templt = document.getElementById(`dz-elevation-prompt-global`);
-          checked ? templt.classList.remove('dz-hidden') : templt.classList.add('dz-hidden')
-          this.setPosition()
-          break;
-      }
-    }
-  
-    _handleSourceTag(sourceArea = this.data?.source?.area ?? ''){
-      const tag = $(this.form).find('#dz-source-tag-global')
-      const sourceT = $(this.form).find('#dz-source-tag-tag-global')
-      const sourceD = $(this.form).find('#dz-source-tag-danger-global')
-      switch(sourceArea){
-        case 'C':
-        case 'D':
-          tag.removeClass('dz-hidden');
-          sourceD.removeClass('dz-hidden');
-          tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.danger.label'))
-          $(this.form).find('#dz-source-tag-danger-global').attr('name', 'source.tags')
-          break;
-        case 'T':
-          tag.removeClass('dz-hidden');
-          sourceT.removeClass('dz-hidden');
-          tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.tag.label'))
-          $(this.form).find('#dz-source-tag-tag-global').attr('name', 'source.tags')
-          break;
-        default:
-          tag.addClass('dz-hidden');
-          break;
-      }
-      if(!['C','D'].includes(sourceArea)){
-        sourceD.addClass('dz-hidden')
-        sourceD.removeAttr('name')
-        sourceD.val([])
-      }
-      if(sourceArea !=='T'){
-        sourceT.addClass('dz-hidden')
-        sourceT.removeAttr('name')
-        sourceT.val([])
-      }
-      this.setPosition()
-    }
-
-    async _updateObject(event, formData) {
-      const expandedData = foundry.utils.expandObject(formData);
-      this.parent.globalZone = expandedData;
-      this.eventParent.classList.add('active');
-    }
-}
-
-
-class DangerZoneDangerFormMutate extends FormApplication {
-  constructor(app, eventParent, data, ...args) {
-    super(...args);
-    this.data = data,
-    this.eventParent = eventParent,
-    this.parent = app;
-    }
-
-    static get defaultOptions(){
-        const defaults = super.defaultOptions;
-
-        return foundry.utils.mergeObject(defaults, {
-          title : game.i18n.localize("DANGERZONE.type-form.mutate.label"),
-          id : "danger-zone-danger-mutate",
-          classes: ["sheet","danger-part-form"],
-          template : dangerZone.TEMPLATES.DANGERZONEDANGERMUTATE,
-          height : "auto",
-          width: 425,
-          height: 595,
-          closeOnSubmit: true,
-          resizable: true
-        });
-      }
-
-    getData(options) {
-      return this.data
-    }
-
-    activateListeners(html) {
-      super.activateListeners(html);
-    }
-  
-    async _updateObject(event, formData) {
-      const expandedData = foundry.utils.expandObject(formData);
-      if (expandedData.token) stringToObj(expandedData.token, {type: 'Token', notify: true})
-      if (expandedData.actor) stringToObj(expandedData.actor, {type: 'Actor', notify: true})
-      if (expandedData.embedded) stringToObj(expandedData.embedded, {type:'Embedded', notify:true})
-      this.parent.mutate = expandedData;
-      if(expandedData.permanent) this.eventParent.classList.add('active');
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class DangerZoneDangerFormWeather extends FormApplication {
-  constructor(app, eventParent, data, ...args) {
-    super(...args);
-    this.data = data,
-    this.eventParent = eventParent,
-    this.parent = app;
-    }
-
-    static get defaultOptions(){
-        const defaults = super.defaultOptions;
-
-        return foundry.utils.mergeObject(defaults, {
-          title : game.i18n.localize("DANGERZONE.type-form.weather.label"),
-          id : "danger-zone-danger-weather",
-          classes: ["sheet","danger-part-form"],
-          template : dangerZone.TEMPLATES.DANGERZONEDANGERWEATHER,
-          height : "auto",
-          width: 425,
-          closeOnSubmit: true
-        });
-      }
-
-    getData(options) {
-      return {
-        data: this.data,
-        parameters: this._createParametersHTML(this.data.type, this.data),
-        typeOps: weatherTypes()
-      }
-    }
-
-    activateListeners(html) {
-      super.activateListeners(html)
-      html.on('change', "#danger-zone-weather-type", this._setParameters.bind(this));
-    }
-
-    _setParameters(event){
-      const ins = document.getElementById(`danger-zone-weather-parameters`);
-      ins.innerHTML = this._createParametersHTML(event.currentTarget.value);
+  #setParameters(event){
+      const ins = this.element.querySelector(`#danger-zone-weather-parameters`);
+      ins.innerHTML = this.#createParametersHTML(event.target.value);
       this.setPosition();
     }
 
-    _createParametersHTML(type, values = {}) {
-      const pObj = weatherParameters(type)
-      let finalHTML = '';
-      if (!pObj) return finalHTML;
-      if (pObj.animations) finalHTML += this._buildSelect('animations', pObj.animations, values.animations);
-      if (pObj.density) finalHTML += this._buildRange('density', pObj.density, values.density);
-      if (pObj.direction) finalHTML += this._buildRange('direction', pObj.direction, values.direction);
-      if (pObj.lifetime) finalHTML += this._buildRange('lifetime', pObj.lifetime, values.lifetime);
-      if (pObj.scale) finalHTML += this._buildRange('scale', pObj.scale, values.scale);
-      if (pObj.speed) finalHTML += this._buildRange('speed', pObj.speed, values.speed);
-      if (pObj.tint) finalHTML += this._buildColor('tint', pObj.tint, values.tint);
-      return finalHTML
-    }
+  #createParametersHTML(type, values = {}) {
+    const pObj = weatherParameters(type)
+    let finalHTML = '';
+    if (!pObj) return finalHTML;
+    if (pObj.animations) finalHTML += this.#buildSelect('animations', pObj.animations, values.animations);
+    if (pObj.density) finalHTML += this.#buildRange('density', pObj.density, values.density);
+    if (pObj.direction) finalHTML += this.#buildRange('direction', pObj.direction, values.direction);
+    if (pObj.lifetime) finalHTML += this.#buildRange('lifetime', pObj.lifetime, values.lifetime);
+    if (pObj.scale) finalHTML += this.#buildRange('scale', pObj.scale, values.scale);
+    if (pObj.speed) finalHTML += this.#buildRange('speed', pObj.speed, values.speed);
+    if (pObj.tint) finalHTML += this.#buildColor('tint', pObj.tint, values.tint);
+    return finalHTML
+  }
 
-    _buildColor(name, obj, val = ''){
-      return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><color-picker name="${name}" value=${val}></color-picker></div></div>`
-    }
+  #buildColor(name, obj, val = ''){
+    return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><color-picker name="${name}" value=${val}></color-picker></div></div>`
+  }
 
-    _buildRange(name, obj, val = obj.value){
-      return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><input type="range" data-dtype="Number" name="${name}" min="${obj.min}" max="${obj.max}" step="${obj.step}" value="${val}"><span class="range-value">${val}</span></div></div>`
-    }
+  #buildRange(name, obj, val = obj.value){
+    return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><range-picker title="${game.i18n.localize(obj.label)}" name="${name}" value="${val}" min="${obj.min}" max="${obj.max}" step="0.05"></range-picker></div></div>`
+  }
 
-    _buildSelect(name, obj, val = obj.value){
-      const sortedList = Object.entries(obj.options).sort(([,a],[,b]) => a.localeCompare(b))
-      let optionList = '<option value=""></option>';
-      for(let i = 0; i < sortedList.length; i++) {
-        let selected = '';
-        if (sortedList[i][0] === val) selected = ' selected '
-        optionList += `<option value="${sortedList[i][0]}"${selected}>${game.i18n.localize(sortedList[i][1])}</option>`;
-      }
-      return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><select name="${name}" value="${val}">${optionList}</select></div></div>`    
+  #buildSelect(name, obj, val = obj.value){
+    const sortedList = Object.entries(obj.options).sort(([,a],[,b]) => a.localeCompare(b))
+    let optionList = '<option value=""></option>';
+    for(let i = 0; i < sortedList.length; i++) {
+      let selected = '';
+      if (sortedList[i][0] === val) selected = ' selected '
+      optionList += `<option value="${sortedList[i][0]}"${selected}>${game.i18n.localize(sortedList[i][1])}</option>`;
     }
-  
-    async _updateObject(event, formData) {
-      const expandedData = foundry.utils.expandObject(formData);
-      this.parent.weather = expandedData;
-      expandedData.type ? this.eventParent.classList.add('active') : this.eventParent.classList.remove('active');
-    }
+    return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><select name="${name}" value="${val}">${optionList}</select></div></div>`    
+  }  
 }

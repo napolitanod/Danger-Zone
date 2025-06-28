@@ -1,0 +1,17 @@
+<div class="tab active danger-part-group" data-tab="basics" data-group="sheet">
+    <p class="notes">{{localize "DANGERZONE.type-form.globalZone.description"}}</p>
+    <div class="form-group">
+        <label for="enabled">{{localize 'DANGERZONE.edit-form.enabled.label'}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="enabled" {{checked zone.enabled}} />
+        </div>
+    </div>
+    <div class="form-group flexrow">
+        <label for="flavor">{{localize 'DANGERZONE.edit-form.flavor.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.flavor.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <input type="text" name="flavor" value="{{zone.flavor}}">
+        </div>
+    </div>
+</div>

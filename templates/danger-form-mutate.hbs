@@ -1,41 +1,36 @@
-<form autocomplete="off">
-    <div class="tab">
-        <p class="notes">{{localize "DANGERZONE.type-form.mutate.description"}}</p>
-        <div class="form-group">
-            <label for="permanent">{{localize "DANGERZONE.type-form.mutate.permanent.label"}}
-                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.mutate.permanent.description'}}"><i class="fas fa-info-circle"></i></span>
-            </label>
-            <div class="form-fields">
-                <input type="checkbox" data-dtype="Boolean" name="permanent" {{checked permanent}}>
-            </div>
-        </div>
-        <div class="form-group stacked command">
-            <label for="token">{{localize "DANGERZONE.type-form.mutate.token.label"}}</label>
-            <textarea name="token" placeholder="{{localize "DANGERZONE.type-form.mutate.token.description"}}" value="{{token}}">{{token}}</textarea>
-        </div>
-        <div class="form-group stacked command">
-            <label for="actor">{{localize "DANGERZONE.type-form.mutate.actor.label"}}</label>
-            <textarea name="actor" placeholder="{{localize "DANGERZONE.type-form.mutate.actor.description"}}" value="{{actor}}">{{actor}}</textarea>
-        </div>
-        <div class="form-group stacked command dz-hidden">
-            <label for="embedded">{{localize "DANGERZONE.type-form.mutate.embedded.label"}}</label>
-            <textarea name="embedded" placeholder="{{localize "DANGERZONE.type-form.mutate.embedded.description"}}" value="{{embedded}}">{{embedded}}</textarea>
-        </div>
-        <p class="notes">{{localize "DANGERZONE.type-form.mutate.interpolate.description"}}</p>
-        <div class="form-group">
-            <label for="delay">{{localize "DANGERZONE.type-form.mutate.delay.label"}}</label>
-            <div class="form-fields">
-                <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if delay}}{{delay}}{{/if}}{{#unless delay}}0{{/unless}}>
-            </div>
-        </div>
-        <div class="form-group {{#if taggerOnNot}}dz-hidden{{/if}}">
-            <label for="tag">{{localize "DANGERZONE.type-form.mutate.tag.label"}}</label>
-            <div class="form-fields">
-                <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.mutate.tag.description"}}"  value="{{tag}}">
-            </div>
+<div class="danger-part-group">
+    <p class="notes">{{localize "DANGERZONE.type-form.mutate.description"}}</p>
+    <div class="form-group">
+        <label for="permanent">{{localize "DANGERZONE.type-form.mutate.permanent.label"}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.mutate.permanent.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="permanent" {{checked data.permanent}}>
         </div>
     </div>
-    <footer class="sheet-footer flexrow">
-        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save.label'}}</button>
-    </footer>
-</form>
+    <div class="form-group stacked command">
+        <label for="token">{{localize "DANGERZONE.type-form.mutate.token.label"}}</label>
+        <textarea name="token" placeholder="{{localize "DANGERZONE.type-form.mutate.token.description"}}" value="{{data.token}}">{{data.token}}</textarea>
+    </div>
+    <div class="form-group stacked command">
+        <label for="actor">{{localize "DANGERZONE.type-form.mutate.actor.label"}}</label>
+        <textarea name="actor" placeholder="{{localize "DANGERZONE.type-form.mutate.actor.description"}}" value="{{data.actor}}">{{data.actor}}</textarea>
+    </div>
+    <div class="form-group stacked command dz-hidden">
+        <label for="embedded">{{localize "DANGERZONE.type-form.mutate.embedded.label"}}</label>
+        <textarea name="embedded" placeholder="{{localize "DANGERZONE.type-form.mutate.embedded.description"}}" value="{{data.embedded}}">{{data.embedded}}</textarea>
+    </div>
+    <p class="notes">{{localize "DANGERZONE.type-form.mutate.interpolate.description"}}</p>
+    <div class="form-group">
+        <label for="delay">{{localize "DANGERZONE.type-form.mutate.delay.label"}}</label>
+        <div class="form-fields">
+            <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.delay}}{{data.delay}}{{else}}0{{/if}}>
+        </div>
+    </div>
+    <div class="form-group {{#unless modules.taggerOn}}dz-hidden{{/unless}}">
+        <label for="tag">{{localize "DANGERZONE.type-form.mutate.tag.label"}}</label>
+        <div class="form-fields">
+            <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.mutate.tag.description"}}"  value="{{data.tag}}">
+        </div>
+    </div>
+</div>

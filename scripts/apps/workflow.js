@@ -2236,7 +2236,9 @@ class mutate extends executable {
 }
 
 class primaryEffect extends executableWithFile {
-        
+       
+    _partSources = []
+
     get hasSourcing(){
         return this.source.enabled ? true : false
     }
@@ -2278,16 +2280,15 @@ class primaryEffect extends executableWithFile {
         let s = new Sequence(), play = true;
         const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.boundary]
         for (const bound of boundaries){
-            if(this.hasSources){
-                let tagged;
+            if(this.hasSources || this.hasSourcing){
                 if(this.source.name) {
                     const taggerEntities = await getTagEntities(this.source.name, this.data.scene)
-                    tagged = limitArray(shuffleArray(taggerEntities),this.data.sourceLimit)
+                    this._partSources = limitArray(shuffleArray(taggerEntities),this.data.sourceLimit)
                  } else {
-                    tagged = this.sourcesSelected
+                    this._partSources = this.sourcesSelected
                  } 
-                if(tagged.length){
-                    for(const document of tagged){
+                if(this._partSources.length){
+                    for(const document of this._partSources){
                         const documentName = document.documentName ? document.documentName : document.document.documentName;
                         const source = boundary.documentBoundary(documentName, document, {retain:true});
                         if(source.A.x === bound.A.x && source.A.y === bound.A.y && source.B.x === bound.B.x && source.B.y === bound.B.y){continue}

@@ -50,9 +50,9 @@
     </div>
     <div class="form-group">
         <ol class="danger-setting-group flexrow">
-            <li data-id="active-effect" class="{{#if hasActiveEffect}}active {{/if}}{{#if activeEffectOnNot}}dz-hidden{{/if}}" title="{{localize "DANGERZONE.type-form.active-effect.label"}}">
-                <button type="button" class="danger-zone-type-button"data-action="edit" title="{{localize "DANGERZONE.type-form.active-effect.edit.title"}} {{localize 'DANGERZONE.type-form.active-effect.notes'}}"><i class="fas fa-hand-sparkles"></i></button>  
-                <label>{{localize 'DANGERZONE.type-form.active-effect.label'}}</label>
+            <li data-id="effect" class="{{#if has.effect}}active {{/if}}{{#unless modules.activeEffectOn}}dz-hidden{{/unless}}" title="{{localize "DANGERZONE.type-form.effect.label"}}">
+                <button type="button" class="danger-zone-type-button"data-action="edit" title="{{localize "DANGERZONE.type-form.effect.edit.title"}} {{localize 'DANGERZONE.type-form.effect.notes'}}"><i class="fas fa-hand-sparkles"></i></button>  
+                <label>{{localize 'DANGERZONE.type-form.effect.label'}}</label>
                 <a class="danger-zone-type-delete" data-action="delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li> 
             <li data-id="ambientLight" {{#if has.ambientLight}}class="active"{{/if}} title="{{localize "DANGERZONE.type-form.ambientLight.label"}}">
@@ -90,7 +90,7 @@
                 <label>{{localize 'DANGERZONE.type-form.tokenMove.label'}}</label>
                 <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="mutate" class="{{#if hasMutate}}active{{/if}}" title="{{localize "DANGERZONE.type-form.mutate.label"}}">
+            <li data-id="mutate" class="{{#if has.mutate}}active{{/if}}" title="{{localize "DANGERZONE.type-form.mutate.label"}}">
                 <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.mutate.description"}}"><i class="fas fa-pastafarianism"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.mutate.label'}}</label>
                 <a class="danger-zone-type-delete"  title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
@@ -155,14 +155,14 @@
                 <label>{{localize 'DANGERZONE.type-form.wall.label'}}</label>
                 <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="weather" class="{{#if hasWeather}}active{{/if}}" title="{{localize "DANGERZONE.type-form.weather.label"}}">
+            <li data-id="weather" class="{{#if has.weather}}active{{/if}}" title="{{localize "DANGERZONE.type-form.weather.label"}}">
                 <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.weather.description"}}"><i class="fas fa-cloud-rain"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.weather.label'}}</label>
                 <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="global-zone" class="{{#if hasGlobalZone}}active{{/if}}" title="{{localize "DANGERZONE.type-form.global-zone.label"}}">
-                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.global-zone.description"}}"><i class="fas fa-radiation"></i></button>   
-                <label>{{localize 'DANGERZONE.type-form.global-zone.label'}}</label>
+            <li data-id="globalZone" class="{{#if has.globalZone}}active{{/if}}" title="{{localize "DANGERZONE.type-form.globalZone.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.globalZone.description"}}"><i class="fas fa-radiation"></i></button>   
+                <label>{{localize 'DANGERZONE.type-form.globalZone.label'}}</label>
                 <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
         </ol> 

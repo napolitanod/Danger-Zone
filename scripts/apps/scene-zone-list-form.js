@@ -1,7 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
-import {dangerZoneType} from './zone-type.js';
 import {dangerZoneDimensions} from './dimensions.js';
-import {sceneOps, regionOps} from './constants.js';
+import {DANGERZONECONFIG, sceneOps, regionOps} from './constants.js';
 import {DangerZoneForm} from './zone-form.js';
 
 export class DangerZoneSceneForm extends FormApplication {
@@ -18,7 +17,7 @@ export class DangerZoneSceneForm extends FormApplication {
     const overrides = {
       title : game.i18n.localize("DANGERZONE.scene.header.name"),
       id : "danger-zone-scene",
-      template : dangerZone.TEMPLATES.DANGERZONESCENE,
+      template : DANGERZONECONFIG.TEMPLATE.ZONESCENE,
       width : 800,
       height : "auto",
       closeOnSubmit: false,
@@ -120,7 +119,7 @@ export class DangerZoneZoneCopyForm extends FormApplication {
         return foundry.utils.mergeObject(defaults, {
           title : game.i18n.localize("DANGERZONE.copy-zone.label"),
           id : "danger-zone-zone-copy",
-          template : dangerZone.TEMPLATES.DANGERZONEZONECOPY,
+          template : DANGERZONECONFIG.TEMPLATE.ZONECOPY,
           height : "auto",
           width: 425,
           closeOnSubmit: true

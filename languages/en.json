@@ -559,26 +559,6 @@
             "turn-end.label": "Turn End"
         },
         "type-form": {
-            "active-effect":{
-                "delay.label": "Delay Start",
-                "description": "Adds an active effect to targeted tokens.",
-                "deleteEffects.description": "Enter a list of active effect names to delete from the target.",
-                "delete-effects.label": "Delete Effects",
-                "disable-effects.description": "Enter a list of active effect names to disable on the target.",
-                "disable-effects.label": "Disable Effects",
-                "enable-effects.description": "Enter a list of active effect names to enable on the target.",
-                "enable-effects.label": "Enable Effects",
-                "label": "Active Effect",
-                "limit.description": "If a token already has this effect applied, a second one will not be added.",
-                "limit.label": "Max 1 Per Token",
-                "macro.description": "Determine if active effect macros should repeat on each turn of the associated token.",
-                "macro.label": "Macro Repeat",
-                "notes": "Active effect will be transferred to each danger target.",
-                "toggle-effects.description": "Enter a list of active effect names to toggle on the target.",
-                "toggle-effects.label": "Toggle Effects",
-                "edit.title": "Edit Active Effect",
-                "delete.title": "Delete Active Effect"
-            },
             "ambientLight":{
                 "animationIntensity.label": "Animation Intensity",
                 "animation.label": "Light Animation Type",
@@ -692,6 +672,26 @@
                     "shake": "Canvas Shake"
                 }
             },
+            "effect":{
+                "delay.label": "Delay Start",
+                "description": "Adds an active effect to targeted tokens.",
+                "deleteEffects.description": "Enter a list of active effect names to delete from the target.",
+                "delete-effects.label": "Delete Effects",
+                "disable-effects.description": "Enter a list of active effect names to disable on the target.",
+                "disable-effects.label": "Disable Effects",
+                "enable-effects.description": "Enter a list of active effect names to enable on the target.",
+                "enable-effects.label": "Enable Effects",
+                "label": "Active Effect",
+                "limit.description": "If a token already has this effect applied, a second one will not be added.",
+                "limit.label": "Max 1 Per Token",
+                "macro.description": "Determine if active effect macros should repeat on each turn of the associated token.",
+                "macro.label": "Macro Repeat",
+                "notes": "Active effect will be transferred to each danger target.",
+                "toggle-effects.description": "Enter a list of active effect names to toggle on the target.",
+                "toggle-effects.label": "Toggle Effects",
+                "edit.title": "Edit Active Effect",
+                "delete.title": "Delete Active Effect"
+            },
             "foregroundEffect":{
                 "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays above the target area, such as a lightning bolt or falling rocks animation.",
@@ -709,7 +709,7 @@
                 "repeat.label": "Number of Repeats",
                 "duration.label": "Duration"
             },
-            "global-zone": {
+            "globalZone": {
                 "bottom.label": "Zone Bottom",
                 "description": "Configures this danger so that it becomes available on every scene as a manually triggered zone with a more limited option set.",
                 "top.label": "Zone Top",

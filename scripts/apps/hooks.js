@@ -1,5 +1,5 @@
 import {api, _triggerZone} from "./api.js";
-import {runOnSetup, setExecutableOptions, setModOptions} from './constants.js';
+import {runOnSetup, setExecutableOptions} from './constants.js';
 import {dangerZone} from '../danger-zone.js';
 import {addSceneFormLaunch, addDangerButton, requestSavingThrow} from './helpers.js';
 import {migrateDanger, migrateScene} from './migration.js';
@@ -32,8 +32,8 @@ export function setHooks(){
             app._handleSourceTag();
         });
 
-        Hooks.on("renderDangerZoneDangerFormGlobalZone", (app, html, options) => {
-            app._handleSourceTag();
+        Hooks.on("renderGlobalZoneDangerPartConfig", (app, html, options) => {
+            app.handleSourceTag();
         });
 
         //hook to ensure that, on settings render, the search is applied to the list
@@ -44,15 +44,14 @@ export function setHooks(){
         //hook to ensure that, on executor form render, appropriate field flagging is done
         Hooks.on("dangerZone.updateZone", (zone) => {
             dangerZone.log(false, 'Zone update hook...', zone)
-            dangerZone.executorForm.renderOnScene(zone.scene.sceneId, zone.id);
+            dangerZone.executorForm.renderOnScene(zone.scene.sceneId, zone.id, false);
         })
 
         //hook to ensure that, on executor form render, appropriate field flagging is done
         Hooks.on("dangerZone.updateDanger", (dangers) => {
             dangerZone.log(false, 'Danger update hook...', dangers)
-            dangerZone.executorForm.renderOnScene();
+            dangerZone.executorForm.renderOnScene(canvas.scene.id, '', false);
         })
-
 
         /**
          * Hooks on rendering the scene directory on the right side bar
@@ -70,7 +69,6 @@ export function setHooks(){
         })
 
         setExecutableOptions();
-        setModOptions();
         await migrateDanger.migrate();
         await migrateScene.migrate();
         
