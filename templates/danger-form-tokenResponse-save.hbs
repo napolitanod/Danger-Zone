@@ -1,0 +1,123 @@
+<div class="tab active danger-part-group scrollable" data-tab="save" data-group="sheet">
+    <p class="notes">{{localize "DANGERZONE.type-form.tokenResponse.save.description"}} {{#if modules.socketLibOn}}{{localize "DANGERZONE.type-form.tokenResponse.save.socket-on.description"}}{{else}}{{localize "DANGERZONE.type-form.tokenResponse.save.socket-off.description"}}{{/if}}</p>
+    <div class="form-group">
+        <label for="save.enable">{{localize "DANGERZONE.type-form.tokenResponse.save.enable.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="save.enable" {{checked data.save.enable}}>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="save.type">{{localize "DANGERZONE.type-form.tokenResponse.save.type.label"}}</label>
+        <div class="form-fields">
+            <select name="save.type" value="{{data.save.type}}"> 
+                {{selectOptions options.TOKENRESPONSE.SAVETYPE selected=data.save.type localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="save.diff">{{localize "DANGERZONE.type-form.tokenResponse.save.diff.label"}}</label>
+        <div class="form-fields">
+            <range-picker name="save.diff" value="{{#if data.save.diff}}{{data.save.diff}}{{else}}10{{/if}}" min="0" max="30" step="1"></range-picker>    
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="save.source">{{localize "DANGERZONE.source.label"}} 
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.source.danger.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <select name="save.source" value="{{data.save.source}}"> 
+                {{selectOptions options.SOURCETREATMENT selected=data.save.source localize=true}}
+            </select>   
+        </div>
+    </div>
+    <h4>{{localize "DANGERZONE.type-form.tokenResponse.save.success.label"}}</h4>
+    <p class="notes">{{localize "DANGERZONE.type-form.tokenResponse.save.success.description"}}</p>
+    <div class="form-group">
+        <label for="save.ae">{{localize "DANGERZONE.type-form.effect.label"}}</label>
+        <div class="form-fields">
+            <select name="save.ae" value={{data.save.ae}} data-dtype="Number"> 
+                {{selectOptions options.TOKENRESPONSE.SAVERESULT selected=data.save.ae localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="save.it">{{localize "DANGERZONE.type-form.item.label"}}</label>
+        <div class="form-fields">
+            <select name="save.it" value={{data.save.it}} data-dtype="Number"> 
+                {{selectOptions options.TOKENRESPONSE.SAVERESULT selected=data.save.ti localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="save.rg">{{localize "DANGERZONE.type-form.region.label"}}</label>
+        <div class="form-fields">
+            <select name="save.rg" value={{data.save.rg}} data-dtype="Number"> 
+                {{selectOptions options.TOKENRESPONSE.SAVERESULT selected=data.save.rg localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="save.le">{{localize "DANGERZONE.type-form.tile.label"}}</label>
+        <div class="form-fields">
+            <select name="save.le" value={{data.save.le}} data-dtype="Number"> 
+                {{selectOptions options.TOKENRESPONSE.SAVERESULT selected=data.save.le localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="save.tm">{{localize "DANGERZONE.type-form.tokenMove.label"}}</label>
+        <div class="form-fields">
+            <select name="save.tm" value={{data.save.tm}} data-dtype="Number"> 
+                {{selectOptions options.TOKENRESPONSE.SAVERESULT selected=data.save.tm localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="save.fe">{{localize "DANGERZONE.type-form.foregroundEffect.label"}}</label>
+        <div class="form-fields">
+            <select name="save.fe" value={{data.save.fe}} data-dtype="Number"> 
+                {{selectOptions options.TOKENRESPONSE.SAVERESULT selected=data.save.fe localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="save.se">{{localize "DANGERZONE.type-form.sourceEffect.label"}}</label>
+        <div class="form-fields">
+            <select name="save.se" value={{data.save.se}} data-dtype="Number"> 
+                {{selectOptions options.TOKENRESPONSE.SAVERESULT selected=data.save.se localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="save.be">{{localize "DANGERZONE.type-form.backgroundEffect.label"}}</label>
+        <div class="form-fields">
+            <select name="save.be" value={{data.save.be}} data-dtype="Number"> 
+                {{selectOptions options.TOKENRESPONSE.SAVERESULT selected=data.save.be localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group {{#unless modules.sequencerOn}}dz-hidden{{/unless}}">
+        <label for="save.te">{{localize "DANGERZONE.type-form.tokenEffect.label"}}</label>
+        <div class="form-fields">
+            <select name="save.te" value={{data.save.te}} data-dtype="Number"> 
+                {{selectOptions options.TOKENRESPONSE.SAVERESULT selected=data.save.te localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group {{#unless modules.tokenSaysOn}}dz-hidden{{/unless}}">
+        <label for="save.ts">{{localize "DANGERZONE.type-form.tokenSays.label"}}</label>
+        <div class="form-fields">
+            <select name="save.ts" value={{data.save.ts}} data-dtype="Number"> 
+                {{selectOptions options.TOKENRESPONSE.SAVERESULT selected=data.save.ts localize=true}}
+            </select>   
+        </div>
+    </div>  
+    <div class="form-group">
+        <label for="save.wall">{{localize "DANGERZONE.type-form.wall.label"}}</label>
+        <div class="form-fields">
+            <select name="save.wall" value={{data.save.wall}} data-dtype="Number"> 
+                {{selectOptions options.TOKENRESPONSE.SAVERESULT selected=data.save.wall localize=true}}
+            </select>   
+        </div>
+    </div>        
+</div>

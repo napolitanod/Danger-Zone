@@ -1,0 +1,29 @@
+<div class="tab danger-part-group" data-tab="overhead" data-group="sheet">
+    <div class="form-group">
+        <label for="occlusion.mode">{{localize "DANGERZONE.type-form.tile.occlusion.mode.label"}}</label>
+        <div class="form-fields">
+            <select name="occlusion.mode" value="{{data.occlusion.mode}}"> 
+                <option value=""></option>
+                {{selectOptions options.LASTINGEFFECT.TILEOCCLUSIONMODES selected=data.occlusion.mode localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="occlusion.alpha">{{localize "DANGERZONE.type-form.tile.occlusion.alpha.label"}}</label>
+        <div class="form-fields">
+            <range-picker name="occlusion.alpha" value="{{data.occlusion.alpha}}" min="0" max="1" step="0.05"></range-picker>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize "DANGERZONE.type-form.tile.restrictsLight.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="restrictions.light" {{ checked data.restrictions.light }}>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize "DANGERZONE.type-form.tile.restrictsWeather.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="restrictions.weather" {{ checked data.restrictions.weather }}>
+        </div>
+    </div>
+</div>

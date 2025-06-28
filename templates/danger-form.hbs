@@ -1,6 +1,6 @@
-<form class="danger-zone-type-form" autocomplete="off" data-id="{{zone.id}}">
+<div class="scrollable">
     <div class="dz-hidden">
-        <input type="text" value="{{zone.id}}" name="id">
+        <input type="text" value="{{danger.id}}" name="id">
     </div>
     <div class="dz-hidden">
         <input type="number" value={{migration}} name="migration">
@@ -9,14 +9,13 @@
         <div class="form-group">
             <label>{{localize 'DANGERZONE.type-form.name.label'}}</label>
             <div class="form-fields">
-                <input type="text" required name="name" value="{{zone.name}}" maxlength="75">
+                <input type="text" required name="name" value="{{danger.name}}" maxlength="75">
             </div>
         </div>
         <div class="form-group">
             <label for="icon">{{localize 'DANGERZONE.type-form.icon.label'}}</label>
-            <div class="form-fields">
-                {{filePicker target="icon" type="image"}}
-                <input type="text" required name="icon" value="{{zone.icon}}">
+            <div class="form-fields">            
+                <file-picker name="icon" type="image" value="{{danger.icon}}"></file-picker>
             </div>
         </div>
         <div class="form-group">
@@ -27,22 +26,22 @@
             <div class="form-fields">
                 <label>{{localize "DANGERZONE.type-form.area-x.label"}}</label>
                 <div class="form-fields">
-                    <input type="number" required name="dimensions.units.w" min="0" step="1"  placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{zone.dimensions.units.w}}>
+                    <input type="number" required name="dimensions.units.w" min="0" step="1"  placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{danger.dimensions.units.w}}>
                 </div>
                 <label>{{localize "DANGERZONE.type-form.area-y.label"}}</label>
                 <div class="form-fields">
-                    <input type="number" required name="dimensions.units.h" min="0" step="1" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{zone.dimensions.units.h}}>
+                    <input type="number" required name="dimensions.units.h" min="0" step="1" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{danger.dimensions.units.h}}>
                 </div>
                 <label>{{localize "DANGERZONE.type-form.area-z.label"}}</label>
                 <div class="form-fields">
-                    <input type="number" required name="dimensions.units.d" min="0" step="1" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{zone.dimensions.units.d}}>
+                    <input type="number" required name="dimensions.units.d" min="0" step="1" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{danger.dimensions.units.d}}>
                 </div>
             </div>
         </div>
         <div class="form-group">
             <label for="options.macro">{{localize 'DANGERZONE.type-form.macro.label'}}</label>
             <div class="form-fields">
-                <select name="options.macro" value="{{zone.options.macro}}"> 
+                <select name="options.macro" value="{{danger.options.macro}}"> 
                     <option value=""></option>  
                     {{selectOptions macroOps selected=zone.options.macro localize=false}}
                 </select>     
@@ -51,124 +50,121 @@
     </div>
     <div class="form-group">
         <ol class="danger-setting-group flexrow">
-            <li data-id="active-effect" class="{{#if hasActiveEffect}}active {{/if}}{{#if activeEffectOnNot}}dz-hidden{{/if}}">
-                <button class="danger-zone-type-button"data-action="edit" title="{{localize "DANGERZONE.type-form.active-effect.edit.title"}} {{localize 'DANGERZONE.type-form.active-effect.notes'}}"><i class="fas fa-hand-sparkles"></i></button>  
-                <label>{{localize 'DANGERZONE.type-form.active-effect.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            <li data-id="effect" class="{{#if has.effect}}active {{/if}}{{#unless modules.activeEffectOn}}dz-hidden{{/unless}}" title="{{localize "DANGERZONE.type-form.effect.label"}}">
+                <button type="button" class="danger-zone-type-button"data-action="edit" title="{{localize "DANGERZONE.type-form.effect.edit.title"}} {{localize 'DANGERZONE.type-form.effect.notes'}}"><i class="fas fa-hand-sparkles"></i></button>  
+                <label>{{localize 'DANGERZONE.type-form.effect.label'}}</label>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li> 
-            <li data-id="light" {{#if hasLight}}class="active"{{/if}}>
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.light.description"}}"><i class="fa-regular fa-lightbulb"></i></button>   
-                <label>{{localize 'DANGERZONE.type-form.light.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            <li data-id="ambientLight" {{#if has.ambientLight}}class="active"{{/if}} title="{{localize "DANGERZONE.type-form.ambientLight.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.ambientLight.description"}}"><i class="fa-regular fa-lightbulb"></i></button>   
+                <label>{{localize 'DANGERZONE.type-form.ambientLight.label'}}</label>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="audio" {{#if hasAudio}}class="active"{{/if}}>
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.audio.description"}}"><i class="fas fa-music"></i></button>   
-                <label>{{localize 'DANGERZONE.type-form.audio.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            <li data-id="audio" {{#if has.audio}}class="active"{{/if}} title="{{localize labels.DANGERPART.audio}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.audio.description"}}"><i class="{{icons.DANGERPART.audio}}"></i></button>   
+                <label>{{localize labels.DANGERPART.audio}}</label>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="canvas" class="{{#if canvasOnNot}}dz-hidden{{/if}} {{#if hasCanvas}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.canvas.description"}}"><i class="fas fa-wind"></i></button>   
-                <label>{{localize 'DANGERZONE.type-form.canvas.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            <li data-id="canvas" class="{{#unless modules.sequencerOn}}dz-hidden{{/unless}} {{#if has.canvas}}active{{/if}}" title="{{localize labels.DANGERPART.canvas}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.canvas.description"}}"><i class="{{icons.DANGERPART.canvas}}"></i></button>   
+                <label>{{localize labels.DANGERPART.canvas}}</label>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="combat" {{#if hasCombat}}class="active"{{/if}}>
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.combat.description"}}"><i class="fas fa-swords"></i></button>   
-                <label>{{localize 'DANGERZONE.type-form.combat.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            <li data-id="combat" {{#if has.combat}}class="active"{{/if}} title="{{localize labels.DANGERPART.combat}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.combat.description"}}"><i class="{{icons.DANGERPART.combat}}"></i></button>   
+                <label>{{localize labels.DANGERPART.combat}}</label>
+                <a class="danger-zone-type-delete"  title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="item" {{#if hasItem}}class="active"{{/if}}>
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.item.description"}}"><i class="fas fa-suitcase"></i></button>   
-                <label>{{localize 'DANGERZONE.type-form.item.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            <li data-id="item" {{#if has.item}}class="active"{{/if}} title="{{localize labels.DANGERPART.item}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.item.description"}}"><i class="{{icons.DANGERPART.item}}"></i></button>   
+                <label>{{localize labels.DANGERPART.item}}</label>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="lasting-effect" {{#if hasLastingEffect}}class="active"{{/if}}>
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tile.description"}}"><i class="fa-solid fa-cubes"></i></button>   
+            <li data-id="lastingEffect" {{#if has.lastingEffect}}class="active"{{/if}} title="{{localize "DANGERZONE.type-form.tile.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tile.description"}}"><i class="fa-solid fa-cubes"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.tile.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="token-move" class="{{#if hasTokenMove}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tokenMove.description"}}"><i class="fas fa-arrows-alt"></i></button>   
+            <li data-id="tokenMove" class="{{#if has.tokenMove}}active{{/if}}" title="{{localize "DANGERZONE.type-form.tokenMove.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tokenMove.description"}}"><i class="fas fa-arrows-alt"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.tokenMove.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="mutate" class="{{#if hasMutate}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.mutate.description"}}"><i class="fas fa-pastafarianism"></i></button>   
+            <li data-id="mutate" class="{{#if has.mutate}}active{{/if}}" title="{{localize "DANGERZONE.type-form.mutate.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.mutate.description"}}"><i class="fas fa-pastafarianism"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.mutate.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete"  title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="region" class="{{#if hasRegion}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.region.description"}}"><i class="fa-regular fa-game-board"></i></button>   
+            <li data-id="region" class="{{#if has.region}}active{{/if}}" title="{{localize "DANGERZONE.type-form.region.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.region.description"}}"><i class="fa-regular fa-game-board"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.region.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="foreground-effect" class="{{#if sequencerOnNot}}dz-hidden{{/if}} {{#if hasForegroundEffect}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.foregroundEffect.description"}}"><i class="fas fa-bolt"></i></button>   
-                <label>{{localize 'DANGERZONE.type-form.foregroundEffect.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            <li data-id="foregroundEffect" class="{{#unless modules.sequencerOn}}dz-hidden{{/unless}}  {{#if has.foregroundEffect}}active{{/if}}" title="{{localize labels.DANGERPART.foregroundEffect}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.foregroundEffect.description"}}"><i class="{{icons.DANGERPART.foregroundEffect}}"></i></button>   
+                <label>{{localize labels.DANGERPART.foregroundEffect}}</label>
+                <a class="danger-zone-type-delete"  title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="source-effect" class="{{#if sequencerOnNot}}dz-hidden{{/if}} {{#if hasSourceEffect}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.sourceEffect.description"}}"><i class="fas fa-dragon"></i></button>   
+            <li data-id="sourceEffect" class="{{#unless modules.sequencerOn}}dz-hidden{{/unless}}  {{#if has.sourceEffect}}active{{/if}}" title="{{localize "DANGERZONE.type-form.sourceEffect.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.sourceEffect.description"}}"><i class="fas fa-dragon"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.sourceEffect.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="background-effect" class="{{#if sequencerOnNot}}dz-hidden{{/if}} {{#if hasBackgroundEffect}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.backgroundEffect.description"}}"><i class="fas fa-bomb"></i></button>   
-                <label>{{localize 'DANGERZONE.type-form.backgroundEffect.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            <li data-id="backgroundEffect" class="{{#unless modules.sequencerOn}}dz-hidden{{/unless}}  {{#if has.backgroundEffect}}active{{/if}}" title="{{localize labels.DANGERPART.backgroundEffect}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.backgroundEffect.description"}}"><i class="{{icons.DANGERPART.backgroundEffect}}"></i></button>   
+                <label>{{localize labels.DANGERPART.backgroundEffect}}</label>
+                <a class="danger-zone-type-delete"  title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="token-effect" class="{{#if sequencerOnNot}}dz-hidden{{/if}} {{#if hasTokenEffect}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tokenEffect.description"}}"><i class="fas fa-male"></i></button>   
-                <label>{{localize 'DANGERZONE.type-form.tokenEffect.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            <li data-id="tokenEffect" class="{{#unless modules.sequencerOn}}dz-hidden{{/unless}}  {{#if has.tokenEffect}}active{{/if}}" title="{{localize labels.DANGERPART.tokenEffect}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize  DANGERZONE.type-form.tokenEffect.description}}"><i class="{{icons.DANGERPART.tokenEffect}}"></i></button>   
+                <label>{{localize labels.DANGERPART.tokenEffect}}</label>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="rolltable" class="{{#if hasRolltable}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.rolltable.description"}}"><i class="fas fa-th-list"></i></button>   
+            <li data-id="rolltable" class="{{#if has.rolltable}}active{{/if}}" title="{{localize "DANGERZONE.type-form.rolltable.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.rolltable.description"}}"><i class="fas fa-th-list"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.rolltable.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="scene" class="{{#if hasScene}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.scene.description"}}"><i class="fas fa-map"></i></button>   
+            <li data-id="scene" class="{{#if has.scene}}active{{/if}}" title="{{localize "DANGERZONE.type-form.scene.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.scene.description"}}"><i class="fas fa-map"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.scene.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="sound" class="{{#if hasSound}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.sound.description"}}"><i class="fa-solid fa-music"></i></button>   
+            <li data-id="sound" class="{{#if has.sound}}active{{/if}}" title="{{localize "DANGERZONE.type-form.sound.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.sound.description"}}"><i class="fa-solid fa-music"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.sound.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="token-response" class="{{#if tokenResponseOnNot}}dz-hidden{{/if}} {{#if hasTokenResponse}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tokenResponse.description"}}"><i class="fas fa-shield-alt"></i></button>   
+            <li data-id="tokenResponse" class="{{#unless danger.tokenResponseAvailable}}dz-hidden{{/unless}} {{#if has.tokenResponse}}active{{/if}}" title="{{localize "DANGERZONE.type-form.tokenResponse.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tokenResponse.description"}}"><i class="fas fa-shield-alt"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.tokenResponse.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="token-says" class="{{#if tokenSaysOnNot}}dz-hidden{{/if}} {{#if hasTokenSays}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tokenSays.description"}}"><i class="fas fa-comment"></i></button>   
+            <li data-id="tokenSays" class="{{#unless modules.tokenSaysOn}}dz-hidden{{/unless}} {{#if has.tokenSays}}active{{/if}}" title="{{localize "DANGERZONE.type-form.tokenSays.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tokenSays.description"}}"><i class="fas fa-comment"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.tokenSays.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="warpgate" class="{{#if portalOnNot}}dz-hidden{{/if}} {{#if hasWarpgate}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.warpgate.description"}}"><i class="fas fa-circle-notch"></i></button>   
+            <li data-id="warpgate" class="{{#unless modules.portalOn}}dz-hidden{{/unless}} {{#if has.warpgate}}active{{/if}}" title="{{localize "DANGERZONE.type-form.warpgate.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.warpgate.description"}}"><i class="fas fa-circle-notch"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.warpgate.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="wall" class="{{#if hasWall}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.wall.description"}}"><i class="fa-solid fa-block-brick"></i></button>   
+            <li data-id="wall" class="{{#if has.wall}}active{{/if}}" title="{{localize "DANGERZONE.type-form.wall.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.wall.description"}}"><i class="fa-solid fa-block-brick"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.wall.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="weather" class="{{#if hasWeather}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.weather.description"}}"><i class="fas fa-cloud-rain"></i></button>   
+            <li data-id="weather" class="{{#if has.weather}}active{{/if}}" title="{{localize "DANGERZONE.type-form.weather.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.weather.description"}}"><i class="fas fa-cloud-rain"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.weather.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
-            <li data-id="global-zone" class="{{#if hasGlobalZone}}active{{/if}}">
-                <button class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.global-zone.description"}}"><i class="fas fa-radiation"></i></button>   
-                <label>{{localize 'DANGERZONE.type-form.global-zone.label'}}</label>
-                <a class="danger-zone-type-delete" data-action="delete" title="{{localize 'DANGERZONE.delete'}}" data-action="delete"><i class="fas fa-trash"></i></a>
+            <li data-id="globalZone" class="{{#if has.globalZone}}active{{/if}}" title="{{localize "DANGERZONE.type-form.globalZone.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.globalZone.description"}}"><i class="fas fa-radiation"></i></button>   
+                <label>{{localize 'DANGERZONE.type-form.globalZone.label'}}</label>
+                <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
         </ol> 
     </div>
-	<footer class="sheet-footer flexrow">
-		<button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
-	</footer>
-</form>
+</div>

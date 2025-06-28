@@ -1,0 +1,87 @@
+<div class="tab active danger-part-group" data-tab="light" data-group="sheet">
+    <p class="notes">{{localize "DANGERZONE.type-form.ambientLight.description"}}</p>
+    <div class="form-group slim">
+        <label>{{localize "DANGERZONE.type-form.ambientLight.radius.label"}} <span class="units">({{localize "DANGERZONE.gridUnits2"}})</span></label>
+        <div class="form-fields">
+            <label for="dim">{{localize "DANGERZONE.type-form.ambientLight.dimLight.label"}}</label>
+            <input type="number" required name="dim"  min="0.00" step="0.01" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{data.dim}}>
+            <label for="bright">{{localize "DANGERZONE.type-form.ambientLight.brightLight.label"}}</label>
+            <input type="number" required name="bright"  min="0.00" step="0.01" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{data.bright}}>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="walls">{{localize "DANGERZONE.type-form.ambientLight.walls.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="walls" {{checked data.walls}}/>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="angle">
+            {{localize "DANGERZONE.type-form.ambientLight.emission.label"}}
+            <span class="units">{{localize 'DANGERZONE.degrees'}}</span>
+        </label>
+        <div class="form-fields">
+            <range-picker name="angle" value="{{data.angle}}" min="0" max="360" step="1"></range-picker>  
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="rotation">{{localize "DANGERZONE.type-form.ambientLight.rotation.label"}}
+            <span class="units">{{localize 'DANGERZONE.degrees'}}</span>
+        </label>
+        <div class="form-fields">
+            <range-picker name="rotation" value="{{data.rotation}}" min="0" max="360" step="1"></range-picker>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="negative">{{localize "DANGERZONE.type-form.ambientLight.negative.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="negative" {{checked data.negative}}/>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="tintColor">{{localize "DANGERZONE.type-form.ambientLight.color.label"}}</label>
+        <div class="form-fields">
+            <color-picker name="tintColor" value={{data.tintColor}}></color-picker>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="tintAlpha">{{localize "DANGERZONE.type-form.ambientLight.intensity.label"}}</label>
+        <div class="form-fields">
+            <range-picker name="tintAlpha" value="{{data.tintAlpha}}" min="0.0" max="1.0" step="0.05"></range-picker>
+        </div>
+    </div>
+    <div class="form-group slim">
+        <label>{{ localize "DANGERZONE.type-form.ambientLight.darkness.label" }}</label>
+        <div class="form-fields">
+            <label>{{localize "DANGERZONE.between"}}</label>
+            <input type="number" value={{data.darkness.min}} name="darkness.min" step="any" placeholder="0" min="0" max="1"/>
+            <label>{{localize "DANGERZONE.and"}}</label>
+            <input type="number" value={{data.darkness.max}} name="darkness.max" step="any" placeholder="1" min="0" max="1"/>
+        </div>
+    </div>
+    <hr>
+    <div class="form-group slim">
+        <label>{{ localize "DANGERZONE.type-form.ambientLight.clear.label" }}</label>
+        <div class="form-fields">
+            <label>{{localize "DANGERZONE.after"}}</label>
+            <input type="number" value={{data.clear.delay}} name="clear.delay" step="1" placeholder="0" min="0" max="600000"/>
+            <label>{{localize "DANGERZONE.ms"}}</label>
+            <select name="clear.type" value="{{data.clear.type }}"> 
+                <option value=""></option>
+                {{selectOptions options.AMBIENTLIGHT.CLEAR selected=data.clear.type localize=true}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="delay">{{localize "DANGERZONE.type-form.ambientLight.delay.label"}}</label>
+        <div class="form-fields">
+            <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
+        </div>
+    </div>
+    <div class="form-group {{#unless modules.taggerOn}}dz-hidden{{/unless}}">
+        <label for="tag">{{localize "DANGERZONE.type-form.ambientLight.tag.label"}}</label>
+        <div class="form-fields">
+            <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.ambientLight.tag.description"}}"  value="{{data.tag}}">
+        </div>
+    </div>
+</div>

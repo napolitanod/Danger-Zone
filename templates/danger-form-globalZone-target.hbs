@@ -1,0 +1,62 @@
+<div class="tab danger-part-group" data-tab="target" data-group="sheet">
+    <div class="form-group">
+        <label for="options.placeTemplate">{{localize 'DANGERZONE.edit-form.placeTemplate.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.placeTemplate.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <input type="checkbox" name="target.choose.enable" {{checked zone.target.choose.enable}} data-action="template-toggle"/>
+        </div>
+    </div>
+    <div class="form-group {{#unless zone.target.choose.enable}}dz-hidden{{/unless}}" id="dz-elevation-prompt-global">
+        <label for="options.noPrompt">{{localize 'DANGERZONE.edit-form.promptElevation.label'}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="target.choose.prompt" {{checked zone.target.choose.prompt}} />
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="options.allInArea">{{localize 'DANGERZONE.edit-form.allInArea.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.allInArea.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <input type="checkbox" name="target.all" {{checked zone.target.all}} />
+        </div>
+    </div>
+    <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.edit-form.runUntilTokenFound.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.runUntilTokenFound.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <input type="checkbox" name="target.always" {{checked zone.target.always}} />
+        </div>
+    </div>
+        <fieldset>
+        <legend>{{localize 'DANGERZONE.edit-form.actor.label'}}</legend>
+        <div class="form-fields actor-select">
+            <multi-select name="target.actors" value="{{zone.target.actors}}">
+                {{selectOptions actorOps selected=zone.target.actors}}
+            </multi-select>
+        </div>
+    </fieldset> 
+        <fieldset>
+        <legend>{{localize 'DANGERZONE.edit-form.token-disposition.label'}}</legend>
+        <div class="form-group">
+            <div class="form-fields">
+                <multi-select name="target.dispositions" value="{{zone.target.dispositions}}">
+                    {{selectOptions zoneOptions.TOKENDISPOSITION selected=zone.target.dispositions localize=true}}
+                </multi-select>
+            </div>
+        </div>
+    </fieldset> 
+        <fieldset>
+        <legend>
+            {{localize 'DANGERZONE.edit-form.token-condition-ex.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.token-condition-ex.description'}}"><i class="fas fa-info-circle"></i></span>
+        </legend>
+        <div class="form-group">
+            <div class="form-fields">
+                <string-tags name="target.exclusion.conditions" value="{{zone.target.exclusion.conditions}}"></string-tags>
+            </div>
+        </div>
+    </fieldset>
+</div>

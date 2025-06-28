@@ -465,8 +465,7 @@ export class dangerZoneType {
   }
 
   get hasTwinBoundary(){
-    const mat = this.options.flags['monks-active-tiles']?.teleport
-    return (this.hasRegionTeleport || (mat && mat.add && mat.twin)) ? true : false
+    return this.hasRegionTeleport  ? true : false
   }
 
   get item(){
@@ -500,7 +499,11 @@ export class dangerZoneType {
   }
 
   get save(){
-    return (this.options.flags.tokenResponse?.save && Object.keys(saveTypes()).length)  ? this.options.flags.tokenResponse.save : {}
+    return (this.options.flags.tokenResponse?.save && this.tokenResponseAvailable)  ? this.options.flags.tokenResponse.save : {}
+  }
+
+  get tokenResponseAvailable(){
+    return Object.keys(saveTypes()).length ? true : false
   }
 
   get scene(){

@@ -22,7 +22,8 @@ export class dangerZoneDimensions {
     }
 
     get region(){
-        return this.regionId ? this.scene.getEmbeddedDocument("Region",this.regionId) : {}
+        const region = this.regionId ? this.scene.getEmbeddedDocument("Region",this.regionId) : {}
+        return region ?? {}
     }
 
     get scene(){
@@ -196,7 +197,7 @@ export class boundary{
         if (this.depthIsInfinite) return [0]
         const arr = []
         for (let i = 0; i < this.depth; i++) {
-            arr.push(this.depth + i);
+            arr.push(this.bottom + i);
         }
         return arr
     }

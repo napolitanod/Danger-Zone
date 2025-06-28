@@ -1,31 +1,58 @@
 {
     "DANGERZONE": {
         "add": "Add",
+        "advanced.label": "Advanced Options",
         "after": "After",
         "and": "and",
+        "animation.label": "Animation",
+        "audio.label": "Audio",
+        "behaviors.label": "Behaviors",
         "between": "Between",
         "cancel": "Cancel",
+        "chat.label": "Chat",
         "clear": "Clear",
         "continue": "Continue",
         "copy": "Copy",
+        "damage.label": "Damage",
         "degrees": "(Degrees)",
         "delete": "Delete",
         "distance": "(Distance)",
         "edit": "Edit",
         "export-danger": "Export Danger",
+        "file": {
+            "audio": {
+                "label": "Audio Source",
+                "placeholder": "path/to/audio.mp3",
+                "playlist.label": "Playlist Name",
+                "random.label": "Random from Playlist"
+            },
+            "visual":{
+                "label": "Image or Video",
+                "placeholder": "path/image.webm",
+                "random.label": "Randomize Wildcard webm"
+            }
+        },
         "grids": "(Grids)",
         "gridUnits": "units",
         "gridUnits2": "(Grid Units)",
         "location-picker": "Select the zone dimensions",
+        "movement.label": "Movement",
         "ms": "ms",
         "none": "None",
+        "offset.label": "Offset",
+        "overhead.label": "Overhead",
         "play": "Play",
         "preview": "Preview",
         "ratio": "(Ratio)",
-        "save": "Save",
+        "save.label": "Save",
         "sec": "sec",
+        "settings.label": "Settings",
+        "source.label": "Source",
         "stop": "Stop",
+        "tile.label": "Tile", 
         "view": "View",
+        "wall.label": "Wall",
+        "visual.label": "Visual",
         "yes": "Ok",
         "zones": "Configure Zones",
         "alerts": {
@@ -357,6 +384,7 @@
                 "delete": "Delete light",
                 "off": "Toggle light off"
             },
+            "label": "Light",
             "replace-types": {
                 "A.label": "Clear all ambient lighting",
                 "N.label": "Retain all ambient lighting",
@@ -531,25 +559,41 @@
             "turn-end.label": "Turn End"
         },
         "type-form": {
-            "active-effect":{
+            "ambientLight":{
+                "animationIntensity.label": "Animation Intensity",
+                "animation.label": "Light Animation Type",
+                "attenuation.description": "Transition illumination gradually between bright, dim, and dark.",
+                "brightLight.label": "Bright",
+                "clear.label": "Post Creation Event",
+                "color.label": "Light Color",
+                "coloration.label": "Coloration Technique",
+                "coloration.description":"The coloration technique applied to the light source contributes additive blending to the resulting appearance.",
+                "contrast.description": "Adjust the contrast of surfaces that are illuminated by this light source. The default value for a standard light source is 0.",
+                "contrast.label": "Background Contrast",
+                "darkness.label": "Darkness Activation Range",
                 "delay.label": "Delay Start",
-                "description": "Adds an active effect to targeted tokens.",
-                "deleteEffects.description": "Enter a list of active effect names to delete from the target.",
-                "delete-effects.label": "Delete Effects",
-                "disable-effects.description": "Enter a list of active effect names to disable on the target.",
-                "disable-effects.label": "Disable Effects",
-                "enable-effects.description": "Enter a list of active effect names to enable on the target.",
-                "enable-effects.label": "Enable Effects",
-                "label": "Active Effect",
-                "limit.description": "If a token already has this effect applied, a second one will not be added.",
-                "limit.label": "Max 1 Per Token",
-                "macro.description": "Determine if active effect macros should repeat on each turn of the associated token.",
-                "macro.label": "Macro Repeat",
-                "notes": "Active effect will be transferred to each danger target.",
-                "toggle-effects.description": "Enter a list of active effect names to toggle on the target.",
-                "toggle-effects.label": "Toggle Effects",
-                "edit.title": "Edit Active Effect",
-                "delete.title": "Delete Active Effect"
+                "description": "Add ambient lighting to the targeted area.",
+                "dimLight.label": "Dim",
+                "emission.label": "Emission Angle",
+                "attenuation.label": "Attenuation",
+                "intensity.label": "Color Intensity",
+                "label": "Ambient Local Light",
+                "luminosity.label": "Luminosity",
+                "luminosity.description": "Adjust the brightness of this light source. More luminous lights are less diminished by darkness. The default value for a standard light source is 0.5.",
+                "negative.label": "Is Darkness Source",
+                "priority.label": "Priority",
+                "radius.label": "Light Radius",
+                "reverseAnimation.label": "Reverse Direction",
+                "rotation.label": "Rotation Angle",
+                "saturation.description": "Adjust the saturation of surfaces that are illuminated by this light source. The default value for a standard light source is 0.",
+                "saturation.label": "Background Saturation",
+                "shadows.description": "Enhance or the intensity of dark colors illuminated by this light source. The default value for a standard light source is 0.",
+                "shadows.label": "Background Shadows",
+                "sightLimit.label": "Sight Limit",
+                "speed.label": "Animation Speed",
+                "tag.label": "Tag",
+                "tag.description": "Tagger tag",
+                "walls.label": "Constrained by Walls"
             },
             "animation.label": "Animation",
             "area-x.label": "Width",
@@ -558,37 +602,25 @@
             "audio":{
                 "description": "Plays a sound when the danger triggers.",
                 "label": "Audio",
-                "file.label": "Audio Source",
-                "file.placeholder": "path/audio.mp3",
-                "file.find": "Browse for Audio File",
-                "playlist.label": "Playlist Name",
                 "delay.label": "Delay Start",
                 "duration.description": "If the sound file is longer than the duration (in seconds) entered, then it will stop the sound at the provided duration following start of play. If duration = 0 then the sound plays for the entire length.",
                 "duration.label": "Duration",
-                "random.label": "Random from Playlist",
                 "volume.label": "Sound Volume"
             },
             "backgroundEffect":{
                 "audio":{
                     "label": "Audio",
-                    "file.label": "Audio Source",
-                    "file.placeholder": "path/audio.mp3",
-                    "file.find": "Browse for Audio File",
-                    "playlist.label": "Playlist Name",
-                    "random.label": "Random from Playlist",
                     "volume.label": "Sound Volume"
                 },
+                "below.label": "Display Below Token",
                 "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays beneath the target area, such as an explosion or impact animation.",
                 "label": "Target Effect",
-                "file.find": "Browse for Effect",
-                "file.label": "Image or Video",
-                "file.placeholder": "path/image.webm",
-                "randomFile.label": "Randomize Wildcard webm",
                 "rotate.label": "Random Rotation",
                 "scale.label": "Scale",
                 "repeat.label": "Number of Repeats",
-                "duration.label": "Duration"
+                "duration.label": "Duration",
+                "visual.label": "Visual"
             },
             "clear": "Clear",
             "cleared.info": "has been deleted from this danger.",
@@ -640,14 +672,30 @@
                     "shake": "Canvas Shake"
                 }
             },
+            "effect":{
+                "delay.label": "Delay Start",
+                "description": "Adds an active effect to targeted tokens.",
+                "deleteEffects.description": "Enter a list of active effect names to delete from the target.",
+                "delete-effects.label": "Delete Effects",
+                "disable-effects.description": "Enter a list of active effect names to disable on the target.",
+                "disable-effects.label": "Disable Effects",
+                "enable-effects.description": "Enter a list of active effect names to enable on the target.",
+                "enable-effects.label": "Enable Effects",
+                "label": "Active Effect",
+                "limit.description": "If a token already has this effect applied, a second one will not be added.",
+                "limit.label": "Max 1 Per Token",
+                "macro.description": "Determine if active effect macros should repeat on each turn of the associated token.",
+                "macro.label": "Macro Repeat",
+                "notes": "Active effect will be transferred to each danger target.",
+                "toggle-effects.description": "Enter a list of active effect names to toggle on the target.",
+                "toggle-effects.label": "Toggle Effects",
+                "edit.title": "Edit Active Effect",
+                "delete.title": "Delete Active Effect"
+            },
             "foregroundEffect":{
                 "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays above the target area, such as a lightning bolt or falling rocks animation.",
                 "label": "Primary Effect",
-                "file.label": "Image or Video",
-                "file.placeholder": "path/image.webm",
-                "file.find": "Browse for Effect",
-                "randomFile.label": "Randomize Wildcard webm",
                 "scale.label": "Scale",
                 "source": {
                     "enabled.label": "Source to Target",
@@ -661,7 +709,7 @@
                 "repeat.label": "Number of Repeats",
                 "duration.label": "Duration"
             },
-            "global-zone": {
+            "globalZone": {
                 "bottom.label": "Zone Bottom",
                 "description": "Configures this danger so that it becomes available on every scene as a manually triggered zone with a more limited option set.",
                 "top.label": "Zone Top",
@@ -688,67 +736,9 @@
                 "updates.label": "Updates",
                 "tag.label": "Item Tag",
                 "tag.description": "Tagger tag"
-                },
-            "light":{
-                "animationIntensity.label": "Animation Intensity",
-                "animation.label": "Light Animation Type",
-                "attenuation.description": "Transition illumination gradually between bright, dim, and dark.",
-                "brightLight.label": "Bright",
-                "clear.label": "Post Creation Event",
-                "color.label": "Light Color",
-                "coloration.label": "Coloration Technique",
-                "coloration.description":"The coloration technique applied to the light source contributes additive blending to the resulting appearance.",
-                "contrast.description": "Adjust the contrast of surfaces that are illuminated by this light source. The default value for a standard light source is 0.",
-                "contrast.label": "Background Contrast",
-                "darkness.label": "Darkness Activation Range",
-                "delay.label": "Delay Start",
-                "description": "Add ambient lighting to the targeted area.",
-                "dimLight.label": "Dim",
-                "emission.label": "Emission Angle",
-                "attenuation.label": "Attenuation",
-                "intensity.label": "Color Intensity",
-                "label": "Ambient Local Light",
-                "luminosity.label": "Luminosity",
-                "luminosity.description": "Adjust the brightness of this light source. More luminous lights are less diminished by darkness. The default value for a standard light source is 0.5.",
-                "negative.label": "Is Darkness Source",
-                "priority.label": "Priority",
-                "radius.label": "Light Radius",
-                "reverseAnimation.label": "Reverse Direction",
-                "rotation.label": "Rotation Angle",
-                "saturation.description": "Adjust the saturation of surfaces that are illuminated by this light source. The default value for a standard light source is 0.",
-                "saturation.label": "Background Saturation",
-                "shadows.description": "Enhance or the intensity of dark colors illuminated by this light source. The default value for a standard light source is 0.",
-                "shadows.label": "Background Shadows",
-                "sightLimit.label": "Sight Limit",
-                "speed.label": "Animation Speed",
-                "tab":{
-                    "basic": "Basic Configuration",
-                    "animation": "Light Animation",
-                    "advanced": "Advanced Options"
-                },
-                "tag.label": "Tag",
-                "tag.description": "Tagger tag",
-                "walls.label": "Constrained by Walls"
             },
             "macro.label": "Macro",
             "macro.notes": "The macro in this world that will run when the danger zone triggers.",
-            "monks-active-tiles":{
-                "label": "Monk's Active Tiles",
-                "macro": {
-                    "args.label": "Macro Args",
-                    "description": "Embed a macro into the tile that executes when a token enters the space.",
-                    "label": "Run Macro"
-                },
-                "notes": "Adds triggers to the lasting effect tile by integrating with Monk's Active Tiles.",
-                "teleport":{
-                    "avoid.label": "Avoid Destination Tokens",
-                    "description": "Tile will teleport tokens to another random destination in the zone. If 'Twin' is selected then a second tile will be created and the two will teleport between each other.",
-                    "label": "Add Token Teleportion",
-                    "pan.label": "Pan Screen On Teleport",
-                    "source.label": "Delete Source Token",
-                    "twin.label": "Twin Tiles (i.e. Portal)"
-                }
-            },
             "mutate": {
                 "actor.label": "Token Actor Data",
                 "actor.description": "Updates token actor by passing in object data. Expects key: value pairs.",
@@ -840,10 +830,6 @@
                 "label": "Region",
                 "name.label": "Name",
                 "scale.label": "Region Scale",
-                "tab": {
-                    "main.title": "Main",
-                    "behaviors.title": "Behaviors"
-                },
                 "type.label": "Shape",
                 "type.options": {
                     "rectangle": "Rectangle",
@@ -867,13 +853,9 @@
             },
             "scene": {
                 "active.label": "Enable Scene Modifications",
+                "background.label": "Background",
                 "description": "Modifiy scene settings and global illumination",
                 "label": "Scene",
-                "background": {
-                    "file.label": "Background Image",
-                    "randomFile.label": "Randomize Wildcard Image",
-                    "file.placeholder":"File Path"
-                },
                 "darkness":{
                     "animate.label": "Animate Over Time",
                     "enable.label": "Update Darkness Level",
@@ -881,6 +863,7 @@
                 },
                 "delay.label": "Delay Start",
                 "foreground":{
+                    "label": "Foreground",    
                     "e": {
                         "label": "Foreground Elevation",
                         "distance": {
@@ -893,10 +876,7 @@
                             "relative.label": "Change Relative to Current Elevation",
                             "set.label": "Set to Elevation"
                         }
-                    },
-                    "randomFile.label": "Randomize Wildcard Image",
-                    "file.label":"Foreground Image",
-                    "file.placeholder":"File Path"
+                    }
                 },
                 "globalLight": {
                     "label": "Toggle Global Illumination",
@@ -910,10 +890,6 @@
             "sound":{
                 "description": "Adds an ambient sound to the scene at the target location.",
                 "label": "Sound",
-                "file.label": "Audio Source",
-                "file.placeholder": "path/audio.mp3",
-                "file.find": "Browse for Audio File",
-                "playlist.label": "Playlist Name",
                 "delay.label": "Delay Start",
                 "easing.label": "Volume Easing",
                 "random.label": "Random from Playlist",
@@ -923,21 +899,11 @@
             },
             "sourceEffect":{
                 "audio":{
-                    "label": "Audio",
-                    "file.label": "Audio Source",
-                    "file.placeholder": "path/audio.mp3",
-                    "file.find": "Browse for Audio File",
-                    "playlist.label": "Playlist Name",
-                    "random.label": "Random from Playlist",
                     "volume.label": "Sound Volume"
                 },
                 "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays beneath the source area, such as an puff of smoke or waving wand.",
                 "label": "Source Effect",
-                "file.find": "Browse for Effect",
-                "file.label": "Image or Video",
-                "file.placeholder": "path/image.webm",
-                "randomFile.label": "Randomize Wildcard webm",
                 "rotate.label": "Random Rotation",
                 "scale.label": "Scale",
                 "repeat.label": "Number of Repeats",
@@ -955,8 +921,6 @@
                 "description": "Create a tile with an embedded video or image in the target area.",
                 "effect.description": "This field is required in order for the tile to generate. To generate a blank tile, use a transparent image.",
                 "effect.label": "Tile Image or Video",
-                "file.placeholder": "path/image.png",
-                "file.find": "Browse for Image or Video",
                 "hidden.label":"Hidden",
                 "label": "Lasting Effect",
                 "occlusion":{
@@ -966,14 +930,9 @@
                 "overhead.label": "Overhead Tile",
                 "is-overhead.label": "Is Overhead?",
                 "loop.label": "Loop Video",
-                "randomFile.label": "Randomize Wildcard Image",
                 "restrictsLight.label": "Restricts Light",
                 "restrictsWeather.label": "Restricts Weather",
                 "scale.label": "Effect Scale",
-                "tab": {
-                    "main.title": "Tile",
-                    "monks.title": "Monk's Active"
-                },
                 "tag.label": "Tile Tag",
                 "tag.description": "Tagger tag",
                 "z.label": "Sort"
@@ -1026,10 +985,6 @@
                 "delay.label": "Delay Start",
                 "description": "Create an effect that plays upon the targeted token and, if made permanent, moves with the token.",
                 "label": "Token Effect",
-                "file.label": "Image or Video",
-                "file.placeholder": "path/image.webm",
-                "file.find": "Browse for Effect",
-                "randomFile.label": "Randomize Wildcard webm",
                 "scale.label": "Scale",
                 "duration.label": "Duration"
             },  
@@ -1058,10 +1013,10 @@
                     },
                 "label": "Move Tokens",
                 "overrides.label": "Movement Overrides",
-                "source-to-target.label": "Move Source to Targeted Area",
+                "source-to-target.label": "Move Source to Targeted",
                 "teleport.label": "Teleport",
                 "tiles-block.label": "Tiles Block Target Depth Move",
-                "walls-block.label": "Walls Block Target X/Y Move",
+                "walls-block.label": "Walls Block Move",
                 "vertical.label": "Vertical Movement",
                 "vertical-distance.label": "Movement Distance",
                 "vertical-distance-max.label": "Maximum",
@@ -1116,10 +1071,6 @@
                     "success.description": "Choose how a save success or failure affects other danger parts",
                     "success.label": "Based on Save Result",
                     "type.label": "Saving Throw Type"
-                },
-                "tab": {
-                    "save.title": "Saving Throw",
-                    "damage.title": "Token Damage"
                 }
             },
             "wall":{
@@ -1152,14 +1103,10 @@
                 "color.label": "Portal Color",
                 "duplicates.label": "Number to Spawn",
                 "delay.label": "Portal Delay Start",
-                "file.description": "Add an image or video to display for the pointer.",
-                "file.label": "Pointer Image",
-                "file.placeholder": "path/image.webm",
                 "isRolltable.label": "Is Rollable Table",
                 "label": "Token Spawn",
                 "mutate.label": "Is Mutation Target",
                 "mutate.description": "If this danger includes a Mutate danger part, enabling this will apply the mutation to the spawned tokens instead of the normal zone targets. Be sure that the Mutate danger part 'Delay Start' is set to occur after this part's 'Delay Start'.",
-                "randomFile.label": "Randomize Wildcard webm",
                 "range.description": "Sets the range of the portal. If = 0, range will be the scene's distance * the danger's maximum width or height.",
                 "range.label": "Range",
                 "spawnDelay.label": "Token Spawn Delay",
@@ -1188,14 +1135,14 @@
         "types-form": {
             "clear": "Delete Danger",
             "confirm": "Are you sure you want to delete this danger?",
-            "description": "Dangers define what happens. Zones live on a scene and define where a danger can happen, when and to whom. Dangers are added to zones. Documentation at https://github.com/napolitanod/Danger-Zone/wiki/Dangers.",
+            "description": "Dangers bring your scene to life by doing things like creating walls, turning on lights, or starting combat. To use one, just create a zone on your scene using the Danger Zone scene controls and then link it to a danger.",
             "header.name": "Add and Edit Dangers",
             "search.placeholder": "enter text to filter dangers",
             "search.clear": "Clear Search",
             "export.title": "Export Dangers",
             "import.title": "Import Dangers",
-            "type.name.label": "Name",
-            "world.label": "World"
+            "type.name.label": "Danger Name",
+            "world.label": "Toggle World Zone"
         },
         "walls-block":{
             "none.label": "Walls do not block",

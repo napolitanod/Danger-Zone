@@ -1,0 +1,43 @@
+<div class="tab active danger-part-group" data-tab="audio" data-group="sheet">
+    <p class="notes">{{localize "DANGERZONE.type-form.sound.description"}}</p>
+    <div class="form-group">
+        <label for="randomFile">{{localize random.audio.LABEL}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-id="audio" data-action="random" data-dtype="Boolean" name="randomFile" {{checked data.randomFile}}>
+        </div>
+    </div>
+    <div data-id="audio-file" class="form-group {{#if randomFile}}hidden-picker{{/if}}">
+        <label for="file">{{#if data.randomFile}}{{localize random.audio.CHECKED.LABEL}}{{else}}{{localize random.audio.NOTCHECKED.LABEL}}{{/if}}</label>
+        <div class="form-fields">
+           <file-picker name="file" type="audio" class="image" placeholder="{{#if data.randomFile}}{{localize random.audio.CHECKED.PLACEHOLDER}}{{else}}{{localize random.audio.NOTCHECKED.PLACEHOLDER}}{{/if}}" value="{{data.file}}"></file-picker>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="volume">{{localize "DANGERZONE.type-form.sound.volume.label"}}&nbsp;&nbsp;<i class="volume-icon fas fa-volume-down"></i></label>
+        <div class="form-fields">
+            <range-picker name="volume" value="{{data.volume}}" min="0" max="1" step="0.05"></range-picker>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize "DANGERZONE.type-form.sound.radius.label" }} 
+            <span class="units">{{localize "DANGERZONE.gridUnits" }} </span>
+        </label>
+        <div class="form-fields">
+            <input type="number" name="radius" value="{{data.radius}}" step="any"/>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>{{localize "DANGERZONE.type-form.sound.easing.label"}}</label>
+        <input type="checkbox" name="easing" {{checked data.easing}}/>
+    </div>
+    <div class="form-group">
+        <label>{{localize "DANGERZONE.type-form.sound.walls.label"}}</label>
+        <input type="checkbox" name="walls" {{checked data.walls}}/>
+    </div>
+    <div class="form-group">
+        <label for="delay">{{localize "DANGERZONE.type-form.sound.delay.label"}}</label>
+        <div class="form-fields">
+            <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
+        </div>
+    </div>
+</div>

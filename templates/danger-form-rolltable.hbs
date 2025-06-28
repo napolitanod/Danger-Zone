@@ -1,26 +1,21 @@
-<form autocomplete="off">
-    <div class="tab">
-        <p class="notes">{{localize "DANGERZONE.type-form.rolltable.description"}}</p>
-        <div class="form-group">
-            <label for="name">{{localize "DANGERZONE.type-form.rolltable.name.label"}}</label>
-            <div class="form-fields">
-                <input type="text" name="name" value="{{data.name}}">
-            </div>
-        </div>     
-        <div class="form-group">
-            <label for="whisper">{{localize "DANGERZONE.type-form.rolltable.whisper.label"}}</label>
-            <div class="form-fields">
-                <input type="checkbox" data-dtype="Boolean" name="whisper" {{checked data.whisper}}>
-            </div>
+<div class="danger-part-group">
+    <p class="notes">{{localize "DANGERZONE.type-form.rolltable.description"}}</p>
+    <div class="form-group">
+        <label for="name">{{localize "DANGERZONE.type-form.rolltable.name.label"}}</label>
+        <div class="form-fields">
+            <input type="text" name="name" value="{{data.name}}">
         </div>
-        <div class="form-group">
-            <label for="delay">{{localize "DANGERZONE.type-form.rolltable.delay.label"}}</label>
-            <div class="form-fields">
-                <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
-            </div>
+    </div>     
+    <div class="form-group">
+        <label for="whisper">{{localize "DANGERZONE.type-form.rolltable.whisper.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="whisper" {{checked data.whisper}}>
         </div>
     </div>
-    <footer class="sheet-footer flexrow">
-        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
-    </footer>
-</form>
+    <div class="form-group">
+        <label for="delay">{{localize "DANGERZONE.type-form.rolltable.delay.label"}}</label>
+        <div class="form-fields">
+            <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
+        </div>
+    </div>
+</div>

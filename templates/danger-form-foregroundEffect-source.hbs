@@ -1,0 +1,32 @@
+<div class="tab danger-part-group" data-tab="source" data-group="sheet">
+    <div class="form-group">
+        <label for="source.enabled">{{localize "DANGERZONE.type-form.foregroundEffect.source.enabled.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="source.enabled" {{checked data.source.enabled}}>
+        </div>
+    </div>
+        <div class="form-group">
+        <label for="source.target">{{localize "DANGERZONE.type-form.foregroundEffect.source.target.label"}}</label>
+        <div class="form-fields">
+            <select name="source.target" value="{{data.source.target}}" required> 
+                {{selectOptions options.SOURCEDANGERLOCATION selected=data.source.target localize=true}}
+            </select>   
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="source.swap">{{localize "DANGERZONE.type-form.foregroundEffect.source.swap.label"}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.foregroundEffect.source.swap.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="source.swap" {{checked data.source.swap}}>
+        </div>
+    </div>
+    <div class="form-group {{#unless modules.taggerOn}}dz-hidden{{/unless}}">
+        <label for="source.name">{{localize "DANGERZONE.type-form.foregroundEffect.source.name.label"}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.foregroundEffect.source.name.notes'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <input type="text" name="source.name" placeholder="{{localize "DANGERZONE.type-form.foregroundEffect.source.name.description"}}"  value="{{data.source.name}}">
+        </div>
+    </div>
+</div>

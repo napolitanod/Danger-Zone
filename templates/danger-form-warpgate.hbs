@@ -1,86 +1,61 @@
-<form autocomplete="off" class="danger-part-form">
-    <div class="tab">
-        <p class="notes">{{localize "DANGERZONE.type-form.warpgate.description"}}</p>
-        <div class="form-group">
-            <label for="actor">{{localize "DANGERZONE.type-form.warpgate.actor.label"}}
-                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.actor.description'}}"><i class="fas fa-info-circle"></i></span>
-            </label>
-            <div class="form-fields">
-                <input type="text" required name="actor" placeholder="{{localize "DANGERZONE.type-form.warpgate.actor.placeholder"}}" value="{{actor}}">
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="isRolltable">{{localize "DANGERZONE.type-form.warpgate.isRolltable.label"}}</label>
-            <div class="form-fields">
-                <input type="checkbox" data-dtype="Boolean" name="isRolltable" {{checked isRolltable}}>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="duplicates">{{localize "DANGERZONE.type-form.warpgate.duplicates.label"}}</label>
-            <div class="form-fields">
-                <input type="range" data-dtype="Number" name="duplicates" value="{{#if duplicates}}{{duplicates}}{{/if}}{{#unless duplicates}}1{{/unless}}" min="1" max="20" step="1">
-                <span class="range-value">{{#if duplicates}}{{duplicates}}{{/if}}{{#unless duplicates}}1{{/unless}}</span>    
-            </div>
-        </div>
-        <!--
-        <div class="form-group">
-            <label for="file">{{localize "DANGERZONE.type-form.warpgate.file.label"}}
-                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.file.description'}}"><i class="fas fa-info-circle"></i></span>
-            </label>
-            <div class="form-fields">
-                {{filePicker target="file" type="imagevideo"}}
-                <input type="text" required name="file" class="image" placeholder="{{localize "DANGERZONE.type-form.warpgate.file.placeholder"}}" value="{{file}}">
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="randomFile">{{localize "DANGERZONE.type-form.warpgate.randomFile.label"}}</label>
-            <div class="form-fields">
-                <input type="checkbox" data-dtype="Boolean" name="randomFile" {{checked randomFile}}>
-            </div>
-        </div>
-        -->
-        <div class="form-group dz-hidden">
-            <label for="color">{{localize "DANGERZONE.type-form.warpgate.color.label"}}</label>
-            <div class="form-fields">
-                <input type="text" name="color"  min="0.00" step="0.01"  value={{color}}>
-                <input type="color" value="{{color}}" data-edit="color">
-            </div>
-        </div>
-        <div class="form-group dz-hidden">
-            <label>{{localize "DANGERZONE.type-form.warpgate.range.label"}} <span class="units">{{localize "DANGERZONE.gridUnits2"}}</span><span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.range.description'}}"><i class="fas fa-info-circle"></i></span></label>
-            <div class="form-fields">
-                <label for="range">{{localize "DANGERZONE.type-form.warpgate.range.label"}}</label>
-                <input type="number" name="range"  min="0.00" step="1" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{range}}>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="mutate">{{localize "DANGERZONE.type-form.warpgate.mutate.label"}}
-                <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.mutate.description'}}"><i class="fas fa-info-circle"></i></span>
-            </label>
-            <div class="form-fields">
-                <input type="checkbox" data-dtype="Boolean" name="mutate" {{checked mutate}}>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="delay">{{localize "DANGERZONE.type-form.warpgate.delay.label"}}</label>
-            <div class="form-fields">
-                <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if delay}}{{delay}}{{else}}0{{/if}}>
-            </div>
-        </div>
-        <div class="form-group dz-hidden">
-            <label for="spawnDelay">{{localize "DANGERZONE.type-form.warpgate.spawnDelay.label"}}</label>
-            <div class="form-fields">
-                <input type="number" required data-dtype="Number" name="spawnDelay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if spawnDelay}}{{spawnDelay}}{{else}}0{{/if}}>
-            </div>
-        </div>
-        <div class="form-group {{#if taggerOnNot}}dz-hidden{{/if}}">
-            <label for="tag">{{localize "DANGERZONE.type-form.warpgate.tag.label"}}</label>
-            <div class="form-fields">
-                <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.warpgate.tag.description"}}"  value="{{tag}}">
-            </div>
+<div class="danger-part-group">
+    <p class="notes">{{localize "DANGERZONE.type-form.warpgate.description"}}</p>
+    <div class="form-group">
+        <label for="actor">{{localize "DANGERZONE.type-form.warpgate.actor.label"}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.actor.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <input type="text" required name="actor" placeholder="{{localize "DANGERZONE.type-form.warpgate.actor.placeholder"}}" value="{{data.actor}}">
         </div>
     </div>
-    <footer class="sheet-footer flexrow">
-        <button type="submit" name="submit"><i class='far fa-save'></i>{{localize 'DANGERZONE.save'}}</button>
-    </footer>
-</form>
+    <div class="form-group">
+        <label for="isRolltable">{{localize "DANGERZONE.type-form.warpgate.isRolltable.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="isRolltable" {{checked data.isRolltable}}>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="duplicates">{{localize "DANGERZONE.type-form.warpgate.duplicates.label"}}</label>
+        <div class="form-fields">
+            <range-picker name="duplicates" value="{{#if data.duplicates}}{{data.duplicates}}{{else}}1{{/if}}" min="1" max="20" step="1"></range-picker>  
+        </div>
+    </div>
+    <div class="form-group dz-hidden">
+        <label for="color">{{localize "DANGERZONE.type-form.warpgate.color.label"}}</label>
+        <div class="form-fields">
+            <color-picker name="color" value={{data.color}}></color-picker>
+        </div>
+    </div>
+    <div class="form-group dz-hidden">
+        <label>{{localize "DANGERZONE.type-form.warpgate.range.label"}} <span class="units">{{localize "DANGERZONE.gridUnits2"}}</span><span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.range.description'}}"><i class="fas fa-info-circle"></i></span></label>
+        <div class="form-fields">
+            <range-picker name="range" value="{{#if data.range}}{{data.range}}{{else}}0{{/if}}" min="0" step="1"></range-picker>  
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="mutate">{{localize "DANGERZONE.type-form.warpgate.mutate.label"}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.mutate.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="mutate" {{checked data.mutate}}>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="delay">{{localize "DANGERZONE.type-form.warpgate.delay.label"}}</label>
+        <div class="form-fields">
+            <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.delay}}{{data.delay}}{{else}}0{{/if}}>
+        </div>
+    </div>
+    <div class="form-group dz-hidden">
+        <label for="spawnDelay">{{localize "DANGERZONE.type-form.warpgate.spawnDelay.label"}}</label>
+        <div class="form-fields">
+            <input type="number" required data-dtype="Number" name="spawnDelay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.spawnDelay}}{{data.spawnDelay}}{{else}}0{{/if}}>
+        </div>
+    </div>
+    <div class="form-group {{#unless modules.taggerOn}}dz-hidden{{/unless}}">
+        <label for="tag">{{localize "DANGERZONE.type-form.warpgate.tag.label"}}</label>
+        <div class="form-fields">
+            <input type="text" name="tag" placeholder="{{localize "DANGERZONE.type-form.warpgate.tag.description"}}"  value="{{data.tag}}">
+        </div>
+    </div>
+</div>

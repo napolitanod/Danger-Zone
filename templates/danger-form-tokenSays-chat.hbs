@@ -1,0 +1,51 @@
+<div class="tab danger-part-group" data-tab="chat" data-group="sheet">
+    <div class="form-group">
+        <label for="{{#unless isChat}}paired.{{/unless}}compendiumName">{{localize "DANGERZONE.type-form.tokenSays.compendium.label"}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenSays.compendium.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <select name="{{#unless isChat}}paired.{{/unless}}compendiumName" value="data.{{#unless isChat}}paired.{{/unless}}compendiumName">  
+                {{#unless isChat}}{{selectOptions compendiums.ROLLTABLE selected=data.paired.compendiumName localize=true}}{{/unless}}
+                {{#if isChat}}{{selectOptions compendiums.ROLLTABLE selected=data.compendiumName localize=true}}{{/if}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="{{#unless isChat}}paired.{{/unless}}fileName">{{localize "DANGERZONE.type-form.tokenSays.saying-source.label"}}</label>
+        <div class="form-fields">
+            <input type="text" name="{{#unless isChat}}paired.{{/unless}}fileName" placeholder="{{localize "DANGERZONE.type-form.tokenSays.source.placeholder"}}" value="{{#if isChat}}{{data.fileName}}{{else}}{{data.paired.fileName}}{{/if}}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="{{#unless isChat}}paired.{{/unless}}fileTitle">{{localize "DANGERZONE.type-form.tokenSays.says.label"}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.tokenSays.says.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <input type="text" name="{{#unless isChat}}paired.{{/unless}}fileTitle" placeholder="{{localize "DANGERZONE.type-form.tokenSays.says.placeholder"}}" value="{{#if isChat}}{{data.fileTitle}}{{else}}{{data.paired.fileTitle}}{{/if}}">
+        </div>
+    </div>
+    <h4>
+        <i class="fas fa-comment-slash"></i>&nbsp;
+        <span>{{localize 'DANGERZONE.type-form.tokenSays.suppress.label'}}</span>
+    </h4>
+    <div class="suppress">
+        <div>
+            <input type="checkbox" name="suppressChatbubble" {{checked data.suppressChatbubble}} />
+            <label>
+                {{localize 'DANGERZONE.type-form.tokenSays.suppressChatbubble.label'}}
+            </label>
+        </div>
+        <div>
+            <input type="checkbox" name="suppressChatMessage" {{checked data.suppressChatMessage}} />
+            <label>
+                {{localize 'DANGERZONE.type-form.tokenSays.suppressChatMessage.label'}}
+            </label>
+        </div>
+        <div>
+            <input type="checkbox" name="suppressQuotes" {{checked data.suppressQuotes}} />
+            <label>
+                {{localize 'DANGERZONE.type-form.tokenSays.suppressQuotes.label'}}
+            </label>
+        </div>
+    </div>
+</div>

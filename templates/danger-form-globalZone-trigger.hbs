@@ -1,0 +1,56 @@
+<div class="tab danger-part-group" data-tab="trigger" data-group="sheet">
+    <p class="notes">{{localize 'DANGERZONE.edit-form.trigger.description'}}</p>
+    <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.edit-form.likelihood.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.likelihood.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <range-picker name="trigger.likelihood" value="{{#if zone.trigger.likelihood}}{{zone.trigger.likelihood}}{{else}}100{{/if}}" min="1" max="100" step="1"></range-picker>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="trigger.loop">{{localize 'DANGERZONE.edit-form.loop.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.loop.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+             <range-picker data-action="loop-change" name="trigger.loop" value="{{#if zone.trigger.loop}}{{zone.trigger.loop}}{{else}}1{{/if}}" min="1" max="20" step="1"></range-picker>
+        </div>
+    </div>
+    <div class="form-group{{#if hideOperation}} dz-hidden{{/if}}" id="dz-operation-global" >
+        <label>
+            {{localize 'DANGERZONE.edit-form.operation.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.operation.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <select name="trigger.operation" value="{{zone.trigger.operation}}">
+                {{selectOptions zoneOptions.TRIGGEROPERATION selected=zone.trigger.operation localize=true}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.edit-form.delay.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.delay.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <div class="form-group">
+                <label>
+                    {{localize 'DANGERZONE.edit-form.delay.min.label'}}
+                </label>
+                <div class="form-fields">
+                    <input type="Number" name="trigger.delay.min" min="0" max="5000" step="1" placeholder="{{localize "DANGERZONE.ms"}}" value={{#if zone.trigger.delay.min}}{{zone.trigger.delay.min}}{{else}}0{{/if}} required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    <span>{{localize 'DANGERZONE.edit-form.delay.max.label'}}</span>
+                </label>
+                <div class="form-fields">
+                    <input type="Number" name="trigger.delay.max" min="0" max="10000" step="1" placeholder="{{localize "DANGERZONE.ms"}}" value={{#if zone.trigger.delay.max}}{{zone.trigger.delay.max}}{{else}}0{{/if}} required>
+                </div>
+            </div>
+        </div>
+    </div>  
+</div>
+    

@@ -3,7 +3,7 @@ import {dangerZoneDimensions} from "./dimensions.js";
 import {DangerForm} from './danger-form.js';
 import {DangerZoneForm} from './zone-form.js';
 import {triggerManager} from './trigger-handler.js';
-import {CONTROLTRIGGERS} from './constants.js';
+import {CONTROLTRIGGERS, DANGERZONECONFIG} from './constants.js';
 
 export class ExecutorForm extends FormApplication {
     constructor(sceneId, executor = {}, zones, ...args) {
@@ -119,7 +119,7 @@ export class ExecutorForm extends FormApplication {
     }
 
     get triggerZones(){
-       return this.zones.filter(z => z.danger && z.hasEvents && !z.scene.isPseudoZone).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)})
+       return this.zones.filter(z => z.danger && z.hasEvents && (z.enabled || z.hasAutomatedEvent) && !z.scene.isPseudoZone).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)})
     }
 
     get userTargets(){
@@ -147,7 +147,7 @@ export class ExecutorForm extends FormApplication {
             title : game.i18n.localize("DANGERZONE.executor-form.form-name"),
             id : "danger-zone-executor",
             classes: ["sheet","danger-zone-executor"],
-            template : dangerZone.TEMPLATES.DANGERZONEEXECUTOR,
+            template : DANGERZONECONFIG.TEMPLATE.EXECUTOR,
             width : 305,
             height : "auto",
             closeOnSubmit: false,
@@ -552,8 +552,8 @@ export class ExecutorForm extends FormApplication {
 
     async _setHook(){
         Hooks.on("canvasReady", async(app) => {
-            if(game.user.isActiveGM && this.rendered && app.scene?.id){
-               const rendered = await this.renderOnScene(app.scene.id);
+            if(game.user.isActiveGM && app.scene?.id){
+               const rendered = await this.renderOnScene(app.scene.id, '', false);
                if(!rendered) this.close();
             }
         });
@@ -587,7 +587,8 @@ export class ExecutorForm extends FormApplication {
      * @param {string} sceneId 
      * @param {string} zoneId 
      */
-    async renderOnScene(sceneId = canvas.scene.id, zoneId){
+    async renderOnScene(sceneId = canvas.scene.id, zoneId, forceRender = false){
+        if(!forceRender && !this.rendered) return
         this.sceneId = sceneId;
         this.zoneId = zoneId;
         if(game.user.isActiveGM && this.scene.active && this.scene.grid.type){

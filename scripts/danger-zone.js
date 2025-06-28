@@ -1,11 +1,12 @@
 import {dangerZoneDimensions} from './apps/dimensions.js';
 import {DangerZoneTypesForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
-import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, CONTROLTRIGGERS, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
+import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, CONTROLTRIGGERS, DANGERZONECONFIG, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
+import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, EffectDangerPartConfig, ForegroundEffectDangerPartConfig, GlobalZoneDangerPartConfig, ItemDangerPartConfig, LastingEffectDangerPartConfig, MutateDangerPartConfig, RegionDangerPartConfig, RolltableDangerPartConfig, SceneDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig, TokenResponseDangerPartConfig, TokenSaysDangerPartConfig, WallDangerPartConfig, WarpgateDangerPartConfig, WeatherDangerPartConfig} from './apps/danger-form.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -16,8 +17,6 @@ export class dangerZone {
   static NAME = 'dangerZone';
 
   static dangerZoneSocket = '';
-
-  static dzMActive = false;
   
   static FLAGS = {
     SCENEZONE: 'sceneZone',
@@ -30,68 +29,19 @@ export class dangerZone {
     activeEffectOn: true, 
     timesUpOn: false, 
     daeOn: false, 
-    perfectVisionOn: false, 
     socketLibOn: false, 
     taggerOn: false, 
     sequencerOn: false, 
     wallHeightOn: false, 
     portalOn: false, 
-    monksActiveTilesOn: false, 
     tokenSaysOn: false, 
     fxMasterOn: false, 
     itemPileOn: false
-  }
- 
-  static TEMPLATES = {
-    DANGERZONECONFIG: `modules/${this.ID}/templates/danger-zone-form.hbs`,
-    DANGERZONEEXTENSION: `modules/${this.ID}/templates/danger-zone-extension-form.hbs`,
-    DANGERZONEEXECUTOR: `modules/${this.ID}/templates/danger-zone-executor-form.hbs`,
-    DANGERZONESCENE: `modules/${this.ID}/templates/danger-zone-scene-form.hbs`,
-    DANGERZONETYPESCONFIG: `modules/${this.ID}/templates/danger-zone-types.hbs`,
-    DANGERZONETYPE: `modules/${this.ID}/templates/danger-form.hbs`,
-    DANGERZONEACTIVEEFFECT: `modules/${this.ID}/templates/active-effect-form.hbs`,
-    DANGERZONEDANGERACTIVEEFFECT: `modules/${this.ID}/templates/danger-form-active-effect.hbs`,
-    DANGERZONEDANGERAUDIO: `modules/${this.ID}/templates/danger-form-audio.hbs`,
-    DANGERZONEDANGERBACKGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-background-effect.hbs`,
-    DANGERZONEDANGERCOMBAT: `modules/${this.ID}/templates/danger-form-combat.hbs`,
-    DANGERZONEDANGERCANVAS: `modules/${this.ID}/templates/danger-form-canvas.hbs`,
-    DANGERZONEDANGERFOREGROUNDEFFECT: `modules/${this.ID}/templates/danger-form-foreground-effect.hbs`,
-    DANGERZONEDANGERGLOBALZONE: `modules/${this.ID}/templates/danger-form-global-zone.hbs`,
-    DANGERZONEDANGERITEM: `modules/${this.ID}/templates/danger-form-item.hbs`,
-    DANGERZONEDANGERLASTINGEFFECT: `modules/${this.ID}/templates/danger-form-lasting-effect.hbs`,
-    DANGERZONEDANGERLIGHT: `modules/${this.ID}/templates/danger-form-light.hbs`,
-    DANGERZONEDANGERMUTATE: `modules/${this.ID}/templates/danger-form-mutate.hbs`,
-    DANGERZONEDANGERREGION: `modules/${this.ID}/templates/danger-form-region.hbs`,
-    DANGERZONEDANGERROLLTABLE: `modules/${this.ID}/templates/danger-form-rolltable.hbs`,
-    DANGERZONEDANGERSCENE: `modules/${this.ID}/templates/danger-form-scene.hbs`,
-    DANGERZONEDANGERSOUND: `modules/${this.ID}/templates/danger-form-sound.hbs`,
-    DANGERZONEDANGERSOURCEEFFECT: `modules/${this.ID}/templates/danger-form-source-effect.hbs`,
-    DANGERZONEDANGERTOKENRESPONSE: `modules/${this.ID}/templates/danger-form-token-response.hbs`,
-    DANGERZONEDANGERTOKENSAYS: `modules/${this.ID}/templates/danger-form-token-says.hbs`,
-    DANGERZONEDANGERTOKENEFFECT: `modules/${this.ID}/templates/danger-form-token-effect.hbs`,
-    DANGERZONEDANGERTOKENMOVE: `modules/${this.ID}/templates/danger-form-token-move.hbs`,
-    DANGERZONEDANGERWALL: `modules/${this.ID}/templates/danger-form-wall.hbs`,
-    DANGERZONEDANGERWARPGATE: `modules/${this.ID}/templates/danger-form-warpgate.hbs`,
-    DANGERZONEDANGERWEATHER: `modules/${this.ID}/templates/danger-form-weather.hbs`,
-    DANGERZONEZONECOPY: `modules/${this.ID}/templates/danger-zone-scene-zone-copy.hbs`
   }
 
   static MIGRATION = {
     ZONE: 2,
     DANGER: 2
-  }
-
-  /** V13
-   * Used to generate debug logs.
-   * @param {boolean} force - forces the log even if the debug flag is not on
-   * @param  {...any} args - what to log
-  */
-  static log(force, ...args) {  
-     // const shouldLog = force || game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.ID);
-  
-      if (force || (game.user.isActiveGM && game.settings.get(dangerZone.ID, 'logging'))) {
-        console.log(this.ID, '|', ...args);
-      }
   }
 
   /** V13
@@ -118,48 +68,94 @@ export class dangerZone {
     header.append(button);
   }
 
-  static _initialize() {
+  /**v13
+   * Performs routines to initialize resources used by module
+   */
+  static initialize() {
+    dangerZone.#setModsAvailable();
+    setHooks()
+    dangerZone.#setDangerZoneConfig()
     this.DangerZoneTypesForm = new DangerZoneTypesForm();
     this.executorForm = new ExecutorForm();
-    dangerZone._setModsAvailable();
-    setHooks()
   }
-
 
   /**V13
  * adds the Danger Zone buttons to the controls on the canvas
  * @param {object} controls 
     */
-  static _insertZoneButtons(controls){
+  static insertZoneButtons(controls){
     dangerZone.log(false, 'Adding control buttons', controls)
     controls[dangerZone.ID] = CONTROLTRIGGERS.controls
+  }
+  
+  /** V13
+   * Used to generate debug logs.
+   * @param {boolean} force - forces the log even if the debug flag is not on
+   * @param  {...any} args - what to log
+  */
+  static log(force, ...args) {  
+     // const shouldLog = force || game.modules.get('_dev-mode')?.api?.getPackageDebugValue(this.ID);
+  
+      if (force || (game.user.isActiveGM && game.settings.get(dangerZone.ID, 'logging'))) {
+        console.log(this.ID, '|', ...args);
+      }
+  }
+
+  /**v13
+   * loads the constant with classes after initialization has completed
+   */
+  static #setDangerZoneConfig() {
+    DANGERZONECONFIG.CLASSES.DANGERPART = {
+        ambientLight: AmbientLightDangerPartConfig,
+        audio: AudioDangerPartConfig,
+        backgroundEffect: BackgroundEffectDangerPartConfig,
+        canvas: CanvasDangerPartConfig,
+        combat: CombatDangerPartConfig,
+        effect: EffectDangerPartConfig,
+        foregroundEffect: ForegroundEffectDangerPartConfig,
+        globalZone: GlobalZoneDangerPartConfig,
+        item: ItemDangerPartConfig,
+        lastingEffect: LastingEffectDangerPartConfig,
+        mutate: MutateDangerPartConfig,
+        region: RegionDangerPartConfig,
+        rolltable: RolltableDangerPartConfig,
+        scene: SceneDangerPartConfig,
+        sound: SoundDangerPartConfig,
+        sourceEffect: SourceEffectDangerPartConfig,
+        tokenEffect: TokenEffectDangerPartConfig,
+        tokenMove: TokenMoveDangerPartConfig,
+        tokenResponse: TokenResponseDangerPartConfig,
+        tokenSays: TokenSaysDangerPartConfig,
+        wall: WallDangerPartConfig,
+        warpgate: WarpgateDangerPartConfig,
+        weather: WeatherDangerPartConfig
+    }
   }
 
   /**
    * sets global variables that indicate which modules that danger zone integrates with are available
    */
-  static _setModsAvailable () {
+  static #setModsAvailable () {
     if (game.modules.get("dae")?.active){dangerZone.MODULES.daeOn = true} ;
     if (game.modules.get("item-piles")?.active){dangerZone.MODULES.itemPileOn = true};
-    if (game.modules.get("monks-active-tiles")?.active){dangerZone.MODULES.monksActiveTilesOn = true} ;
     if (game.modules.get("token-says")?.active){dangerZone.MODULES.tokenSaysOn = true} ;
     if (game.modules.get("portal-lib")?.active){dangerZone.MODULES.portalOn = true} ;
     if (game.modules.get("fxmaster")?.active){dangerZone.MODULES.fxMasterOn = true} ;
     if (game.modules.get("sequencer")?.active){dangerZone.MODULES.sequencerOn = true} ;
     if (game.modules.get("tagger")?.active){dangerZone.MODULES.taggerOn = true} ;
     if (game.modules.get("wall-height")?.active){dangerZone.MODULES.wallHeightOn = true} ;
-    if (game.modules.get("times-up")?.active){dangerZone.MODULES.timesUpOn = true};
-    if (game.modules.get("perfect-vision")?.active) dangerZone.MODULES.perfectVisionOn = true;
+    if (game.modules.get("times-up")?.active && dangerZone.MODULES.daeOn === true){dangerZone.MODULES.timesUpOn = true};
     if (game.modules.get("socketlib")?.active) dangerZone.MODULES.socketLibOn = true
     if(['pf1', 'pf2e'].includes(game.world.system)) dangerZone.MODULES.activeEffectOn = false
   }
 
-  /**
+
+  /**v13
    * converts a JSON object to a zone class
    * @param {object} flag 
    * @returns 
    */
-  static _toClass(flag){
+  static #toClass(flag){
     if(!flag.scene?.sceneId){return {}}
     let zn =  new zone(flag.scene.sceneId);
     return foundry.utils.mergeObject(zn, flag, {insertKeys: false, enforceTypes: true})
@@ -174,7 +170,7 @@ export class dangerZone {
     const scene = game.scenes?.get(sceneId);
     const flag = scene ? scene.getFlag(this.ID, this.FLAGS.SCENEZONE) : ar; 
     for (var zn in flag) {
-        if((!options.enabled || flag[zn].enabled) && (!options.triggerRequired || flag[zn].trigger.events.length) && flag[zn].scene?.sceneId) ar.push(this._toClass(flag[zn]));
+        if((!options.enabled || flag[zn].enabled) && (!options.triggerRequired || flag[zn].trigger.events.length) && flag[zn].scene?.sceneId) ar.push(dangerZone.#toClass(flag[zn]));
     }
     return ar.filter(z => !options.typeRequired || z.danger)
   }
@@ -312,7 +308,7 @@ export class dangerZone {
    */
   static getZoneFromScene(zoneId, sceneId) {
     let flag = game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE + `.${zoneId}`);
-    return flag ? this._toClass(flag) : undefined
+    return flag ? dangerZone.#toClass(flag) : undefined
   } 
 
    /**
@@ -390,7 +386,7 @@ export class dangerZone {
     zn.dangerId = danger.id;
     zn.title = danger.name;
     isGlobal ? zn.id = 'w_' + danger.id : zn.id = 'd_' + danger.id
-    return this._toClass(zn);
+    return dangerZone.#toClass(zn);
   }
 
   static async updateAllSceneZones(sceneId,flag){
@@ -400,11 +396,15 @@ export class dangerZone {
     return updt
   }
 
-  static toggleMasterButtonActive(){
-    dangerZone.dzMActive ? dangerZone.dzMActive = false : dangerZone.dzMActive = true
-  }
-
-  static async wipe(documentName){
+  static async wipe(documentName, confirm = false){
+    if(confirm){
+      const proceed = await foundry.applications.api.DialogV2.confirm({
+        content: game.i18n.localize("DANGERZONE.controls.clear.description"),
+        rejectClose: false,
+        modal: true
+      });
+      if (!proceed) return 
+    }
     const ids=canvas.scene[PLACEABLESBYDOCUMENT[documentName]].filter(t => t.flags[dangerZone.ID]).map(t => t.id);
     if(ids.length) await canvas.scene.deleteEmbeddedDocuments(documentName, ids)
   }
@@ -418,6 +418,7 @@ export class dangerZone {
       }
     }
   }
+
 
 }
 
@@ -610,7 +611,7 @@ export class zone {
   }
 
   get titleLong(){
-      return this.title + (this.scene.dangerId ? ' (' + game.i18n.localize("DANGERZONE.type-form.global-zone.label") + ') ' :' ') + this.eventsDescription + ' ' + game.i18n.localize("DANGERZONE.scene.trigger")
+      return this.title + (this.scene.dangerId ? ' (' + game.i18n.localize("DANGERZONE.type-form.globalZone.label") + ') ' :' ') + this.eventsDescription + ' ' + game.i18n.localize("DANGERZONE.scene.trigger")
   }
 
   /**

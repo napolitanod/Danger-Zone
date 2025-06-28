@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {damageTypes, EVENTS, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
+import {EVENTS, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
 import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
 
 async function delay(delay){
@@ -579,7 +579,6 @@ export class executor {
     }
 
     _initialize(){
-        let flags = Object.fromEntries(this.data.danger.parts.filter(p => ["monks-active-tiles"].includes(p[0])));
         for(let [name,part] of this.data.danger.parts){
             let be;
             switch(name){
@@ -593,7 +592,7 @@ export class executor {
                     be = new combat(part, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'foregroundEffect': 
-                    be = new primaryEffect(this.danger.foregroundEffect, this.data, name, EXECUTABLEOPTIONS[name], flags); 
+                    be = new primaryEffect(this.danger.foregroundEffect, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'ambientLight': 
                     be = new ambientLight(this.danger.ambientLight, this.data, name, EXECUTABLEOPTIONS[name]); 
@@ -605,7 +604,7 @@ export class executor {
                     be = new damageToken(this.danger.damage, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'lastingEffect': 
-                    be = new lastingEffect(this.danger.lastingEffect, this.data, name, EXECUTABLEOPTIONS[name], flags); 
+                    be = new lastingEffect(this.danger.lastingEffect, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'macro': 
                     be = new macro(this.danger.macro, this.data, name, EXECUTABLEOPTIONS[name]); 
@@ -1366,11 +1365,6 @@ class ambientLight extends executable{
 
     get flag(){
         const flg = foundry.utils.mergeObject({}, this.data.flag)
-        if(dangerZone.MODULES.perfectVisionOn){
-            const pv = this._part.flags['perfect-vision']
-            if(pv?.sightLimit) flg['perfect-vision.sightLimit'] = pv.sightLimit
-            if(pv?.priority) flg['core.priority'] = pv.priority
-        }
         return flg
     }
 
@@ -1526,8 +1520,10 @@ class audio extends executableWithFile {
     async stop(){
         if(this.sound?.id){
             game.socket.emit('module.danger-zone', {stop: this.sound.id})
+            dangerZone.log(false, 'Stopping sound...', this.sound)
             await this.sound.fade(0, {duration: 250})
             this.sound.stop();
+            dangerZone.log(false, 'Stopped sound...', this.sound)
         }  
     }
 
@@ -2061,20 +2057,12 @@ class lastingEffect extends executableWithFile{
         this._tiles = []
     }
 
-    get activeTiles(){
-        return this.flags["monks-active-tiles"] ? this.flags["monks-active-tiles"] : {}
-    }
-
     get alpha(){
         return this._part.alpha
     }
 
     get flags(){
         return this._flags ? this._flags : {}
-    }
-
-    get hasActiveTiles(){
-        return (this.activeTiles.macro?.macroid || this.activeTiles.teleport?.add) ? true : false
     }
 
     get hidden(){
@@ -2105,10 +2093,7 @@ class lastingEffect extends executableWithFile{
     }
 
     build(){
-        const boundaries = this.data.twinDanger ? this.dualBoundaries : [this.boundary]
-        for(let i = 0; i < boundaries.length; i++){
-            this._tiles.push(this._tile(boundaries[i], i))
-        }
+        this._tiles.push(this._tile())
     }
 
     async play(){
@@ -2121,21 +2106,14 @@ class lastingEffect extends executableWithFile{
         await this.data.fillSourceAreas()
     }
 
-    _pairedBoundary(index){
-        if(!this.data.hasDualBoundaries) return this.boundary
-        if(index % 2 && this.dualBoundaries.length >= index) return this.dualBoundaries[index-1]
-        if(this.dualBoundaries.length >= index+1) return this.dualBoundaries[index+1]
-        return this.dualBoundaries[index]
-    }
-
-    _tile(boundary, index = 0){
+    _tile(){
         const tile = {
             alpha: this.alpha,
-            elevation: boundary.bottomToElevation, 
+            elevation: this.boundary.bottomToElevation, 
             flags: this.data.flag,
             hidden: this.hidden,
             locked: false,
-            height: boundary.height,
+            height: this.boundary.height,
             occlusion: {
                 alpha: this.occlusion.alpha,
                 mode: CONST.TILE_OCCLUSION_MODES[this.occlusion.mode] 
@@ -2148,54 +2126,13 @@ class lastingEffect extends executableWithFile{
                 scaleX: this.flipContent('x') ? this.scale * -1 : this.scale,
                 scaleY: this.flipContent('y') ? this.scale * -1 : this.scale
             },
-            width: boundary.width,
+            width: this.boundary.width,
             video: {autoplay: true, loop: this.loop, volume: 0},
-            x: boundary.A.x,
-            y: boundary.A.y
+            x: this.boundary.A.x,
+            y: this.boundary.A.y
         };
         if(dangerZone.MODULES.taggerOn && this.tag) tile.flags['tagger'] = this.taggerTag
-        if(dangerZone.MODULES.monksActiveTilesOn && this.hasActiveTiles){
-            tile.flags["monks-active-tiles"] = {
-                "actions": [],
-                "active": true,
-                "restriction": "all",
-                "controlled": "all",
-                "trigger": "enter",
-                "pertoken": false,
-                "chance": 100
-            };
-            //macro
-            if(this.activeTiles.macro?.macroid){
-                tile.flags['monks-active-tiles'].actions.push(
-                    {
-                        "delay": this.activeTiles.macro.delay,
-                        "action": "runmacro",
-                        "data": {
-                            "macroid": this.activeTiles.macro.macroid,
-                            "args": this.activeTiles.macro.args
-                        },
-                        "id": foundry.utils.randomID(16)
-                    }
-                )
-            };
-            if(this.activeTiles.teleport?.add){                
-                tile.flags['monks-active-tiles'].actions.push(
-                    {
-                        "action": "teleport",
-                        "data": {
-                            animatepan: this.activeTiles.teleport.animatepan ? true : false,
-                            avoidtokens: this.activeTiles.teleport.avoidtokens ? true : false,
-                            deletesource: this.activeTiles.teleport.deletesource ? true : false,
-                            entity: "",
-                            location: this._pairedBoundary(index).center,
-                            preservesettings: true,
-                            remotesnap: true
-                        },
-                        "id": foundry.utils.randomID(16)
-                    }
-                ) 
-            }
-        }
+        
         return tile
     } 
 }
@@ -2299,7 +2236,9 @@ class mutate extends executable {
 }
 
 class primaryEffect extends executableWithFile {
-        
+       
+    _partSources = []
+
     get hasSourcing(){
         return this.source.enabled ? true : false
     }
@@ -2341,16 +2280,15 @@ class primaryEffect extends executableWithFile {
         let s = new Sequence(), play = true;
         const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.boundary]
         for (const bound of boundaries){
-            if(this.hasSources){
-                let tagged;
+            if(this.hasSources || this.hasSourcing){
                 if(this.source.name) {
                     const taggerEntities = await getTagEntities(this.source.name, this.data.scene)
-                    tagged = limitArray(shuffleArray(taggerEntities),this.data.sourceLimit)
+                    this._partSources = limitArray(shuffleArray(taggerEntities),this.data.sourceLimit)
                  } else {
-                    tagged = this.sourcesSelected
+                    this._partSources = this.sourcesSelected
                  } 
-                if(tagged.length){
-                    for(const document of tagged){
+                if(this._partSources.length){
+                    for(const document of this._partSources){
                         const documentName = document.documentName ? document.documentName : document.document.documentName;
                         const source = boundary.documentBoundary(documentName, document, {retain:true});
                         if(source.A.x === bound.A.x && source.A.y === bound.A.y && source.B.x === bound.B.x && source.B.y === bound.B.y){continue}
@@ -2629,7 +2567,7 @@ class rolltable extends executable {
         if(this._table) {
             if(!this._table.replacement && !this._table.results?.find(r => !r.drawn)) return console.log(`Rollable table ${this.rolltable} has all results drawn.`)
             this._rolledResult = await this._table.draw(this.options)
-            this._message = this._rolledResult?.results[0]?.text
+            this._message = this._rolledResult?.results[0]?.description
             Hooks.call("updateRollTable", this._rolledResult)
         }
     }
@@ -2769,7 +2707,7 @@ class scene extends executable{
     }
 
     get e(){
-        return this._part.e ? this._part.e : {type: '', min: 0, max: 0}
+        return this._part.foreground.e ? this._part.foreground.e : {type: '', min: 0, max: 0}
     }
 
     get filePathB(){
@@ -2838,7 +2776,8 @@ class scene extends executable{
     }
 
     _e(){
-        return (this.e.min + Math.floor(Math.random() * (this.e.max - this.e.min + 1))) 
+        const value = this.e.max === this.e.min ? this.e.min : (this.e.min + Math.floor(Math.random() * (this.e.max - this.e.min + 1))) 
+        return value >= 1 ? value : null
     }
 
     async load() {
@@ -2991,12 +2930,12 @@ class secondaryEffect extends executableWithFile {
             if(this.duration) s = s.duration(this.duration)
             if(this.repeat) s = s.repeats(this.repeat)
             if(this.rotate) s = s.randomRotation()
+            if(this.below) s = s.belowTokens()
         if(this._fileB){
             s = s.sound()
             .file(this._fileB)
             .volume(this.audio.volume)
         }
-        if(this.below) s = s.belowTokens()
         return s
     }
 
@@ -3028,6 +2967,7 @@ class sound extends executableWithFile {
 
     get _sound() {
         const sound = {
+            elevation: this.boundary.bottomToElevation,  
             easing: this.easing,
             flags: this.data.flag,
             path: this._file,
