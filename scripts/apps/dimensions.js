@@ -35,7 +35,11 @@ export class dangerZoneDimensions {
     }
 
     get dangerRelativeDimensions(){
-        return {w:this.danger.dimensions.units.w ?? this.boundary.dimensions.w, h: this.danger.dimensions.units.h ?? this.boundary.dimensions.h, d:this.danger.dimensions.units.d ?? this.boundary.depth}
+        return {
+                w: this.danger.dimensions.units.w ?? this.boundary.dimensions.w, 
+                h: this.danger.dimensions.units.h ?? this.boundary.dimensions.h, 
+                d: this.danger.dimensions.units.d < 1 ? this.boundary.depth : this.danger.dimensions.units.d 
+            }
     }
 
     get zone(){
@@ -488,7 +492,7 @@ export class boundary{
         canvas.interface.grid.addHighlightLayer(hId);
         const grids = this.grids();
         for(const grid of grids){ 
-            let position = canvas.grid.getTopLeftPoint(grid); 
+            let position = canvas.grid.getTopLeftPoint(grid);
             canvas.interface.grid.highlightPosition(hId, {x: position.x, y: position.y, color:color});
         }
     }

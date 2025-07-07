@@ -7,7 +7,7 @@ import {getEventData, stringToObj} from './helpers.js';
  * The main danger form from which danger part forms are launched. Used to configure a danger.
  */
 export class DangerForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
-  constructor(dangerId, parent, ...args) {
+  constructor(dangerId, parent = '', ...args) {
     super(...args);
 
     this._data = {flags:{}},
@@ -154,7 +154,7 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
     const expandedData = foundry.utils.expandObject(submitData.object);
     expandedData.options = this._data 
     await dangerZoneType.updateDangerZoneType(expandedData.id, expandedData);
-    this.parent.refresh();
+    if(this.parent) this.parent.refresh();
   }
 
   #isActive(partId, part){
@@ -774,7 +774,7 @@ export class GlobalZoneDangerPartConfig extends DangerPartConfig {
   #templateToggle(event){
     const data = getEventData(event)
     const templt = this.element.querySelector(`#dz-elevation-prompt-global`);
-    data.checked ? templt.classList.remove('dz-hidden') : templt.classList.add('dz-hidden')
+    data.target.checked ? templt.classList.remove('dz-hidden') : templt.classList.add('dz-hidden')
     this.setPosition()
   }
   

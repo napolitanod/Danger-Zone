@@ -1,41 +1,88 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
-import {getSceneRegionList} from './helpers.js';
-import {CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, DANGERZONECONFIG, EVENT_OPTIONS, SOURCEAREA, SOURCETRIGGERS, actorOps, ZONEEXTENSIONINTERACTIONOPTIONS, ZONEEXTENSIONSEQUENCEOPTIONS, MOVEMENT_EVENTS, ZONEFORMOPTIONS} from './constants.js';
+import {DangerForm} from './danger-form.js';
+import {getEventData, getSceneRegionList} from './helpers.js';
+import {actorOps, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, DANGERZONECONFIG, EVENT_OPTIONS, MOVEMENT_EVENTS, ZONEFORMOPTIONS} from './constants.js';
 
-export class DangerZoneForm extends FormApplication {
+export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
   constructor(app, zoneId, sceneId, dangerId, ...args) {
       super(...args);
       this.parent = app,
       this.dangerId = dangerId,
       this.zoneId = zoneId,
-      this.sceneId = sceneId,
-      this.pickerStart = null,
-      this.pickerEnd = null;
-
+      this.sceneId = sceneId;
       this.extensions = this.zone.extensions;
   }
 
-  static get defaultOptions(){
-    const defaults = super.defaultOptions;
-
-    const overrides = {
-      title : game.i18n.localize("DANGERZONE.edit-form.name"),
-      id : "danger-zone",
-      classes: ["sheet","danger-zone-record"],
-      template : DANGERZONECONFIG.TEMPLATE.ZONECONFIG,
-      width : 500,
-      height : "auto",
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = {
+    classes: [],
+    id : DANGERZONECONFIG.ID.FORM.ZONE,
+    actions: {
+      'add-extension': ZoneForm.#addExtension,
+      'delete-extension': ZoneForm.#deleteExtension,
+      'edit-extension': ZoneForm.#editExtension,
+      'render-danger': ZoneForm.#renderDanger
+    },
+    form: {
+      submitOnChange: false,
       closeOnSubmit: true,
-      tabs : [
-        {navSelector: ".tabs", contentSelector: "form", initial: "basics"}
-      ]   
-    };
-    const mergedOptions = foundry.utils.mergeObject(defaults, overrides);
-    
-    return mergedOptions;
+      handler: ZoneForm.#onSubmit
+    },
+    position: {
+      width: 500
+    },
+    tag: "form",
+    window: {
+      contentClasses: ["danger-zone-record", "sheet"],
+      title : DANGERZONECONFIG.LABEL.ZONE,
+      icon: DANGERZONECONFIG.ICON.ZONE
+    }
   }
 
+  /** @override */
+  static PARTS = 
+      {
+        tabs: {template: DANGERZONECONFIG.TEMPLATE.TABNAV},
+        basics: {classes: ["standard-form"], scrollable: [""], template: DANGERZONECONFIG.TEMPLATE.ZONECONFIG.BASICS},
+        dimensions: {classes: ["standard-form"], scrollable: [""], template: DANGERZONECONFIG.TEMPLATE.ZONECONFIG.DIMENSIONS},
+        trigger: {classes: ["standard-form"], scrollable: [""], template: DANGERZONECONFIG.TEMPLATE.ZONECONFIG.TRIGGER},
+        source: {classes: ["standard-form"], scrollable: [""], template: DANGERZONECONFIG.TEMPLATE.ZONECONFIG.SOURCE},
+        target: {classes: ["standard-form"], scrollable: [""], template: DANGERZONECONFIG.TEMPLATE.ZONECONFIG.TARGET},
+        clear: {classes: ["standard-form"], scrollable: [""], template: DANGERZONECONFIG.TEMPLATE.ZONECONFIG.CLEAR},
+        extend: {classes: ["standard-form"], scrollable: [""], template: DANGERZONECONFIG.TEMPLATE.ZONECONFIG.EXTEND},
+        footer: {template: DANGERZONECONFIG.TEMPLATE.FOOTER}
+      }
+
+  /** @override */
+  static TABS = {
+    sheet: {
+      initial: "basics", 
+      tabs: DANGERZONECONFIG.TAB.ZONECONFIG
+    }
+  }
+
+     /** @override */
+  async _prepareContext() {
+    return {
+      zone: this.zone,
+      actorOps: actorOps(),
+      hideOperation: this.zone.trigger.loop > 1 ? false : true,
+      options: ZONEFORMOPTIONS,
+      regionOps: getSceneRegionList(this.sceneId),
+      eventOps: EVENT_OPTIONS,
+      zoneOps: dangerZone.getZoneList(this.sceneId),
+      zoneTypeOps: dangerZoneType.dangerList,
+      sceneInactive: (this.scene?.active && this.scene.grid.type) ? false : true,
+      extensionsListHTML: this.#createExtendsListHTML(),
+      tabs: this._prepareTabs("sheet"),
+      buttons: [{ type: "submit", icon: "fa-solid fa-floppy-disk", label: "DANGERZONE.save.label" }]
+    }
+  }
+
+  /*******           custom            ********/
+
+  /**         GETTERS         **/
   get scene(){
     return game.scenes.get(this.sceneId)
   }
@@ -44,242 +91,282 @@ export class DangerZoneForm extends FormApplication {
     return this.zoneId ? (this.dangerId ? dangerZone.getGlobalZone(this.dangerId, this.sceneId) : dangerZone.getZoneFromScene(this.zoneId, this.sceneId)) : new zone(this.sceneId);
   }
 
-  getData(){
-     return {
-      zone: this.zone,
-      actorOps: actorOps(),
-      hideElevationPrompt: !this.zone.target.choose.enable,
-      hideInit: this.zone.hasCombatInitiativeEvent ? false : true,
-      hideOperation: this.zone.trigger.loop > 1 ? false : true,
-      hideTriggerChat: this.zone.hasChatEvent ? false : true,
-      hideTargetCombatant: this.zone.hasCombatEvent ? false : true,
-      //hideTargetStartMovement: this.zone.hasAuraEvent ? false : true,
-      hideTriggerMovementWait: this.zone.hasMovementEvent ? false : true,
-      hideWeight: !this.zone.trigger.random,
-      hideWorld: this.dangerId ? false : true,
-      replaceOps: ZONEFORMOPTIONS.REPLACE.TILE,
-      lightReplaceOps: ZONEFORMOPTIONS.REPLACE.LIGHT,
-      operationOps: ZONEFORMOPTIONS.TRIGGEROPERATION,
-      regionOps: getSceneRegionList(this.sceneId),
-      regionReplaceOps: ZONEFORMOPTIONS.REPLACE.REGION,
-      soundReplaceOps: ZONEFORMOPTIONS.REPLACE.SOUND,
-      sourceAreaOps: SOURCEAREA,
-      sourceTargetOps: ZONEFORMOPTIONS.SOURCEAREATARGET,
-      sourceTriggerOps: SOURCETRIGGERS,
-      stretchOps: ZONEFORMOPTIONS.STRETCH,
-      tokenDispositionOps: ZONEFORMOPTIONS.TOKENDISPOSITION,
-      eventOps: EVENT_OPTIONS,
-      zoneOps: dangerZone.getZoneList(this.sceneId),
-      zoneTypeOps: dangerZoneType.dangerList,
-      wallReplaceOps: ZONEFORMOPTIONS.REPLACE.WALL,
-      weatherReplaceOps: ZONEFORMOPTIONS.REPLACE.WEATHER,
-      sceneInactive: (this.scene?.active && this.scene.grid.type) ? false : true,
-      extensionsListHTML: this._createExtendsListHTML()
-    } 
+  /**         STATIC PRIVATE METHODS         **/
+
+  /**v13
+   * Add a zone extension.
+   * @this {ApplicationV2}
+   * @param {SubmitEvent} event         The pointer event.
+   */
+  static async #addExtension(event) {
+    new ZoneExtensionForm({}, this).render(true)
   }
 
-  activateListeners(html) {
-    super.activateListeners(html);
-    html.on('click', "[data-action]", this._handleButtonClick.bind(this));
-    html.on('change', "[data-action]", this._handleChange.bind(this));
+  /**v13
+   * Delete a zone extension.
+   * @this {ApplicationV2}
+   * @param {SubmitEvent} event         The pointer event.
+   */
+  static async #deleteExtension(event) {
+    const data = getEventData(event)
+    this.extensions = this.extensions.filter(e => e.id !== data.parentId);
+    this.#renderExtendsList()
   }
 
-  async _handleButtonClick(event) {
-    const clickedElement = $(event.currentTarget);
-    const action = clickedElement.data().action;
-    const id = clickedElement.parents('[data-id]')?.data()?.id;
-    switch (action) {
-      case 'add-extension': {
-        new DangerZoneExtensionForm({}, this).render(true);
-        break;
-      }
-      case 'delete-extension': {
-        this.extensions = this.extensions.filter(e => e.id !== id);
-        this._setExtendsList();
-        break;
-      }
-      case 'edit-extension': {
-        new DangerZoneExtensionForm(this.extensions.find(e => e.id === id), this).render(true);
-        break;
-      }
-      case 'render-zone-types': {
-        dangerZone.DangerZoneTypesForm.render(true);
-        break;
-      }
-    }
+  /**v13
+   * Edit a zone extension.
+   * @this {ApplicationV2}
+   * @param {SubmitEvent} event         The pointer event.
+   */
+  static async #editExtension(event) {
+    const data = getEventData(event)
+    new ZoneExtensionForm(this.extensions.find(e => e.id === data.parentId), this).render(true);
   }
 
-  async _handleChange(event) {
-    const action = $(event.currentTarget).data().action, val = event.currentTarget.value, checked = event.currentTarget.checked;
-    switch (action) {
-      case 'trigger-select': {
-        const targetCom = document.getElementById(`dz-target-combatant`);
-        const triggerCom = document.getElementById(`dz-combatantInZone`);
-        const targetMvWait = document.getElementById(`dz-trigger-movement-wait`);
-        const triggerChatPhrase = document.getElementById(`dz-trigger-chat-phrases`);
-        //const triggerMvStart = document.getElementById(`dz-target-movement-start`);
-        const init = document.getElementById(`dz-initiative`);
-        if(CHAT_EVENTS.find(e => val.includes(e))){
-          triggerChatPhrase.classList.remove('dz-hidden')
-        } else{
-          triggerChatPhrase.classList.add('dz-hidden')
-        }
-        if(COMBAT_EVENTS.find(e => val.includes(e))){
-           targetCom.classList.remove('dz-hidden')
-           triggerCom.classList.remove('dz-hidden')
-        } else{
-          targetCom.classList.add('dz-hidden')
-          triggerCom.classList.add('dz-hidden')
-        }
-        if(COMBAT_PERIOD_INITIATIVE_EVENTS.find(e => val.includes(e))){
-          init.classList.remove('dz-hidden')
-        } else {
-          init.classList.add('dz-hidden')
-          init.children[1].children[0].value=0;
-        }
-        // if(val.includes('aura')){
-        //   triggerMvStart.classList.remove('dz-hidden')
-        // } else {
-        //   triggerMvStart.classList.add('dz-hidden')
-        // }
-        if(MOVEMENT_EVENTS.find(e => val.includes(e))){
-          targetMvWait.classList.remove('dz-hidden')
-        } else{
-          targetMvWait.classList.add('dz-hidden')
-        }
-        this.setPosition()
-        break;
-      }
-      case 'loop-change': 
-        const op = document.getElementById(`dz-operation`);
-        val > 1 ? op.classList.remove('dz-hidden') : op.classList.add('dz-hidden')
-        this.setPosition()
-        break;
-      case 'random-toggle': 
-        const rando = document.getElementById(`dz-random-weight`);
-        checked ? rando.classList.remove('dz-hidden') : rando.classList.add('dz-hidden')
-        break;
-      case 'source-area':
-        this._handleSourceTag(val)
-        break;
-          
-      case 'template-toggle': 
-        const templt = document.getElementById(`dz-elevation-prompt`);
-        checked ? templt.classList.remove('dz-hidden') : templt.classList.add('dz-hidden')
-        this.setPosition()
-        break;
-    }
-  }
-
-  _handleSourceTag(sourceArea = this.zone.source.area){
-    const tag = $(this.form).find('#dz-source-tag')
-    const sourceT = $(this.form).find('#dz-source-tag-tag')
-    const sourceD = $(this.form).find('#dz-source-tag-danger')
-    const sourceZ = $(this.form).find('#dz-source-tag-zone')
-    switch(sourceArea){
-      case 'C':
-      case 'D':
-        tag.removeClass('dz-hidden');
-        sourceD.removeClass('dz-hidden');
-        tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.danger.label'))
-        $(this.form).find('#dz-source-tag-danger').attr('name', 'source.tags')
-        break;
-      case 'T':
-        tag.removeClass('dz-hidden');
-        sourceT.removeClass('dz-hidden');
-        tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.tag.label'))
-        $(this.form).find('#dz-source-tag-tag').attr('name', 'source.tags')
-        break;
-      case 'Y':
-      case 'Z':
-        tag.removeClass('dz-hidden');
-        sourceZ.removeClass('dz-hidden');
-        tag.children('label').html(game.i18n.localize('DANGERZONE.edit-form.source.tag.zone.label'))
-        $(this.form).find('#dz-source-tag-zone').attr('name', 'source.tags')
-        break;
-      default:
-        tag.addClass('dz-hidden');
-        break;
-    }
-    if(!['C','D'].includes(sourceArea)){
-      sourceD.addClass('dz-hidden')
-      sourceD.removeAttr('name')
-      sourceD.val([])
-    }
-    if(sourceArea !=='T'){
-      sourceT.addClass('dz-hidden')
-      sourceT.removeAttr('name')
-      sourceT.val([])
-    }
-    if(!['Y','Z'].includes(sourceArea)){
-      sourceZ.addClass('dz-hidden')
-      sourceZ.removeAttr('name')
-      sourceZ.val([])
-    }
-    this.setPosition()
-  }
-
-  partialRender(){
-    this._setExtendsList()
-  }
-
-  _setExtendsList(){
-    const ins = document.getElementById(`danger-zone-zone-form-extend`);
-    ins.innerHTML = this._createExtendsListHTML();
-    this.setPosition();
-  }
-
-  _createExtendsListHTML() {
-    let finalHTML = ''; 
-    const znlist = dangerZone.getExtendedZones(this.sceneId)
-    for(let item of this.extensions) {
-      const zone = znlist.find(z => z.id === item.zoneId)
-      finalHTML += `<li class="flexrow extension-record" data-container="types" draggable="true"><div class="flexrow danger-zone-extends-details"><div class="title">${zone ? zone.title : ''}</div><div class="interaction">${game.i18n.localize(ZONEEXTENSIONINTERACTIONOPTIONS[item.interaction])}</div></div><div class="danger-zone-controls flexrow" data-id="${item.id}"><a class="danger-zone-edit" title="${game.i18n.localize('DANGERZONE.edit')}" data-action="edit-extension"><i class="fas fa-edit"></i></a>&nbsp;&nbsp;&nbsp;<a class="danger-zone-delete" title="${game.i18n.localize('DANGERZONE.delete')}" data-action="delete-extension"><i class="fas fa-trash"></i></a></div></li>`;
-    }
-    return finalHTML
-  }
-
-  updateExtension(extension){
-    this.extensions.find(e => e.id === extension.id) ? this.extensions.map(e => {if(e.id === extension.id) {return Object.assign(e, extension)} return e}) : this.extensions.push(extension)
-  }
-  
-  async _updateObject(event, formData) {
-    const expandedData = foundry.utils.expandObject(formData); 
+  /**v13
+   * Save the changes to the zone.
+   * @this {ApplicationV2}
+   * @param {SubmitEvent} _event         The form submission event.
+   * @param {HTMLFormElement} _form      The form element that was submitted.
+   * @param {FormDataExtended} submitData  Processed data for the submitted form.
+   */
+  static async #onSubmit(_event, _form, submitData) {
+    const expandedData = foundry.utils.expandObject(submitData.object);
     expandedData['extensions'] = this.extensions;
     await dangerZone.updateSceneZone(expandedData.zoneId, expandedData);
     if(this.parent){this.parent.render(true)}
   }
+
+  /**v13
+   * Render the dangers list.
+   * @this {ApplicationV2}
+   * @param {SubmitEvent} event         The pointer event.
+   */
+  static async #renderDanger(event) {
+    const selectedDanger = this.element.querySelector(`select[name="dangerId"]`).value 
+    selectedDanger ?  new DangerForm(selectedDanger).render(true) : dangerZone.DangerListForm.render(true)
+  }
+  
+
+  /************ PRIVATE METHODS  ***************/
+
+  /**v13
+   * generates the html needed to render the extensions lsit
+   * @returns string of html
+   */
+  #createExtendsListHTML() {
+    let finalHTML = ''; 
+    const znlist = dangerZone.getExtendedZones(this.sceneId)
+    for(let item of this.extensions) {
+      const zone = znlist.find(z => z.id === item.zoneId)
+      finalHTML += `<li class="flexrow extension-record" data-container="types" draggable="true"><div class="flexrow danger-zone-extends-details"><div class="title">${zone ? zone.title : ''}</div><div class="interaction">${game.i18n.localize(ZONEFORMOPTIONS.ZONEEXTENSION.INTERACTIONOPTIONS[item.interaction])}</div></div><div class="danger-zone-controls flexrow" data-id="${item.id}"><a class="danger-zone-edit" title="${game.i18n.localize('DANGERZONE.edit')}" data-action="edit-extension"><i class="fas fa-edit"></i></a>&nbsp;&nbsp;&nbsp;<a class="danger-zone-delete" title="${game.i18n.localize('DANGERZONE.delete')}" data-action="delete-extension"><i class="fas fa-trash"></i></a></div></li>`;
+    }
+    return finalHTML
+  }
+
+  /**
+   * 
+   * @param {event} event 
+   */
+  #loopChange(event){
+    const data = getEventData(event)
+    const op = this.element.querySelector(`#dz-operation`);
+    data.target.value > 1 ? op.classList.remove('dz-hidden') : op.classList.add('dz-hidden')
+    this.setPosition()
+  }
+
+  /**v13
+   * Form handling to show/hide weight field depending on random setting
+   * @param {event} event 
+   */
+  #randomToggle(event){
+    const data = getEventData(event)
+    const rando = this.element.querySelector(`#dz-random-weight`);
+    data.target.checked ? rando.classList.remove('dz-hidden') : rando.classList.add('dz-hidden')
+  }
+
+  /**v13
+   * renders the extends list into the form
+   */
+  #renderExtendsList(){
+    const ins = this.element.querySelector(`#danger-zone-zone-form-extend`);
+    ins.innerHTML = this.#createExtendsListHTML();
+    this.setPosition();
+  }
+  
+  /**v13
+   * Dynamic form handling for showing or hiding for prompt elevaton based on prompt selection
+   * @param {event} event 
+  */
+  #templateToggle(event){
+    const data = getEventData(event)
+    const templt = this.element.querySelector(`#dz-elevation-prompt`);
+    data.target.checked ? templt.classList.remove('dz-hidden') : templt.classList.add('dz-hidden')
+    this.setPosition()
+  }
+
+  /**v13
+  * Dynamic form handling in response to trigger value change
+  * @param {event} event 
+  */
+  #triggerSelect(event) {
+    const data = getEventData(event)
+
+    const targetCom = this.element.querySelector(`#dz-target-combatant`);
+    const triggerCom = this.element.querySelector(`#dz-combatantInZone`);
+    const targetMvWait = this.element.querySelector(`#dz-trigger-movement-wait`);
+    const triggerChatPhrase = this.element.querySelector(`#dz-trigger-chat-phrases`);
+    const init = this.element.querySelector(`#dz-initiative`);
+    
+    CHAT_EVENTS.find(e => val.includes(e)) ? triggerChatPhrase.classList.remove('dz-hidden') : triggerChatPhrase.classList.add('dz-hidden');
+
+    if(COMBAT_EVENTS.find(e => val.includes(e))){
+      targetCom.classList.remove('dz-hidden')
+      triggerCom.classList.remove('dz-hidden')
+    } else{
+      targetCom.classList.add('dz-hidden')
+      triggerCom.classList.add('dz-hidden')
+    }
+
+    if(COMBAT_PERIOD_INITIATIVE_EVENTS.find(e => data.target.value.includes(e))){
+      init.classList.remove('dz-hidden')
+    } else {
+      init.classList.add('dz-hidden')
+      init.children[1].children[0].value=0;
+    }
+    
+    MOVEMENT_EVENTS.find(e => data.target.value.includes(e)) ? targetMvWait.classList.remove('dz-hidden') : targetMvWait.classList.add('dz-hidden')
+    
+    this.setPosition()
+  }
+
+  /**         METHODS         **/
+    /** @override */
+  _onRender(context, options) {
+    super._onRender(context, options);
+    this.element.querySelector(`[data-action="loop-change"]`).addEventListener("change", (event => {this.#loopChange(event)}))
+    this.element.querySelector(`[data-action="source-area"]`).addEventListener("change", (event => {this.handleSourceTag(event)}))
+    this.element.querySelector(`[data-action="template-toggle"]`).addEventListener("change", (event => {this.#templateToggle(event)}))
+    this.element.querySelector(`[data-action="random-toggle"]`).addEventListener("change", (event => {this.#randomToggle(event)}))
+    this.element.querySelector(`[data-action="trigger-select"]`).addEventListener("change", (event => {this.#triggerSelect(event)}))
+  }
+
+  /**v13
+   * form dynamic handling when source area is changed
+   * @param {event} event 
+  */
+  handleSourceTag(event){
+    const data = getEventData(event)
+    const sourceArea = data.target.value ?? this.zone.source.area
+    const tag = this.element.querySelector('#dz-source-tag')
+    const sourceT = this.element.querySelector('#dz-source-tag-tag')
+    const sourceD = this.element.querySelector('#dz-source-tag-danger')
+    const sourceZ = this.element.querySelector('#dz-source-tag-zone')
+    switch(sourceArea){
+      case 'C':
+      case 'D':
+        tag.classList.remove('dz-hidden');
+        sourceD.classList.remove('dz-hidden');
+        tag.querySelector('label').innerHTML = game.i18n.localize('DANGERZONE.edit-form.source.tag.danger.label')
+        sourceD.setAttribute("name", 'source.tags')
+        break;
+      case 'T':
+        tag.classList.remove('dz-hidden');
+        sourceT.classList.remove('dz-hidden');
+        tag.querySelector('label').innerHTML = game.i18n.localize('DANGERZONE.edit-form.source.tag.tag.label')
+        sourceD.setAttribute("name", 'source.tags')
+        break;
+      case 'Y':
+      case 'Z':
+        tag.classList.remove('dz-hidden');
+        sourceZ.classList.remove('dz-hidden');
+        tag.querySelector('label').innerHTML = game.i18n.localize('DANGERZONE.edit-form.source.tag.zone.label')
+        sourceZ.setAttribute("name",  'source.tags')
+        break;
+      default:
+        tag.classList.add('dz-hidden');
+        break;
+    }
+    if(!['C','D'].includes(sourceArea)){
+      sourceD.classList.add('dz-hidden')
+      sourceD.removeAttribute('name')
+      sourceD.value = []
+    }
+    if(sourceArea !=='T'){
+      sourceT.classList.add('dz-hidden')
+      sourceT.removeAttribute('name')
+      sourceT.value = []
+    }
+    if(!['Y','Z'].includes(sourceArea)){
+      sourceZ.classList.add('dz-hidden')
+      sourceZ.removeAttribute('name')
+      sourceZ.value = []
+    }
+    this.setPosition()
+  }
+
+  /**v13
+   * called by extension app to update extension then re-render that list on this form
+   */
+  updateExtension(extension){
+    this.extensions.find(e => e.id === extension.id) ? this.extensions.map(e => {if(e.id === extension.id) {return Object.assign(e, extension)} return e}) : this.extensions.push(extension)
+    this.#renderExtendsList()
+  }
   
 } 
 
-export class DangerZoneExtensionForm extends FormApplication {
+export class ZoneExtensionForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
   constructor(extension = {}, app, ...args) {
       super(...args);
-
       this.parent = app,
       this.extension = extension;
       this.zones = dangerZone.getExtendedZones(this.scene.id, this.triggeringZone.id);
-
       if(!this.extension.id) this.extension.id = foundry.utils.randomID(16)
   }
 
-  static get defaultOptions(){
-    const defaults = super.defaultOptions;
-
-    const overrides = {
-      title : game.i18n.localize("DANGERZONE.edit-form.extension.add"),
-      id : "danger-zone-extension",
-      classes: ["sheet","danger-zone-record"],
-      template : DANGERZONECONFIG.TEMPLATE.ZONEEXTENSION,
-      width : 450,
-      height : "auto",
-      closeOnSubmit: true
-    };
-    const mergedOptions = foundry.utils.mergeObject(defaults, overrides);
-    
-    return mergedOptions;
+    /** @inheritDoc */
+  static DEFAULT_OPTIONS = {
+    classes: [],
+    id : DANGERZONECONFIG.ID.FORM.ZONEEXTENSION,
+    form: {
+      submitOnChange: false,
+      closeOnSubmit: true,
+      handler: ZoneExtensionForm.#onSubmit
+    },
+    position: {
+      width: 500
+    },
+    tag: "form",
+    window: {
+      contentClasses: ["danger-zone-record", "sheet"],
+      title : DANGERZONECONFIG.LABEL.ZONEEXTENSION,
+      icon: DANGERZONECONFIG.ICON.ZONEEXTENSION
+    }
   }
 
+ /** @override */
+  static PARTS = {
+      sheet: {template: DANGERZONECONFIG.TEMPLATE.ZONEEXTENSION},
+      footer: {template: DANGERZONECONFIG.TEMPLATE.FOOTER}
+    }
+
+ /** @override */
+  async _prepareContext() {
+    return {
+      data: this.extension,
+      dangerOps: this.dangerOps,
+      options: ZONEFORMOPTIONS,
+      worldZoneOps: this.worldZoneOps,
+      zoneOps: this.zoneOps,
+      isTrigger: (!this.extension.interaction || this.extension.interaction === 'T') ? true : false,
+      isSceneZone: (!this.extension.zoneId || this.sceneZones.find(z=>z.id === this.extension.zoneId)) ? true : false,
+      buttons: [{ type: "submit", icon: "fa-solid fa-floppy-disk", label: "DANGERZONE.save.label" }]
+    }
+  }
+
+  /*******           custom            ********/
+
+  /**         GETTERS         **/
   get dangerOps(){
       return this.zones.filter(z => z.scene.dangerId).reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
   }
@@ -304,47 +391,58 @@ export class DangerZoneExtensionForm extends FormApplication {
       return this.sceneZones.reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
   }
 
+  /************ PRIVATE METHODS  ***************/
 
-  async _handleChange(event) {
-    const action = $(event.currentTarget).data().action, val = event.currentTarget.value;
-    switch (action) {         
-      case 'interaction': 
-        const tfId = document.getElementById(`danger-zone-extension-trigger-fields`);
-        val === 'T' ? tfId.classList.remove('dz-hidden') : tfId.classList.add('dz-hidden')
-        const sFld = document.getElementById(`danger-zone-extension-interaction-shape`);
-        val === 'R' ? sFld.classList.remove('dz-hidden') : sFld.classList.add('dz-hidden')
-        this.setPosition()
+  /**v13
+   * 
+   * @param {event} event 
+   */
+  #interaction(event){
+    const data = getEventData(event)
+    const tfId = this.element.querySelector(`#danger-zone-extension-trigger-fields`);
+    const sFld = this.element.querySelector(`#danger-zone-extension-interaction-shape`);
+    switch(data.target.value){
+      case 'T':
+        tfId.classList.remove('dz-hidden') 
+        sFld.classList.add('dz-hidden')
         break;
-      case 'zone':
-        const iFld = document.getElementById(`danger-zone-extension-interaction-warning`);
-        this.sceneZones.find(z=>z.id === val) ? iFld.classList.add('dz-hidden') : iFld.classList.remove('dz-hidden')
-        this.setPosition()
+      case 'R': 
+        tfId.classList.add('dz-hidden')
+        sFld.classList.remove('dz-hidden') 
         break;
     }
+    this.setPosition()
   }
 
-  activateListeners(html) {
-    super.activateListeners(html);
-    html.on('change', "[data-action]", this._handleChange.bind(this));
-  }
-
-  getData(){
-     return {
-      data: this.extension,
-      interactionOps: ZONEEXTENSIONINTERACTIONOPTIONS,
-      sequenceOps: ZONEEXTENSIONSEQUENCEOPTIONS,
-      dangerOps: this.dangerOps,
-      worldZoneOps: this.worldZoneOps,
-      zoneOps: this.zoneOps,
-      isTrigger: (!this.extension.interaction || this.extension.interaction === 'T') ? true : false,
-      isSceneZone: (!this.extension.zoneId || this.sceneZones.find(z=>z.id === this.extension.zoneId)) ? true : false
-     } 
-  }
-  
-  async _updateObject(event, formData) {
-    const expandedData = foundry.utils.expandObject(formData); 
+  /**v13
+   * Save the changes to the zone.
+   * @this {ApplicationV2}
+   * @param {SubmitEvent} _event         The form submission event.
+   * @param {HTMLFormElement} _form      The form element that was submitted.
+   * @param {FormDataExtended} submitData  Processed data for the submitted form.
+   */
+  static async #onSubmit(_event, _form, submitData) {
+    const expandedData = foundry.utils.expandObject(submitData.object); 
     this.parent.updateExtension(expandedData)
-    this.parent.partialRender()
   }
-  
+
+  /**v13
+   * 
+   * @param {event} event 
+   */
+  #zone(event){
+    const data = getEventData(event)
+    const iFld = this.element.querySelector(`#danger-zone-extension-interaction-warning`);
+    this.sceneZones.find(z=>z.id === data.target.value) ? iFld.classList.add('dz-hidden') : iFld.classList.remove('dz-hidden')
+    this.setPosition()
+  }
+
+  /**         METHODS         **/
+    /** @override */
+  _onRender(context, options) {
+    super._onRender(context, options);
+    this.element.querySelector(`[data-action="interaction"]`).addEventListener("change", (event => {this.#interaction(event)}))
+    this.element.querySelector(`[data-action="zone"]`).addEventListener("change", (event => {this.#zone(event)}))
+  }
+
 } 

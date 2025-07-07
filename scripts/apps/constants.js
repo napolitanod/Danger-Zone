@@ -1,5 +1,5 @@
 import { dangerZone } from '../danger-zone.js';
-import {DangerZoneSceneForm} from './scene-zone-list-form.js';
+import {ZoneListForm} from './zone-list-form.js';
 
 /**v13
  * Defines the metadata for danger parts, including data used when building forms
@@ -45,6 +45,11 @@ export const DANGERZONECONFIG = {
             DANGER: 'danger-zone-type-form',
             DANGERPART: {_default: 'id'},
             DANGERS: 'danger-zone-types',
+            ZONE: 'danger-zone',
+            ZONECOPY: "danger-zone-zone-copy",
+            ZONEEXECUTOR: "danger-zone-executor",
+            ZONEEXTENSION: "danger-zone-extension",
+            ZONELIST: "zone-list"
         }
     },
     ICON: {
@@ -73,7 +78,12 @@ export const DANGERZONECONFIG = {
         TRIGGER: "fas fa-play",
         VISUAL: 'fa-solid fa-eye',
         SETTINGS: 'fa-solid fa-gear',
-        WALL: DANGERZONEPARTS.get('wall').icon
+        WALL: DANGERZONEPARTS.get('wall').icon,
+        ZONE: 'fas fa-radiation',
+        ZONECOPY: 'fas fa-copy',
+        ZONELIST: 'fas fa-radiation',
+        ZONEEXECUTOR: 'fas fa-list-alt',
+        ZONEEXTENSION: 'fas fa-link'
     },
     LABEL: {
         ADVANCED: 'DANGERZONE.advanced.label',
@@ -99,7 +109,12 @@ export const DANGERZONECONFIG = {
         SETTINGS: 'DANGERZONE.settings.label',
         SOURCE: 'DANGERZONE.source.label',
         VISUAL: 'DANGERZONE.visual.label',
-        WALL: 'DANGERZONE.wall.label'
+        WALL: 'DANGERZONE.wall.label',
+        ZONE: "DANGERZONE.edit-form.name",
+        ZONECOPY: "DANGERZONE.copy-zone.label",
+        ZONEEXECUTOR: "DANGERZONE.executor-form.form-name",
+        ZONEEXTENSION: "DANGERZONE.edit-form.extension.add",
+        ZONELIST: "DANGERZONE.scene.header.name"
     },
     RANDOM: {
         audio : {
@@ -120,7 +135,55 @@ export const DANGERZONECONFIG = {
             LABEL: "DANGERZONE.file.visual.random.label"
         }
     },
-    TAB: {}, 
+    TAB: {
+        ZONECONFIG: [{
+                icon: "fas fa-radiation", 
+                id: "basics", 
+                label: 'DANGERZONE.edit-form.basics.label'
+            },
+            {
+                icon: "fas fa-ruler", 
+                id: "dimensions", 
+                label: 'DANGERZONE.edit-form.boundary.label'
+            },
+            {
+                icon: "fas fa-play", 
+                id: "trigger", 
+                label: 'DANGERZONE.edit-form.trigger.label'
+            },
+            {
+                icon: "fas fa-dragon", 
+                id: "source", 
+                label: 'DANGERZONE.edit-form.source.label'
+            },
+            {
+                icon: "fas fa-bullseye", 
+                id: "target", 
+                label: 'DANGERZONE.edit-form.token-targeting.label'
+            },
+            {
+                icon: "fas fa-eraser", 
+                id: "clear", 
+                label: 'DANGERZONE.edit-form.clear.label'
+            },
+            {
+                icon: "fas fa-link", 
+                id: "extend", 
+                label: 'DANGERZONE.edit-form.extend.label'
+            }
+        ],
+        ZONEEXECUTOR: [{
+                icon: "fas fa-radiation", 
+                id: "trigger", 
+                label: 'DANGERZONE.executor-form.tab.list.label'
+            },
+            {
+                icon: "fas fa-list-alt", 
+                id: "exploded", 
+                label: 'DANGERZONE.executor-form.tab.exploded.label'
+            }
+        ]
+    }, 
     TEMPLATE: {
         DANGERCONFIG: `modules/danger-zone/templates/danger-form.hbs`,
         DANGERSLIST: `modules/danger-zone/templates/dangers-list.hbs`,
@@ -129,11 +192,22 @@ export const DANGERZONECONFIG = {
         DANGERPART: {_default: 'modules/danger-zone/templates/dangers-list-footer.hbs'},
         FOOTER: `modules/danger-zone/templates/footer.hbs`,
         TABNAV: `modules/danger-zone/templates/tab-navigation.hbs`,
-        ZONECONFIG: `modules/danger-zone/templates/danger-zone-form.hbs`,
-        ZONEEXTENSION: `modules/danger-zone/templates/danger-zone-extension-form.hbs`,
-        EXECUTOR: `modules/danger-zone/templates/danger-zone-executor-form.hbs`,
-        ZONECOPY: `modules/danger-zone/templates/danger-zone-scene-zone-copy.hbs`,
-        ZONESCENE: `modules/danger-zone/templates/danger-zone-scene-form.hbs`
+        ZONECONFIG: {
+            BASICS: `modules/danger-zone/templates/zone-form-basics.hbs`,
+            DIMENSIONS: `modules/danger-zone/templates/zone-form-dimensions.hbs`,
+            TRIGGER: `modules/danger-zone/templates/zone-form-trigger.hbs`,
+            SOURCE: `modules/danger-zone/templates/zone-form-source.hbs`,
+            TARGET: `modules/danger-zone/templates/zone-form-target.hbs`,
+            CLEAR: `modules/danger-zone/templates/zone-form-clear.hbs`,
+            EXTEND: `modules/danger-zone/templates/zone-form-extend.hbs`,
+        }, 
+        ZONEEXTENSION: `modules/danger-zone/templates/zone-extension-form.hbs`,
+        ZONEEXECUTOR: {
+            TRIGGER: `modules/danger-zone/templates/zone-executor-form-trigger.hbs`,
+            EXPLODED: `modules/danger-zone/templates/zone-executor-form-exploded.hbs`,
+        },
+        ZONECOPY: `modules/danger-zone/templates/zone-copy-form.hbs`,
+        ZONELIST: `modules/danger-zone/templates/zone-list-form.hbs`
     }
 }
 
@@ -376,6 +450,13 @@ export const ZONEFORMOPTIONS = {
             "A": "DANGERZONE.weather.replace-types.A.label"
         }
     },
+    SOURCEAREA: {
+    "": "DANGERZONE.source.area.none",
+    "A": "DANGERZONE.source.area.actor",
+    "D": "DANGERZONE.source.area.danger.placeable",
+    "T": "DANGERZONE.source.area.tag",
+    "Z": "DANGERZONE.source.area.zone.placeable"
+    },
     SOURCEAREAGLOBALZONE: {
         "": "DANGERZONE.source.area.none",
         "A": "DANGERZONE.source.area.actor",
@@ -387,6 +468,11 @@ export const ZONEFORMOPTIONS = {
         "A": "DANGERZONE.source.target.adjacent",
         "I": "DANGERZONE.source.target.in",
         "B": "DANGERZONE.source.target.both"
+    },
+    SOURCETRIGGERS: {
+        "": "DANGERZONE.edit-form.source.triggers.any",
+        "C": "DANGERZONE.edit-form.source.triggers.scene",
+        "S": "DANGERZONE.edit-form.source.triggers.source"
     },
     STRETCH: {
         "": "",
@@ -404,6 +490,22 @@ export const ZONEFORMOPTIONS = {
         "Q": "DANGERZONE.trigger-operation.sequential",
         "G": "DANGERZONE.trigger-operation.staggered",
         "T": "DANGERZONE.trigger-operation.together"
+    },
+    ZONEEXTENSION:{
+        INTERACTIONOPTIONS: {
+            "T": "DANGERZONE.edit-form.extension.interaction.options.trigger",
+            "A": "DANGERZONE.edit-form.extension.interaction.options.enable",
+            "D": "DANGERZONE.edit-form.extension.interaction.options.disable",
+            "G": "DANGERZONE.edit-form.extension.interaction.options.toggle",
+            "R": "DANGERZONE.edit-form.extension.interaction.options.add-region",
+            "P": "DANGERZONE.edit-form.extension.interaction.options.replace-region",
+            "S": "DANGERZONE.edit-form.extension.interaction.options.swap-region"
+        }, 
+        SEQUENCEOPTIONS: {
+            "1": "DANGERZONE.edit-form.extension.sequence.options.after",
+            "-1": "DANGERZONE.edit-form.extension.sequence.options.before",
+            "0": "DANGERZONE.edit-form.extension.sequence.options.same"
+        }
     }
 }
 
@@ -478,7 +580,7 @@ export function runOnSetup(){
                 name: "config",
                 title: "DANGERZONE.zones",
                 onChange: (event, active) => {
-                    if(active && dangerZone.executorForm.visible) new DangerZoneSceneForm('', canvas.scene?.id).render(true)
+                    if(active && dangerZone.executorForm.visible) new ZoneListForm('', canvas.scene?.id).render(true)
                 },
                 visible: game.user.isActiveGM
             },
@@ -545,14 +647,17 @@ export function runOnSetup(){
         }   
     }
 
+    /**v13
+     * load form constants for system and module based data
+     */
     DANGERFORMOPTIONS.TOKENRESPONSE.DAMAGETYPE = damageTypes();
     DANGERFORMOPTIONS.TOKENRESPONSE.SAVETYPE = saveTypes()
     DANGERFORMOPTIONS.WEATHER.TYPE = weatherTypes()
     
     if(dangerZone.MODULES.taggerOn){
-        SOURCEAREA["C"] = "DANGERZONE.source.area.danger.tile"; 
+        ZONEFORMOPTIONS.SOURCEAREA["C"] = "DANGERZONE.source.area.danger.tile"; 
         ZONEFORMOPTIONS.SOURCEAREAGLOBALZONE["C"] = "DANGERZONE.source.area.danger.tile"; 
-        SOURCEAREA["Y"] = "DANGERZONE.source.area.zone.tile";  
+        ZONEFORMOPTIONS.SOURCEAREA["Y"] = "DANGERZONE.source.area.zone.tile";  
     }    
 }
 
@@ -620,13 +725,13 @@ function weatherTypes() {
 
 /************* Begin dropdown generator functions */
 
+
 /**v13
- * Outputs what can be used as a dropdown of compendium options
- * @param {string} fileType 
- * @returns compendium options for the given filetype
+ * outputs that can be used as a dropdown of actor options
+ * @returns actor options
  */
-export function getCompendiumOps(fileType){
-    return game.packs.filter((x) => x.documentName == TOKENSAYSFILETYPEENTITYTYPE[fileType]).reduce((obj, p) => {obj['']=''; obj[p.collection] = p.title; return obj;}, {})
+export function actorOps(){
+    return game.actors.reduce((obj, a) => {obj[a.id] = a.name; return obj;}, {})
 }
 
 /**v13
@@ -642,6 +747,32 @@ export function determineMacroList(keyIsUuid = false) {
   return list;
 }
 
+/**v13
+ * Outputs what can be used as a dropdown of compendium options
+ * @param {string} fileType 
+ * @returns compendium options for the given filetype
+ */
+export function getCompendiumOps(fileType){
+    return game.packs.filter((x) => x.documentName == TOKENSAYSFILETYPEENTITYTYPE[fileType]).reduce((obj, p) => {obj['']=''; obj[p.collection] = p.title; return obj;}, {})
+}
+
+/**v13
+ * outputs that can be used as a dropdown of region options for a given scene
+ * @param {string}      id for scene
+ * @returns region options
+ */
+export function regionOps(sceneId){
+    return game.scenes.get(sceneId).regions.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
+}
+
+/**v13
+ * outputs that can be used as a dropdown of scene options
+ * @returns scene options
+ */
+export function sceneOps(){
+    return game.scenes.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
+}
+
 /**
  * v13 
  * outputs parameters for a given fxMaster
@@ -652,15 +783,9 @@ export function weatherParameters(type) {
 
 /************* End dropdown generator functions */
 
-export const WORKFLOWSTATES = {
-    NONE: 0,
-    INITIALIZE: 1,
-    EXECUTE: 2,
-    INFORM: 3,
-    CANCEL: 98,
-    COMPLETE: 99
-}
-
+/**v13
+ * Convesion object, with key representing the document name and the value the placeable name 
+ */
 export const PLACEABLESBYDOCUMENT =  {
     'Tile': 'tiles',
     'Wall': 'walls',
@@ -670,6 +795,21 @@ export const PLACEABLESBYDOCUMENT =  {
     'fxmaster-particle':'fxmaster-particle'
 }
 
+/**v13
+ * states in order that zone trigger workflow moves through.
+ */
+export const WORKFLOWSTATES = {
+    NONE: 0,
+    INITIALIZE: 1,
+    EXECUTE: 2,
+    INFORM: 3,
+    CANCEL: 98,
+    COMPLETE: 99
+}
+
+/**v13
+ * holds default settings for initializing the world zone data part
+ */
 export const WORLDZONE = {
     dimensions: {
         bleed: false,
@@ -947,33 +1087,6 @@ export const MIGRATION_ZONE = {
     MULTI: 2
 }
 
-//a few options are added via the setModOptions function if tagger is on
-export const SOURCEAREA = {
-    "": "DANGERZONE.source.area.none",
-    "A": "DANGERZONE.source.area.actor",
-    "D": "DANGERZONE.source.area.danger.placeable",
-    "T": "DANGERZONE.source.area.tag",
-    "Z": "DANGERZONE.source.area.zone.placeable"
-}
-
-export const SOURCETRIGGERS = {
-    "": "DANGERZONE.edit-form.source.triggers.any",
-    "C": "DANGERZONE.edit-form.source.triggers.scene",
-    "S": "DANGERZONE.edit-form.source.triggers.source"
-}
-
-
-export function actorOps(){
-    return game.actors.reduce((obj, a) => {obj[a.id] = a.name; return obj;}, {})
-}
-
-export function regionOps(sceneId){
-    return game.scenes.get(sceneId).regions.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
-}
-
-export function sceneOps(){
-    return game.scenes.reduce((obj, a) => {obj['']=''; obj[a.id] = a.name; return obj;}, {})
-}
 
 export const FVTTMOVETYPES = {
     0: 0,
@@ -994,21 +1107,6 @@ const TOKENSAYSFILETYPEENTITYTYPE = {
     item: "Item"
   }
 
-export const ZONEEXTENSIONINTERACTIONOPTIONS = {
-    "T": "DANGERZONE.edit-form.extension.interaction.options.trigger",
-    "A": "DANGERZONE.edit-form.extension.interaction.options.enable",
-    "D": "DANGERZONE.edit-form.extension.interaction.options.disable",
-    "G": "DANGERZONE.edit-form.extension.interaction.options.toggle",
-    "R": "DANGERZONE.edit-form.extension.interaction.options.add-region",
-    "P": "DANGERZONE.edit-form.extension.interaction.options.replace-region",
-    "S": "DANGERZONE.edit-form.extension.interaction.options.swap-region"
-}
-
-export const ZONEEXTENSIONSEQUENCEOPTIONS = {
-    "1": "DANGERZONE.edit-form.extension.sequence.options.after",
-    "-1": "DANGERZONE.edit-form.extension.sequence.options.before",
-    "0": "DANGERZONE.edit-form.extension.sequence.options.same"
-}
 
 export const EXECUTABLEOPTIONS = {};
 

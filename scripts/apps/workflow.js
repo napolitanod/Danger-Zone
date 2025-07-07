@@ -357,7 +357,7 @@ class executorData {
                 <div><label class="danger-zone-label">Danger:</label><span> ${this.danger.name}</span></div>
                 <div><label class="danger-zone-label">Dimensions:</label><span> w${this.danger.dimensions.units.w}  h${this.danger.dimensions.units.h}  d${this.danger.dimensions.units.d}${this.zone.dimensions.bleed ? ' (bleed)' : ''}</span></div>
                 <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => t.name)}</span></div>
-                <div><label class="danger-zone-label">Trigger:</label><span> ${game.i18n.localize(EVENTS[this.event].label)}</span></div>
+                <div><label class="danger-zone-label">Trigger:</label><span> ${game.i18n.localize(EVENTS[this.event]?.label)}</span></div>
                 <div><label class="danger-zone-label">Likelihood:</label><span> ${this.zone.trigger.likelihood}</span> <label class="danger-zone-label">Likelihood result:</label><span> ${this.likelihoodResult}</span></div>
                 <div><label class="danger-zone-label">Targeting:</label><span> ${this.zone.target.always ? 'Must target a location with a token' : 'Can target any location in zone'}. ${this.zone.target.all ? 'Hits all eligible tokens' : 'Hits one eligible token'} at location.</span></div>
                 `;
@@ -437,7 +437,7 @@ class executorData {
     }
     
     async setBoundary(asRun = false) {
-        if(this.hasBoundary) return this._setBoundary();
+        if(this.hasBoundary) return this.setBoundaryEligibleTargets();
         if(this.hasLocation) return this._setLocationBoundary();
         if(asRun && this.zone.target.choose.enable) {
             await this.promptBoundary();
@@ -512,15 +512,15 @@ class executorData {
         this.zoneEligibleTokens = this.zone.zoneEligibleTokens(this.zoneTokens);
     }
 
-    _setBoundary(){
-        this.eligibleTargets = this.boundary.tokensIn(this.zoneEligibleTokens);
+    setBoundaryEligibleTargets(){
+        this.eligibleTargets = !this.hasBoundary ? [] : this.boundary.tokensIn(this.zoneEligibleTokens);
     }
 
     _setLocationBoundary(){
         const options = {excludes: this.zoneBoundary.excludes, universe: this.zoneBoundary.universe}
         this.zone.stretch(options);
         this.boundary = boundary.locationToBoundary(this.location.coords, {bottom: this.location.elevation, top: this.location.elevation}, this.danger.dimensions.units, options);
-        this._setBoundary();
+        this.setBoundaryEligibleTargets();
     }
 
     insertSaveFailed(failed){
@@ -541,6 +541,7 @@ class executorData {
 
     updateBoundary(boundary){
         this.boundary = boundary ?? {}
+        this.setBoundaryEligibleTargets();
     }
 
     updateLocation(location){
@@ -557,6 +558,7 @@ class executorData {
 
     updateSources(sources){
         this._sources = sources?.length ? sources : []
+        this.sources = this._sources
     }
 
     updateTargets(targets){
@@ -788,9 +790,10 @@ export class executor {
                 }
             }
             if(ex.likelihood < 100){
-                const maybe = await maybe();
-                if(ex.likelihood > maybe.result) {
-                    console.log(`Zone extension likelihood of ${ex.likelihood} was not met with a roll of ${maybe.result}`)
+                const roll = await maybe();
+                dangerZone.log(false,'Extension likelihood result', {extension: ex, roll: roll})
+                if(roll.result > ex.likelihood) {
+                    console.log(`Zone extension likelihood of ${ex.likelihood} was not met with a roll of ${roll.result}`)
                     continue;
                 }
             }

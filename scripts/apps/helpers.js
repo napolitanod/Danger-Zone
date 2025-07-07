@@ -4,7 +4,7 @@
 
 import {dangerZone} from '../danger-zone.js';
 import {point} from './dimensions.js'
-import {DangerZoneSceneForm} from './scene-zone-list-form.js';
+import {ZoneListForm} from './zone-list-form.js';
 
 export function circleAreaGrid(xLoc,yLoc, dimension = {w:w, h:h}){
   if((!xLoc &&!yLoc) || (yLoc===dimension.h&&!xLoc) || (xLoc===dimension.w&&!yLoc) || (xLoc===dimension.w&&yLoc===dimension.h)){return false}
@@ -159,7 +159,7 @@ export function addSceneFormLaunch(application, controls){
  * @param {object} application 
  */
 export function launchSceneForm(scene, application = ''){ 
-  new DangerZoneSceneForm(application, scene.id).render(true)
+  new ZoneListForm(application, scene.id).render(true)
 }
 
 export async function requestSavingThrow(tokenUuid, saveType, time){

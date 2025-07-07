@@ -11,6 +11,13 @@ export function setHooks(){
      */
     Hooks.once('ready', async function() { 
 
+        Hooks.on("canvasReady", async(app) => {
+            if(game.user.isActiveGM && app.scene?.id){
+               const rendered = await dangerZone.executorForm.renderOnScene(app.scene.id, '', false);
+               if(!rendered) dangerZone.executorForm.close();
+            }
+        });
+
         game.socket.on("module.danger-zone", async (request) => {
             if(request.stop){
                 //dangerZone.log(false,'Socket Call... ', {sound: request.stop});
@@ -28,8 +35,8 @@ export function setHooks(){
             }
         });
         
-        Hooks.on("renderDangerZoneForm", (app, html, options) => {
-            app._handleSourceTag();
+        Hooks.on("renderZoneForm", (app, html, options) => {
+            app.handleSourceTag();
         });
 
         Hooks.on("renderGlobalZoneDangerPartConfig", (app, html, options) => {
@@ -37,8 +44,8 @@ export function setHooks(){
         });
 
         //hook to ensure that, on settings render, the search is applied to the list
-        Hooks.on("renderDangerZoneTypesForm", (app, html, options) => {
-            app._filter();
+        Hooks.on("renderDangerListForm", (app, html, options) => {
+            app.filter();
         });
 
         //hook to ensure that, on executor form render, appropriate field flagging is done

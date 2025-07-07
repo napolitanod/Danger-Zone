@@ -1,0 +1,116 @@
+
+<div class="tab" data-tab="source" data-group="sheet">
+    <p class="notes">{{localize 'DANGERZONE.edit-form.source.description'}}</p>
+        <fieldset>
+        <legend>
+            {{localize 'DANGERZONE.edit-form.source.area.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.source.area.description'}}"><i class="fas fa-info-circle"></i></span>
+        </legend>
+        <div class="form-group">
+            <div class="form-fields">
+                <select name="source.area" data-action="source-area" value="{{zone.source.area}}">
+                    {{selectOptions options.SOURCEAREA selected=zone.source.area localize=true}}
+                </select>
+            </div>
+        </div>
+        <div class="form-group" id="dz-source-tag" >
+            <label>
+                {{localize 'DANGERZONE.edit-form.source.tag.tag.label'}}
+            </label>
+            <div class="form-fields">
+                <multi-select id="dz-source-tag-danger" name="source.tags" value="{{zone.source.tags}}">
+                    <option value=""></option>
+                    {{selectOptions zoneTypeOps selected=zone.source.tags localize=true}}
+                </multi-select>
+                <multi-select id="dz-source-tag-zone" name="source.tags" value="{{zone.source.tags}}">
+                    <option value=""></option>
+                    {{selectOptions zoneOps selected=zone.source.tags localize=true}}
+                </multi-select>
+                <string-tags id="dz-source-tag-tag" name="source.tags" value="{{zone.source.tags}}"></string-tags>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                {{localize 'DANGERZONE.edit-form.source.target.label'}}
+                <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.source.target.description'}}"><i class="fas fa-info-circle"></i></span>
+            </label>
+            <div class="form-fields">
+                <select name="source.target" value="{{zone.source.target}}">
+                    {{selectOptions options.SOURCEAREATARGET selected=zone.source.target localize=true}}
+                </select>
+            </div>
+        </div>
+    </fieldset>
+        <fieldset>
+        <legend>{{localize 'DANGERZONE.edit-form.source.actor.label'}}</legend>
+        <div class="form-group">
+            <label>
+                {{localize 'DANGERZONE.edit-form.source.actor.actors.label'}}
+            </label>
+        </div>
+        <div class="form-group">
+            <div class="form-fields">
+                <multi-select name="source.actors" value="{{zone.source.actors}}">
+                    {{selectOptions actorOps selected=zone.source.actors}}
+                </multi-select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                {{localize 'DANGERZONE.edit-form.source.actor.dispositions.label'}}
+            </label>
+        </div>
+        <div class="form-group">
+            <div class="form-fields">
+                <multi-select name=".dispositions" value="{{zone.source.dispositions}}">
+                    {{selectOptions options.TOKENDISPOSITION selected=zone.source.dispositions localize=true}}
+                </multi-select>source
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                {{localize 'DANGERZONE.edit-form.token-condition-ex.label'}}
+            </label>
+        </div>
+        <div class="form-group">
+            <div class="form-fields">
+                <string-tags name="source.exclusion.conditions" value="{{zone.source.exclusion.conditions}}"></string-tags>
+            </div>
+        </div>
+    </fieldset>
+    <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.edit-form.source.limit.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.source.limit.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <div class="form-group">
+                <label>
+                    {{localize 'DANGERZONE.edit-form.source.limit.min.label'}}
+                </label>
+                <div class="form-fields">
+                    <input type="Number" name="source.limit.min" min="0" max="5000" step="1" placeholder="{{localize "DANGERZONE.ms"}}" value={{zone.source.limit.min}} required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    <span>{{localize 'DANGERZONE.edit-form.source.limit.max.label'}}</span>
+                </label>
+                <div class="form-fields">
+                    <input type="Number" name="source.limit.max" min="0" max="5000" step="1" placeholder="{{localize "DANGERZONE.ms"}}" value={{zone.source.limit.max}} required>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.edit-form.source.trigger.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.source.trigger.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <select name="source.trigger" value="{{zone.source.trigger}}">
+                {{selectOptions options.SOURCETRIGGERS selected=zone.source.trigger localize=true}}
+            </select>
+        </div>
+    </div>  
+</div>

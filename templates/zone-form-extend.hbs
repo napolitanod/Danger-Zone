@@ -1,0 +1,19 @@
+
+<div class="tab" data-tab="extend" data-group="sheet">
+    <p class="notes">{{localize 'DANGERZONE.edit-form.extend.description'}}</p>
+    <div class="danger-zone-extensions-list">
+        <div class="flexrow extension-record">
+            <div class="flexrow">
+                <div>{{localize 'DANGERZONE.edit-form.extend.zone.name.label'}}</div>
+            </div>
+            <div class="danger-zone-controls flexrow" data-id="">
+                <a class="danger-zone-add" title="{{localize 'DANGERZONE.edit-form.extension.add'}}" data-action="add-extension">
+                    <i class="fas fa-plus"></i> {{localize 'DANGERZONE.add'}}
+                </a>
+            </div>
+        </div>
+        <ol class="flexrow" id="danger-zone-zone-form-extend">
+            {{{extensionsListHTML}}}
+        </ol>
+    </div>
+</div>

@@ -1,5 +1,5 @@
 import {dangerZoneDimensions} from './apps/dimensions.js';
-import {DangerZoneTypesForm} from './apps/danger-list-form.js';
+import {DangerListForm} from './apps/danger-list-form.js';
 import {dangerZoneType} from './apps/zone-type.js';
 import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, CONTROLTRIGGERS, DANGERZONECONFIG, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
@@ -13,6 +13,11 @@ import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDan
  */
 export class dangerZone {
   static ID = 'danger-zone';
+
+  /**v13
+   * holds the terms last used when searching the danger list form
+   */
+  static LASTSEARCH = '';
 
   static NAME = 'dangerZone';
 
@@ -44,6 +49,13 @@ export class dangerZone {
     DANGER: 2
   }
 
+  /**v13
+   * outputs the danger list form last search term in lower case
+   */
+  static get lastSearchLower(){
+    return dangerZone.LASTSEARCH.toLowerCase()
+  }
+
   /** V13
    * Adds the Dangers button to the scenes side menu if the user settings allows for this.
    * @param {object} app 
@@ -61,7 +73,7 @@ export class dangerZone {
     button.classList.add("danger-zone-types-launcher");
     button.innerHTML = `<i class="fas fa-radiation"></i>${game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.name")}`;
     button.addEventListener("click", async (_event) => {
-      dangerZone.DangerZoneTypesForm.render(true);
+      dangerZone.DangerListForm.render(true);
     });
     //append the button to footer
     const header = html.querySelector(".header-actions");
@@ -73,10 +85,10 @@ export class dangerZone {
    */
   static initialize() {
     dangerZone.#setModsAvailable();
-    setHooks()
     dangerZone.#setDangerZoneConfig()
-    this.DangerZoneTypesForm = new DangerZoneTypesForm();
+    this.DangerListForm = new DangerListForm();
     this.executorForm = new ExecutorForm();
+    setHooks()
   }
 
   /**V13
@@ -268,11 +280,10 @@ export class dangerZone {
     for (const zn of zones) {
       if(zn.eventsIncludingInitiative.includes(event) && (!eligibaleZones.length || eligibaleZones.find(z => z.id === zn.id))){
         let min = max + 1;
-        max += zn.weight;
+        max += zn.trigger?.weight ?? 0;
         keptZones.push({zone: zn, min: min, max: max});
       }
     }
-
     if(!keptZones.length) return
     const maybe = await new Roll(`1d${max}`).evaluate()
     const randomResult = maybe.result;
@@ -288,7 +299,7 @@ export class dangerZone {
    * @returns array of zones
    */
   static getRandomZonesFromScene(sceneId) {
-    return this.getAllZonesFromScene(sceneId).filter(zn => zn.random)
+    return this.getAllZonesFromScene(sceneId).filter(zn => zn.trigger?.random)
   }
 
   /**V13
@@ -396,10 +407,17 @@ export class dangerZone {
     return updt
   }
 
+  /**v13
+   * @param {string} searchTerm     the danger list form search term to set as the last search
+   */
+  static updateLastSearch(searchTerm){
+    dangerZone.LASTSEARCH = searchTerm
+  }
+
   static async wipe(documentName, confirm = false){
     if(confirm){
       const proceed = await foundry.applications.api.DialogV2.confirm({
-        content: game.i18n.localize("DANGERZONE.controls.clear.description"),
+        content: game.i18n.localize(`DANGERZONE.controls.clear${documentName}.description`),
         rejectClose: false,
         modal: true
       });
@@ -524,7 +542,7 @@ export class zone {
   }
 
   get eventsIncludingInitiative(){
-    return this.combatEvents.map(i => COMBAT_PERIOD_INITIATIVE_EVENTS.includes(i) ? (i + '-' + (this.trigger.initiative ? this.trigger.initiative.toString() : '0')) : i)
+    return this.trigger.events.map(i => COMBAT_PERIOD_INITIATIVE_EVENTS.includes(i) ? (i + '-' + (this.trigger.initiative ? this.trigger.initiative.toString() : '0')) : i)
   }
 
   get flaggablePlaceables(){
