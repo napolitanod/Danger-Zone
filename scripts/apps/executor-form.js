@@ -264,7 +264,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     static async #triggerZone(event) {
         event.preventDefault();
         const data = getEventData(event)
-        await triggerManager.manualTrigger({scene: this.sceneId, dangerId: data.targetId, zone: data.parentId, event: event, force: true});
+        await triggerManager.manualTrigger({scene: this.sceneId, dangerId: data.targetId, zone: data.parentId, event: event, force: data.target.type === 'button' ? false : true});
     }
 
    /************ PRIVATE METHODS  ***************/

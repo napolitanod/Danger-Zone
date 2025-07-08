@@ -110,7 +110,7 @@ export class triggerManager {
 	    const sceneId = chatMessage.speaker?.scene ?? canvas.scene.id
         const sceneZones = dangerZone.getRolltableZonesFromScene(sceneId)
         if(!sceneZones.length) return
-        if(hook === "createChateMessage"){
+        if(hook === "createChatMessage"){
             rollResult = chatMessage.rolls[0].result
             if(!rollResult) return
             table = game.tables.get(options.rollTableId)
@@ -121,6 +121,7 @@ export class triggerManager {
             results = chatMessage.results
         }
         if(!results) return
+        
         const eligibleZones = sceneZones.filter(s => s.trigger.chat.phrases.find(r => results.includes(r)))
         dangerZone.log(false, 'Searching for Rolltable Result Trigger', {chatMessage: chatMessage, sceneZones: sceneZones, eligibleZones: eligibleZones, rollResult: rollResult, table: table, tableResults: results})
         if(eligibleZones.length){

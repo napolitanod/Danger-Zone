@@ -1005,22 +1005,48 @@ export class executor {
 
 class executable {
     constructor(part = {}, data = executorData, id, options = {}, flags = {}){
-        this.boundary = {},
-        this._cancel = false,
         this.data = data,
         this._document = options.document,
-        this._executed = false,
         this._modules = options.modules ? options.modules : [],
         this.icon = options.icon ? options.icon : 'fas fa-hryvnia',
         this._id = id,
-        this.likelihoodResult = 100,
         this.name = options.title ? options.title : '',
         this._flags = flags,
         this._part = part,
         this.scope = options.scope,
-        this.twinBoundary = {},
-        this.wipeable = options.wipeable ? true : false
+        this.wipeable = options.wipeable ? true : false;
+
+        this._initialize()
     }
+
+    /**v13
+     * bool
+     * indicates whether or not the executable has been executed
+     */
+    _executed
+
+    /**v13
+     * bool
+     * flags the executable to cancel out of play, typically due to critical data or conditions not being met
+     */
+    _cancel
+
+    /**v13
+     * boundary class
+     * stores the boundary class for the target boundary
+     */
+    boundary
+
+    /**v13
+     * holds the result of the last likelihood roll, 1-100
+     */
+    likelihoodResult
+
+    /**v13
+     * boundary class
+     * stores the boundary class for the twin boundary
+     */
+    twinBoundary
 
     get delay(){
         return this._part.delay ? this._part.delay : 0
@@ -1125,6 +1151,14 @@ class executable {
         return this.data.zone
     }
 
+    _initialize(){
+        this.boundary = undefined
+        this.likelihoodResult = 100
+        this._executed = false
+        this._cancel = false
+        this.twinBoundary = undefined
+    }
+
     _setBoundary(){
         if(!this.offset){
             this.boundary = this.data.boundary;
@@ -1166,6 +1200,7 @@ class executable {
     }
 
     async play(){  
+        this._initialize()
         this.setExecuted()
         if (this.hasBoundaryScope && !this.data.hasBoundary) {this._cancel = true} else {this._setBoundary()}
     }
@@ -1188,10 +1223,12 @@ class executable {
 }
 
 class executableWithFile extends executable{
-    constructor(...args){
-        super(...args),
-        this._file
-    }
+
+    /**v13
+     * string
+     * holds the file location
+     */
+    _file
 
     get filePath(){
         return this._part.file ? this._part.file : ''
@@ -1209,6 +1246,12 @@ class executableWithFile extends executable{
         if(!this._file) return this._setFile();
         return this._file
     }
+
+    /*on hold until design for resetting this after play - these are called by the executor and not the executable, leading to executing at the part level in exploded form to always use the same file.
+    _initialize(){
+        super._initialize()
+        this._file = ''
+    }*/
 
     async load() {
         this._file = await this.file;
@@ -1229,12 +1272,24 @@ class executableWithFile extends executable{
 }
 
 class activeEffect extends executable {
-    constructor(...args){
-        super(...args),
-        this._adds = [],
-        this._deletes = [],
-        this._updates = []
-    }
+
+    /**v13
+     * array
+     * holds the add data that was passed to the active effect add call
+     */
+    _adds
+
+    /**v13
+     * array
+     * holds the delete data that was passed to the active effect add call
+     */
+    _deletes
+    
+    /**v13
+     * array
+     * holds the update data that was passed to the active effect add call
+     */
+    _updates
 
     get delay(){
         return this.flag.delay ? this.flag.delay : 0
@@ -1311,6 +1366,13 @@ class activeEffect extends executable {
         this._deletes.push({token: token, data: data})  
     }
 
+    _initialize(){
+        super._initialize()
+        this._adds = []
+        this._deletes = []
+        this._updates = []
+    }
+
     async _updateEffects(token){
         let data = [];
         data = data.concat(this._data(token, this.enable, 1))
@@ -1333,10 +1395,12 @@ class activeEffect extends executable {
 }
 
 class ambientLight extends executable{
-    constructor(...args){
-        super(...args),
-        this.lights = []
-    }
+
+    /**v13
+     * array
+     * holds the lights returned from the document create call
+     */
+    _lights;
 
     get angle(){
         return this._part.angle
@@ -1452,11 +1516,16 @@ class ambientLight extends executable{
         if(dangerZone.MODULES.taggerOn && this.tag) light.flags['tagger'] = this.taggerTag
         return light
     }
+
+    _initialize(){
+        super._initialize()
+        this._lights = []
+    }
     
     async play(){
         await super.play()
         if(this._cancel) return
-        this.lights = await this.data.scene.createEmbeddedDocuments("AmbientLight",[this._light]);
+        this._lights = await this.data.scene.createEmbeddedDocuments("AmbientLight",[this._light]);
         if(this._part.clear.type) this._postEvent() 
         if(this._part.clear.type !== 'D') await this.data.fillSourceAreas()
     }
@@ -1478,14 +1547,14 @@ class ambientLight extends executable{
         if(this._part.clear.delay) await wait(this._part.clear.delay);
         switch(this._part.clear.type){
             case 'O':
-                const updates = this.lights.filter(l => this.data.scene.lights.find(lt => lt.id === l.id)).map((data) => ({
+                const updates = this._lights.filter(l => this.data.scene.lights.find(lt => lt.id === l.id)).map((data) => ({
                     _id: data.id,
                     hidden: true,
                   }));
                 this.data.scene.updateEmbeddedDocuments("AmbientLight", updates);
                 break;
             case 'D':
-                await this.data.scene.deleteEmbeddedDocuments("AmbientLight",this.lights.filter(l => this.data.scene.lights.find(lt => lt.id === l.id)).map(l => l.id))
+                await this.data.scene.deleteEmbeddedDocuments("AmbientLight",this._lights.filter(l => this.data.scene.lights.find(lt => lt.id === l.id)).map(l => l.id))
                 break;
         }
         
@@ -1493,10 +1562,12 @@ class ambientLight extends executable{
 }   
 
 class audio extends executableWithFile {
-    constructor(...args){
-        super(...args);
-        this.sound 
-    }
+
+    /**v13
+     * Audio Helper sound class
+     * stores the generated sound so that functionality can stop it or adjust it as needed.
+     */
+    _sound
 
     get duration(){
         return this._part.duration
@@ -1506,10 +1577,15 @@ class audio extends executableWithFile {
         return this._part.volume ? this._part.volume : 0.5
     } 
 
+    _initialize(){
+        super._initialize()
+        this._sound = undefined
+    }
+
     async play() {
         await super.play()
         if(this._cancel) return
-        this.sound = await foundry.audio.AudioHelper.play({src: this.file, volume: this.volume, loop: false, autoplay: true}, true)
+        this._sound = await foundry.audio.AudioHelper.play({src: this.file, volume: this.volume, loop: false, autoplay: true}, true)
         this._schedule();
     }
 
@@ -1521,12 +1597,12 @@ class audio extends executableWithFile {
     }
 
     async stop(){
-        if(this.sound?.id){
-            game.socket.emit('module.danger-zone', {stop: this.sound.id})
-            dangerZone.log(false, 'Stopping sound...', this.sound)
-            await this.sound.fade(0, {duration: 250})
-            this.sound.stop();
-            dangerZone.log(false, 'Stopped sound...', this.sound)
+        if(this._sound?.id){
+            game.socket.emit('module.danger-zone', {stop: this._sound.id})
+            dangerZone.log(false, 'Stopping sound...', this._sound)
+            await this._sound.fade(0, {duration: 250})
+            this._sound.stop();
+            dangerZone.log(false, 'Stopped sound...', this._sound)
         }  
     }
 
@@ -1547,11 +1623,18 @@ class audio extends executableWithFile {
 }
 
 class combat extends executable {
-    constructor(...args){
-        super(...args);
-        this._combat,
-        this.initiativeTargets = []
-    }
+
+    /**v13
+     * combat class
+     * holds combat class created by this executable
+     */
+    _combat
+
+    /**v13
+     * array
+     * holds the token documents for use in adding or rolling initiative by this executable
+     */
+    _initiativeTargets
 
     get addSource(){
         return this._part.source.add
@@ -1600,19 +1683,25 @@ class combat extends executable {
         }
     }
     
+    _initialize(){
+        super._initialize()
+        this._combat = undefined
+        this.initiativeTargets = []
+    }
+    
     async play(){    
         await super.play()
         this._checkActiveCombat()
         if(this._cancel) return
         if(this.newCombat) await this._newCombat()
         this._setTargets()
-        if(this.initiativeTargets.length) await this._addToCombat()
+        if(this._initiativeTargets.length) await this._addToCombat()
         if(this.initiative === 'R') {await this._rollInitiative()} else if(this.initiative ==='S'){await this._setInitiative()}
         if(this.start & !this.combat.started) await this.combat.startCombat()
     }
 
     async _addToCombat(){
-        for(const token of this.initiativeTargets){if(!this._tokenCombatant(token)) await token.toggleCombatant(this.combat)}
+        for(const token of this._initiativeTargets){if(!this._tokenCombatant(token)) await token.toggleCombatant(this.combat)}
     }
 
     async _newCombat(){
@@ -1625,18 +1714,18 @@ class combat extends executable {
     }
 
     _setTargets(){
-        if(this.addTargets) this.initiativeTargets = this.targets
-        if(this.addSource && this.data.hasSources) this.initiativeTargets = this.initiativeTargets.concat(this.data.sources.filter(s => !this.initiativeTargets.find(t => t.id === s.id)))
+        if(this.addTargets) this._initiativeTargets = this.targets
+        if(this.addSource && this.data.hasSources) this._initiativeTargets = this._initiativeTargets.concat(this.data.sources.filter(s => !this._initiativeTargets.find(t => t.id === s.id)))
         if(dangerZone.MODULES.portalOn && this.spawn){
             for(const token of this.data.spawn.tokens){
-                if(!this.initiativeTargets.find(t => t.id === token.id)) this.initiativeTargets.push(this.data.sceneTokens.get(token.id))
+                if(!this._initiativeTargets.find(t => t.id === token.id)) this._initiativeTargets.push(this.data.sceneTokens.get(token.id))
             }
         }
     }
 
     async _rollInitiative(){
         const rollIds = []
-        for(const token of this.initiativeTargets){
+        for(const token of this._initiativeTargets){
             if(!this.initiativePlayer && getActorOwner(token)) continue
             const combatantId = this._tokenCombatant(token)?.id
             if(combatantId) rollIds.push(combatantId) 
@@ -1645,7 +1734,7 @@ class combat extends executable {
     }
     
     async _setInitiative(){
-        for(const token of this.initiativeTargets){
+        for(const token of this._initiativeTargets){
             if(!this.initiativePlayer && getActorOwner(token)) continue
             if(this._tokenCombatant(token)?.id) await this.combat.setInitiative(this._tokenCombatant(token).id, this.initiativeValue)
         }
@@ -1654,14 +1743,38 @@ class combat extends executable {
 }
 
 class damageToken extends executable{
-    constructor(...args){
-        super(...args),
-        this._apply = game.settings.get('danger-zone', 'apply-damage') ?? false,
-        this._chatMessageResults = '',
-        this._gmChatMessageResults = '',
-        this._gmDamageCount = 0,
-        this._damageResults = []
-    }
+
+    /**v13
+     * Boolean
+     * Indicates that damage can be auto-applied
+     */
+    _apply
+
+    /**v13
+     * String
+     * used in construction of the final chat message
+     */
+    _chatMessageResults
+
+
+    /** v13
+     * Array
+     * Stores objects containing the data sent to the damage token method for use further on in process in generating the chat message.
+     */
+    _damageResults
+
+
+    /** v13
+     * String
+     * Holds derived string for use in generating a chat message to the GM
+     */
+    _gmChatMessageResults
+
+    /**v13
+     * Integer
+     * Holds the count of tokens damaged that are not player owned, so as to advertise quantity damaged in chat without providing additional details to non-GMs.
+     */
+    _gmDamageCount
 
     get damages(){
         const arr = [];
@@ -1733,6 +1846,15 @@ class damageToken extends executable{
     get type(){
         return this._part.type
     } 
+
+    _initialize(){
+        super._initialize()
+        this._apply = game.settings.get('danger-zone', 'apply-damage') ?? false,
+        this._chatMessageResults = ''
+        this._gmChatMessageResults = ''
+        this._gmDamageCount = 0
+        this._damageResults = []
+    }
 
     async play(){    
         await super.play()
@@ -1947,11 +2069,18 @@ class Canvas extends executable{
 }
 
 class item extends executable {
-    constructor(...args){
-        super(...args);
-        this.items = [],
-        this.compendium
-    }
+
+    /**v13
+     * compendium document
+     * holds the compendium for this part
+     */
+    _compendium;
+
+    /**v13
+     * array
+     * the items that are selected from the compendium for use by this executable
+     */
+    _items
 
     get action(){
         return this._part.action ? this._part.action : ''
@@ -1985,17 +2114,24 @@ class item extends executable {
         return this.data.danger.save.it ? parseInt(this.data.danger.save.it) : super.save
     }
 
+    
+    _initialize(){
+        super._initialize()
+        this._items = []
+    }
+    
+
     async getCompendium(){
-        this.compendium = await game.packs.find(p=>p.collection === this.compendiumName)?.getDocuments();
-        if(!this.compendium) dangerZone.log(false, 'Compendium Not Found ', this)
+        this._compendium = await game.packs.find(p=>p.collection === this.compendiumName)?.getDocuments();
+        if(!this._compendium) dangerZone.log(false, 'Compendium Not Found ', this)
     }
 
     getItems(){
         for(const item of this.itemNames){
             let found;
-            if(this.compendium) found = this.compendium.find(i => i.name === item)
+            if(this._compendium) found = this._compendium.find(i => i.name === item)
             if(!found) found = game.items.getName(item)
-            found ? this.items.push(found) : console.log(`Item ${item} not found ${this.compendium ? 'in provided compendium.' : 'in world.'}`) 
+            found ? this._items.push(found) : console.log(`Item ${item} not found ${this._compendium ? 'in provided compendium.' : 'in world.'}`) 
         }
     }
 
@@ -2005,21 +2141,21 @@ class item extends executable {
         if(!['D','E'].includes(this.action)){
             if(this.compendiumName) await this.getCompendium() 
             this.getItems()
-            if(!this.items.length) return 
+            if(!this._items.length) return 
         }
         if(this.pile && dangerZone.MODULES.itemPileOn) {
             const pilePos = canvas.grid.getTopLeftPoint({x:this.boundary.center.x, y:this.boundary.center.y})
-            await ItemPiles.API.createItemPile({position: {x: pilePos.x, y: pilePos.y}, sceneId: this.data.scene.id, items: this.items, pileActorName: false})
+            await ItemPiles.API.createItemPile({position: {x: pilePos.x, y: pilePos.y}, sceneId: this.data.scene.id, items: this._items, pileActorName: false})
             return
         }
         for (const token of this.targets) { 
             if(!token.actor) continue
             let crtdItms = []
             if(this.action === 'A'){
-                crtdItms = await token.actor.createEmbeddedDocuments('Item', this.items)
+                crtdItms = await token.actor.createEmbeddedDocuments('Item', this._items)
                 if(this.hasUpdates) await this.updateTokenItem(token, crtdItms)
             } else if(this.action === 'B'){
-                const notOn = this.items.filter(t => !token.actor.items.find(i=> i.name === t.name))
+                const notOn = this._items.filter(t => !token.actor.items.find(i=> i.name === t.name))
                 if(!notOn.length) return
                 crtdItms = await token.actor.createEmbeddedDocuments('Item', notOn)
                 if(this.hasUpdates) await this.updateTokenItem(token, crtdItms)
@@ -2055,10 +2191,12 @@ class item extends executable {
 }
 
 class lastingEffect extends executableWithFile{
-    constructor(...args){
-        super(...args);
-        this._tiles = []
-    }
+
+    /**v13
+     * array
+     * Holds tile data that will be used later in the execution during the create document call
+    */
+    _tiles
 
     get alpha(){
         return this._part.alpha
@@ -2097,6 +2235,11 @@ class lastingEffect extends executableWithFile{
 
     build(){
         this._tiles.push(this._tile())
+    }
+
+    _initialize(){
+        super._initialize()
+        this._tiles = []
     }
 
     async play(){
@@ -2163,11 +2306,17 @@ class macro extends executable{
 
 class mutate extends executable {
 
-    constructor(...args){
-        super(...args),
-        this._tokenUpdates = [],
-        this._actorUpdates = []
-    }
+    /**v13
+     * array
+     * Holds the updates to pass into the actor document update method
+     */
+    _actorUpdates
+
+    /**v13
+     * array
+     * Holds the updates to pass into the token document update method
+     */
+    _tokenUpdates
 
     get embedded(){
         return this.hasEmbedded ? stringToObj(this._part.embedded) : {}
@@ -2208,6 +2357,12 @@ class mutate extends executable {
         return actor
     }
 
+    _initialize(){
+        super._initialize()
+        this._tokenUpdates = []
+        this._actorUpdates = []
+    }
+
     token(token){
         const tok = stringToObj(this._part.token, {document: token})
         if(this.tag) tok['flags'] = {"tagger":this.taggerTag}
@@ -2240,7 +2395,10 @@ class mutate extends executable {
 
 class primaryEffect extends executableWithFile {
        
-    _partSources = []
+    /**v13
+     * Array
+     */
+    _partSources
 
     get hasSourcing(){
         return this.source.enabled ? true : false
@@ -2268,6 +2426,11 @@ class primaryEffect extends executableWithFile {
 
     get save(){
         return this.data.danger.save.fe ? parseInt(this.data.danger.save.fe) : super.save
+    }
+
+    _initialize(){
+        super._initialize()
+        this._partSources = []
     }
 
     async play(){
@@ -2329,12 +2492,24 @@ class primaryEffect extends executableWithFile {
 }
 
 class region extends executable{
-    constructor(...args){
-        super(...args);
-        this._boundaries = [],
-        this._data = [],
-        this._regions = []
-    }
+
+    /**v13
+     * array
+     * holds the dimensions to create as regions
+     */
+    _boundaries 
+
+    /**v13
+     * array
+     * holds the final region data to send to the document create
+     */
+    _data 
+
+    /**v13
+     * array
+     * holds the region documents that were created, so that behaviors can then be added
+     */
+    _regions
 
     get color(){
         return this._part.color ?? ''
@@ -2487,6 +2662,13 @@ class region extends executable{
         } 
     }
 
+    _initialize(){
+        super._initialize()
+        this._boundaries = []
+        this._data = []
+        this._regions = []
+    }
+
     async play(){
         await super.play()
         if(this._cancel) return
@@ -2527,14 +2709,18 @@ class region extends executable{
 
 class rolltable extends executable {
 
-    constructor(...args){
-        super(...args);
-        this._message,
-        this._pack = undefined,
-        this._rolledResult = undefined,
-        this._table = undefined
-        ;
-    }
+    /**v13
+     * Roll class
+     * holds the roll result from the rolltable
+     */
+    _rolledResult
+
+    /**v13 
+     * RollTable document
+     * holds the rolltable that this executor rolls
+    */
+    _table
+
 
     get options(){
         return {
@@ -2546,12 +2732,22 @@ class rolltable extends executable {
         return (super.has && this.rolltable) ? true : false
     }
 
+    get message(){
+        return this._rolledResult?.results[0]?.description ?? ''
+    }
+
     get rolltable(){
         return this._part.name
     }
 
     get whisper(){
         return this._part.whisper
+    }
+    
+    _initialize(){
+        super._initialize()
+        this._rolledResult = undefined
+        this._table = undefined
     }
 
     async play(){
@@ -2570,22 +2766,24 @@ class rolltable extends executable {
         if(this._table) {
             if(!this._table.replacement && !this._table.results?.find(r => !r.drawn)) return console.log(`Rollable table ${this.rolltable} has all results drawn.`)
             this._rolledResult = await this._table.draw(this.options)
-            this._message = this._rolledResult?.results[0]?.description
             Hooks.call("updateRollTable", this._rolledResult)
         }
     }
 }
 
 class save extends executable{
-    constructor(...args){
-        super(...args),
-        this._chatMessageResults = '',
-        this._gmChatMessageResults = '',
-        this._gmRollCount = 0,
-        this._saving = [],
-        this._saveResults = [],
-        this._playerPrompted = []
-    }
+   
+    _chatMessageResults
+    
+    _gmChatMessageResults
+    
+    _gmRollCount
+    
+    _saving
+    
+    _saveResults
+    
+    _playerPrompted
 
     get delay(){
         return -1
@@ -2633,7 +2831,14 @@ class save extends executable{
     }
 
     _initialize(){
+        super._initialize()
         this.data["save"] = {failed: [], succeeded: []}
+        this._chatMessageResults = ''
+        this._gmChatMessageResults = ''
+        this._gmRollCount = 0
+        this._saving = []
+        this._saveResults = []
+        this._playerPrompted = []
     }
 
     async _messageSave(){
@@ -2653,7 +2858,6 @@ class save extends executable{
     async play(){
         await super.play()
         if(this._cancel) return
-        this._initialize()
         await this._applySave()
         this._messageSave()
     }
@@ -2689,13 +2893,29 @@ class save extends executable{
 }
 
 class scene extends executable{
-    constructor(...args){
-        super(...args),
-        this._fileB,
-        this._fileF,
-        this.update = {},
-        this.renderUpdate = {}
-    }
+    /**v13
+     * String
+     * the file path for the background image
+     */
+    _fileB
+
+    /**v13
+     * String
+     * the file path for the foreground image
+     */
+    _fileF
+
+    /**v13
+     * Object
+     * the data passed to the scene update which do not invoke render of scene
+     */
+    _data
+        
+    /**v13
+     * Object
+     * the data passed to the scene update which do not invoke render of scene
+     */
+    _renderData
 
     get active(){
         return this._part.active
@@ -2746,11 +2966,11 @@ class scene extends executable{
     }
 
     get hasNonRenderInvokingChange(){
-        return Object.keys(this.update).length ? true : false
+        return Object.keys(this._data).length ? true : false
     } 
 
     get hasRenderInvokingChange(){
-        return Object.keys(this.renderUpdate).length ? true : false
+        return Object.keys(this._renderData).length ? true : false
     } 
 
     get weather(){
@@ -2769,18 +2989,26 @@ class scene extends executable{
 
     _build() {
         if(this.active){
-            if(this.darkness !== - 1) this.update.darkness = this.darkness;
-            if(this.globalLight) this.update.globalLight = this.globalLight === 'Y' ? true : false;
-            if(this.e.type) this.update.foregroundElevation = this.e.type === 'S' ? this._e() : this.data.scene.foregroundElevation + this._e();
-            if(this._fileB && this.data.scene.background.src !== this._fileB) this.renderUpdate['background'] = {src: this._fileB}
-            if(this._fileF && this.data.scene.foreground !== this._fileF) this.renderUpdate.foreground = this._fileF
+            if(this.darkness !== - 1) this._data.darkness = this.darkness;
+            if(this.globalLight) this._data.globalLight = this.globalLight === 'Y' ? true : false;
+            if(this.e.type) this._data.foregroundElevation = this.e.type === 'S' ? this._e() : this.data.scene.foregroundElevation + this._e();
+            if(this._fileB && this.data.scene.background.src !== this._fileB) this._renderData['background'] = {src: this._fileB}
+            if(this._fileF && this.data.scene.foreground !== this._fileF) this._renderData.foreground = this._fileF
         }
-        if(this.weather) this.renderUpdate.weather = this.weather
+        if(this.weather) this._renderData.weather = this.weather
     }
 
     _e(){
         const value = this.e.max === this.e.min ? this.e.min : (this.e.min + Math.floor(Math.random() * (this.e.max - this.e.min + 1))) 
         return value >= 1 ? value : null
+    }
+
+    _initialize(){
+        super._initialize()
+        //this._fileB = ''
+        //this._fileF = ''
+        this._data = undefined
+        this._renderData = undefined
     }
 
     async load() {
@@ -2820,7 +3048,7 @@ class scene extends executable{
           });
         });
 
-        await this.data.scene.update(this.renderUpdate);
+        await this.data.scene.update(this._renderData);
 
         // Timeout after 5 seconds
         const timeout = new Promise(resolve => window.setTimeout(() => {
@@ -2846,16 +3074,17 @@ class scene extends executable{
     }
 
     async _update(){
-        await this.data.scene.update(this.update, this.updateOps);
+        await this.data.scene.update(this._data, this.updateOps);
     }
 
 }
 
 class secondaryEffect extends executableWithFile {
-    constructor(...args){
-        super(...args);
-        this._fileB 
-    }
+    /**v13
+     * string
+     * holds the file path for the sound file
+     */
+    _fileB 
 
     get audio(){
         return this._part.audio ? this._part.audio : {}
@@ -2888,6 +3117,12 @@ class secondaryEffect extends executableWithFile {
     get save(){
         return this.data.danger.save.be ? parseInt(this.data.danger.save.be) : super.save
     }
+
+    /*
+    _initialize(){
+        super._initialize()
+        this._fileB = ''
+    }*/
 
     async load() {
         this._file = await this.file;
@@ -2959,10 +3194,11 @@ class secondaryEffect extends executableWithFile {
 } 
 
 class sound extends executableWithFile {
-    constructor(...args){
-        super(...args);
-        this.sounds = []
-    }
+    /**v13
+     * array
+     * the array of sound documents returned by the create document method
+     */
+    _sounds
 
     get easing(){
         return this._part.easing
@@ -2995,10 +3231,16 @@ class sound extends executableWithFile {
         return this._part.volume ? this._part.volume : 0.5
     } 
 
+    
+    _initialize(){
+        super._initialize()
+        this._sounds = []
+    }
+
     async play() {
         await super.play()
         if(this._cancel) return
-        this.sounds = await this.data.scene.createEmbeddedDocuments("AmbientSound",[this._sound]);
+        this._sounds = await this.data.scene.createEmbeddedDocuments("AmbientSound",[this._sound]);
     }
 
     async _setFile(){
@@ -3018,10 +3260,12 @@ class sound extends executableWithFile {
 }
 
 class sourceEffect extends executableWithFile {
-    constructor(...args){
-        super(...args);
-        this._fileB 
-    }
+    /**v13
+     * string
+     * holds the file path for the sound file
+     */
+    _fileB 
+
 
     get audio(){
         return this._part.audio ? this._part.audio : {}
@@ -3054,6 +3298,12 @@ class sourceEffect extends executableWithFile {
     get save(){
         return this.data.danger.save.se ? parseInt(this.data.danger.save.se) : super.save
     }
+
+    /*
+    _initialize(){
+        super._initialize()
+        this._fileB = ''
+    }*/
 
     async load() {
         this._file = await this.file;
@@ -3128,12 +3378,13 @@ class sourceEffect extends executableWithFile {
 } 
 
 class spawn extends executable {
-    constructor(...args){
-        super(...args);
-        this.actor = ''
-    }
+    /**v13
+     * String
+     * the name of the actor sent to the spawn process
+     */
+    _actor 
 
-    get _actor(){
+    get actorOrTableName(){
         return this._part.actor
     }
 
@@ -3146,11 +3397,11 @@ class spawn extends executable {
     }
 
     get has(){
-        return (super.has && this._actor) ? true : false
+        return (super.has && this.actorOrTableName) ? true : false
     }
 
     get hasActor(){
-        return this.actor ? true : false
+        return this._actor ? true : false
     }
 
     get isRolltable(){
@@ -3174,7 +3425,7 @@ class spawn extends executable {
     }
 
     get texture(){
-        return game.actors.getName(this.actor)?.thumbnail
+        return game.actors.getName(this._actor)?.thumbnail
     }
 
     get updates(){
@@ -3189,7 +3440,12 @@ class spawn extends executable {
         //if(this.color) this.data.spawn.portal = this.data.spawn.portal.color(this.color)
         //if(this.spawnDelay) this.data.spawn.portal = this.data.spawn.portal.delay(this.spawnDelay)
         //if(this.texture) this.data.spawn.portal = this.data.spawn.portal.texture(this.texture)
-        this.data.spawn.portal = this.data.spawn.portal.addCreature(this.actor, obj).origin(this.location).setLocation(this.location)//.range(this.range)
+        this.data.spawn.portal = this.data.spawn.portal.addCreature(this._actor, obj).origin(this.location).setLocation(this.location)//.range(this.range)
+    }
+
+    _initialize(){
+        super._initialize()
+        this._actor = ''
     }
 
     async _spawn(){
@@ -3210,19 +3466,19 @@ class spawn extends executable {
 
     async token(){
         if(!this.hasActor) await this._setActor();
-        const token = this.hasActor ? await game.actors.getName(this.actor).getTokenDocument() : ''
+        const token = this.hasActor ? await game.actors.getName(this._actor).getTokenDocument() : ''
         return token
     }
     
     async _rollTable(){
-        const table = game.tables.getName(this._actor);
+        const table = game.tables.getName(this.actorOrTableName);
         if(!table) return
         const rolledResult = await table.roll(); 
-        this.actor = rolledResult.results[0].data.text;
+        this._actor = rolledResult.results[0].data.text;
     }
 
     async _setActor(){
-        this.isRolltable ? await this._rollTable() : this.actor = this._actor
+        this.isRolltable ? await this._rollTable() : this._actor = this.actorOrTableName
     }
 }
 
@@ -3272,10 +3528,12 @@ class  tokenEffect extends executableWithFile {
 }
 
 class tokenMove extends executable {
-    constructor(...args){
-        super(...args);
-        this.updates = []
-    }
+    
+    /**v13
+     * array
+     * the update data passed into the token update call
+     */
+    _updates
 
     get e(){
         return this._part.e
@@ -3331,6 +3589,11 @@ class tokenMove extends executable {
         return this._part.teleport
     }
 
+    _initialize(){
+        super._initialize()
+        this._updates = []
+    }
+
     async play() {
         await super.play()
         if(this._cancel) return
@@ -3358,7 +3621,7 @@ class tokenMove extends executable {
                 } else if (y > this.data.sceneBoundary.y.max) {
                     y = this.data.sceneBoundary.y.max
                 }
-                this.updates.push({"_id": token.id,"x": x,"y": y, "elevation": e});
+                this._updates.push({"_id": token.id,"x": x,"y": y, "elevation": e});
             }
             await this._update()
         }
@@ -3386,7 +3649,7 @@ class tokenMove extends executable {
             opts.teleport = true;
             opts.forced = true;
         }
-        await this.data.scene.updateEmbeddedDocuments("Token", this.updates, opts);
+        await this.data.scene.updateEmbeddedDocuments("Token", this_updates, opts);
     }
 }
 
@@ -3463,11 +3726,11 @@ class tokenSays extends executable {
 }
 
 class wall extends executable {
-
-    constructor(...args){
-        super(...args);
-        this._data = []
-    }
+    /**v13
+     * array
+     * the array of update data passed into the wall update call
+     */
+    _data
 
     get bottom(){
         return this._part.bottom
@@ -3538,6 +3801,11 @@ class wall extends executable {
         if(this.right && this.randomize()) this._data.push(this._wall({x: this.boundary.B.x, y: this.boundary.A.y}, this.boundary.B))
         if(this.bottom && this.randomize()) this._data.push(this._wall(this.boundary.B, {x: this.boundary.A.x, y: this.boundary.B.y}))
         if(this.left && this.randomize()) this._data.push(this._wall({x: this.boundary.A.x, y: this.boundary.B.y}, this.boundary.A))
+    }
+
+    _initialize(){
+        super._initialize()
+        this._data = []
     }
 
     _wall(start, end){

@@ -13,8 +13,7 @@ export function setHooks(){
 
         Hooks.on("canvasReady", async(app) => {
             if(game.user.isActiveGM && app.scene?.id){
-               const rendered = await dangerZone.executorForm.renderOnScene(app.scene.id, '', false);
-               if(!rendered) dangerZone.executorForm.close();
+               await dangerZone.executorForm.renderOnScene(app.scene.id, '', false);
             }
         });
 

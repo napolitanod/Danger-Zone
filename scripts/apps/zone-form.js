@@ -218,9 +218,9 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
     const triggerChatPhrase = this.element.querySelector(`#dz-trigger-chat-phrases`);
     const init = this.element.querySelector(`#dz-initiative`);
     
-    CHAT_EVENTS.find(e => val.includes(e)) ? triggerChatPhrase.classList.remove('dz-hidden') : triggerChatPhrase.classList.add('dz-hidden');
+    CHAT_EVENTS.find(e => data.target.value.includes(e)) ? triggerChatPhrase.classList.remove('dz-hidden') : triggerChatPhrase.classList.add('dz-hidden');
 
-    if(COMBAT_EVENTS.find(e => val.includes(e))){
+    if(COMBAT_EVENTS.find(e => data.target.value.includes(e))){
       targetCom.classList.remove('dz-hidden')
       triggerCom.classList.remove('dz-hidden')
     } else{
