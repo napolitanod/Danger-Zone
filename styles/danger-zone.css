@@ -66,10 +66,9 @@
     height: 30px;
     margin-bottom: 2px;
     padding: 6px 5px;
-    color: #7a7971;
     font-size: 16px;
     font-weight: 700;
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(128, 128, 128, 0.05);
     border: 2px groove #eeede0;
     align-items: center;
     flex-wrap: nowrap;
@@ -84,7 +83,7 @@ form ol.danger-zone-scene-list, form ol.danger-zone-types-list, form ol.danger-s
     padding: 0;
     overflow-y: auto;
     scrollbar-width: thin;
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(128, 128, 128, 0.03);
 }
 
 form ol.danger-setting-group > li {
@@ -115,7 +114,7 @@ form ol.danger-setting-group > li {
 }
 
 .danger-zone-type-form .main-danger {
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(128, 128, 128, 0.1);
     padding: 3px 10px;
 }
 
@@ -190,7 +189,6 @@ form ol.danger-setting-group > li {
 .danger-zone-types-list .danger-zone-controls {
     flex: 0 0 12%;
     text-align: right;
-    color: #7a7971;
     padding: 0px 4px 0px 0px;
 }
 
@@ -256,7 +254,6 @@ form ol.danger-setting-group > li {
 
 .danger-zone-record .form-group a {
     text-align: right;
-    color: #7a7971;
     padding-right: 10px;
 }
 
@@ -273,7 +270,7 @@ form ol.danger-setting-group > li {
     margin-bottom: 8px;
 }
 
-.danger-zone-record fieldset, .danger-part-form fieldset {
+.danger-part-form fieldset {
     margin: 15px 0px;
 } 
 
@@ -286,7 +283,7 @@ form ol.danger-setting-group > li {
 } 
 
 .danger-zone-record fieldset .tags .tag, .danger-part-form fieldset .tags .tag, .danger-part-form .form-fields .tags .tag {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(128, 128, 128, 0.5);
     color: #FFF;
 }
 
@@ -295,7 +292,7 @@ form ol.danger-setting-group > li {
 } 
 
 form ol.danger-setting-group button {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(128, 128, 128, 0.5);
     box-shadow: 0 0 10px var(--color-shadow-dark);
     color: var(--color-text-light-4);
     border: 1px solid var(--color-border-dark);
@@ -356,7 +353,7 @@ form ol.danger-setting-group .active:hover label {
     align-items: center;
     position: relative;
     height: 34px;
-    border: 1px solid rgba(0, 0, 0, .3);
+    border: 1px solid rgba(128, 128, 128, .3);
     border-radius: 2px;
     width: 84%;
 }
@@ -473,7 +470,7 @@ form ol.danger-setting-group .active:hover label {
 .dz-executable-info-list {
     font-size: .8em;
     padding: 4px 10px 4px 4px;
-    background: rgba(0, 0, 0, 0.1)
+    background: rgba(128, 128, 128, 0.1)
 }
 
 .dz-executable-list {
@@ -483,7 +480,7 @@ form ol.danger-setting-group .active:hover label {
     align-content: flex-start;
     align-items: stretch;
     padding: 4px 10px 4px 4px;
-    background: rgba(0, 0, 0, 0.1)
+    background: rgba(128, 128, 128, 0.1)
 }
 
 .dz-executable-list > li {
@@ -504,7 +501,7 @@ form ol.danger-setting-group .active:hover label {
 }
 
 .dz-executable-list > li > span i, .dz-executable-list .no-play {
-    color: #424242;
+    color: var(--color-form-hint);
     width: 18px;
     text-align: center;
 }
@@ -557,7 +554,7 @@ form ol.danger-setting-group .active:hover label {
 }
 
 .danger-zone-executor select option:disabled {
-    color: #212121;
+    color: var(--color-form-hint);
     font-weight: bold;
 }
 
@@ -570,7 +567,7 @@ form ol.danger-setting-group .active:hover label {
 
 .danger-zone-chat-message-title {
     padding: 6px ;
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(128, 128, 128, 0.1);
     font-weight: 500;
 }
 
@@ -580,7 +577,7 @@ form ol.danger-setting-group .active:hover label {
 
 .danger-zone-chat-message-body-black {
     padding: 6px;
-    background: rgba(0, 0, 0, 0.1);
+    background: rgba(128, 128, 128, 0.1);
 }
 
 .danger-zone-chat-message-footer {
@@ -593,10 +590,14 @@ form ol.danger-setting-group .active:hover label {
 }
 
 .danger-zone-chat-message-body hr {
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(128, 128, 128, 0.1);
     border-bottom: none;
   }
 
 form .form-group .form-fields input.danger-zone-proximity {
     flex: 0 0 48px;
+}
+
+.danger-zone-footer{
+    margin-top: 10px;
 }

@@ -3,6 +3,14 @@ import {dangerZoneDimensions, boundary} from './dimensions.js'
 import {workflow} from './workflow.js';
 import {COMBAT_EVENTS, DANGERZONETRIGGERSORT, COMBAT_PERIOD_COMBAT_EVENTS, COMBAT_THRESHOLD_END_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS} from './constants.js';
 
+
+/**
+ * 
+ * 
+ * data {
+ *   force: forces the zone to trigger even when zone does not have the event. Used primarily for executor trigger of any zone manually
+ * }
+ */
 export class triggerManager {
 
     constructor(sceneId, data, sceneZones, hook, options = {}) {
@@ -69,30 +77,6 @@ export class triggerManager {
         return arr
     }
 
-    /**V13
-     * method called by manual trigger. Runs through determining the random trigger to generate or the provided on
-     * @returns trigger manager
-     */
-    async _manualTrigger() {
-        if(this.data.zone ==='random') {
-            this.randomEvents.add('manual')
-            await this.reconcileRandomZones()
-        } else {
-            const zn = this.data.dangerId ? dangerZone.getGlobalZone(this.data.dangerId, this.data.scene) : dangerZone.getZoneFromScene(this.data.zone, this.data.scene)
-            if(zn) this.zones.push({zone: zn, event: zn.hasManualEvent ? 'manual' : ''})
-        } 
-        
-        if(!this.zones.length) return
-
-        if(this.zones[0].event === 'manual'){
-            await this.next();
-        } else {
-            await this.zones[0].zone.toggleZoneActive();
-        }
-    
-        return this
-    }
-
     _options(zone, event){
         const options = {}
         if(!['move'].includes(event)){
@@ -113,11 +97,6 @@ export class triggerManager {
         this.combatEvents.push(trigger);
     }
 
-    addZoneEvent(event, initiative){
-        const e = COMBAT_PERIOD_INITIATIVE_EVENTS.includes(event) ? event + '-' + initiative.toString() : event
-        this.randomEvents.add(e)
-    }
-
     static async apiDirectTrigger(zn, sceneId, options = {}){
         const event = 'api'
         const tm = new triggerManager(sceneId, {zone: 'direct', scene: sceneId, options: options});
@@ -131,7 +110,7 @@ export class triggerManager {
 	    const sceneId = chatMessage.speaker?.scene ?? canvas.scene.id
         const sceneZones = dangerZone.getRolltableZonesFromScene(sceneId)
         if(!sceneZones.length) return
-        if(hook === "createChateMessage"){
+        if(hook === "createChatMessage"){
             rollResult = chatMessage.rolls[0].result
             if(!rollResult) return
             table = game.tables.get(options.rollTableId)
@@ -142,6 +121,7 @@ export class triggerManager {
             results = chatMessage.results
         }
         if(!results) return
+        
         const eligibleZones = sceneZones.filter(s => s.trigger.chat.phrases.find(r => results.includes(r)))
         dangerZone.log(false, 'Searching for Rolltable Result Trigger', {chatMessage: chatMessage, sceneZones: sceneZones, eligibleZones: eligibleZones, rollResult: rollResult, table: table, tableResults: results})
         if(eligibleZones.length){
@@ -152,9 +132,9 @@ export class triggerManager {
 
     async chatTrigger(){
         for(const zn of this.sceneZones) { 
-            for(const event of zn.chatEvents) this.stageZones(zn, event);
+            for(const event of zn.chatEvents) this.#stageZone(zn, event);
         }
-        await this.reconcileRandomZones();
+        await this.#reconcileRandomZones();
         this.zones.sort((a, b) => { return DANGERZONETRIGGERSORT[a.event] < DANGERZONETRIGGERSORT[b.event] ? -1 : (DANGERZONETRIGGERSORT[a.event] > DANGERZONETRIGGERSORT[b.event] ? 1 : 0)});
         this.next();
     }
@@ -223,13 +203,13 @@ export class triggerManager {
                             continue
                         }
                     }
-                    this.stageZones(zn, event);
+                    this.#stageZone(zn, event);
                 } else {
                     this._cancelZone(zn, `Failed ${event} was not a combat event that occurred.`)
                 }
             }
         }
-        await this.reconcileRandomZones();
+        await this.#reconcileRandomZones();
         this.zones.sort((a, b) => {let _a = (COMBAT_PERIOD_INITIATIVE_EVENTS.includes(a.event) ? a.zone.trigger.initiative : 0), _b = (COMBAT_PERIOD_INITIATIVE_EVENTS.includes(b.event) ? b.zone.trigger.initiative : 0); return _a < _b ? -1 : _a > _b ? 1 : 0});
         this.zones.sort((a, b) => { return DANGERZONETRIGGERSORT[a.event] < DANGERZONETRIGGERSORT[b.event] ? -1 : (DANGERZONETRIGGERSORT[a.event] > DANGERZONETRIGGERSORT[b.event] ? 1 : 0)});
         this.next();
@@ -302,17 +282,6 @@ export class triggerManager {
         dangerZone.log(false,`${message}... `, {triggerManager: this, data:data});
     }
 
-    /**v13
-     * method called by a manual trigger (for example, using the executor)
-     * @param {object} data 
-     * @returns trigger manager
-     */
-    static async manualTrigger(data) {
-        let sceneId = data.scene; 
-        const tm = new triggerManager(sceneId, data);
-        return await tm._manualTrigger();
-    }
-
     async movementTrigger(){
         for(const zn of this.sceneZones) { 
             for(const event of zn.movementEvents){
@@ -323,10 +292,10 @@ export class triggerManager {
                         continue //only trigger aura if the moving token can be targted
                     }
                 }
-                this.stageZones(zn, event);
+                this.#stageZone(zn, event);
             }
         }
-        await this.reconcileRandomZones();
+        await this.#reconcileRandomZones();
         this.zones.sort((a, b) => { return DANGERZONETRIGGERSORT[a.event] < DANGERZONETRIGGERSORT[b.event] ? -1 : (DANGERZONETRIGGERSORT[a.event] > DANGERZONETRIGGERSORT[b.event] ? 1 : 0)});
         this.next();
     }
@@ -344,23 +313,6 @@ export class triggerManager {
             }
         }  
         this.log(`Trigger manager finished...`, this._cancels);
-    }
-
-    /**V13
-     * from the array of events that have randomized zones, selects a zone at random that is eligible for each given event and adds as a zone to trigger
-     */
-    async reconcileRandomZones() {
-        if(this.randomZones.length) {
-            for (let event of this.randomEvents){
-                const zone = await dangerZone.getRandomZoneFromScene(this.sceneId, event, this.randomZones.filter(z => z.event === event).map(z => z.zone))
-                if(zone){
-                    this.zones.push({zone: zone, event: event})
-                    this.log(`Random trigger zone not found...`, {eventData: this.data, event: event})
-                } else{
-                    this.log(`Random trigger zone found...`, {eventData: this.data, event: event});
-                }
-            }
-        } 
     }
 
     setCombatFlags(){
@@ -389,14 +341,94 @@ export class triggerManager {
         }
     }
     
-    stageZones(zone, event) {
+    /************ PRIVATE METHODS *****************/
+
+    /**V13
+     * method called by manual trigger. Runs through determining the random trigger to generate or the provided on
+     * @returns trigger manager
+     */
+    async #manualTrigger() {
+        if(this.data.zone ==='random') {
+            await this.#stageRandomManualZone()
+        } else {
+            const zn = this.data.dangerId ? dangerZone.getGlobalZone(this.data.dangerId, this.data.scene) : dangerZone.getZoneFromScene(this.data.zone, this.data.scene)
+            if(zn) this.zones.push({zone: zn, event: (zn.hasManualEvent || this.data.force) ? 'manual' : ''})
+        } 
+        
+        if(!this.zones.length) return
+
+        if(this.zones[0].event === 'manual' || this.data.force){
+            await this.next();
+        } else {
+            await this.zones[0].zone.toggleZoneActive();
+        }
+    
+        return this
+    }
+
+    /**V13
+     * from the array of events that have randomized zones, selects a zone at random that is eligible for each given event and adds as a zone to trigger
+     */
+    async #reconcileRandomZones() {
+        if(this.randomZones.length) {
+            for (let event of this.randomEvents){
+                const zone = await dangerZone.getRandomZoneFromScene(this.sceneId, event, this.randomZones.filter(z => z.event === event).map(z => z.zone))
+                if(zone){
+                    this.zones.push({zone: zone, event: event})
+                    this.log(`Random trigger zone not found...`, {eventData: this.data, event: event})
+                } else{
+                    this.log(`Random trigger zone found...`, {eventData: this.data, event: event});
+                }
+            }
+        } 
+    }
+
+    /**v13
+     * During manual trigger of a random event, selects 1 zone and sends it to be staged for random handling
+     */
+    async #stageRandomManualZone(){
+        const zn = await dangerZone.getRandomZoneFromScene(this.sceneId, 'manual')
+        this.#stageZone(zn, 'manual')
+        await this.#reconcileRandomZones()
+    }
+    
+    /**v13
+     * For random zones, adds the event to the random event array for use in random triggering
+     * @param {string} event      the trigger event 
+     * @param {integer} initiative      initiative setting on zone
+     */
+    #stageRandomZoneEvent(event, initiative){
+        const e = COMBAT_PERIOD_INITIATIVE_EVENTS.includes(event) ? event + '-' + initiative.toString() : event
+        this.randomEvents.add(e)
+    }
+
+    /**v13
+     * Adds the zone to the appropriate array - whether for random handling or queued for trigger
+     * For random zones, calls the method to stage the event also
+     * @param {zone} zone      the zone class
+     * @param {string} event     the trigger event 
+     */
+    #stageZone(zone, event) {
         if(!zone.trigger.random){
             this.zones.push({zone: zone, event: event})
         } else {
             this.randomZones.push({zone: zone, event: event})
-            this.addZoneEvent(event, zone.trigger.initiative ?? 0)
+            this.#stageRandomZoneEvent(event, zone.trigger.initiative ?? 0)
         }
     }
+
+    /************ METHODS *****************/
+    /**v13
+     * method called by a manual trigger (for example, using the executor)
+     * @param {object} data 
+     * @returns trigger manager
+    */
+    static async manualTrigger(data) {
+        let sceneId = data.scene; 
+        const tm = new triggerManager(sceneId, data);
+        return await tm.#manualTrigger();
+    }
+
 
 }
 

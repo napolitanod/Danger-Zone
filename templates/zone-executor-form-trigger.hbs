@@ -1,0 +1,34 @@
+<div class="tab active" data-tab="trigger" data-group="sheet">
+    <div class="form-group">
+        <div class="dz-hidden">
+            <input type="text" value="{{sceneId}}" name="id">
+        </div>
+        <ol class="danger-setting-group flexrow" id="danger-zone-executable-trigger">
+            {{#if this.includesIncludeRandomTrigger}}
+                <li data-id="random">
+                    <button type="button"
+                        class="danger-zone-scene-trigger-button"
+                        title="{{randomTitle}}"
+                        data-action="trigger" 
+                    >
+                        <i class="fas fa-radiation-alt"></i>  
+                    </button>             
+                </li>
+            {{/if}}
+            {{#each triggerZones}}
+                {{#unless this.trigger.random}}
+                <li data-id="{{this.id}}"  class="{{#if this.enabled}}{{#if this.hasAutomatedEvent}}active{{/if}}{{/if}}">
+                    <button type="button"
+                        {{#if this.scene.dangerId}}data-id="{{this.scene.dangerId}}"{{/if}} 
+                        style="background-image: url('{{this.danger.icon}}')"
+                        class="danger-zone-scene-trigger-button {{#if this.scene.dangerId}}global-zone{{/if}}"
+                        title="{{this.titleLong}}"
+                        data-action="trigger" 
+                    >
+                    </button>
+                </li>
+                {{/unless}}
+            {{/each}}
+        </ol>
+    </div>
+</div>

@@ -4,24 +4,22 @@ import {DangerForm} from './danger-form.js';
 import {DANGERZONECONFIG} from './constants.js';
 import {getEventData} from './helpers.js';
 
-export var lastSearch = '';
-
-export class DangerZoneTypesForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
+export class DangerListForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
 
   /** @inheritDoc */
   static DEFAULT_OPTIONS = {
     classes: [],
     id : DANGERZONECONFIG.ID.FORM.DANGERS,
     actions: {
-      'active': DangerZoneTypesForm.#worldZoneToggle,
-      'add': DangerZoneTypesForm.#add,
-      'copy': DangerZoneTypesForm.#copy,
-      'searchClear': DangerZoneTypesForm.#clearFilter,
-      'delete': DangerZoneTypesForm.#delete,
-      'edit': DangerZoneTypesForm.#edit,
-      'export': DangerZoneTypesForm.#export,
-      'exportAll': DangerZoneTypesForm.#exportToJSON,
-      'import': DangerZoneTypesForm.#importFromJSONDialog
+      'active': DangerListForm.#worldZoneToggle,
+      'add': DangerListForm.#add,
+      'copy': DangerListForm.#copy,
+      'searchClear': DangerListForm.#clearFilter,
+      'delete': DangerListForm.#delete,
+      'edit': DangerListForm.#edit,
+      'export': DangerListForm.#export,
+      'exportAll': DangerListForm.#exportToJSON,
+      'import': DangerListForm.#importFromJSONDialog
     },
     form: {
       closeOnSubmit: false,
@@ -59,7 +57,7 @@ export class DangerZoneTypesForm extends foundry.applications.api.HandlebarsAppl
   async _prepareContext() {
       return {
           dangerZoneTypes: dangerZoneType.allDangers.sort((a, b) => a.name.localeCompare(b.name)),
-          lastSearch: lastSearch
+          lastSearch: dangerZone.LASTSEARCH
       }
   }
 
@@ -67,7 +65,7 @@ export class DangerZoneTypesForm extends foundry.applications.api.HandlebarsAppl
   _onRender(context, options) {
       super._onRender(context, options);
       this.element.querySelector(`#danger-zone-type-search-input`).addEventListener("input", (async event => {
-        this._preFilter(event)})
+        this.#preFilter(event)})
       );
   }
 
@@ -81,8 +79,8 @@ export class DangerZoneTypesForm extends foundry.applications.api.HandlebarsAppl
   static #clearFilter(event){
     event.preventDefault();
     document.getElementById("danger-zone-type-search-input").value = '';
-    lastSearch = '';
-    this._filter();
+    dangerZone.updateLastSearch('');
+    this.filter();
   }
 
   static async #copy(event){
@@ -148,6 +146,11 @@ export class DangerZoneTypesForm extends foundry.applications.api.HandlebarsAppl
     }
   }
 
+  #preFilter(event) {
+    dangerZone.updateLastSearch(event.target.value);
+    this.filter();
+  }
+
   static async #worldZoneToggle(event){
     const data = getEventData(event)
     const danger = dangerZoneType.getDanger(data.parentId);
@@ -163,11 +166,11 @@ export class DangerZoneTypesForm extends foundry.applications.api.HandlebarsAppl
     );  
   }
 
-  _filter() {
+  filter() {
     const clear = this.element.querySelector(`#danger-zone-type-search-clear`);
     const searchBox = this.element.querySelector(`#danger-zone-type-search-input`);
 
-    if(lastSearch != ''){
+    if(dangerZone.LASTSEARCH != ''){
       clear.classList.remove('dz-hidden');
       searchBox.classList.add('outline');
     } else {
@@ -176,7 +179,7 @@ export class DangerZoneTypesForm extends foundry.applications.api.HandlebarsAppl
     }
     this.element.querySelectorAll(".name").forEach((item) => {
       let label = item.innerText.toLowerCase();
-      if (label.search(lastSearch.toLowerCase()) > -1) {
+      if (label.search(dangerZone.lastSearchLower) > -1) {
         $(item).closest('.type-record').show();
       } else {
         $(item).closest('.type-record').hide();
@@ -199,11 +202,6 @@ export class DangerZoneTypesForm extends foundry.applications.api.HandlebarsAppl
       )
     }
     return response
-  }
-
-  _preFilter(event) {
-    lastSearch = event.target.value;
-    this._filter();
   }
 
   refresh() {

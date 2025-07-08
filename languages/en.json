@@ -75,10 +75,15 @@
             "clear.label": "Clear Danger Zone Placeables",
             "clear.description": "Clear all Danger Zone placeables?",
             "clearAmbientLight.label": "Clear Danger Zone Ambient Lighting",
+            "clearAmbientLight.description": "Clear all Danger Zone placed lighting on scene?",
             "clearAmbientSound.label": "Clear Danger Zone Ambient Sounds",
+            "clearAmbientSound.description": "Clear all Danger Zone placed ambient sounds on scene?",
             "clearRegion.label": "Clear Danger Zone Regions",
-            "clearEffectsTile.label": "Clear Danger Zone Lasting Effects",
-            "clearWall.label": "Clear Danger Zone Walls"
+            "clearRegion.description": "Clear all Danger Zone placed regions on scene?",
+            "clearEffectsTile.label": "Clear Danger Zone Tiles (Lasting Effects)",
+            "clearTile.description": "Clear all Danger Zone placed tiles on scene?",
+            "clearWall.label": "Clear Danger Zone Walls",
+            "clearWall.description": "Clear all Danger Zone placed walls on scene?"
         },
         "copy-zone":{
             "label": "Copy Zone from Scene",
@@ -93,7 +98,7 @@
         },
         "edit-form": {
             "actor.label": "Actors",
-            "allInArea.label": "Danger Targets All Tokens",
+            "allInArea.label": "Target All Tokens",
             "allInArea.description": "If more than one token is in a target area, they will all be targeted. Otherwise only one random token is targeted.",
             "basics.label": "Basics",
             "bleed.label": "Bleed",
@@ -191,7 +196,7 @@
             "promptTrigger.description": "When the zone trigger is initiated, this will evoke a prompt to the GM that queries whether or not the trigger should proceed. Useful for automated triggers where you want the option to cancel.",
             "random.label": "Randomize",
             "random.description": "All zones in this scene that share the same trigger are grouped and only one is triggered at random. Assign a weight to control how often one triggers in relation to the others.",
-            "region.label": "Associate Zone to Region",
+            "region.label": "Region Dimensions",
             "region.description": "Assigns the zone to a region, otherwise the zone consists of the scene's dimensions.",
             "region.replace.label": "Regions",
             "region.replace.description": "Choose what to do with existing Danger Zone created regions when this zone triggers.",
@@ -270,12 +275,11 @@
                 "clear.label": "Clear boundary",
                 "label": "Target Boundary",
                 "highlight.label": "Highlight boundary location",
-                "lock.label": "Boundary will not update due to zone changes",
+                "lock.label": "Locking retains boundary when zone changes",
                 "none.label": "There is no target boundery selected.",
                 "prompt.label": "Choose boundary location",
                 "random.label": "New random boundary location",
-                "target.label": "Change boundary to scene target's location",
-                "unlock.label": "Boundary will update due to zone changes"
+                "target.label": "Change boundary to scene target's location"
             },
             "danger":{
                 "edit.label": "Edit danger",
@@ -300,12 +304,11 @@
                 "clear.label": "Clear save list",
                 "highlight.label": "Target on the game canvas any tokens that are on this list",
                 "list.label": "Saving Throw List",
-                "lock.label": "Save list will not update due to zone or boundary changes",
+                "lock.label": "Locking retains save list when zone or boundary changes",
                 "none.label": "Saves have not been made",
                 "add-fail.label": "Add canvas targeted tokens to save fail list",
                 "requires-fail.label": "Plays only if save failed",
-                "requires-success.label": "Plays only if save succeeded",
-                "unlock.label": "Save list will update due to zone or boundary changes"
+                "requires-success.label": "Plays only if save succeeded"
             },
             "scope": {
                 "boundary.label": "Plays on target boundary",
@@ -318,11 +321,10 @@
                 "fail.label": "Fail the saving throw for all targets in list",
                 "highlight.label": "Target on the game canvas any tokens that are on this list",
                 "list.label": "Source List",
-                "lock.label": "Source list will not update due to zone or boundary changes",
+                "lock.label": "Locking retains source list when zone or boundary changes",
                 "none.label": "Source list is empty",
                 "replace.label": "Replace source list with scene targets",
-                "succeed.label": "Succeed the saving throw for all sources in list",
-                "unlock.label": "Source list will update due to zone or boundary changes"
+                "succeed.label": "Succeed the saving throw for all sources in list"
             },
             "tab":{
                 "list.label": "Trigger Zones",
@@ -334,12 +336,11 @@
                 "fail.label": "Fail the saving throw for all targets in list",
                 "highlight.label": "Target on the game canvas any tokens that are on this list",
                 "list.label": "Target List",
-                "lock.label": "Target list will not update due to zone or boundary changes",
+                "lock.label": "Locking retains target list when zone or boundary changes",
                 "none.label": "Target list is empty",
                 "random.label": "Set targets randomly from eligible targets",
                 "replace.label": "Replace target list with scene targets",
-                "succeed.label": "Succeed the saving throw for all targets in list",
-                "unlock.label": "Target list will update due to zone or boundary changes"
+                "succeed.label": "Succeed the saving throw for all targets in list"
             },
             "zone":{
                 "edit.label": "Edit zone",

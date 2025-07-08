@@ -1,0 +1,70 @@
+
+<div class="tab" data-tab="clear" data-group="sheet">
+    <p class="notes">{{localize 'DANGERZONE.edit-form.single-run.description'}}</p>
+    <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.edit-form.light.replace.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.light.replace.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <select name="replace.light" value="{{zone.replace.light}}">
+                {{selectOptions options.REPLACE.LIGHT selected=zone.replace.light localize=true}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.edit-form.replace.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.replace.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <select name="replace.tile" value="{{zone.replace.tile}}">
+                {{selectOptions options.REPLACE.TILE selected=zone.replace.tile localize=true}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.edit-form.region.replace.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.region.replace.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <select name="replace.region" value="{{zone.replace.region}}">
+                {{selectOptions options.REPLACE.REGION selected=zone.replace.region localize=true}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.edit-form.sound.replace.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.sound.replace.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <select name="replace.sound" value="{{zone.replace.sound}}">
+                {{selectOptions options.REPLACE.SOUND selected=zone.replace.sound localize=true}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.edit-form.wall.replace.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.wall.replace.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <select name="replace.wall" value="{{zone.replace.wall}}">
+                {{selectOptions options.REPLACE.WALL selected=zone.replace.wall localize=true}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.edit-form.weather.replace.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.weather.replace.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <select name="replace.weather" value="{{zone.replace.weather}}">
+                {{selectOptions options.REPLACE.WEATHER selected=zone.replace.weather localize=true}}
+            </select>
+        </div>
+    </div>
+</div>

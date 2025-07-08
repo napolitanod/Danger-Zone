@@ -1,5 +1,5 @@
 import {dangerZone} from './danger-zone.js';
-import {DangerZoneTypesForm} from './apps/danger-list-form.js';
+import {DangerListForm} from './apps/danger-list-form.js';
 
 /*
 	issues
@@ -25,7 +25,7 @@ Hooks.once('init', async function() {
         name: game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.name"),
         label: game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.label"),
         icon: "fas fa-radiation",
-        type: DangerZoneTypesForm,
+        type: DangerListForm,
         restricted: true
     });
 

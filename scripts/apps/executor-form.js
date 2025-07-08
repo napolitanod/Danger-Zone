@@ -1,11 +1,12 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneDimensions} from "./dimensions.js";
 import {DangerForm} from './danger-form.js';
-import {DangerZoneForm} from './zone-form.js';
+import {ZoneForm} from './zone-form.js';
 import {triggerManager} from './trigger-handler.js';
 import {CONTROLTRIGGERS, DANGERZONECONFIG} from './constants.js';
+import {getEventData} from './helpers.js';
 
-export class ExecutorForm extends FormApplication {
+export class ExecutorForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
     constructor(sceneId, executor = {}, zones, ...args) {
       super(...args);
       this.sceneId = sceneId, 
@@ -18,9 +19,117 @@ export class ExecutorForm extends FormApplication {
           saves: false,
           target: false
       };
-
-      this._setHook();
     }
+
+    /** @inheritDoc */
+    static DEFAULT_OPTIONS = {
+        classes: [],
+        id : DANGERZONECONFIG.ID.FORM.ZONEEXECUTOR,
+        actions: {
+            'boundary-clear': ExecutorForm.#boundaryClear,
+            'boundary-highlight': ExecutorForm.#boundaryHighlight,
+            'boundary-prompt': ExecutorForm.#boundaryPrompt,
+            'boundary-random': ExecutorForm.#boundaryRandom,
+            'boundary-target': ExecutorForm.#boundaryTarget,
+            'boundary-eligible-fail': ExecutorForm.#boundaryEligibleFail,
+            'boundary-eligible-succeed': ExecutorForm.#boundaryEligibleSucceed,
+            'boundary-eligible-refresh': ExecutorForm.#boundaryEligibleRefresh,
+            'boundary-eligible-fail': ExecutorForm.#boundaryEligibleFail,
+            'boundary-eligible-highlight': ExecutorForm.#boundaryEligibleHighlight,
+            'edit-danger': ExecutorForm.#editDanger,
+            'edit-zone': ExecutorForm.#editZone,
+            'play':  ExecutorForm.#play,
+            'play-zone':  ExecutorForm.#playZone,
+            'save-add-fail': ExecutorForm.#saveAddFail,
+            'save-add-success': ExecutorForm.#saveAddSuccess,
+            'save-clear': ExecutorForm.#saveClear,
+            'save-highlight': ExecutorForm.#saveHighlight,
+            'source-add': ExecutorForm.#sourceAdd,
+            'source-clear': ExecutorForm.#sourceClear,
+            'source-fail': ExecutorForm.#sourceFail,
+            'source-highlight': ExecutorForm.#sourceHighlight,
+            'source-replace': ExecutorForm.#sourceReplace,
+            'source-succeed': ExecutorForm.#sourceSucceed,
+            'stop':  ExecutorForm.#stop,
+            'target-add': ExecutorForm.#targetAdd,
+            'target-boundary-eligible': ExecutorForm.#targetBoundaryEligible,
+            'target-clear': ExecutorForm.#targetClear,
+            'target-fail': ExecutorForm.#targetFail,
+            'target-highlight': ExecutorForm.#targetHighlight,
+            'target-random': ExecutorForm.#targetRandom,
+            'target-replace': ExecutorForm.#targetReplace,
+            'target-succeed': ExecutorForm.#targetSucceed,
+            'target-zone': ExecutorForm.#targetZone,
+            'toggle-lock':ExecutorForm.#toggleLock,
+            'trigger': ExecutorForm.#triggerZone,
+            'wipe':  ExecutorForm.#wipe,
+            'zone-fail': ExecutorForm.#zoneFail,
+            'zone-highlight': ExecutorForm.#zoneHighlight,
+            'zone-refresh': ExecutorForm.#zoneRefresh,
+            'zone-succeed': ExecutorForm.#zoneSucceed
+        },
+        form: {
+            submitOnChange: false,
+            closeOnSubmit: true
+        },
+        position: {
+            width: 350
+        },
+        tag: "form",
+        window: {
+            contentClasses: ["danger-zone-executor", "sheet"],
+            title : DANGERZONECONFIG.LABEL.ZONEEXECUTOR,
+            icon: DANGERZONECONFIG.ICON.ZONEEXECUTOR
+        }
+    }
+
+      /** @override */
+    static PARTS = {
+        tabs: {template: DANGERZONECONFIG.TEMPLATE.TABNAV},
+        trigger: {classes: ["standard-form"], scrollable: [""], template: DANGERZONECONFIG.TEMPLATE.ZONEEXECUTOR.TRIGGER},
+        exploded: {classes: ["standard-form"], scrollable: [""], template: DANGERZONECONFIG.TEMPLATE.ZONEEXECUTOR.EXPLODED},
+        footer: {template: DANGERZONECONFIG.TEMPLATE.FOOTER}
+    }
+
+    /** @override */
+    static TABS = {
+        sheet: {
+            initial: "trigger", 
+            tabs: DANGERZONECONFIG.TAB.ZONEEXECUTOR
+        }
+    }
+
+    /** @override */
+    async _prepareContext() {
+        return {
+            boundary: this.boundaryInfo,
+            dangerId: this.worldId,
+            eligibleTargetList: this.eligibleTargetList,
+            eligibleZoneList: this.eligibleZoneList,
+            dangerOps: this.dangerOps,
+            executor: this.executor,
+            executables: this.executor.executables.sort((a, b) => a.name.localeCompare(b.name)),
+            hasSave: this.hasSave,
+            hasSourcing: this.hasSourcing,
+            hasTargeting: this.hasTargeting,
+            includesIncludeRandomTrigger: this.triggerZones.find(zn => zn.enabled && zn.hasManualEvent && zn.trigger.random) ? true : false,
+            locked: this.locked,
+            randomTitle: game.i18n.localize("DANGERZONE.scene.random-trigger.label"),
+            saveList: this.saveList,
+            sceneId: this.sceneId,
+            sourceList: this.sourceList,
+            targetList: this.targetList,
+            triggerZones: this.triggerZones,
+            worldZoneOps: this.worldZoneOps,
+            zoneId: this.zoneId,
+            zoneOps: this.zoneOps,
+            tabs: this._prepareTabs("sheet")
+        }
+    }
+    
+    /*******           custom            ********/
+
+    /**         GETTERS         **/
 
     get hasExecutor(){
         return Object.keys(this.executor).length ? true : false
@@ -36,6 +145,10 @@ export class ExecutorForm extends FormApplication {
 
     get control(){
         return ui.controls?.controls[dangerZone.ID]?.tools?.executor
+    }
+
+    get currentTab(){
+        if(this.element) return this.element.querySelector('.active.tab').getAttribute('data-tab') 
     }
 
     get dangerOps(){
@@ -127,7 +240,7 @@ export class ExecutorForm extends FormApplication {
     }
 
     get worldZoneOps(){
-        return this.zones.filter(z => z.danger.hasGlobalZone).reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
+        return this.zones.filter(z => z.danger.hasGlobalZone && !z.scene.isPseudoZone && z.scene.dangerId).reduce((obj, a) => {obj[a.id] = a.title; return obj;}, {})
     }
 
     get visible(){
@@ -142,34 +255,412 @@ export class ExecutorForm extends FormApplication {
         return this.zoneId ? this.zones.find(z => z.id === this.zoneId) : {}
     }
 
-    static get defaultOptions(){    
-        return foundry.utils.mergeObject(super.defaultOptions, {
-            title : game.i18n.localize("DANGERZONE.executor-form.form-name"),
-            id : "danger-zone-executor",
-            classes: ["sheet","danger-zone-executor"],
-            template : DANGERZONECONFIG.TEMPLATE.EXECUTOR,
-            width : 305,
-            height : "auto",
-            closeOnSubmit: false,
-            tabs : [
-                {navSelector: ".tabs", contentSelector: "form", initial: "list"}
-            ]   
-            })
+    /**         STATIC PRIVATE METHODS         **/
+    /**v13
+     * trigger a zone .
+     * @this {ApplicationV2}
+     * @param {SubmitEvent} event         The pointer event.
+    */
+    static async #triggerZone(event) {
+        event.preventDefault();
+        const data = getEventData(event)
+        await triggerManager.manualTrigger({scene: this.sceneId, dangerId: data.targetId, zone: data.parentId, event: event, force: data.target.type === 'button' ? false : true});
     }
 
-    activateListeners(html) {
-        super.activateListeners(html);
-        html.on('click', "[data-action]", this._handleButtonClick.bind(this));
-        html.on('change', "[data-action]", this._handleChange.bind(this));
-        html.on('mouseenter', "#dz-zoneId", this._showZoneHighlight.bind(this));
-        html.on('mouseleave', "#dz-zoneId", this._hideZoneHighlight.bind(this));
-        html.on('mouseenter', ".danger-zone-scene-trigger-button", this._handleHover.bind(this));
-        html.on('mouseleave', ".danger-zone-scene-trigger-button", this._handleHover.bind(this));
-        html.on('contextmenu', ".danger-zone-scene-trigger-button", this._handleRightClick.bind(this));
+   /************ PRIVATE METHODS  ***************/
+   _getExecutable(event){
+        const data = getEventData(event)
+        data['executable'] = data.parentId ? this.executor.executable[data.parentId] : {}
+        return data
     }
 
-    close(...args){
-        super.close(...args)
+    _getEventIds(event){
+        if(this.sceneId !== canvas.scene?.id || !canvas.scene?.grid?.type) return false
+        const data = getEventData(event)
+        const obj = {
+            zoneId: data.parentId ?? this.zoneId,
+            dangerId: data.parentId ? data.targetId : this.worldId
+        }
+        return (!obj.zoneId || obj.zoneId === 'random') ? false : obj
+    }
+        
+    /**v13
+     * 
+     */
+    static #boundaryClear(event){
+        this.executor.clearBoundary({clearTargets: !this.locked.target, clearLocation: !this.locked.boundary})
+        this.refreshBoundary();  
+    }
+    
+    /**v13
+     * 
+     */
+    static #boundaryHighlight(event){
+        this.executor.highlightBoundary(true);   
+    }
+    
+    /**v13
+     * 
+     */
+    static async #boundaryPrompt(event){
+        await this.executor.promptBoundary({clearTargets: !this.locked.target, clearLocation: !this.locked.boundary, highlight: true})
+        this.refreshBoundary(); 
+    }    
+    
+    /**v13
+     * 
+     */
+    static async #boundaryRandom(event){
+        await this.executor.randomBoundary({clearTargets: !this.locked.target, clearLocation: !this.locked.boundary, highlight: true})
+        this.refreshBoundary();
+    }    
+    
+    /**v13
+     * 
+     */
+    static async #boundaryTarget(event){
+        await this.executor.updateLocation(this.userTargets?.[0], {clearTargets: !this.locked.target, highlight: true});
+        this.refreshBoundary();  
+    }    
+
+    /**v13
+     * 
+    */
+    static #boundaryEligibleFail(event){
+        this.executor.insertSaveFailed(this.executor.eligibleTargets);
+        this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.executor.eligibleTargets.find(f => f.id === s.id)));
+        this.drawSaves();
+    }
+
+    /**v13
+     * 
+     */
+    static #boundaryEligibleHighlight(event){
+        canvas.tokens.setTargets(this.executor.eligibleTargets.map(t => t.id), {mode: 'replace'});    
+    }
+
+    /**v13
+     * 
+    */
+    static #boundaryEligibleSucceed(event){
+        this.executor.insertSaveSucceeded(this.executor.eligibleTargets);
+        this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.executor.eligibleTargets.find(f => f.id === s.id)));
+        this.drawSaves();
+    }
+
+    /**v13
+     * 
+    */
+    static async #boundaryEligibleRefresh(event){
+        await this.refreshZone();
+        this.drawSaves();
+    }
+
+    /**v13
+     * 
+     */
+    static #editDanger(event){
+        new DangerForm(this.zone.dangerId, this).render(true);    
+    }
+
+    /**v13
+     * 
+    */
+    static #editZone(event){
+       new ZoneForm(this, this.zoneId, this.sceneId, this.worldId).render(true);   
+    }
+
+
+    /**v13
+     * context menu launch zone form
+     * @this {ApplicationV2}
+     * @param {SubmitEvent} event         The pointer event.
+    */
+    #handleRightClick(event){
+        const data = this._getEventIds(event)
+        if(!data) return
+        new ZoneForm(this, data.zoneId, this.sceneId, data.dangerId).render(true);
+    }
+
+    /**v13
+     * remove highlight from a zone
+     * @this {ApplicationV2}
+     * @param {SubmitEvent} event         The pointer event.
+    */
+    #hideZoneHighlight(event){
+        const data = this._getEventIds(event)
+        if(!data) return
+        dangerZoneDimensions.destroyHighlightZone(data.zoneId, '', data.dangerId);
+    }
+
+    /**v13
+     * 
+     */
+    static async #play(event){
+        const data = this._getExecutable(event)
+        await data.executable.play()
+        if(data.parentId==='save') this.drawSaves();
+    }
+
+    /**v13
+     * 
+    */
+    static async #playZone(event){
+        this.executor.newPlan();
+        await this.executor.play();
+        this.drawBoundary();
+    }
+
+    /**v13
+     * 
+    */
+    static #saveAddFail(event){
+        this.executor.insertSaveFailed(this.userTargets);
+        this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.userTargets.find(f => f.id === s.id)));
+        this.drawSaves();
+    }
+
+    /**v13
+     * 
+    */
+    static #saveAddSuccess(event){
+        this.executor.insertSaveSucceeded(this.userTargets);
+        this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.userTargets.find(f => f.id === s.id)));
+        this.drawSaves();
+    }
+
+    /**v13
+     * 
+    */
+    static #saveClear(event){
+        this.executor.clearSaveFailed();
+        this.executor.clearSaveSucceeded();
+        this.drawSaves();
+    }
+
+    /**v13
+     * 
+     */
+    static #saveHighlight(event){
+        canvas.tokens.setTargets(this.executor.saveSucceeded.map(t => t.id).concat(this.executor.saveFailed.map(t => t.id)));
+    }
+
+    /**v13
+     * highlight a zone
+     * @this {ApplicationV2}
+     * @param {SubmitEvent} event         The pointer event.
+    */
+    #showZoneHighlight(event){
+        const data = this._getEventIds(event)
+        if(!data) return
+        dangerZoneDimensions.addHighlightZone(data.zoneId, this.sceneId, '', data.dangerId);
+    } 
+
+    /**v13
+     * 
+    */
+    static #sourceAdd(event){
+        this.executor.insertSources(this.userTargets);
+        this.drawSources();
+    }
+
+    /**v13
+     * 
+    */
+    static #sourceClear(event){
+        this.executor.clearSources();
+        this.drawSources();
+    }
+    
+    /**v13
+     * 
+    */
+    static #sourceFail(event){
+        this.executor.insertSaveFailed(this.executor.sources);
+        this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.executor.sources.find(f => f.id === s.id)));
+        this.drawSources();
+    }
+
+    /**v13
+     * 
+     */
+    static #sourceHighlight(event){
+        canvas.tokens.setTargets(this.executor.sources.map(t => t.id))
+    }
+
+    /**v13
+     * 
+    */
+    static #sourceReplace(event){
+        this.executor.updateSources(this.userTargets);
+        this.drawSources();
+    }
+
+    /**v13
+     * 
+    */
+    static #sourceSucceed(event){
+        this.executor.insertSaveSucceeded(this.executor.sources);
+        this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.executor.sources.find(f => f.id === s.id)));
+        this.drawSources();
+    }
+
+    /**v13
+     * 
+     */
+    static async #stop(event){        
+        const data = this._getExecutable(event)
+         await data.executable.stop()
+    }
+
+    /**v13
+     * 
+     */
+    static #targetAdd(event){
+        this.executor.insertTargets(this.userTargets);
+        this.drawTargets();
+    }
+
+    /**v13
+     * 
+     */
+    static #targetBoundaryEligible(event){
+        this.executor.insertTargets(this.executor.eligibleTargets);
+        this.drawTargets();
+    }
+    /**v13
+     * 
+     */
+    static #targetClear(event){
+        this.executor.clearTargets();
+        this.drawTargets();
+    }
+
+    /**v13
+     * 
+     */
+    static #targetFail(event){
+        this.executor.insertSaveFailed(this.executor.targets);
+        this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.executor.targets.find(f => f.id === s.id)));
+        this.drawTargets();
+    }
+
+    /**v13
+     * 
+     */
+    static #targetHighlight(event){
+        canvas.tokens.setTargets(this.executor.targets.map(t => t.id));
+    }
+
+    /**v13
+     * 
+     */
+    static #targetRandom(event){
+        this.executor.randomTarget();
+        this.drawTargets();
+    }
+
+    /**v13
+     * 
+     */
+    static #targetReplace(event){
+        this.executor.updateTargets(this.userTargets);
+        this.drawTargets();
+    }
+
+    /**v13
+     * 
+     */
+    static #targetSucceed(event){
+        this.executor.insertSaveSucceeded(this.executor.targets);
+        this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.executor.targets.find(f => f.id === s.id)));
+        this.drawTargets();
+    }
+
+    /**v13
+     * 
+     */
+    static #targetZone(event){
+        this.executor.insertTargets(this.executor.zoneEligibleTokens);
+        this.drawTargets();
+    }
+
+    /**v13
+     * 
+    */
+    static #toggleLock(event){
+        const data = getEventData(event)
+        const icon = data.target.firstChild
+        if(this.locked[data.targetId]){
+            icon.classList.add('fa-unlock')
+            icon.classList.remove('fa-lock')
+        } else {
+            icon.classList.remove('fa-unlock')
+            icon.classList.add('fa-lock')
+        }
+        this.locked[data.targetId] = !this.locked[data.targetId]
+    }
+
+    /**v13
+     * 
+    */
+    static async #wipe(event){
+        const data = this._getExecutable(event)
+        await data.executable.wipeType()
+    }
+
+    /**v13
+     * 
+    */
+    static #zoneFail(event){
+        this.executor.insertSaveFailed(this.executor.zoneEligibleTokens);
+        this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.executor.zoneEligibleTokens.find(f => f.id === s.id)));
+        this.drawSaves();
+    }
+
+
+    /**v13
+     * 
+    */
+    static #zoneHighlight(event){
+        if(this.zoneId) this.zone.highlightZone();
+    }
+
+    /**v13
+     * 
+    */
+    static async #zoneRefresh(event){
+        await this.refreshZone();
+    }
+
+    /**v13
+     * 
+    */
+    static #zoneSucceed(event){
+        this.executor.insertSaveSucceeded(this.executor.zoneEligibleTokens);
+        this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.executor.zoneEligibleTokens.find(f => f.id === s.id)));
+        this.drawSaves();
+    }
+
+    /**v13
+     * 
+     */
+    async #zoneUpdateRefresh(event){
+        this.zoneId = this.element.querySelector(`[data-action="zone"]`).value;
+        await this.refresh({full:true, force: false})
+    }
+
+    /**         METHODS         **/
+
+    /** @override */
+    _onRender(context, options) {
+        super._onRender(context, options);
+        this.element.querySelector(`[data-action="zone"]`).addEventListener("change", (event => {this.#zoneUpdateRefresh(event)}))
+        this.element.querySelectorAll(`[data-action="trigger"]`).forEach((el) => {
+            el.addEventListener("mouseenter", (event => {this.#showZoneHighlight(event)}))
+            el.addEventListener("mouseleave", (event => {this.#hideZoneHighlight(event)}))
+            el.addEventListener("contextmenu", (event => {this.#handleRightClick(event)}))
+        })
     }
 
     draw(elementId, obj, setPosition = false){
@@ -191,10 +682,12 @@ export class ExecutorForm extends FormApplication {
 
     drawSaves(){
         this.draw(`dz-save-list`, this.saveList, true);
+        this._handleSuppress()
     }
 
     drawSources(){
         this.draw(`dz-source-list`, this.sourceList, true);
+        this._handleSuppress()
     }
 
     drawTargets(){
@@ -206,334 +699,94 @@ export class ExecutorForm extends FormApplication {
         this.draw(`dz-eligible-zone-list`, this.eligibleZoneList, true);
     }
 
-    getData(){
-        return {
-            boundary: this.boundaryInfo,
-            eligibleTargetList: this.eligibleTargetList,
-            eligibleZoneList: this.eligibleZoneList,
-            dangerOps: this.dangerOps,
-            executor: this.executor,
-            executables: this.executor.executables.sort((a, b) => a.name.localeCompare(b.name)),
-            hasSave: this.hasSave,
-            hasSourcing: this.hasSourcing,
-            hasTargeting: this.hasTargeting,
-            includesIncludeRandomTrigger: this.triggerZones.find(zn => zn.enabled && zn.hasManualEvent && zn.trigger.random) ? true : false,
-            locked: this.locked,
-            randomTitle: game.i18n.localize("DANGERZONE.scene.random-trigger.label"),
-            saveList: this.saveList,
-            sceneId: this.sceneId,
-            sourceList: this.sourceList,
-            targetList: this.targetList,
-            triggerZones: this.triggerZones,
-            worldZoneOps: this.worldZoneOps,
-            zoneId: this.zoneId,
-            zoneOps: this.zoneOps
+    /**v13
+     * sets the color for the icons on each executable to red or non-red
+     */
+    _handleSuppress(){
+        function color(obj, cl, red = false){
+            obj.querySelectorAll(cl).forEach((el) =>{
+                red ? el.classList.add('warning') : el.classList.remove('warning')
+            })
         }
+
+        this.element.querySelectorAll('.dz-executable-list > li').forEach((ex) => {
+            let play = true;
+            const tu = ex.querySelector('i.fa-thumbs-up'); 
+            const td = ex.querySelector('i.fa-thumbs-down');
+            if(ex.querySelector('.dzex-or-source') && !this.hasSources ){
+                if(!this.hasTargets ){
+                    play = false; 
+                    color(ex,'i.fa-crosshairs', true); 
+                    color(ex,'i.fa-dragon', true)
+                } else{
+                    play = false; 
+                    color(ex,'i.fa-crosshairs'); 
+                    color(ex,'i.fa-dragon', true)
+                }
+            } else if (ex.querySelector('i.fa-crosshairs') && !this.hasTargets){
+                play = false; 
+                color(ex,'i.fa-crosshairs', true); 
+                color(ex,'i.fa-dragon')
+            } 
+            else {
+                color(ex,'i.fa-crosshairs'); 
+                color(ex,'i.fa-dragon');
+            }
+            
+            if(!this.boundary && ex.querySelector('i.fa-expand')){
+                play = false; 
+                color(ex,'i.fa-expand', true)
+            } else {
+                color(ex,'i.fa-expand')
+            } 
+            
+            if((tu && td && !this.hasSaveFails && !this.hasSaveSuccesses) || (td && !tu && !this.hasSaveFails) || (tu && !td && !this.hasSaveSuccesses)) play = false; 
+            (td && !this.hasSaveFails) ? color(ex,'i.fa-thumbs-down', true) : color(ex,'i.fa-thumbs-down', false);
+            (tu && !this.hasSaveSuccesses) ? color(ex,'i.fa-thumbs-up', true) : color(ex,'i.fa-thumbs-up', false);
+
+            if(ex.id !== 'dz-zoneId'){
+                if(play){
+                    ex.querySelector('.no-play').classList.add('dz-hidden') 
+                    ex.querySelector('[data-action="play"]').classList.remove('dz-hidden') 
+                } else {
+                    ex.querySelector('.no-play').classList.remove('dz-hidden') 
+                    ex.querySelector('[data-action="play"]').classList.add('dz-hidden') 
+                } 
+            }
+        });
     }
 
-    async _handleButtonClick(event) {
-        event.preventDefault();
-        if(!this.hasExecutor) return
-        const clickedElement = $(event.currentTarget);
-        const action = clickedElement.data().action;
-        const actionId = clickedElement.data()?.id;
-        const executableId = clickedElement.parents('[data-id]')?.data()?.id;
-        const executable = executableId ? this.executor.executable[executableId] : {}
-        switch (action) {
-            case 'trigger':
-                await triggerManager.manualTrigger({scene: this.sceneId, dangerId: actionId, zone: executableId, event: event});
-                break;
-            case 'edit-danger':
-                new DangerForm(this.zone.dangerId, this).render(true);
-                break;
-            case 'edit-zone': 
-                new DangerZoneForm(this, this.zoneId, this.sceneId, this.worldId).render(true);
-                break;
-            case 'play':
-                await executable.play()
-                if(executableId==='save') this.drawSaves();
-                break;
-            case 'play-zone':
-                this.executor.newPlan();
-                await this.executor.play();
-                this.drawBoundary();
-                break;
-            case 'stop':
-                await executable.stop()
-                break;
-            case 'wipe':
-                await executable.wipeType()
-                break;
-            case 'add-target':
-            case 'clear-target':
-            case 'fail-target':
-            case 'random-target':
-            case 'replace-target':
-            case 'succeed-target':
-            case 'target-boundary-eligible':
-            case 'target-zone':
-                this._handleTarget(action)
-                this.drawTargets();
-                break;
-            case 'add-source':
-            case 'clear-source':
-            case 'fail-source':
-            case 'replace-source':
-            case 'succeed-source':
-                this._handleSource(action);
-                this.drawSources();
-                break;
-            case 'clear-boundary':
-            case 'highlight-boundary':
-            case 'prompt-boundary':
-            case 'random-boundary':
-            case 'target-boundary':
-                await this._handleBoundary(action)
-                this.refreshBoundary();
-                this.executor.highlightBoundary(true);
-                break;
-            case 'add-save-success':
-            case 'add-save-fail':
-            case 'clear-saves':
-            case 'fail-boundary-eligible':
-            case 'succeed-boundary-eligible':
-            case 'succeed-zone':
-            case 'fail-zone':
-            case 'succeed-zone':
-                this._handleSaves(action)
-                this.drawSaves();
-                break;
-            case 'refresh-boundary-eligible':
-            case 'refresh-zone':
-                await this.refreshZone();
-                break;
-            case 'highlight-zone':
-                if(this.zoneId) this.zone.highlightZone();
-                break;
-            case 'lock-saves':
-            case 'lock-source':
-            case 'lock-target':
-            case 'lock-boundary':
-            case 'unlock-saves':
-            case 'unlock-source':
-            case 'unlock-target':
-            case 'unlock-boundary':
-                this._handleLock(action)
-                break;
-            case 'highlight-boundary-eligible':
-            case 'highlight-saves':
-            case 'highlight-source':
-            case 'highlight-target':
-                this._handleTokenHighlight(action)
-            break;
-            default: break
-        }
-        this._handleSuppress(event.delegateTarget)
-        dangerZone.log(false, 'Executor Form Invoked', {executor: this, executableId: executableId, event: event})
-    }
-
-    async _handleChange(event) {
-        const action = $(event.currentTarget).data().action, val = event.currentTarget.value, checked = event.currentTarget.checked;
-        switch (action) {
-          case 'zone': 
-            this.zoneId = val;
-            await this._setExecutor();
-            await this.refresh(false);
-            break;
-        }
-    }
-
-    async _handleBoundary(action){
-        if (action !== 'highlight-boundary') await this.refreshZone()
-        switch(action){
-            case 'clear-boundary':
-                this.executor.clearBoundary({clearTargets: !this.locked.target, clearLocation: !this.locked.boundary});
-                break;
-            case 'prompt-boundary':
-                await this.executor.promptBoundary({clearTargets: !this.locked.target, clearLocation: !this.locked.boundary, highlight: false});
-                break;
-            case 'random-boundary':
-                await this.executor.randomBoundary({clearTargets: !this.locked.target, clearLocation: !this.locked.boundary, highlight: false});
-                break;
-            case 'target-boundary':
-                await this.executor.updateLocation(this.userTargets?.[0], {clearTargets: !this.locked.target, highlight: false});
-                break
-        }
-    }
-
-    async _handleHover(event){
-        const hoveredElement = $(event.currentTarget);
-        const zoneId = hoveredElement.parents('[data-id]')?.data()?.id;
-        const worldId = hoveredElement.data()?.id;
-        if(zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
-            switch(event.type){
-                case 'mouseenter':
-                    dangerZoneDimensions.addHighlightZone(zoneId, this.sceneId, '', worldId);
-                    break;
-                case 'mouseleave':
-                    dangerZoneDimensions.destroyHighlightZone(zoneId, '', worldId); 
-                    break;
+    /**v13
+     * Called when executor is intended to be opened on scene
+     * @param {string} sceneId 
+     * @param {string} zoneId
+     * @param {Boolean} forceRender     renders executor on scene if not already rendered.
+     */
+    async renderOnScene(sceneId = canvas.scene.id, zoneId, forceRender = false){
+        if(!forceRender && !this.rendered) return
+        this.sceneId = sceneId;
+        this.zoneId = zoneId;
+        if(game.user.isActiveGM && this.scene.active && this.scene.grid.type){
+            this.zones = dangerZone.getExtendedZones(this.sceneId);
+            if(this.hasZones){
+                if(!this.zoneId) this.zoneId = this.firstZone.id;
+                this.setVisible(true);
+                await this.refresh({force: forceRender, full:true});
             }
         }
     }
 
-    async _handleRightClick(event){
-        const hoveredElement = $(event.currentTarget);
-        const zoneId = hoveredElement.parents('[data-id]')?.data()?.id;
-        if (zoneId === 'random') return
-        const worldId = hoveredElement.data()?.id;
-        new DangerZoneForm(this, zoneId, this.sceneId, worldId).render(true);
-    }
-
-    _handleLock(action){
-        const un = action.startsWith('un') ? true : false
-        $(this.form).find(`[data-action="${action}"]`).addClass('dz-hidden');
-        $(this.form).find(`[data-action="${un ? action.replace('unlock','lock') : 'un'+action}"]`).removeClass('dz-hidden');
-        this.locked[action.replace( un ? 'unlock-' : 'lock-', '')] = !un
-    }
-
-    _handleSaves(action){
-        switch(action){
-            case 'add-save-fail':
-                this.executor.insertSaveFailed(this.userTargets);
-                this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.userTargets.find(f => f.id === s.id)));
-                break;
-            case 'add-save-success':
-                this.executor.insertSaveSucceeded(this.userTargets);
-                this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.userTargets.find(f => f.id === s.id)));
-                break;
-            case 'clear-saves':
-                this.executor.clearSaveFailed();
-                this.executor.clearSaveSucceeded();
-                break;
-            case 'fail-boundary-eligible':
-                this.executor.insertSaveFailed(this.executor.eligibleTargets);
-                this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.executor.eligibleTargets.find(f => f.id === s.id)));
-                break;
-            case 'succeed-boundary-eligible':
-                this.executor.insertSaveSucceeded(this.executor.eligibleTargets);
-                this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.executor.eligibleTargets.find(f => f.id === s.id)));
-                break;
-            case 'fail-zone':
-                this.executor.insertSaveFailed(this.executor.zoneEligibleTokens);
-                this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.executor.zoneEligibleTokens.find(f => f.id === s.id)));
-                break;
-            case 'succeed-zone':
-                this.executor.insertSaveSucceeded(this.executor.zoneEligibleTokens);
-                this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.executor.zoneEligibleTokens.find(f => f.id === s.id)));
-                break;
-        }
-    }
-
-    _handleSource(action){
-        switch(action) {
-            case 'add-source':
-                this.executor.insertSources(this.userTargets);
-                break;
-            case 'clear-source':
-                this.executor.clearSources();
-                break;
-            case 'fail-source':
-                this.executor.insertSaveFailed(this.executor.sources);
-                this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.executor.sources.find(f => f.id === s.id)));
-                break;
-            case 'replace-source':
-                this.executor.updateSources(this.userTargets);
-                break;
-            case 'succeed-source':
-                this.executor.insertSaveSucceeded(this.executor.sources);
-                this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.executor.sources.find(f => f.id === s.id)));
-                break;
-        } 
-    }
-
-    _handleTarget(action){
-        switch(action) {
-            case 'add-target':
-                this.executor.insertTargets(this.userTargets);
-                break;
-            case 'clear-target':
-                this.executor.clearTargets();
-                break;
-            case 'fail-target':
-                this.executor.insertSaveFailed(this.executor.targets);
-                this.executor.updateSaveSucceeded(this.executor.saveSucceeded.filter(s => !this.executor.targets.find(f => f.id === s.id)));
-                break;
-            case 'random-target':
-                this.executor.randomTarget();
-                break;
-            case 'replace-target':
-                this.executor.updateTargets(this.userTargets);
-                break;
-            case 'succeed-target':
-                this.executor.insertSaveSucceeded(this.executor.targets);
-                this.executor.updateSaveFailed(this.executor.saveFailed.filter(s => !this.executor.targets.find(f => f.id === s.id)));
-                break;
-            case 'target-boundary-eligible':
-                this.executor.insertTargets(this.executor.eligibleTargets);
-                break;
-            case 'target-zone':
-                this.executor.insertTargets(this.executor.zoneEligibleTokens);
-                break;
-        } 
-    }
-    
-    _handleTokenHighlight(action){
-        switch(action) {
-            case 'highlight-boundary-eligible':
-                game.user.updateTokenTargets(this.executor.eligibleTargets.map(t => t.id));
-                break;
-            case 'highlight-saves':
-                game.user.updateTokenTargets(this.executor.saveSucceeded.map(t => t.id).concat(this.executor.saveFailed.map(t => t.id)));
-                break;
-            case 'highlight-source':
-                game.user.updateTokenTargets(this.executor.sources.map(t => t.id));
-                break;
-            case 'highlight-target':
-                game.user.updateTokenTargets(this.executor.targets.map(t => t.id));
-                break;
-            default: break;
-        }
-    }
-
-    _handleSuppress(html){
-        const that = this
-        function color(obj, cl, red = false){
-            red ? $(obj).find(cl).addClass('warning') : $(obj).find(cl).removeClass('warning')
-        }
-
-        $(html).find('.dz-executable-list > li').each(function(){
-            let play = true;
-            const tu = $(this).find('i.fa-thumbs-up').length, td = $(this).find('i.fa-thumbs-down').length, tos = $(this).find('.dzex-or-source').length;
-            if(tos && !that.hasSources && !that.hasTargets ){
-                play = false; color(this,'i.fa-crosshairs', true); color(this,'i.fa-dragon', true)
-            } else if ($(this).find('i.fa-crosshairs').length && !that.hasTargets){
-                play = false; color(this,'i.fa-crosshairs', true); color(this,'i.fa-dragon')
-            } else if ($(this).find('.dzex-source').length && !that.hasSources){
-                play = false; color(this,'i.fa-crosshairs'); color(this,'i.fa-dragon', true)
-            } else {color(this,'i.fa-crosshairs'); color(this,'i.fa-dragon');}
-            
-            if(!that.boundary && $(this).find('i.fa-expand').length !== 0){
-                play = false; color(this,'i.fa-expand', true)
-            } else {color(this,'i.fa-expand')} 
-            
-            if((tu && td && !that.hasSaveFails && !that.hasSaveSuccesses) || (td && !tu && !that.hasSaveFails) || (tu && !td && !that.hasSaveSuccesses)) play = false; 
-            (td && !that.hasSaveFails) ? color(this,'i.fa-thumbs-down', true) : color(this,'i.fa-thumbs-down', false);
-            (tu && !that.hasSaveSuccesses) ? color(this,'i.fa-thumbs-up', true) : color(this,'i.fa-thumbs-up', false);
-
-            if(play){
-                $(this).find('.no-play').addClass('dz-hidden') 
-                $(this).find('[data-action="play"]').removeClass('dz-hidden') 
-            } else {
-                $(this).find('.no-play').removeClass('dz-hidden') 
-                $(this).find('[data-action="play"]').addClass('dz-hidden') 
-            } 
-        });
-    }
-
-    async refresh(full = true){
-        if(full) await this._setExecutor()
-        this.render(true);
+    /**v13
+     * 
+     * @param {object} options    
+     *         full: runs the _setExecutor method
+     *         force: renders executor if not already rendered  
+     */
+    async refresh(options = {}){
+        const tab = this.currentTab
+        if(options.full) await this._setExecutor()
+        await this.render(options.force);
+        if(tab) this.changeTab(tab, "sheet", {force: true})
     }
 
     refreshBoundary(){
@@ -550,28 +803,6 @@ export class ExecutorForm extends FormApplication {
         }
     }
 
-    async _setHook(){
-        Hooks.on("canvasReady", async(app) => {
-            if(game.user.isActiveGM && app.scene?.id){
-               const rendered = await this.renderOnScene(app.scene.id, '', false);
-               if(!rendered) this.close();
-            }
-        });
-    }
-
-    _showZoneHighlight(){
-        if(this.zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
-            dangerZoneDimensions.addHighlightZone(this.zoneId, this.sceneId, '', this.worldId);
-        }
-    } 
-    
-    _hideZoneHighlight(){
-        if(this.zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
-            dangerZoneDimensions.destroyHighlightZone(this.zoneId, '', this.worldId);
-        }
-    }
-
-
     async _setExecutor(){
         this.executor = this.zoneId ? await this.zone.executor(this.executorOptions): {}
         await this.refreshZone();
@@ -580,26 +811,6 @@ export class ExecutorForm extends FormApplication {
     setVisible(isVisible = true){
         CONTROLTRIGGERS.visible = isVisible
         this.control.active = CONTROLTRIGGERS.visible
-    }
-    
-    /**v13
-     * Called when executor is intended to be opened on scene
-     * @param {string} sceneId 
-     * @param {string} zoneId 
-     */
-    async renderOnScene(sceneId = canvas.scene.id, zoneId, forceRender = false){
-        if(!forceRender && !this.rendered) return
-        this.sceneId = sceneId;
-        this.zoneId = zoneId;
-        if(game.user.isActiveGM && this.scene.active && this.scene.grid.type){
-            this.zones = dangerZone.getExtendedZones(this.sceneId);
-            if(this.hasZones){
-                if(!this.zoneId) this.zoneId = this.firstZone.id;
-                await this._setExecutor();
-                this.setVisible(true);
-                this.render(true);
-            }
-        }
     }
     
 }
