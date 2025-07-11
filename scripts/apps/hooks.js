@@ -50,13 +50,13 @@ export function setHooks(){
         //hook to ensure that, on executor form render, appropriate field flagging is done
         Hooks.on("dangerZone.updateZone", (zone) => {
             dangerZone.log(false, 'Zone update hook...', zone)
-            dangerZone.executorForm.renderOnScene(zone.scene.sceneId, zone.id, false);
+            if(game.user.isActiveGM && canvas.scene?.id === zone.scene.sceneId) dangerZone.executorForm.renderOnScene(zone.scene.sceneId, zone.id, false);
         })
 
         //hook to ensure that, on executor form render, appropriate field flagging is done
         Hooks.on("dangerZone.updateDanger", (dangers) => {
             dangerZone.log(false, 'Danger update hook...', dangers)
-            dangerZone.executorForm.renderOnScene(canvas.scene.id, '', false);
+            if(game.user.isActiveGM && canvas.scene?.id) dangerZone.executorForm.renderOnScene(canvas.scene.id, '', false);
         })
 
         /**
@@ -101,7 +101,7 @@ export function setHooks(){
      * in combat hook for when combat ends. Used for managing in combat zone events
      */
     Hooks.on('combatStart', async(combat, options) => {
-        triggerManager.findcombatEvents(combat, 'combatStart', options)
+        if(game.user.isActiveGM) triggerManager.findcombatEvents(combat, 'combatStart', options)
     });
 
     /**
@@ -113,7 +113,7 @@ export function setHooks(){
         if(!rollTableId) return
         if(!chatMessage.rolls?.length) return
         const options = {rollTableId: rollTableId}
-        triggerManager.findChatEvents(chatMessage, "createChatMessage", options)
+        if(game.user.isActiveGM) triggerManager.findChatEvents(chatMessage, "createChatMessage", options)
     })
 
     Hooks.on('createScene', async (scene, options, userId) => {
@@ -126,7 +126,7 @@ export function setHooks(){
      * in combat hook for when combat ends. Used for managing in combat zone events
      */
     Hooks.on('deleteCombat', async(combat, options, id) => {
-        triggerManager.findcombatEvents(combat, 'deleteCombat', options)
+        if(game.user.isActiveGM) triggerManager.findcombatEvents(combat, 'deleteCombat', options)
     });
 
     /** V13
@@ -152,6 +152,7 @@ export function setHooks(){
      * in combat hook for when combat begins or round/turn changes. Used for managing in combat zone events
      */
     Hooks.on('updateCombat', async(combat, round, options, id) => {
+        if(!game.user.isActiveGM) return
         if(options.advanceTime || options.direction === 1) triggerManager.findcombatEvents(combat, 'updateCombat', options)
     });
 

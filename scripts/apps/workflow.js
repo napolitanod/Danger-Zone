@@ -3007,8 +3007,8 @@ class scene extends executable{
         super._initialize()
         //this._fileB = ''
         //this._fileF = ''
-        this._data = undefined
-        this._renderData = undefined
+        this._data = {}
+        this._renderData = {}
     }
 
     async load() {
