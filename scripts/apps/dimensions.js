@@ -222,6 +222,10 @@ export class boundary{
         return this.options.limit ?? {}
     }
 
+    get location(){
+        return {x:this.A.x, y:this.A.y, elevation: this.bottom}
+    }
+
     get offset(){
         return this.options.offset
     }

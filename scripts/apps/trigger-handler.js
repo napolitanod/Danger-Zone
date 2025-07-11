@@ -231,12 +231,12 @@ export class triggerManager {
         }
     }
 
-    static async zoneMovement(token, update, movementPromise){
+    static async zoneMovement(token, update){
         const sceneId = token.parent.id;
         const scene = game.scenes.get(sceneId);
         if(!scene?.grid?.type){return dangerZone.log(false,'No Movement Triggers When Gridless ', {token: token, update:update})}
         triggerManager.findMovementEvents(token, update, {end: false, sceneId: sceneId})
-        triggerManager.findMovementEvents(token, update, {movementPromise: movementPromise, end: true, sceneId: sceneId})
+        triggerManager.findMovementEvents(token, update, {end: true, sceneId: sceneId})
     }
 
     static async findMovementEvents(token, update, options){
@@ -245,7 +245,7 @@ export class triggerManager {
 
         const zones = []
         const move = dangerZoneDimensions.tokenMovement(token, update);
-        if(options.end) await CanvasAnimation.getAnimation(options.movementPromise)?.promise
+        if(options.end) await token.object.movementAnimationPromise 
 
         for (const zn of sceneZones) {
             if(!(await zn.sourceTrigger([token]))){

@@ -157,7 +157,7 @@ export function setHooks(){
 
     Hooks.on("updateToken", async (token, update, options, userId) => {
         if (game.user.isActiveGM && ("x" in update || "y" in update || "elevation" in update) && !options.dangerZoneMove && dangerZone.getMovementZonesFromScene(token.parent?.id).length) {
-            triggerManager.zoneMovement(token, update, token?.object?.animationName)
+            triggerManager.zoneMovement(token, update)
         }
     });
 }
