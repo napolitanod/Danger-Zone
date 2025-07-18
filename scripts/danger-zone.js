@@ -521,10 +521,6 @@ export class zone {
     this.title = ''
   }
 
-  get _executor(){
-    return new executor(this)
-  }
-
   get chatEvents(){
     return this.trigger.events.filter(e => CHAT_EVENTS.includes(e)) 
   }
@@ -594,6 +590,26 @@ export class zone {
   
   get hasSourceActor(){
     return this.source.actors.length  ? true : false
+  }
+
+  get hasSourceTags(){
+    return this.source.tags.length  ? true : false
+  }
+
+  get hasSourceArea(){
+    switch(this.source.area){
+      case 'A':
+        if(this.hasSourceTokenDefined) return true
+        break;
+      case 'C':
+      case 'D':
+      case 'T':
+      case 'Y':
+      case 'Z':
+        if(this.hasSourceTags) return true
+        break;
+    }
+    return false 
   }
 
   get hasSourceTokenDefined(){
@@ -715,6 +731,7 @@ export class zone {
    */
   async delete(){
     await this.scene.scene.update({[`flags.${dangerZone.ID}.${dangerZone.FLAGS.SCENEZONE}.-=${this.id}`]: null})
+    Hooks.call("dangerZone.deleteZone", this);
   }
 
   async executor(options={}){
@@ -771,7 +788,7 @@ export class zone {
    */
   async sourceArea(){
     const obj = {documents: [], target: ''}
-    if(this.source.area){
+    if(this.hasSourceArea){
       obj.target = this.source.target
       switch(this.source.area){
         case 'A':
@@ -784,7 +801,7 @@ export class zone {
           obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].type && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type));
           break;
         case 'T':
-          obj['documents'] = await getTagEntities(this.source.tags, this.scene.scene)
+          if(this.hasSourceTags) obj['documents'] = await getTagEntities(this.source.tags, this.scene.scene)
           break;
         case 'Y':
           obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId));

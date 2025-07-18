@@ -1119,6 +1119,7 @@ export function setExecutableOptions(){
                 scope: "token"
             },
             'audio': {
+                fileTypes: ['audio'],
                 title: "Audio", 
                 icon: "fas fa-music", 
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: false}],
@@ -1131,6 +1132,7 @@ export function setExecutableOptions(){
                 scope: "scene"
             },
             'foregroundEffect': {
+                fileTypes: ['image'],
                 title: "Primary Effect", 
                 icon: "fas fa-bolt", 
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
@@ -1166,6 +1168,7 @@ export function setExecutableOptions(){
                 scope: "token"
             },
             'lastingEffect': {
+                fileTypes: ['image'],
                 title: "Lasting Effect", 
                 icon: "fa-solid fa-cubes", 
                 document: "Tile",  
@@ -1189,6 +1192,7 @@ export function setExecutableOptions(){
                 scope: "token"
             },
             'backgroundEffect': {
+                fileTypes: ['image', 'audio'],
                 title: "Secondary Effect", 
                 icon: "fas fa-bomb", 
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
@@ -1212,6 +1216,7 @@ export function setExecutableOptions(){
                 scope: "token"
             },
             'scene': {
+                fileTypes: ['image', 'overlay'],
                 title: "Scene", 
                 icon: "fas fa-map", 
                 document: 'scene',
@@ -1220,6 +1225,7 @@ export function setExecutableOptions(){
                 scope: "scene"
             },
             'sound': {
+                fileTypes: ['audio'],
                 title: "Sound", 
                 icon: "fa-solid fa-music", 
                 document: "AmbientSound", 
@@ -1228,6 +1234,7 @@ export function setExecutableOptions(){
                 scope: "boundary"
             },
             'sourceEffect': {
+                fileTypes: ['image', 'audio'],
                 title: "Source Effect", 
                 icon: "fas fa-dragon", 
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
@@ -1248,6 +1255,7 @@ export function setExecutableOptions(){
                 scope: "token"
             },
             'tokenEffect': {
+                fileTypes: ['image'],
                 title: "Token Effect", 
                 icon: "fas fa-male", 
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],

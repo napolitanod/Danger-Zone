@@ -58,12 +58,14 @@ export class dangerZoneType {
               type: ''
             }
           },
+          priority: 0,
           rotation: 0,
           saturation: 0,
           shadows: 0,
           tag: "",
           tintColor: "",
           tintAlpha: 0.5,
+          vision: false,
           walls: true
         },
         audio: {
