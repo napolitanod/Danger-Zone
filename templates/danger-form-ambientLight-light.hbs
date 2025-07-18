@@ -1,7 +1,7 @@
 <div class="tab active danger-part-group" data-tab="light" data-group="sheet">
     <p class="notes">{{localize "DANGERZONE.type-form.ambientLight.description"}}</p>
     <div class="form-group slim">
-        <label>{{localize "DANGERZONE.type-form.ambientLight.radius.label"}} <span class="units">({{localize "DANGERZONE.gridUnits2"}})</span></label>
+        <label>{{localize "DANGERZONE.type-form.ambientLight.radius.label"}} <span class="units">{{localize "DANGERZONE.gridUnits2"}}</span></label>
         <div class="form-fields">
             <label for="dim">{{localize "DANGERZONE.type-form.ambientLight.dimLight.label"}}</label>
             <input type="number" required name="dim"  min="0.00" step="0.01" placeholder="{{localize "DANGERZONE.gridUnits"}}" value={{data.dim}}>
@@ -36,6 +36,12 @@
         <label for="negative">{{localize "DANGERZONE.type-form.ambientLight.negative.label"}}</label>
         <div class="form-fields">
             <input type="checkbox" name="negative" {{checked data.negative}}/>
+        </div>
+    </div>
+     <div class="form-group">
+        <label for="priority">{{localize "DANGERZONE.type-form.ambientLight.priority.label"}}</label>
+        <div class="form-fields">
+            <input type="number" required data-dtype="Number" name="priority" min="0" step="1" value={{data.priority}}>
         </div>
     </div>
     <div class="form-group">
@@ -73,7 +79,7 @@
         </div>
     </div>
     <div class="form-group">
-        <label for="delay">{{localize "DANGERZONE.type-form.ambientLight.delay.label"}}</label>
+        <label for="delay">{{localize "DANGERZONE.type-form.ambientLight.delay.label"}}  <span class="units">({{localize "DANGERZONE.ms"}})</span></label>
         <div class="form-fields">
             <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
         </div>

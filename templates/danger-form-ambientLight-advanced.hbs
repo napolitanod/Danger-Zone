@@ -1,5 +1,11 @@
 <div class="tab danger-part-group" data-tab="advanced" data-group="sheet">
     <div class="form-group">
+        <label for="vision">{{localize "DANGERZONE.type-form.ambientLight.vision.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="vision" {{checked data.vision}}/>
+        </div>
+    </div>
+    <div class="form-group">
         <label for="coloration">{{localize 'DANGERZONE.type-form.ambientLight.coloration.label'}}</label>
         <div class="form-fields">
             <select name="coloration" data-dtype="Number">

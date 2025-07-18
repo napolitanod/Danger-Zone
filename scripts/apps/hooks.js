@@ -48,6 +48,12 @@ export function setHooks(){
         });
 
         //hook to ensure that, on executor form render, appropriate field flagging is done
+        Hooks.on("dangerZone.deleteZone", (zone) => {
+            dangerZone.log(false, 'Zone delete hook...', zone)
+            if(game.user.isActiveGM && canvas.scene?.id === zone.scene.sceneId) dangerZone.executorForm.renderOnScene(zone.scene.sceneId);
+        })
+
+        //hook to ensure that, on executor form render, appropriate field flagging is done
         Hooks.on("dangerZone.updateZone", (zone) => {
             dangerZone.log(false, 'Zone update hook...', zone)
             if(game.user.isActiveGM && canvas.scene?.id === zone.scene.sceneId) dangerZone.executorForm.renderOnScene(zone.scene.sceneId, zone.id, false);

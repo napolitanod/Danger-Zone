@@ -133,10 +133,10 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
 
     const danger = new dangerZoneType;
    
-    if(this.#isFlag(key)){
-      this._data.flags[key] = Object.assign(this._data.flags[key], danger.options.flags[key])
+    if(this.#isFlag(data.parentId)){
+      this._data.flags[data.parentId] = Object.assign(this._data.flags[data.parentId], danger.options.flags[data.parentId])
     } else {
-      this._data[key] = Object.assign(this._data[key], danger.options[key])
+      this._data[data.parentId] = Object.assign(this._data[data.parentId], danger.options[data.parentId])
     }
     
     data.parent.classList.remove('active')
@@ -162,13 +162,14 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
       case 'effect':
         return Object.keys(part).length
       case 'audio': 
-      case 'backgroundEffect':
       case 'foregroundEffect':
       case 'lastingEffect':
       case 'sound':
-      case 'sourceEffect':
       case 'tokenEffect':
         return part.file ? true : false
+      case 'sourceEffect':
+      case 'backgroundEffect':
+        return (part.file || part.audio.file) ? true : false
       case 'combat': return (part.targets.add || part.source.add || part.spawn || part.new || part.initiative.type || part.start) ? true : false
       case 'canvas': return (part.effect.type || part.pan.active) 
       case 'item': 

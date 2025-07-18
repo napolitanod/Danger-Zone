@@ -282,6 +282,10 @@ form ol.danger-setting-group > li {
     margin-bottom: 10px;
 } 
 
+.tab.danger-part-group {
+    margin-top: 15px;
+} 
+
 .danger-zone-record fieldset .tags .tag, .danger-part-form fieldset .tags .tag, .danger-part-form .form-fields .tags .tag {
     background-color: rgba(128, 128, 128, 0.5);
     color: #FFF;

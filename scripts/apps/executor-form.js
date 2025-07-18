@@ -361,8 +361,9 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
      * 
     */
     static async #boundaryEligibleRefresh(event){
-        await this.refreshZone();
-        this.drawSaves();
+        this.executor.setBoundaryEligibleTargets();
+        this.drawBoundaryEligible();
+        console.log(this)
     }
 
     /**v13
@@ -415,7 +416,6 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
      * 
     */
     static async #playZone(event){
-        this.executor.newPlan();
         await this.executor.play();
         this.drawBoundary();
     }
@@ -691,12 +691,12 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
 
     drawSaves(){
         this.draw(`dz-save-list`, this.saveList, true);
-        this._handleSuppress()
+        this.#handleSuppress()
     }
 
     drawSources(){
         this.draw(`dz-source-list`, this.sourceList, true);
-        this._handleSuppress()
+        this.#handleSuppress()
     }
 
     drawTargets(){
@@ -708,10 +708,14 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         this.draw(`dz-eligible-zone-list`, this.eligibleZoneList, true);
     }
 
+    async initialize(){
+        await this.executor.initialize()
+    }
+
     /**v13
      * sets the color for the icons on each executable to red or non-red
      */
-    _handleSuppress(){
+    #handleSuppress(){
         function color(obj, cl, red = false){
             obj.querySelectorAll(cl).forEach((el) =>{
                 red ? el.classList.add('warning') : el.classList.remove('warning')
@@ -781,6 +785,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
                 if(!this.zoneId) this.zoneId = this.firstZone.id;
                 this.setVisible(true);
                 await this.refresh({force: forceRender, full:true});
+                dangerZone.log(false, `executor rendered on scene...`, this)
             }
         }
     }
@@ -788,13 +793,14 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     /**v13
      * 
      * @param {object} options    
-     *         full: runs the _setExecutor method
+     *         full: runs the #setExecutor method
      *         force: renders executor if not already rendered  
      */
     async refresh(options = {}){
         const tab = this.currentTab
-        if(options.full) await this._setExecutor()
+        if(options.full) await this.#setExecutor()
         await this.render(options.force);
+        this.#handleSuppress()
         if(tab) this.changeTab(tab, "sheet", {force: true})
     }
 
@@ -812,8 +818,9 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         }
     }
 
-    async _setExecutor(){
+    async #setExecutor(){
         this.executor = this.zoneId ? await this.zone.executor(this.executorOptions): {}
+        await this.initialize()
         await this.refreshZone();
     }
 
