@@ -100,7 +100,7 @@ export class triggerManager {
     static async apiDirectTrigger(zn, sceneId, options = {}){
         const event = 'api'
         const tm = new triggerManager(sceneId, {zone: 'direct', scene: sceneId, options: options});
-        tm.zones.push(zn, event);
+        tm.zones.loadZone(zn, event);
         (zn.enabled || !options.activeOnly) ? await tm.next() : console.log('API trigger bypassed scene disabled ', {zone: zn, trigger: tm, options: options});
         return tm
     }
@@ -132,7 +132,13 @@ export class triggerManager {
 
     async chatTrigger(){
         for(const zn of this.sceneZones) { 
-            for(const event of zn.chatEvents) this.#stageZone(zn, event);
+            if(!(await zn.sourceTrigger(this.scene.tokens))){
+                this._cancelZone(zn, `Failed manual source trigger check on zone`)
+                continue
+            }
+            for(const event of zn.chatEvents) {
+                this.#stageZone(zn, event);
+            }
         }
         await this.#reconcileRandomZones();
         this.zones.sort((a, b) => { return DANGERZONETRIGGERSORT[a.event] < DANGERZONETRIGGERSORT[b.event] ? -1 : (DANGERZONETRIGGERSORT[a.event] > DANGERZONETRIGGERSORT[b.event] ? 1 : 0)});
@@ -277,6 +283,16 @@ export class triggerManager {
         if(COMBAT_THRESHOLD_END_EVENTS.includes(event)) return [this.previousCombatant.token]
         return [this.combatant.token]
     }
+    
+    /**v13
+     * Adds the zone to the appropriate array - whether for random handling or queued for trigger
+     * For random zones, calls the method to stage the event also
+     * @param {zone} zone      the zone class
+     * @param {string} event     the trigger event 
+     */
+    loadZone(zone, event){
+        this.#stageZone(zone, event)
+    }
 
     log(message, data){
         dangerZone.log(false,`${message}... `, {triggerManager: this, data:data});
@@ -352,12 +368,17 @@ export class triggerManager {
             await this.#stageRandomManualZone()
         } else {
             const zn = this.data.dangerId ? dangerZone.getGlobalZone(this.data.dangerId, this.data.scene) : dangerZone.getZoneFromScene(this.data.zone, this.data.scene)
-            if(zn) this.zones.push({zone: zn, event: (zn.hasManualEvent || this.data.force) ? 'manual' : ''})
+            if(zn) this.#stageZone(zn, (zn.hasManualEvent || this.data.force) ? 'manual' : '');
         } 
         
         if(!this.zones.length) return
 
         if(this.zones[0].event === 'manual' || this.data.force){
+            if(!(await this.zones[0].zone.sourceTrigger(this.scene.tokens))){
+                this._cancelZone(this.zones[0].zone, `Failed manual source trigger check on zone`)
+                ui.notifications?.error(game.i18n.localize("The zone was not triggered due to failing the zone's source trigger condition."));
+                return
+            }
             await this.next();
         } else {
             await this.zones[0].zone.toggleZoneActive();
@@ -374,10 +395,10 @@ export class triggerManager {
             for (let event of this.randomEvents){
                 const zone = await dangerZone.getRandomZoneFromScene(this.sceneId, event, this.randomZones.filter(z => z.event === event).map(z => z.zone))
                 if(zone){
-                    this.zones.push({zone: zone, event: event})
-                    this.log(`Random trigger zone not found...`, {eventData: this.data, event: event})
+                    this.#stageZone(zone, event)
+                    this.log(`Random trigger zone found...`, {eventData: this.data, event: event})
                 } else{
-                    this.log(`Random trigger zone found...`, {eventData: this.data, event: event});
+                    this.log(`Random trigger zone not found...`, {eventData: this.data, event: event});
                 }
             }
         } 

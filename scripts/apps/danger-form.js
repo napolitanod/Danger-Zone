@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {actorOps,  DANGERZONEPARTS, DANGERZONECONFIG, DANGERFORMOPTIONS,determineMacroList,  getCompendiumOps, weatherParameters, WORLDZONE, ZONEFORMOPTIONS} from './constants.js';
-import {getEventData, stringToObj} from './helpers.js';
+import { helper, getEventData, stringToObj} from './helpers.js';
 
 /**v13
  * The main danger form from which danger part forms are launched. Used to configure a danger.
@@ -379,7 +379,6 @@ export class DangerPartConfig extends foundry.applications.api.HandlebarsApplica
     for(let tab of tabs){_obj.sheet.tabs.push(DANGERZONECONFIG.TAB[tab])}
     return _obj
   }
-
   
   /**         METHODS         **/
   _mergeData(data){
@@ -402,6 +401,24 @@ export class AmbientLightDangerPartConfig extends DangerPartConfig {
 
   /** @override */
   static TABS = this._tabs(this.#partId) 
+
+  /** @override */
+  _onRender(context, options) {
+    super._onRender(context, options);
+    this.element.querySelector(`#danger-zone-ambient-light-darkness`).addEventListener("change", (event => {this.#setAnimationType(event)}));
+  }
+
+  #setAnimationType(event){
+    const ins = this.element.querySelector(`#danger-zone-ambient-light-animation`);
+    const obj = {
+      name: 'lightAnimation.type',
+      type: 'options',
+      options: event.target.checked ? DANGERFORMOPTIONS.AMBIENTLIGHT.DARKNESSANIMATION : DANGERFORMOPTIONS.AMBIENTLIGHT.ANIMATION,
+      value: ''
+    }
+    ins.innerHTML = helper.htmlBuildInput(obj)
+    this.setPosition();
+  }
 }
 
 /**v13
@@ -415,6 +432,24 @@ export class AudioDangerPartConfig extends DangerPartConfig {
 
   /** @override */
   static PARTS = this._parts(this.#partId)
+
+  
+   /** @override */
+  _onRender(context, options) {
+      super._onRender(context, options);
+      this.element.querySelector(`[data-action="duration-change"]`).addEventListener("change", (event => {this.#toggleFadeDisplay(event)}));
+  }
+
+  /*******           CUSTOM             ********/
+
+  /*******          PRIVATE METHODS *************/
+  /**v13
+   * Dynamic handling of input pertaining to fade
+   * @param {SubmitEvent} event         The pointer event.
+   */
+  #toggleFadeDisplay(event) {
+    helper.htmlToggleElement(this, {event: event, condition: 'less_than', test: 1, type: 'hide', html: this.element, id: `dz-part-audio-fade`})
+  }
 }
 
 export class BackgroundEffectDangerPartConfig extends DangerPartConfig {
@@ -470,20 +505,8 @@ export class CombatDangerPartConfig extends DangerPartConfig {
    * @param {SubmitEvent} event         The pointer event.
    */
   #toggleInitiativeFieldsDisplay(event) {
-    const data = getEventData(event)
-    const op = this.element.querySelector(`#dz-initiative-value`)
-    const pc = this.element.querySelector(`#dz-initiative-player`)
-    switch (data.target.value) {
-      case 'S' : 
-          op.classList.remove('dz-hidden')
-          pc.classList.add('dz-hidden')
-        break;
-      case 'R':
-        op.classList.add('dz-hidden')
-        pc.classList.remove('dz-hidden')
-        break;
-    }
-    this.setPosition()
+    helper.htmlToggleElement(this, {event: event, condition: 'eq', test: 'R', type: 'show', html: this.element, id: `dz-initiative-player`})
+    helper.htmlToggleElement(this, {event: event, condition: 'eq', test: 'S', type: 'show', html: this.element, id: `dz-initiative-value`})
   }
 }
 
@@ -661,14 +684,11 @@ export class ItemDangerPartConfig extends DangerPartConfig {
 
   /*******          STATIC METHODS *************/
   /**v13
-   * Dynamic handling of dropdowns pertaining to initiative
+   * Dynamic handling of fields associated with item pile
    * @param {SubmitEvent} event         The pointer event.
    */
   static #pile(event) {
-    const data = getEventData(event)
-    const target = this.element.querySelector(`#dz-token-fields`)
-    data.target.checked ? target.classList.add('dz-hidden') : target.classList.remove('dz-hidden')
-    this.setPosition()
+    helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'hide', html: this.element, id: `dz-token-fields`})
   }
 }
 
@@ -766,17 +786,11 @@ export class GlobalZoneDangerPartConfig extends DangerPartConfig {
   }
 
   #loopChange(event){
-    const data = getEventData(event)
-    const op = this.element.querySelector(`#dz-operation-global`);
-    data.target.value > 1 ? op.classList.remove('dz-hidden') : op.classList.add('dz-hidden')
-    this.setPosition()
+    helper.htmlToggleElement(this, {event: event, condition: 'less_than', test: 2, type: 'hide', html: this.element, id: `dz-operation-global`})
   }
 
   #templateToggle(event){
-    const data = getEventData(event)
-    const templt = this.element.querySelector(`#dz-elevation-prompt-global`);
-    data.target.checked ? templt.classList.remove('dz-hidden') : templt.classList.add('dz-hidden')
-    this.setPosition()
+    helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'hide', html: this.element, id: `dz-elevation-prompt-global`})
   }
   
 }
@@ -1081,8 +1095,8 @@ export class WeatherDangerPartConfig extends DangerPartConfig {
 
      /** @override */
   _onRender(context, options) {
-      super._onRender(context, options);
-      this.element.querySelector(`#danger-zone-weather-type`).addEventListener("change", (event => {this.#setParameters(event)}));
+    super._onRender(context, options);
+    this.element.querySelector(`#danger-zone-weather-type`).addEventListener("change", (event => {this.#setParameters(event)}));
   }
   
     /** @override */
@@ -1101,32 +1115,17 @@ export class WeatherDangerPartConfig extends DangerPartConfig {
     const pObj = weatherParameters(type)
     let finalHTML = '';
     if (!pObj) return finalHTML;
-    if (pObj.animations) finalHTML += this.#buildSelect('animations', pObj.animations, values.animations);
-    if (pObj.density) finalHTML += this.#buildRange('density', pObj.density, values.density);
-    if (pObj.direction) finalHTML += this.#buildRange('direction', pObj.direction, values.direction);
-    if (pObj.lifetime) finalHTML += this.#buildRange('lifetime', pObj.lifetime, values.lifetime);
-    if (pObj.scale) finalHTML += this.#buildRange('scale', pObj.scale, values.scale);
-    if (pObj.speed) finalHTML += this.#buildRange('speed', pObj.speed, values.speed);
-    if (pObj.tint) finalHTML += this.#buildColor('tint', pObj.tint, values.tint);
+    if (pObj.animations) finalHTML += helper.htmlBuildInput(Object.assign(pObj.animations, {name: 'animations', inputValue: values.animations}));
+    if (pObj.density) finalHTML += helper.htmlBuildInput(Object.assign(pObj.density, {name: 'density', inputValue: values.density}));
+    if (pObj.direction) finalHTML += helper.htmlBuildInput(Object.assign(pObj.direction,{name: 'direction', inputValue: values.direction}));
+    if (pObj.lifetime) finalHTML += helper.htmlBuildInput(Object.assign(pObj.lifetime,{name: 'lifetime', inputValue: values.lifetime}));
+    if (pObj.scale) finalHTML += helper.htmlBuildInput(Object.assign(pObj.scale, {name: 'scale', inputValue: values.scale}));
+    if (pObj.alpha) finalHTML += helper.htmlBuildInput(Object.assign(pObj.alpha,{name: 'alpha', inputValue: values.alpha}));
+    if (pObj.speed) finalHTML += helper.htmlBuildInput(Object.assign(pObj.speed,{name: 'speed', inputValue: values.speed}));
+    if (pObj.tint) {
+      pObj.tint.value = (pObj.tint.value.apply ? pObj.tint.value.value : '')
+      finalHTML += helper.htmlBuildInput(Object.assign(pObj.tint,{name: 'tint', inputValue: values.tint}));
+    }
     return finalHTML
   }
-
-  #buildColor(name, obj, val = ''){
-    return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><color-picker name="${name}" value=${val}></color-picker></div></div>`
-  }
-
-  #buildRange(name, obj, val = obj.value){
-    return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><range-picker title="${game.i18n.localize(obj.label)}" name="${name}" value="${val}" min="${obj.min}" max="${obj.max}" step="0.05"></range-picker></div></div>`
-  }
-
-  #buildSelect(name, obj, val = obj.value){
-    const sortedList = Object.entries(obj.options).sort(([,a],[,b]) => a.localeCompare(b))
-    let optionList = '<option value=""></option>';
-    for(let i = 0; i < sortedList.length; i++) {
-      let selected = '';
-      if (sortedList[i][0] === val) selected = ' selected '
-      optionList += `<option value="${sortedList[i][0]}"${selected}>${game.i18n.localize(sortedList[i][1])}</option>`;
-    }
-    return `<div class="form-group"><label>${game.i18n.localize(obj.label)}</label><div class="form-fields"><select name="${name}" value="${val}">${optionList}</select></div></div>`    
-  }  
 }

@@ -278,11 +278,11 @@ form ol.danger-setting-group > li {
     margin-bottom: 5px;
 } 
 
-.danger-part-group {
+.danger-part-group, .zone-group {
     margin-bottom: 10px;
 } 
 
-.tab.danger-part-group {
+.tab.danger-part-group, .tab.zone-group {
     margin-top: 15px;
 } 
 

@@ -23,7 +23,15 @@
             <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.audio.duration.description'}}"><i class="fas fa-info-circle"></i></span>
         </label>
         <div class="form-fields">
-            <input type="number" required data-dtype="Number" name="duration" placeholder="{{localize "DANGERZONE.sec"}}" min="0" step="1" value={{data.duration}}>
+            <input data-action="duration-change" type="number" required data-dtype="Number" name="duration" placeholder="{{localize "DANGERZONE.sec"}}" min="0" step="1" value={{data.duration}}>
+        </div>
+    </div>
+    <div class="form-group {{#if (eq data.duration 0)}}dz-hidden{{/if}}" id="dz-part-audio-fade">
+        <label for="fade">{{localize "DANGERZONE.type-form.audio.fade.label"}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.audio.fade.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields">
+            <input type="number" required data-dtype="Number" name="fade" placeholder="{{localize "DANGERZONE.sec"}}" min="0" step="1" value={{data.fade}}>
         </div>
     </div>
     <div class="form-group">

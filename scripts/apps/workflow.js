@@ -1368,6 +1368,10 @@ class executableWithFile extends executable{
      */
     #playlist
 
+    get duration(){
+        return this.part.duration ?? 0
+    } 
+
     get fileData(){
         return this.#fileData
     }
@@ -1399,6 +1403,10 @@ class executableWithFile extends executable{
     get randomFile(){
         return this.part.randomFile ? true : false
     }
+
+    get volume(){
+        return this.part.volume ? this.part.volume : 0.5
+    } 
 
     /** @overide */
     async initialize(){
@@ -1820,6 +1828,7 @@ class ambientLight extends executable{
             flags: this.flag
         }
         if(dangerZone.MODULES.taggerOn && this.tag) light.flags['tagger'] = this.taggerTag
+        if(dangerZone.MODULES.wallHeightOn) light.flags['levels'] = {rangeTop: this.boundary.topToElevation}
         return light
     }
 
@@ -1881,17 +1890,22 @@ class audio extends executableWithFile {
      */
     #sound
 
-    get duration(){
-        return this.part.duration
-    } 
+    get fade(){
+        return this.part.fade ?? 0
+    }
+
+    get preFadeDown(){
+        let diff = this.duration - this.fade
+        if(diff > 0){
+            return diff
+        } else {
+            return 0
+        }
+    }
 
     get sound(){
         return this.#sound
     }
-
-    get volume(){
-        return this.part.volume ? this.part.volume : 0.5
-    } 
 
     /** @override */
     async initialize(){
@@ -1906,9 +1920,14 @@ class audio extends executableWithFile {
         this.#schedule();
     }
 
+    async #fade(duration = this.fade){
+        await this.sound.fade(0, {duration: duration})
+    }
+
     async #schedule(){
         if(this.duration){
-            await wait(this.duration)
+            await wait(this.preFadeDown)
+            if(this.fade) await this.#fade()
             await this.stop();            
         }
     }
@@ -1917,7 +1936,7 @@ class audio extends executableWithFile {
         if(this.#sound?.id){
             game.socket.emit('module.danger-zone', {stop: this.sound.id})
             dangerZone.log(false, 'Stopping sound...', this.sound)
-            await this.sound.fade(0, {duration: 250})
+            await this.#fade(250)
             this.sound.stop();
             dangerZone.log(false, 'Stopped sound...', this.sound)
         }  
@@ -2603,7 +2622,7 @@ class lastingEffect extends executableWithFile{
     #getData(){
         const tile = {
             alpha: this.alpha,
-            elevation: this.boundary.bottomToElevation, 
+            elevation: this.boundary.topToElevation, 
             flags: this.data.flag,
             hidden: this.hidden,
             locked: false,
@@ -2772,10 +2791,6 @@ class primaryEffect extends executableWithAnimation {
 
     get repeat(){
         return this.part.repeat
-    }
-
-    get duration(){
-        return this.part.duration
     }
 
     get hasSources(){
@@ -3417,7 +3432,7 @@ class scene extends executableWithFile {
     }
 
     #getE(){
-        const value = this.e.max === this.e.min ? this.e.min : (this.e.min + Math.floor(Math.random() * (this.e.max - this.e.min + 1))) 
+        const value = getRandomNumber(this.e.min, this.e.max)  
         return value >= 1 ? value : null
     }
 
@@ -3462,10 +3477,6 @@ class secondaryEffect extends executableWithAnimation {
     
     get below(){
         return this.part.below 
-    }
-
-    get duration(){
-        return this.part.duration
     }
 
     get has(){
@@ -3570,10 +3581,6 @@ class sound extends executableWithFile {
         return this.part.walls
     } 
 
-    get volume(){
-        return this.part.volume ? this.part.volume : 0.5
-    } 
-
     async initialize(){
         await super.initialize()
         this.#sounds = []
@@ -3598,10 +3605,6 @@ class sourceEffect extends executableWithAnimation {
 
     get audio(){
         return this.part.audio ? this.part.audio : {}
-    }
-
-    get duration(){
-        return this.part.duration
     }
 
     get hasSourceTargets(){
@@ -3804,10 +3807,6 @@ class  tokenEffect extends executableWithAnimation {
         return this.part.below
     }   
 
-    get duration(){
-        return this.part.duration ?? 0
-    }   
-
     get save(){
         return this.data.danger.save.te ? parseInt(this.data.danger.save.te) : super.save
     }
@@ -3952,19 +3951,19 @@ class tokenMove extends executable {
     }
 
     #getE(){
-        return this.e?.type ? (this.e.min + Math.floor(Math.random() * (this.e.max - this.e.min + 1))) : 0
+        return this.e?.type ? getRandomNumber(this.e.min,this.e.max) : 0
     }
     
     #getHz(){
         if(!this.hz?.dir) return 0
         const adjH = (this.hz.dir === "D" || (this.hz.dir === "R" && Math.round(Math.random()))) ? -1 : 1
-        return ((this.hz.min + Math.floor(Math.random() * (this.hz.max - this.hz.min + 1))) * adjH)
+        return (getRandomNumber(this.hz.min,this.hz.max)  * adjH)
     }
 
     #getV(){
         if(!this.v?.dir) return 0
         const adjV = (this.v.dir === "U" || (this.v.dir === "R" && Math.round(Math.random()))) ? -1 : 1
-        return ((this.v.min + Math.floor(Math.random() * (this.v.max - this.v.min + 1))) * adjV)
+        return (getRandomNumber(this.v.min,this.v.max) * adjV)
     }
 
     async #update(){
@@ -4024,6 +4023,10 @@ class tokenSays extends executable {
         return this.data.danger.save.ts ? parseInt(this.data.danger.save.ts) : super.save
     }
 
+    get spawn(){
+        return this.part.spawn ?? false
+    }
+
     get suppressChatbubble(){
         return this.part.suppressChatbubble ? true : false
     } 
@@ -4035,6 +4038,12 @@ class tokenSays extends executable {
     get suppressQuotes(){
         return this.part.suppressQuotes ? true : false
     } 
+
+    get targets(){
+        let tg = super.targets
+        if(dangerZone.MODULES.portalOn && this.spawn) tg = tg.concat(this.data.spawn.tokens)
+        return tg
+    }
 
     get volume(){
         return this.part.volume ? this.part.volume : 0.50
@@ -4207,12 +4216,17 @@ class weather extends executable{
         return this.part.lifetime 
     }
 
+    get alpha(){
+        return this.part.alpha 
+    }
+
     get settings(){
         const obj = {};
         if(this.animations.length) obj['animations'] = this.animations;
         if(this.density !== undefined) obj['density'] = this.density;
         if(this.direction !== undefined) obj['direction'] = this.direction;
         if(this.lifetime !== undefined) obj['lifetime'] = this.lifetime;
+        if(this.alpha !== undefined) obj['alpha'] = this.alpha;
         if(this.scale !== undefined) obj['scale'] = this.scale;
         if(this.speed !== undefined) obj['speed'] = this.speed;
         if(this.tint !== undefined) obj['tint'] = this.tint;
