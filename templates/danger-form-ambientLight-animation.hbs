@@ -2,8 +2,8 @@
     <div class="form-group">
         <label for="lightAnimation.type">{{localize "DANGERZONE.type-form.ambientLight.animation.label"}}</label>
         <div class="form-fields">
-            <select name="lightAnimation.type" value="{{data.lightAnimation.type}}"> 
-                {{selectOptions options.AMBIENTLIGHT.ANIMATION selected=data.lightAnimation.type localize=true}}
+            <select id="danger-zone-ambient-light-animation" name="lightAnimation.type" value="{{data.lightAnimation.type}}"> 
+                {{#if data.negative}}{{selectOptions options.AMBIENTLIGHT.DARKNESSANIMATION selected=data.lightAnimation.type localize=true}}{{else}}{{selectOptions options.AMBIENTLIGHT.ANIMATION selected=data.lightAnimation.type localize=true}}{{/if}}
             </select>   
         </div>
     </div>

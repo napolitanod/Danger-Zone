@@ -4,7 +4,7 @@ import {dangerZoneType} from './apps/zone-type.js';
 import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, CONTROLTRIGGERS, DANGERZONECONFIG, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
-import {wait, getTagEntities, joinWithAnd} from './apps/helpers.js';
+import {wait, getTagEntities, getRandomNumber, joinWithAnd} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
 import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, EffectDangerPartConfig, ForegroundEffectDangerPartConfig, GlobalZoneDangerPartConfig, ItemDangerPartConfig, LastingEffectDangerPartConfig, MutateDangerPartConfig, RegionDangerPartConfig, RolltableDangerPartConfig, SceneDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig, TokenResponseDangerPartConfig, TokenSaysDangerPartConfig, WallDangerPartConfig, WarpgateDangerPartConfig, WeatherDangerPartConfig} from './apps/danger-form.js';
 
@@ -12,6 +12,7 @@ import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDan
  * A class which holds some constants for dangerZone
  */
 export class dangerZone {
+
   static ID = 'danger-zone';
 
   /**v13
@@ -742,7 +743,7 @@ export class zone {
 
   generateSourceCount(){
     if(!this.source.limit.max && !this.source.limit.min) return -1
-    return this.source.limit.max === this.source.limit.min ? this.source.limit.max : Math.floor(Math.random() * (this.source.limit.max - this.source.limit.min + 1))
+    return getRandomNumber(this.source.limit.min, this.source.limit.max)
   }
 
   getExtension(extensionId){

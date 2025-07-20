@@ -222,6 +222,7 @@ export const DANGERFORMOPTIONS = {
             'O': 'DANGERZONE.light.clear-types.off'
         },
         COLORATION: foundry.canvas.rendering.shaders.AdaptiveLightingShader.SHADER_TECHNIQUES,
+        DARKNESSANIMATION: darknessAnimationTypes()
     },
     CANVAS:{
         TYPE: {
@@ -669,6 +670,18 @@ export function runOnSetup(){
 function animationTypes() {
     const animationTypes = {"": "DANGERZONE.none"};
     for ( let [k, v] of Object.entries(CONFIG.Canvas.lightAnimations) ) {
+      animationTypes[k] = v.label;
+    }
+    return animationTypes;
+}
+
+/**v13
+ * function used to populate DANGERFORMOPTIONS 
+ * @returns obj
+ */
+function darknessAnimationTypes() {
+    const animationTypes = {"": "DANGERZONE.none"};
+    for ( let [k, v] of Object.entries(CONFIG.Canvas.darknessAnimations) ) {
       animationTypes[k] = v.label;
     }
     return animationTypes;
@@ -1144,6 +1157,7 @@ export function setExecutableOptions(){
                 document: "AmbientLight", 
                 wipeable: true, 
                 modules: [
+                    {active: dangerZone.MODULES.wallHeightOn, name: "wall-height", dependent: false}, 
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"

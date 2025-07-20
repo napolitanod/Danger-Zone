@@ -607,6 +607,8 @@
                 "delay.label": "Delay Start",
                 "duration.description": "If the sound file is longer than the duration (in seconds) entered, then it will stop the sound at the provided duration following start of play. If duration = 0 then the sound plays for the entire length.",
                 "duration.label": "Duration",
+                "fade.label": "Fade",
+                "fade.description": "If a sound has a set duration, reduce its volume to zero starting the specified number of milliseconds before the sound ends.",
                 "volume.label": "Sound Volume"
             },
             "backgroundEffect":{
@@ -974,6 +976,7 @@
                     "label": "Chat Message",
                     "placeholder": "quote"
                 },
+                "spawn.label": "Include spawned tokens",
                 "source.label": "Source",
                 "source.placeholder": "rollable table name",
                 "suppress.label": "Suppress",

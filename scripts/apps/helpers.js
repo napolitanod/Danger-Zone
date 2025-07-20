@@ -6,6 +6,90 @@ import {dangerZone} from '../danger-zone.js';
 import {point} from './dimensions.js'
 import {ZoneListForm} from './zone-list-form.js';
 
+export class helper {
+
+  static htmlBuildInput(options){
+    let htmlInner = '';
+    const value = options.inputValue ?? options.value;
+    switch(options.type){
+      case 'color':
+        htmlInner = `<color-picker name="${options.name}" value="${value}"></color-picker>`
+        break;
+      case 'range':
+        htmlInner = `<range-picker title="${game.i18n.localize(options.label)}" name="${options.name}" value="${value}" min="${options.min}" max="${options.max}" step="0.05"></range-picker>`
+        break;
+      case 'select':
+      case 'options':
+        const sortedList = Object.entries(options.options).sort(([,a],[,b]) => a.localeCompare(b))
+        let optionList = '<option value=""></option>';
+        for(let i = 0; i < sortedList.length; i++) {
+          let selected = '';
+          if (sortedList[i][0] === value) selected = ' selected '
+          optionList += `<option value="${sortedList[i][0]}"${selected}>${game.i18n.localize(sortedList[i][1])}</option>`;
+        }
+        if('options') return optionList;
+        htmlInner = `<select name="${options.name}" value="${value}">${optionList}</select>`
+        break;
+    }
+    let html = `<div class="form-group"><label>${game.i18n.localize(options.label)}</label><div class="form-fields">${htmlInner}</div></div>`
+    return html;     
+  }
+
+  /**v13
+   * 
+   * @param {object} options 
+   *      html = the html to toggle
+   * 
+   *      type = the type of toggle
+   *            hide = hide if condition met, else show
+   *            show = show if condition met, else hide
+   * 
+   *      id = indicates query selector to use on the element 
+   *      
+   *      condition = the condition in relation to the event that, when true, hides the element
+   *            check = the event's target.checked
+   *            eq = target.value equals the test value
+   *            greater_than = the events target.value is greater than the test 
+   *            less_than = the events target.value is less than the test 
+   * 
+   *      event = the click event
+   * 
+   *      test = variable use, what is being tested against
+   */
+
+  static htmlToggleElement(form, options){
+
+    let value //the value from the event
+    switch(options.condition){
+      case 'check':
+        value = getEventData(options.event).target.checked 
+        break;
+      case 'eq':
+        value = options.test === getEventData(options.event).target.value ? true : false
+        break;
+      case 'less_than':
+        value = getEventData(options.event).target.value < options.test ? true : false
+        break;
+    }
+
+    let target
+    if(options.id){
+      target = options.html.querySelector(`#${options.id}`)
+    }
+
+    switch(options.type){
+      case 'hide':
+        value ? target.classList.add('dz-hidden') : target.classList.remove('dz-hidden')
+        break;
+      case 'show':
+        value ? target.classList.remove('dz-hidden') : target.classList.add('dz-hidden')
+        break;
+    }  console.log(getEventData(options.event).target.value , form, options, target, value)
+  
+    form.setPosition()
+  }
+}
+
 export function circleAreaGrid(xLoc,yLoc, dimension = {w:w, h:h}){
   if((!xLoc &&!yLoc) || (yLoc===dimension.h&&!xLoc) || (xLoc===dimension.w&&!yLoc) || (xLoc===dimension.w&&yLoc===dimension.h)){return false}
   return true
@@ -151,6 +235,10 @@ export function addSceneFormLaunch(application, controls){
       icon: 'fas fa-radiation',
       label: 'DANGERZONE.zones'
   })
+}
+
+export function getRandomNumber(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 /**v13

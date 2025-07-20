@@ -72,6 +72,7 @@ export class dangerZoneType {
           file:'',
           delay: 0,
           duration: 0,
+          fade: 0,
           randomFile: false,
           volume: 0.5
         },
