@@ -741,6 +741,7 @@
                 "tag.label": "Item Tag",
                 "tag.description": "Tagger tag"
             },
+            "lastingEffect.label": "Lasting Effect",
             "macro.label": "Macro",
             "macro.notes": "The macro in this world that will run when the danger zone triggers.",
             "mutate": {
