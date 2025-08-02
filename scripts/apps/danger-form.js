@@ -891,13 +891,24 @@ export class SoundDangerPartConfig extends DangerPartConfig {
 static #partId = 'sound'
 
   /** @inheritDoc */
-  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId)
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId, {actions: {'walls': SoundDangerPartConfig.#walls}})
 
   /** @override */
   static PARTS = this._parts(this.#partId)
 
   /** @override */
   static TABS = this._tabs(this.#partId) 
+
+  /*******           CUSTOM             ********/
+
+  /*******          STATIC METHODS *************/
+  /**v13
+   * Dynamic handling of fields associated with item pile
+   * @param {SubmitEvent} event         The pointer event.
+   */
+  static #walls(event) {
+    helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'hide', html: this.element, id: `dz-sound-muffled-fields`})
+  }
 
 }
 
