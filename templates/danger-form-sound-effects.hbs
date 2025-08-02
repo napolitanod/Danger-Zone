@@ -1,0 +1,35 @@
+<div class="tab danger-part-group" data-tab="effects" data-group="sheet">
+     <fieldset>
+        <legend>{{localize "DANGERZONE.type-form.sound.effects.label"}}</legend>
+        <div class="form-group">
+            <label for="effects.base.type">{{localize "DANGERZONE.type-form.sound.effects.base.type.label"}}</label>
+            <div class="form-fields">
+                <select name="effects.base.type">
+                    {{selectOptions options.SOUND.EFFECTS  selected=data.effects.base.type labelAttr="label" blank="" localize=true}}
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="effects.base.intensity">{{localize "DANGERZONE.type-form.sound.effects.base.intensity.label"}}</label>
+            <div class="form-fields">
+                <range-picker name="effects.base.intensity" value="{{data.effects.base.intensity}}" min="1" max="10" step="1"></range-picker>
+            </div>
+        </div>
+        <div class="{{#if data.walls}}dz-hidden{{/if}}" id="dz-sound-muffled-fields">
+            <div class="form-group danger-zone-margin-bottom-spacer">
+                <label  for="effects.muffled.type">{{localize "DANGERZONE.type-form.sound.effects.muffled.type.label"}}</label>
+                <div class="form-fields">
+                    <select name="effects.muffled.type">
+                        {{selectOptions options.SOUND.EFFECTS selected=data.effects.muffled.type labelAttr="label" blank="" localize=true}}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="effects.muffled.intensity">{{localize "DANGERZONE.type-form.sound.effects.muffled.intensity.label"}}</label>
+                <div class="form-fields">
+                    <range-picker name="effects.muffled.intensity" value="{{data.effects.muffled.intensity}}" min="1" max="10" step="1"></range-picker>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</div>

@@ -605,3 +605,7 @@ form .form-group .form-fields input.danger-zone-proximity {
 .danger-zone-footer{
     margin-top: 10px;
 }
+
+.danger-zone-margin-bottom-spacer{
+    margin-bottom: 15px;
+}

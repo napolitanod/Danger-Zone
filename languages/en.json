@@ -18,6 +18,7 @@
         "delete": "Delete",
         "distance": "(Distance)",
         "edit": "Edit",
+        "effects.label": "Effects",
         "export-danger": "Export Danger",
         "file": {
             "audio": {
@@ -894,6 +895,17 @@
             },
             "sound":{
                 "description": "Adds an ambient sound to the scene at the target location.",
+                "effects": {
+                    "base":{
+                        "type.label": "Base Effect",
+                        "intensity.label": "Base Effect Intensity"
+                    },
+                    "muffled":{
+                        "type.label": "Muffled Effect",
+                        "intensity.label": "Muffled Effect Intensity"
+                    },
+                    "label": "Special Effects"
+                },
                 "label": "Sound",
                 "delay.label": "Delay Start",
                 "easing.label": "Volume Easing",

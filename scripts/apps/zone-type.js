@@ -287,6 +287,16 @@ export class dangerZoneType {
           file:'',
           delay: 0,
           easing: true,
+          effects: {
+            base: {
+              type: '',
+              intensity: 5
+            },
+            muffled: {
+              type: '',
+              intensity: 5
+            }
+          },
           offset: {
             x: {
               flip: false,

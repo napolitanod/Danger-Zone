@@ -19,7 +19,7 @@ export const DANGERZONEPARTS = new Map([
     ['region', {icon:'fa-regular fa-game-board', templates: new Map([[1, 'settings'], [2, 'offset'], [3, 'behaviors']])}],
     ['rolltable', {icon: 'fas fa-th-list'}], 
     ['scene', {icon: 'fas fa-map', templates: new Map([[1, 'settings'], [2,'light']])}], 
-    ['sound', {icon:'fa-solid fa-music', templates: new Map([[1, 'audio'], [2,'offset']])}],
+    ['sound', {icon:'fa-solid fa-music', templates: new Map([[1, 'audio'], [2,'effects'], [3,'offset']])}],
     ['sourceEffect', {icon: 'fas fa-dragon', templates: new Map([[1, 'visual'], [2, 'audio'], [3,'offset']])}],
     ['tokenMove', {icon: 'fas fa-arrows-alt', templates: new Map([[1, 'movement'], [2, 'settings']])}],
     ['tokenEffect', {icon: 'fas fa-male'}],
@@ -67,6 +67,7 @@ export const DANGERZONECONFIG = {
             _default: ''
         },
         DANGER: "fas fa-radiation",
+        EFFECTS: "fa-solid fa-hurricane",
         MOVEMENT: DANGERZONEPARTS.get('tokenMove').icon,
         OFFSET: 'fa-solid fa-rotate',
         OVERHEAD: 'fa-solid fa-house',
@@ -98,6 +99,7 @@ export const DANGERZONECONFIG = {
         DANGERPART:{ _default: ''},
         DANGER: "DANGERZONE.zone-type-form.form-name",
         DELETE: 'DANGERZONE.delete',
+        EFFECTS: 'DANGERZONE.effects.label',
         LIGHT: 'DANGERZONE.light.label',
         MOVEMENT: 'DANGERZONE.movement.label',
         OFFSET: 'DANGERZONE.offset.label',
@@ -309,6 +311,9 @@ export const DANGERFORMOPTIONS = {
             "Y": "DANGERZONE.type-form.scene.globalLight.options.Y.label",
             "N": "DANGERZONE.type-form.scene.globalLight.options.N.label"
         }
+    },
+    SOUND: {
+        EFFECTS: CONFIG.soundEffects
     },
     SOURCEDANGERLOCATION: {
         "A": "DANGERZONE.source.danger.location.actor",

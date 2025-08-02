@@ -3480,7 +3480,7 @@ class secondaryEffect extends executableWithAnimation {
     }
 
     get has(){
-        return (super.has || this.audio.file) ? true : false
+        return (super.has && this.audio.file) ? true : false
     }
 
     get repeat(){
@@ -3558,10 +3558,15 @@ class sound extends executableWithFile {
         return this.part.easing
     } 
 
+    get effects(){
+        return this.part.effects
+    }
+
     get #soundData() {
         const sound = {
             elevation: this.boundary.bottomToElevation,  
             easing: this.easing,
+            effects: this.effects,
             flags: this.data.flag,
             path: this.files.audio,
             radius: this.radius,
