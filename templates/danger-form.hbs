@@ -38,15 +38,6 @@
                 </div>
             </div>
         </div>
-        <div class="form-group">
-            <label for="options.macro">{{localize 'DANGERZONE.type-form.macro.label'}}</label>
-            <div class="form-fields">
-                <select name="options.macro" value="{{danger.options.macro}}"> 
-                    <option value=""></option>  
-                    {{selectOptions macroOps selected=zone.options.macro localize=false}}
-                </select>     
-            </div>
-        </div>
     </div>
     <div class="form-group">
         <ol class="danger-setting-group flexrow">
@@ -81,8 +72,13 @@
                 <a class="danger-zone-type-delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
             <li data-id="lastingEffect" {{#if has.lastingEffect}}class="active"{{/if}} title="{{localize "DANGERZONE.type-form.tile.label"}}">
-                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tile.description"}}"><i class="fa-solid fa-cubes"></i></button>   
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.tile.description"}}"><i class="{{icons.DANGERPART.lastingEffect}}"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.tile.label'}}</label>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
+            </li>
+            <li data-id="macro" {{#if has.macro}}class="active"{{/if}} title="{{localize "DANGERZONE.type-form.macro.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.macro.description"}}"><i class="{{icons.DANGERPART.macro}}"></i></button>   
+                <label>{{localize 'DANGERZONE.type-form.macro.label'}}</label>
                 <a class="danger-zone-type-delete" data-action="delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
             <li data-id="tokenMove" class="{{#if has.tokenMove}}active{{/if}}" title="{{localize "DANGERZONE.type-form.tokenMove.label"}}">

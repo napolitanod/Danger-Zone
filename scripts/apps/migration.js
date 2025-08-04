@@ -41,6 +41,7 @@ export class migrateDanger {
             this.update = true
             this._migrationData_001(danger)
             this._migrationData_002(danger)
+            this._migrationData_003(danger)
             dangerZone.log(false, `Migrating Danger Data... ${danger.name}...`, {newDanger: danger, key: key, danger: this.dangers[key], dangers: this})       
         }
         if(this.update){
@@ -114,6 +115,14 @@ export class migrateDanger {
             if(danger.options.item) danger.options.item.name =  stringToArray(danger.options.item.name, splitter)
             this.setMigration(danger, MIGRATION_DANGER.MULTI)
         }
+    }
+
+    _migrationData_003(danger){
+        if ((!danger.migration || danger.migration < MIGRATION_DANGER.MACRO) ){
+            const macro = game.macros.get(danger.options?.macro)
+            danger.options.macro = {uuid: macro?.uuid ?? ''} 
+            this.setMigration(danger, MIGRATION_DANGER.MACRO)
+            }
     }
 }
 

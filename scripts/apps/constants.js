@@ -15,6 +15,7 @@ export const DANGERZONEPARTS = new Map([
     ['foregroundEffect', {icon:'fas fa-bolt', templates: new Map([[1, 'visual'], [2, 'source'], [3,'offset']])}],
     ['globalZone', {icon:'fas fa-radiation', templates: new Map([[1, 'basics'], [2, 'boundary'], [3,'trigger'], [4,'source'], [5,'target'], [6,'clear']])}],
     ['lastingEffect', {icon:'fa-solid fa-cubes', templates: new Map([[1, 'tile'], [2,'overhead'], [3,'offset']])}], 
+    ['macro', {icon: 'fa-solid fa-code'}],
     ['mutate', {flag: true, icon: 'fas fa-pastafarianism'}],
     ['region', {icon:'fa-regular fa-game-board', templates: new Map([[1, 'settings'], [2, 'offset'], [3, 'behaviors']])}],
     ['rolltable', {icon: 'fas fa-th-list'}], 
@@ -101,6 +102,7 @@ export const DANGERZONECONFIG = {
         DELETE: 'DANGERZONE.delete',
         EFFECTS: 'DANGERZONE.effects.label',
         LIGHT: 'DANGERZONE.light.label',
+        MACRO: 'DANGERZONE.macro.label',
         MOVEMENT: 'DANGERZONE.movement.label',
         OFFSET: 'DANGERZONE.offset.label',
         OVERHEAD: 'DANGERZONE.overhead.label',
@@ -1096,7 +1098,8 @@ export const DANGERZONETRIGGERSORT = {
 export const MIGRATION_DANGER = {
     INITIAL: 0,
     WORLD: 1,
-    MULTI: 2
+    MULTI: 2,
+    MACRO: 3
 }
 
 export const MIGRATION_ZONE = {

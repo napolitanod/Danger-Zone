@@ -402,7 +402,9 @@ export class dangerZoneType {
             sound: null
           }
         },
-        macro: '',
+        macro: {
+          uuid: ''
+        },
         migration: {
           globalZone: 1
         }

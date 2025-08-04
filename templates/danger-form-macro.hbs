@@ -1,0 +1,12 @@
+<div class="danger-part-group">
+    <p class="notes">{{localize "DANGERZONE.type-form.macro.description"}}</p>
+    <div class="form-group">
+        <label for="macro">{{localize 'DANGERZONE.type-form.macro.label'}}</label>
+        <div class="form-fields">
+            <select name="uuid" value="{{data.uuid}}"> 
+                <option value=""></option>  
+                {{selectOptions macros selected=data.uuid localize=false}}
+            </select>     
+        </div>
+    </div>
+</div>

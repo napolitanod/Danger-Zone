@@ -37,6 +37,7 @@
         "gridUnits": "units",
         "gridUnits2": "(Grid Units)",
         "location-picker": "Select the zone dimensions",
+        "macro.label": "Macro",
         "movement.label": "Movement",
         "ms": "ms",
         "none": "None",
@@ -744,7 +745,7 @@
             },
             "lastingEffect.label": "Lasting Effect",
             "macro.label": "Macro",
-            "macro.notes": "The macro in this world that will run when the danger zone triggers.",
+            "macro.description": "A macro to execute when this danger triggers.",
             "mutate": {
                 "actor.label": "Token Actor Data",
                 "actor.description": "Updates token actor by passing in object data. Expects key: value pairs.",

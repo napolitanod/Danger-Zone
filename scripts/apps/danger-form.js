@@ -74,7 +74,6 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
       has: has,
       icons: DANGERZONECONFIG.ICON,
       labels: DANGERZONECONFIG.LABEL,
-      macroOps: determineMacroList(),
       migration: dangerZone.MIGRATION.DANGER,
       modules: dangerZone.MODULES
     } 
@@ -159,6 +158,8 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
 
   #isActive(partId, part){
     switch(partId){
+      case 'macro':
+        return part.uuid ? true : false
       case 'effect':
         return Object.keys(part).length
       case 'audio': 
@@ -794,6 +795,20 @@ export class GlobalZoneDangerPartConfig extends DangerPartConfig {
   }
   
 }
+
+/**v13
+ * Configures the macro danger part
+ */
+export class MacroDangerPartConfig extends DangerPartConfig {
+  static #partId = 'macro'
+
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId);  
+
+  /** @override */
+  static PARTS = this._parts(this.#partId)
+}
+
 
 /**v13
  * Configures the mutate danger part
