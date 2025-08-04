@@ -2657,17 +2657,17 @@ class macro extends executable{
     }
 
     get macro(){
-        return this.macroId ? game.macros.get(this.macroId) : false
+        return this.macroId ? fromUuidSync(this.macroId) : false
     }
 
     get macroId(){
-        return this.part
+        return this.part.uuid
     }
 
     /** @override */
     async execute(){
         await super.execute()
-        await this.macro.execute(this.data);
+        if(this.macro) await this.macro.execute({args: [this.data?.parent?.parent], data: this.data, workflow: this.data?.parent?.parent, executor: this.data?.parent});
     }
 }
 
@@ -3478,11 +3478,7 @@ class secondaryEffect extends executableWithAnimation {
     get below(){
         return this.part.below 
     }
-
-    get has(){
-        return (super.has && this.audio.file) ? true : false
-    }
-
+    
     get repeat(){
         return this.part.repeat
     }
