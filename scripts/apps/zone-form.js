@@ -5,9 +5,8 @@ import {getEventData, getSceneRegionList} from './helpers.js';
 import {actorOps, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, DANGERZONECONFIG, EVENT_OPTIONS, MOVEMENT_EVENTS, ZONEFORMOPTIONS} from './constants.js';
 
 export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
-  constructor(app, zoneId, sceneId, dangerId, ...args) {
+  constructor(zoneId, sceneId, dangerId, ...args) {
       super(...args);
-      this.parent = app,
       this.dangerId = dangerId,
       this.zoneId = zoneId,
       this.sceneId = sceneId;
@@ -99,7 +98,7 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
    * @param {SubmitEvent} event         The pointer event.
    */
   static async #addExtension(event) {
-    new ZoneExtensionForm({}, this).render(true)
+    this.renderChild(new ZoneExtensionForm({}));
   }
 
   /**v13
@@ -120,7 +119,7 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
    */
   static async #editExtension(event) {
     const data = getEventData(event)
-    new ZoneExtensionForm(this.extensions.find(e => e.id === data.parentId), this).render(true);
+    this.renderChild(new ZoneExtensionForm(this.extensions.find(e => e.id === data.parentId)));
   }
 
   /**v13
@@ -134,6 +133,7 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
     const expandedData = foundry.utils.expandObject(submitData.object);
     expandedData['extensions'] = this.extensions;
     await dangerZone.updateSceneZone(expandedData.zoneId, expandedData);
+    dangerZone.log(false,'Zone form on submit...',{update: expandedData, form:this})
     if(this.parent){this.parent.render(true)}
   }
 
@@ -316,9 +316,8 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
 } 
 
 export class ZoneExtensionForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
-  constructor(extension = {}, app, ...args) {
+  constructor(extension = {}, ...args) {
       super(...args);
-      this.parent = app,
       this.extension = extension;
       this.zones = dangerZone.getExtendedZones(this.scene.id, this.triggeringZone.id);
       if(!this.extension.id) this.extension.id = foundry.utils.randomID(16)

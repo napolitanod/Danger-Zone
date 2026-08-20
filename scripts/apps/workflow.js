@@ -1229,7 +1229,7 @@ class executable {
     }
 
     get taggerTag(){
-        return {"tags": [this.tag]}
+        return {"tags": this.tag}
     }
     
     get targets(){
@@ -1821,7 +1821,6 @@ class ambientLight extends executable{
             hidden: false,
             rotation: this.#flipRotation(),
             vision: this.vision,
-            walls: true,
             x: this.boundary.center.x,
             y: this.boundary.center.y,
             walls: this.walls,

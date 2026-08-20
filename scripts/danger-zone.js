@@ -65,7 +65,7 @@ export class dangerZone {
    */
   static addDangersLaunch(app, html) {
     if (!game.user.isActiveGM 
-        || app.options.id !== "scenes" 
+        || app.options.uniqueId !== "scenes" 
         || game.settings.get('danger-zone', 'types-button-display') === false
       ) return;
     //create the button  
@@ -378,6 +378,7 @@ export class dangerZone {
    */
   static async updateSceneZone(zoneId, updateData) {
     let zn = this.getZoneFromScene(zoneId, updateData.scene.sceneId);
+    dangerZone.log(false,'UpdateSceneZone static method', {zoneId: zoneId, data: updateData, zone: zn})
     if(!zn){zn = new zone(updateData.scene.sceneId)} 
     return await zn.update(updateData);
   }
@@ -656,10 +657,18 @@ export class zone {
    */
   async _setFlag(){
     const scene = game.scenes.get(this.scene.sceneId)
-    const updt = await scene.setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, {[this.id]: this});
+    const data = this._toObject();
+    const updt = await scene.setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, {[this.id]: data});
     await dangerZone.checkSetMigration(scene)
-    Hooks.call("dangerZone.updateZone", this);
+    Hooks.call("dangerZone.updateZone", this, scene, data);
     return updt
+  }
+
+  /**
+   * private method to convert from class to object
+   */
+  _toObject(){
+    return JSON.parse(JSON.stringify(this))
   }
 
   /**

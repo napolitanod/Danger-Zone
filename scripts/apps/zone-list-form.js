@@ -5,9 +5,8 @@ import {getEventData} from './helpers.js';
 import {ZoneForm} from './zone-form.js';
 
 export class ZoneListForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
-  constructor(app, sceneId, ...args) {
+  constructor(sceneId, ...args) {
       super(...args);
-      this.parent = app,
       this.sceneId = sceneId;
   }
 
@@ -62,15 +61,15 @@ export class ZoneListForm extends foundry.applications.api.HandlebarsApplication
    * Adds a new zone to scene
    */
   static async #add(event){
-    new ZoneForm(this, '', this.sceneId,'').render(true);
-    this.render(true);
+    this.renderChild(new ZoneForm('', this.sceneId,''));
+    //this.render(true);
   }
 
   /**v13
    * Copys a zone to scene
    */
   static async #copy(event){
-    new ZoneCopyForm(this, this.sceneId, '').render(true);
+    this.renderChild(new ZoneCopyForm(this.sceneId, ''))
   }
 
   /**v13
@@ -94,7 +93,7 @@ export class ZoneListForm extends foundry.applications.api.HandlebarsApplication
    */
   static async #edit(event){
     const data = getEventData(event)
-    new ZoneForm(this, data.parentId, this.sceneId, '').render(true);
+    this.renderChild(new ZoneForm(data.parentId, this.sceneId, ''));
   }
 
   
@@ -135,11 +134,10 @@ export class ZoneListForm extends foundry.applications.api.HandlebarsApplication
 }
 
 export class ZoneCopyForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
-  constructor(app, sceneId, sourceSceneId, ...args) {
+  constructor(sceneId, sourceSceneId, ...args) {
     super(...args);
     this.sceneId = sceneId,
-    this.sourceSceneId = sourceSceneId,
-    this.parent = app;
+    this.sourceSceneId = sourceSceneId;
     }
 
   /** @inheritDoc */

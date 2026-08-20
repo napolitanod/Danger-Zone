@@ -379,8 +379,8 @@ export const DANGERFORMOPTIONS = {
         }
     },
     WALL: {
-        DIRECTIONTYPES: Object.keys(CONST.WALL_DIRECTIONS).reduce((obj, key) => {
-                let k = CONST.WALL_DIRECTIONS[key];
+        DIRECTIONTYPES: Object.keys(CONST.EDGE_DIRECTIONS).reduce((obj, key) => {
+                let k = CONST.EDGE_DIRECTIONS[key];
                 obj[k] = key.titleCase();
                 return obj;
             }, {}),
@@ -588,7 +588,7 @@ export function runOnSetup(){
                 name: "config",
                 title: "DANGERZONE.zones",
                 onChange: (event, active) => {
-                    if(active && dangerZone.executorForm.visible) new ZoneListForm('', canvas.scene?.id).render(true)
+                    if(active && dangerZone.executorForm.visible) new ZoneListForm(canvas.scene?.id).render(true)
                 },
                 visible: game.user.isActiveGM
             },

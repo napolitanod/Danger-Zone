@@ -247,7 +247,7 @@ export function getRandomNumber(min, max) {
  * @param {object} application 
  */
 export function launchSceneForm(scene, application = ''){ 
-  new ZoneListForm(application, scene.id).render(true)
+  application ? application.renderChild(new ZoneListForm(scene.id)) : new ZoneListForm(scene.id).render(true)
 }
 
 export async function requestSavingThrow(tokenUuid, saveType, time){
