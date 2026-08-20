@@ -72,7 +72,7 @@ export class DangerListForm extends foundry.applications.api.HandlebarsApplicati
   /******* custom form actions ********/
   static async #add(event){
     const newType = await dangerZoneType.addZoneType();
-    new DangerForm(newType.id, this).render(true);
+    this.renderChild(new DangerForm(newType.id)) 
     this.refresh();
   }
 
@@ -87,7 +87,7 @@ export class DangerListForm extends foundry.applications.api.HandlebarsApplicati
     const data = getEventData(event)
     const copied = await dangerZoneType.copyDanger(data.parentId)
     this.refresh();
-    new DangerForm(copied, this).render(true);
+    this.renderChild(new DangerForm(copied)) 
   }
 
   static async #delete(event){
@@ -105,7 +105,7 @@ export class DangerListForm extends foundry.applications.api.HandlebarsApplicati
 
   static async #edit(event){
     const data = getEventData(event)
-    new DangerForm(data.parentId, this).render(true);
+    this.renderChild(new DangerForm(data.parentId)) 
   }
 
   static async #export(event){

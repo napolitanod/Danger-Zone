@@ -363,21 +363,20 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     static async #boundaryEligibleRefresh(event){
         this.executor.setBoundaryEligibleTargets();
         this.drawBoundaryEligible();
-        console.log(this)
     }
 
     /**v13
      * 
      */
     static #editDanger(event){
-        new DangerForm(this.zone.dangerId, this).render(true);    
+        this.renderChild(new DangerForm(this.zone.dangerId)) 
     }
 
     /**v13
      * 
     */
     static #editZone(event){
-       new ZoneForm(this, this.zoneId, this.sceneId, this.worldId).render(true);   
+        this.renderChild(new ZoneForm(this.zoneId, this.sceneId, this.worldId)) 
     }
 
 
@@ -389,7 +388,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     #handleRightClick(event){
         const data = this._getEventIds(event)
         if(!data) return
-        new ZoneForm(this, data.zoneId, this.sceneId, data.dangerId).render(true);
+        this.renderChild(new ZoneForm(data.zoneId, this.sceneId, data.dangerId)) 
     }
 
     /**v13

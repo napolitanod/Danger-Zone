@@ -7,12 +7,11 @@ import { helper, getEventData, stringToObj} from './helpers.js';
  * The main danger form from which danger part forms are launched. Used to configure a danger.
  */
 export class DangerForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
-  constructor(dangerId, parent = '', ...args) {
+  constructor(dangerId, ...args) {
     super(...args);
 
     this._data = {flags:{}},
-    this.dangerId = dangerId,
-    this.parent = parent;
+    this.dangerId = dangerId;
   }
 
   /** @inheritDoc */
@@ -550,7 +549,8 @@ export class EffectDangerPartConfig extends DangerPartConfig {
     });
     
     const doc = new ActiveEffect(effect, {})
-    new DangerZoneActiveEffectForm(this, data.parent, this.parentApp.dangerId, doc).render(true);
+    
+    this.renderChild(new DangerZoneActiveEffectForm(data.parent, this.parentApp.dangerId, doc))
   }
 
   /**v13
@@ -571,9 +571,8 @@ export class EffectDangerPartConfig extends DangerPartConfig {
  * form that extends the activeeffectconfig form to collect active effect data
  */
 class DangerZoneActiveEffectForm extends foundry.applications.sheets.ActiveEffectConfig {
-  constructor(app, eventParent, origin, ...args) {
+  constructor(eventParent, origin, ...args) {
     super(...args);
-    this.parent = app,
     this.eventParent = eventParent,
     this.origin = origin
     }
