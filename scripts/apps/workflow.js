@@ -3687,6 +3687,12 @@ class spawn extends executable {
      */
     #rollTable
 
+    /**
+     * roll
+     * result of the roll on the table
+     */
+    #rollResult
+
     get actor(){
         return this.#actor
     }
@@ -3785,9 +3791,9 @@ class spawn extends executable {
     
     async #setActorFromRollTable(){
         this.#rollTable = game.tables.getName(this.actorOrTableName);
-        if(this.rollTable) return
-        const rolledResult = await this.rollTable.roll(); 
-        this.#actor = rolledResult.results[0].data.text;
+        if(!this.rolltable) return
+        this.#rollResult = await this.rolltable.roll(); 
+        this.#actor = this.#rollResult.results[0].name;
     }
 
     async #setActor(){
