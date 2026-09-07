@@ -7,11 +7,21 @@
             <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.region.description'}}"><i class="fas fa-info-circle"></i></span>
         </label>
         <div class="form-fields">
-            <select name="scene.regionId" value="{{zone.scene.regionId}}">
+            <select data-action="region-change" name="scene.regionId" value="{{zone.scene.regionId}}">
                 {{selectOptions regionOps selected=zone.scene.regionId localize=true}}
             </select>
         </div>
     </div>
+    <fieldset class="{{#if hideLevels}} dz-hidden{{/if}}" >
+        <legend>{{localize 'DANGERZONE.edit-form.levels.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.levels.description'}}"><i class="fas fa-info-circle"></i></span>
+        </legend>
+        <div class="form-fields levels-select">
+            <multi-select name="scene.levels" value="{{zone.scene.levels}}" id="dz-levels" >
+                {{selectOptions levelOps selected=zone.scene.levels}}
+            </multi-select>
+        </div>
+    </fieldset> 
     <div class="form-group">
         <label>
             {{localize 'DANGERZONE.edit-form.bleed.label'}}

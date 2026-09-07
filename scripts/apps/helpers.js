@@ -172,6 +172,14 @@ export async function getFilesFromPattern(pattern) {
     return content.files;      
 }
 
+export function getSceneLevelList(sceneId){
+  let list = {'':'[All Levels]'};
+  for (let level of game.scenes.get(sceneId).levels.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
+    list[level.id] = level.name;
+  }
+  return list
+}
+
 export function getSceneRegionList(sceneId){
   let list = {'':'[Use Scene Dimensions]'};
   for (let region of game.scenes.get(sceneId).regions.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {

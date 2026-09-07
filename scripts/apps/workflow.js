@@ -500,13 +500,21 @@ class executorData {
     }
     
     setTargets(){
-        if (this.hasTargets) return this.eligibleTargets.filter(e => this.targets.find(t => e.id === t.id))
-        if(!this.zone.target.all){
-            if(this.eligibleTargets.length > 1){
-                return this.targets.push(this.eligibleTargets[Math.floor(Math.random() * this.eligibleTargets.length)])
-            }
-        }
-        return this.targets = this.eligibleTargets
+        let targets = []
+        if (this.hasTargets) {//if has targets, then just return that array filtered by eligible
+            targets = this.eligibleTargets.filter(e => this.targets.find(t => e.id === t.id))
+        } else if(this.zone.target.all) {//if targets all tokens, set targets to all eligible tokens
+            targets = this.eligibleTargets
+            this.targets = targets
+        } else if(this.eligibleTargets.length > 1){//else return from the random target quantity
+            const totalToTarget = this.zone.targetQuantity()
+            //shallow copy shuffle
+            const shuffled = [...this.eligibleTargets].sort(() => 0.5 - Math.random());
+            targets = shuffled.slice(0, totalToTarget);
+            this.targets.push(...targets);
+        }    
+        
+        return targets;
     }
 
     async setTwinBoundary(){

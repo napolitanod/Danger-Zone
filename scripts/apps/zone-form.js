@@ -1,7 +1,7 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {DangerForm} from './danger-form.js';
-import {getEventData, getSceneRegionList} from './helpers.js';
+import {getEventData, getSceneRegionList, getSceneLevelList} from './helpers.js';
 import {actorOps, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, DANGERZONECONFIG, EVENT_OPTIONS, MOVEMENT_EVENTS, ZONEFORMOPTIONS} from './constants.js';
 
 export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
@@ -66,7 +66,9 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
     return {
       zone: this.zone,
       actorOps: actorOps(),
+      hideLevels: this.zone.scene.regionId ? true : false,
       hideOperation: this.zone.trigger.loop > 1 ? false : true,
+      levelOps: getSceneLevelList(this.sceneId),
       options: ZONEFORMOPTIONS,
       regionOps: getSceneRegionList(this.sceneId),
       eventOps: EVENT_OPTIONS,
@@ -185,12 +187,30 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
     data.target.checked ? rando.classList.remove('dz-hidden') : rando.classList.add('dz-hidden')
   }
 
+  /**
+   * 
+   * @param {event} event 
+   */
+  #regionChange(event){
+    const data = getEventData(event)
+    const op = this.element.querySelector(`#dz-levels`);
+    data.target.value ? op.classList.add('dz-hidden') : op.classList.remove('dz-hidden')
+    this.setPosition()
+  }
+
   /**v13
    * renders the extends list into the form
    */
   #renderExtendsList(){
     const ins = this.element.querySelector(`#danger-zone-zone-form-extend`);
     ins.innerHTML = this.#createExtendsListHTML();
+    this.setPosition();
+  }
+
+  #targetAllTokensEnablementToggle(event){
+    const data = getEventData(event)
+    const tg = this.element.querySelector(`#dz-target-quantity`);    
+    data.target.checked ? tg.classList.add('dz-hidden') : tg.classList.remove('dz-hidden')
     this.setPosition();
   }
   
@@ -245,9 +265,11 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
   _onRender(context, options) {
     super._onRender(context, options);
     this.element.querySelector(`[data-action="loop-change"]`).addEventListener("change", (event => {this.#loopChange(event)}))
+    this.element.querySelector(`[data-action="region-change"]`).addEventListener("change", (event => {this.#regionChange(event)}))
     this.element.querySelector(`[data-action="source-area"]`).addEventListener("change", (event => {this.handleSourceTag(event)}))
     this.element.querySelector(`[data-action="template-toggle"]`).addEventListener("change", (event => {this.#templateToggle(event)}))
     this.element.querySelector(`[data-action="random-toggle"]`).addEventListener("change", (event => {this.#randomToggle(event)}))
+    this.element.querySelector(`[data-action="target-all-toggle"]`).addEventListener("change", (event => {this.#targetAllTokensEnablementToggle(event)}))
     this.element.querySelector(`[data-action="trigger-select"]`).addEventListener("change", (event => {this.#triggerSelect(event)}))
   }
 

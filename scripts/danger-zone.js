@@ -516,6 +516,10 @@ export class zone {
       dispositions: [],
       exclusion: {
         conditions: []
+      },
+      quantity: {
+        min: 1,
+        max: 1
       }//,
       //movement: {
         //start: false
@@ -861,6 +865,14 @@ export class zone {
           break;
     }
     return options
+  }
+
+  targetQuantity(){ 
+    let quantity 
+    const min = this.target.quantity.min ?? 1, max = this.target.quantity.max ?? 1;
+    const del = max - min
+    quantity = del <= 0 ?  min : Math.floor(Math.random() * del)
+    return quantity
   }
 
   /**

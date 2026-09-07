@@ -10,7 +10,8 @@ export class dangerZoneDimensions {
     constructor (sceneId, zoneId, regionId = '') {
         this.zoneId = zoneId,
         this.sceneId = sceneId,
-        this.regionId = regionId;
+        this.regionId = regionId,
+        this.levels = [];
     }
 
     get boundary(){

@@ -182,6 +182,10 @@
             "initiative-count.label": "Initiative Count",
             "flavor.label": "Flavor",
             "flavor.description": "This text will output to a chat message when this zone triggers. Flavor will only output once regardless of how many loops are in the zone.",
+            "levels": {
+                "description": "Limit zone to specific scene levels",
+                "label":"Levels"
+            },
             "light.replace.label": "Ambient Lighting",
             "light.replace.description": "Choose what to do with existing Danger Zone created ambient light when this zone triggers.",
             "likelihood.label": "Likelihood",
@@ -189,6 +193,12 @@
             "loop.label": "Loop Count",
             "loop.description": "Set the number of danger executions when this zone is triggered. Each loop will have the likelihood assessed separately when executed.",
             "name": "Configure Zone",
+            "numberOfTargets":{
+                "description": "Sets the number of tokens the danger may target\nIf the maximum value exceeds the minimum value, the number of targets will randomly vary within that range.",
+                "label": "Tokens Targeted",
+                "min.label": "Minimum",
+                "max.label": "Maximum"
+            },
             "operation.description": "Determines the trigger operation of each loop.\n  Sequential: Next loop fires once the current loop completes.\n  Staggered: All loops fire at the same time and 'Delay Start' is calculated separately for each loop.\n  Together: 'Delay Start' is calculated and performed once and then all loops are triggered directly after.\nnote: a danger's weather part is only played on the first loop.",
             "operation.label": "Loop Operation",
             "placeTemplate.label": "Choose Location",
@@ -204,7 +214,7 @@
             "region.replace.description": "Choose what to do with existing Danger Zone created regions when this zone triggers.",
             "replace.label": "Lasting Effects",
             "replace.description": "Choose what to do with existing Danger Zone created lasting effects when this zone triggers.",
-            "runUntilTokenFound.label": "Always Targets a Token",
+            "runUntilTokenFound.label": "Always Target a Token",
             "runUntilTokenFound.description": "The danger will target an area of the zone where at least one token is present, if able.",
             "single-run.description": "This section executes at most once, after the first likelihood success, and regardless of the loop count for this zone",
             "sound.replace.label": "Sounds",
