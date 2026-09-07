@@ -745,6 +745,7 @@ export class GlobalZoneDangerPartConfig extends DangerPartConfig {
       super._onRender(context, options);
       this.element.querySelector(`[data-action="loop-change"]`).addEventListener("change", (event => {this.#loopChange(event)}))
       this.element.querySelector(`[data-action="source-area"]`).addEventListener("change", (event => {this.handleSourceTag(event)}))
+      this.element.querySelector(`[data-action="target-all-toggle"]`).addEventListener("change", (event => {this.#targetAllTokensEnablementToggle(event)}))
       this.element.querySelector(`[data-action="template-toggle"]`).addEventListener("change", (event => {this.#templateToggle(event)}))
   }
 
@@ -787,6 +788,10 @@ export class GlobalZoneDangerPartConfig extends DangerPartConfig {
 
   #loopChange(event){
     helper.htmlToggleElement(this, {event: event, condition: 'less_than', test: 2, type: 'hide', html: this.element, id: `dz-operation-global`})
+  }
+
+  #targetAllTokensEnablementToggle(event){
+    helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'hide', html: this.element, id: `dz-target-quantity-global`})
   }
 
   #templateToggle(event){

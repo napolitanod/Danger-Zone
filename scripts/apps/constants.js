@@ -870,6 +870,10 @@ export const WORLDZONE = {
         dispositions: [],
         exclusion: {
           conditions: []
+        },
+        quantity: {
+            min: 1,
+            max: 1
         }
     },
     trigger: {

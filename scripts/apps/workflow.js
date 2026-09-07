@@ -348,6 +348,18 @@ class executorData {
 
     about() {
         if(game.user.isActiveGM && game.settings.get(dangerZone.ID, 'chat-details-to-gm')) {   
+            let tokenTargets
+            const minTarget = this.zone.target.quantity?.min ?? 1
+            const maxTarget = this.zone.target.quantity?.max ?? 1
+
+            if(this.zone.target.all){
+                tokenTargets = 'Hits all eligible tokens'
+            } else if(minTarget < maxTarget ){
+                tokenTargets = `Hits between ${minTarget} and ${maxTarget} eligible tokens`
+            } else {
+                tokenTargets = `Hits ${minTarget} eligible tokens`
+            }
+
             let content =
                 `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Workflow Details</div><div class="danger-zone-chat-message-body">
                 <div><label class="danger-zone-label">Danger:</label><span> ${this.danger.name}</span></div>
@@ -355,7 +367,7 @@ class executorData {
                 <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => t.name)}</span></div>
                 <div><label class="danger-zone-label">Trigger:</label><span> ${game.i18n.localize(EVENTS[this.event]?.label)}</span></div>
                 <div><label class="danger-zone-label">Likelihood:</label><span> ${this.zone.trigger.likelihood}</span> <label class="danger-zone-label">Likelihood result:</label><span> ${this.likelihoodResult}</span></div>
-                <div><label class="danger-zone-label">Targeting:</label><span> ${this.zone.target.always ? 'Must target a location with a token' : 'Can target any location in zone'}. ${this.zone.target.all ? 'Hits all eligible tokens' : 'Hits one eligible token'} at location.</span></div>
+                <div><label class="danger-zone-label">Targeting:</label><span> ${this.zone.target.always ? 'Must target a location with a token' : 'Can target any location in zone'}. ${tokenTargets} at location.</span></div>
                 `;
             if(this.hasBoundary){
                 content += `

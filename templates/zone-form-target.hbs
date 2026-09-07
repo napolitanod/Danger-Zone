@@ -18,7 +18,7 @@
             <input type="checkbox" name="target.choose.prompt" {{checked zone.target.choose.prompt}} />
         </div>
     </div>
-    <div class="form-group" id="dz-target-quantity">
+    <div class="form-group {{#if zone.target.all}}dz-hidden{{/if}}" id="dz-target-quantity" >
         <label>
             {{localize 'DANGERZONE.edit-form.numberOfTargets.label'}}
             <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.numberOfTargets.description'}}"><i class="fas fa-info-circle"></i></span>
