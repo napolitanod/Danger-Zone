@@ -1,0 +1,54 @@
+<div class="tab danger-part-group" data-tab="visual" data-group="sheet">
+    <div class="form-group">
+        <label for="color">{{localize "DANGERZONE.type-form.region.color.label"}}</label>
+        <div class="form-fields">
+            <color-picker name="color" value={{data.color}}></color-picker>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="visibility">{{localize "DANGERZONE.type-form.region.visibility.label"}}</label>
+        <div class="form-fields">
+            <select name="visibility" value="data.visibility" >  
+                {{selectOptions options.REGION.VISIBILITY selected=data.visibility localize=true}}
+            </select>
+            </div>
+    </div>
+    <div class="form-group">
+        <label for="highlightMode">{{localize "DANGERZONE.type-form.region.highlightMode.label"}}</label>
+        <div class="form-fields">
+            <select name="highlightMode" value="data.highlightMode" >  
+                {{selectOptions options.REGION.HIGHLIGHTMODE selected=data.highlightMode localize=true}}
+            </select>
+            </div>
+    </div>
+    <div class="form-group">
+        <label for="displayMeasurements">{{localize "DANGERZONE.type-form.region.displayMeasurements.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="displayMeasurements" {{checked data.displayMeasurements}}>
+        </div>
+    </div>
+    <hr>
+    <div class="form-group">
+        <label for="type">{{localize "DANGERZONE.type-form.region.type.label"}}</label>
+        <div class="form-fields">
+            <select name="type" value="data.type" >  
+                {{selectOptions options.REGION.SHAPETYPE selected=data.type localize=true}}
+            </select>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="hole">{{localize "DANGERZONE.type-form.region.hole.label"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" data-dtype="Boolean" name="hole" {{checked data.hole}}>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="scale">{{localize "DANGERZONE.type-form.region.scale.label"}}
+            <span class="units">{{localize 'DANGERZONE.ratio'}}</span>
+        </label>
+        <div class="form-fields">
+            <input type="number" required name="scale" min="0.01" max="50" step="0.01" value={{#if data.scale}}{{data.scale}}{{else}}1{{/if}}>
+        </div>
+    </div>
+</div>
+   

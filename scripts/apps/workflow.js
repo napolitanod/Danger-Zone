@@ -1847,7 +1847,6 @@ class ambientLight extends executable{
             flags: this.flag
         }
         if(dangerZone.MODULES.taggerOn && this.tag) light.flags['tagger'] = this.taggerTag
-        if(dangerZone.MODULES.wallHeightOn) light.flags['levels'] = {rangeTop: this.boundary.topToElevation}
         return light
     }
 
@@ -2923,6 +2922,10 @@ class region extends executable{
      */
     #regionUpdates
 
+    get attachedToken(){
+        return this.part.attachedToken ?? ""
+    }
+
     get boundaries(){
         return this.#boundaries
     }
@@ -2931,8 +2934,16 @@ class region extends executable{
         return this.part.color ?? ''
     }
 
+    get displayMeasurements(){
+        return this.part.displayMeasurements ?? false
+    }
+
     get has(){
         return (super.has && this.data.danger.hasRegion) ? true : false
+    }
+
+    get highlightMode(){
+        return this.part.highlightMode ?? 'shapes'
     }
 
     get hole(){
@@ -2957,6 +2968,15 @@ class region extends executable{
 
     get regions(){
         return this.#regions
+    }
+
+    get restriction(){
+        const obj = {
+              enabled: this.part.restriction?.enabled ?? false,
+              type: this.part.restriction?.type ?? 'move',
+              priority: this.part.restriction?.priority ?? 0
+            }
+        return obj
     }
 
     get scale(){
@@ -3105,9 +3125,12 @@ class region extends executable{
         let shape = this.#buildShape(boundary);
         const rg = {
             color: this.color,
+            displayMeasurements: this.displayMeasurements,
             elevation: {bottom: boundary.bottom, top: boundary.top}, 
             flags: this.data.flag,
+            highlightMode: this.highlightMode,
             name: this.regionName,
+            restriction: this.restriction,
             shapes: [shape],
             visibility: this.visibility
         };
@@ -4196,7 +4219,6 @@ class wall extends executable {
             threshold: this.threshold,
             flags: this.data.flag
         }
-        if(dangerZone.MODULES.wallHeightOn && !this.boundary.depthIsInfinite) wall.flags['wall-height'] = {"top": this.boundary.top, "bottom": this.boundary.bottom}
         if(dangerZone.MODULES.taggerOn && this.tag) wall.flags['tagger'] = this.taggerTag
         return wall;
     }  

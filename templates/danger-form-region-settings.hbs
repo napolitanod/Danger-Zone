@@ -13,41 +13,40 @@
         </div>
     </div>
     <div class="form-group">
-        <label for="color">{{localize "DANGERZONE.type-form.region.color.label"}}</label>
-        <div class="form-fields">
-            <color-picker name="color" value={{data.color}}></color-picker>
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="visibility">{{localize "DANGERZONE.type-form.region.visibility.label"}}</label>
-        <div class="form-fields">
-            <select name="visibility" value="data.visibility" >  
-                {{selectOptions options.REGION.VISIBILITY selected=data.visibility localize=true}}
-            </select>
-            </div>
-    </div>
-    <div class="form-group">
-        <label for="type">{{localize "DANGERZONE.type-form.region.type.label"}}</label>
-        <div class="form-fields">
-            <select name="type" value="data.type" >  
-                {{selectOptions options.REGION.SHAPETYPE selected=data.type localize=true}}
-            </select>
-            </div>
-    </div>
-    <div class="form-group">
-        <label for="active">{{localize "DANGERZONE.type-form.region.hole.label"}}</label>
-        <div class="form-fields">
-            <input type="checkbox" data-dtype="Boolean" name="hole" {{checked data.hole}}>
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="scale">{{localize "DANGERZONE.type-form.region.scale.label"}}
-            <span class="units">{{localize 'DANGERZONE.ratio'}}</span>
+        <label for="attachedToken">{{localize "DANGERZONE.type-form.region.attachedToken.label"}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.region.attachedToken.description'}}"><i class="fas fa-info-circle"></i></span>
         </label>
         <div class="form-fields">
-            <input type="number" required name="scale" min="0.01" max="50" step="0.01" value={{#if data.scale}}{{data.scale}}{{else}}1{{/if}}>
+            <select name="attachedToken" value="data.attachedToken" >  
+                {{selectOptions options.REGION.ATTACHEDTOKEN selected=data.attachedToken localize=true}}
+            </select>
         </div>
     </div>
+    <fieldset>
+        <legend>{{localize "DANGERZONE.type-form.region.restriction.label"}}</legend>
+        <div class="form-group">
+            <label for="restriction.enabled">{{localize "DANGERZONE.type-form.region.restriction.enabled.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="restriction.enabled" {{checked data.restriction.enabled}}>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="restriction.type">{{localize "DANGERZONE.type-form.region.restriction.type.label"}}</label>
+            <div class="form-fields">
+                <select name="restriction.type" value="data.restriction.type" >  
+                    {{selectOptions options.REGION.RESTRICTIONTYPE selected=data.restriction.type localize=true}}
+                </select>
+            </div>
+        </div>
+        {{formField fields.restriction.fields.type value=source.restriction.type options=restrictionTypes classes="slim" rootId=rootId}}
+        <div class="form-group">
+            <label for="restriction.priority">{{localize "DANGERZONE.type-form.region.restriction.priority.label"}}</label>
+            <div class="form-fields">
+                <input type="number" required data-dtype="Number" name="restriction.priority" min="0" step="1" value={{#if data.restriction.priority}}{{data.restriction.priority}}{{else}}0{{/if}}>
+            </div>
+        </div>
+    </fieldset>
     <div class="form-group">
         <label for="delay">{{localize "DANGERZONE.type-form.region.delay.label"}}</label>
         <div class="form-fields">

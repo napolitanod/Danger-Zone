@@ -21,6 +21,34 @@ Hooks.once('init', async function() {
     
 	let modulename = "danger-zone";
 
+	game.settings.register(modulename, "min-elevation", {
+		name: game.i18n.localize("DANGERZONE.setting.min-elevation.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.min-elevation.description"),
+		scope: "world",
+		config: true,
+		default: 0,
+		type: Number,
+		range: {
+			min: -100,
+			max: 0,
+			step: 1
+		}
+	});
+
+	game.settings.register(modulename, "max-elevation", {
+		name: game.i18n.localize("DANGERZONE.setting.max-elevation.label"),
+		hint: game.i18n.localize("DANGERZONE.setting.max-elevation.description"),
+		scope: "world",
+		config: true,
+		default: 20,
+		type: Number,
+		range: {
+			min: 0,
+			max: 100,
+			step: 1
+		}
+	});
+
 	game.settings.registerMenu(modulename, "danger-zone-types-config", {
         name: game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.name"),
         label: game.i18n.localize("DANGERZONE.setting.danger-zone-types-config.label"),

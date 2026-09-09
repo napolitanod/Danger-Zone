@@ -88,6 +88,61 @@ export class helper {
   
     form.setPosition()
   }
+
+  /**returns the world bottom elevation in the event that the value passed in is infinity or null
+   * 
+   * @param {int} val 
+   * @returns 
+   */
+  static fallbackElevationBottom(val){
+    return (val === Infinity || val === -Infinity || val === null || val === undefined) ? dangerZone.minElevation : val;
+  }
+
+  /**returns the world top elevation in the event that the value passed in is infinity or null
+   * 
+   * @param {int} val 
+   * @returns 
+   */
+  static fallbackElevationTop(val){
+    return (val === Infinity || val === -Infinity || val === null || val === undefined) ? dangerZone.maxElevation : val;
+  }
+
+  /**  returns a random value from the array
+   * 
+   * @param {array} arr 
+   * @returns 
+   */
+  static pickRandom(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  /**returns levels for the given scene, filtered down by the optionally provided set of level ids
+   * 
+   * @param {*} scene 
+   * @param {*} filterIds 
+   * @returns 
+   */
+  static sceneLevels(scene, filterIds = []){
+      let levels = []
+      if(scene.levels?.length){
+          levels = filterIds.length ? scene.levels?.filter(l => filterIds.includes(l.id)) : scene.levels
+      }
+      return levels
+  }
+
+  /**returns the minimum bottom and maximum top for elevation related to a scene's levels, with optional abbility to filter to certain levels
+   * 
+   * @param {document} scene 
+   * @param {array} filterIds 
+   * @returns 
+   */
+  static sceneLevelsElevationBounds(scene, filterIds = []){
+      const elevations = this.sceneLevels(scene, filterIds).map(l => l.elevation);
+      return{
+          bottom: Math.min(...elevations.map(e => e.bottom ?? -Infinity)),
+          top: Math.max(...elevations.map(e => e.top ?? Infinity))
+      }
+  }
 }
 
 export function circleAreaGrid(xLoc,yLoc, dimension = {w:w, h:h}){

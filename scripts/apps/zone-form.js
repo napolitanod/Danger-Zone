@@ -66,6 +66,8 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
     return {
       zone: this.zone,
       actorOps: actorOps(),
+      defaultMinElevation: dangerZone.minElevation,
+      defaultMaxElevation: dangerZone.maxElevation,
       hideLevels: this.zone.scene.regionId ? true : false,
       hideOperation: this.zone.trigger.loop > 1 ? false : true,
       levelOps: getSceneLevelList(this.sceneId),
@@ -193,8 +195,14 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
    */
   #regionChange(event){
     const data = getEventData(event)
-    const op = this.element.querySelector(`#dz-levels`);
-    data.target.value ? op.classList.add('dz-hidden') : op.classList.remove('dz-hidden')
+    const lvl = this.element.querySelector(`#dz-levels`);
+    const dim = this.element.querySelector(`#dz-dimensions`);
+    const dimlvl = this.element.querySelector(`#dz-dimensions-region`);
+    const rgnlvl = this.element.querySelector(`#dz-levels-region`);
+    data.target.value ? lvl.classList.add('dz-hidden') : lvl.classList.remove('dz-hidden')
+    data.target.value ? dim.classList.add('dz-hidden') : dim.classList.remove('dz-hidden')
+    data.target.value ? dimlvl.classList.remove('dz-hidden') : dimlvl.classList.add('dz-hidden')
+    data.target.value ? rgnlvl.classList.remove('dz-hidden') : rgnlvl.classList.add('dz-hidden')
     this.setPosition()
   }
 

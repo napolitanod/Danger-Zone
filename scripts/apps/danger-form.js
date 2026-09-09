@@ -731,7 +731,9 @@ export class GlobalZoneDangerPartConfig extends DangerPartConfig {
         zone: obj,
         actorOps: actorOps(),
         hideOperation: obj.trigger.loop > 1 ? false : true,
-        zoneTypeOps: dangerZoneType.dangerList
+        zoneTypeOps: dangerZoneType.dangerList,
+        defaultMinElevation: dangerZone.minElevation,
+        defaultMaxElevation: dangerZone.maxElevation
       } )
   }
 

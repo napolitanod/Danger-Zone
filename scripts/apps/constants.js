@@ -17,7 +17,7 @@ export const DANGERZONEPARTS = new Map([
     ['lastingEffect', {icon:'fa-solid fa-cubes', templates: new Map([[1, 'tile'], [2,'overhead'], [3,'offset']])}], 
     ['macro', {icon: 'fa-solid fa-code'}],
     ['mutate', {flag: true, icon: 'fas fa-pastafarianism'}],
-    ['region', {icon:'fa-regular fa-game-board', templates: new Map([[1, 'settings'], [2, 'offset'], [3, 'behaviors']])}],
+    ['region', {icon:'fa-regular fa-game-board', templates: new Map([[1, 'settings'], [2, 'visual'], [3, 'offset'], [4, 'behaviors']])}],
     ['rolltable', {icon: 'fas fa-th-list'}], 
     ['scene', {icon: 'fas fa-map', templates: new Map([[1, 'settings'], [2,'light']])}], 
     ['sound', {icon:'fa-solid fa-music', templates: new Map([[1, 'audio'], [2,'effects'], [3,'offset']])}],
@@ -286,20 +286,34 @@ export const DANGERFORMOPTIONS = {
         "pxl": "DANGERZONE.type-form.offset.type.options.pxl.label"
     },
     REGION: {
+        ATTACHEDTOKEN: {
+            "": "DANGERZONE.type-form.region.attachedToken.options.none",
+            "S": "DANGERZONE.type-form.region.attachedToken.options.source",
+            "T": "DANGERZONE.type-form.region.attachedToken.options.target"
+        },
         EVENTS: Object.keys(CONST.REGION_EVENTS).reduce((obj, key) => {
                 let k = CONST.REGION_EVENTS[key];
                 let v = `DANGERZONE.region.events.options.${k}`
                 obj[k] = v === key ? key.titleCase().replace('_',' ').replace('_',' ') : v;
                 return obj;
             }, {}),
+        HIGHLIGHTMODE: {
+            "shapes": "DANGERZONE.type-form.region.highlightMode.shapes.label", 
+            "coverage": "DANGERZONE.type-form.region.highlightMode.coverage.label"
+        },
+        RESTRICTIONTYPE: Object.fromEntries(
+            CONST.EDGE_RESTRICTION_TYPES.map(key => [key, `REGION.RESTRICTION_TYPES.${key}.label`])
+        ),
         SHAPETYPE: {
             "ellipse": "DANGERZONE.type-form.region.type.options.ellipse",
             "rectangle": "DANGERZONE.type-form.region.type.options.rectangle"
         },
         VISIBILITY: {
-            'LAYER': "DANGERZONE.type-form.region.visibility.options.layer",
-            'GAMEMASTER': "DANGERZONE.type-form.region.visibility.options.gamemaster",
-            'ALWAYS': "DANGERZONE.type-form.region.visibility.options.always"
+            "LAYER_UNLOCKED": "DANGERZONE.type-form.region.visibility.options.layer_unlocked",
+            "LAYER": "DANGERZONE.type-form.region.visibility.options.layer",
+            "GAMEMASTER": "DANGERZONE.type-form.region.visibility.options.gamemaster",
+            "OBESERVER": "DANGERZONE.type-form.region.visibility.options.observer",
+            "ALWAYS": "DANGERZONE.type-form.region.visibility.options.always"
         }
     },
     SCENE: {
@@ -833,9 +847,9 @@ export const WORKFLOWSTATES = {
 export const WORLDZONE = {
     dimensions: {
         bleed: false,
-        bottom: 0,
+        bottom: undefined,
         stretch: '',
-        top: 0
+        top: undefined
     },
     source: {
         area: '',
@@ -1169,7 +1183,6 @@ export function setExecutableOptions(){
                 document: "AmbientLight", 
                 wipeable: true, 
                 modules: [
-                    {active: dangerZone.MODULES.wallHeightOn, name: "wall-height", dependent: false}, 
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
@@ -1299,7 +1312,6 @@ export function setExecutableOptions(){
                 document: "Wall",  
                 wipeable: true,
                 modules:[
-                    {active: dangerZone.MODULES.wallHeightOn, name: "wall-height", dependent: false}, 
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"

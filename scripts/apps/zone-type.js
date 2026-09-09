@@ -212,6 +212,7 @@ export class dangerZoneType {
         },
         region: {
           active: false,
+          attachedToken: "",
           behavior: {
             macro: {
               everyone: false,
@@ -221,6 +222,11 @@ export class dangerZoneType {
             pause: {
               enable: false,
               once: false
+            },
+            restriction: {
+              enabled: false,
+              type: 'move',
+              priority: 0
             },
             script: {
               source: '',
@@ -238,6 +244,8 @@ export class dangerZoneType {
           },
           color: '',
           delay: 0,
+          displayMeasurements: false,
+          highlightMode: 'shapes',
           hole: false,
           name: '',
           offset: {

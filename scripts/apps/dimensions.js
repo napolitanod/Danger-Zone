@@ -1,5 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
-import {circleAreaGrid, getTagEntities, rayIntersectsGrid} from './helpers.js';
+import {circleAreaGrid, getTagEntities, rayIntersectsGrid, helper} from './helpers.js';
 
 export class dangerZoneDimensions {
     /**
@@ -15,7 +15,48 @@ export class dangerZoneDimensions {
     }
 
     get boundary(){
-        return this.region?.id ? boundary.documentBoundary("Region", this.region) : boundary.documentBoundary("Scene", this.scene, this.dangerId ? {global: {bottom: this.danger.globalZone?.options?.bottom ?? null, top: this.danger.globalZone?.options?.top ?? null}} : {})
+        let docType, document
+        
+        if(this.hasRegion) {
+            docType = "Region";
+            document = this.region;
+        } else {
+            docType = "Scene";
+            document = this.scene
+        }
+
+        const opts = {elevation: this.elevation}
+
+        return boundary.documentBoundary(docType, document, opts)
+    }
+    
+    get danger(){
+        return this.zone.danger;
+    }
+
+    get dangerRelativeDimensions(){
+        return {
+                w: this.danger.dimensions.units.w ?? this.boundary.dimensions.w, 
+                h: this.danger.dimensions.units.h ?? this.boundary.dimensions.h, 
+                d: this.danger.dimensions.units.d < 1 ? this.boundary.depth : this.danger.dimensions.units.d 
+            }
+    }
+
+    get elevation(){
+        const e = this.hasRegion ? this.region.elevation : this.zone.dimensions
+        const elevation = {
+            top: helper.fallbackElevationTop(e.top),
+            bottom: helper.fallbackElevationBottom(e.bottom)
+        }
+        return elevation
+    }
+
+    get hasWorldZone(){
+        return this.dangerId ? true : false
+    }
+
+    get hasSceneLevels(){
+        return this.sceneLevels?.length ? true : false
     }
 
     get hasRegion(){
@@ -31,18 +72,6 @@ export class dangerZoneDimensions {
         return game.scenes.get(this.sceneId);
     }
 
-    get danger(){
-        return this.zone.danger;
-    }
-
-    get dangerRelativeDimensions(){
-        return {
-                w: this.danger.dimensions.units.w ?? this.boundary.dimensions.w, 
-                h: this.danger.dimensions.units.h ?? this.boundary.dimensions.h, 
-                d: this.danger.dimensions.units.d < 1 ? this.boundary.depth : this.danger.dimensions.units.d 
-            }
-    }
-
     get zone(){
         return this.dangerId ? dangerZone.getGlobalZone(this.dangerId, this.sceneId) : dangerZone.getZoneFromScene(this.zoneId, this.sceneId);
     }
@@ -51,6 +80,11 @@ export class dangerZoneDimensions {
         return getTagEntities(game.settings.get(dangerZone.ID, 'zone-exclusion-tag'), this.scene)
     }
 
+    /**
+     * 
+     * @param {object} options {range: {w: , h: , d:}}//object set by dimensions class dangerRelativeDimensions(). Sets the danger's dimensions
+     * @returns 
+     */
     async boundaryBleed(options = {}){
         const b = await this.getZoneBoundary();
         const topLeft = canvas.grid.getTopLeftPoint({j:b.dimensions.j -(Math.min(b.dimensions.j, (this.danger.dimensions.units.w -1))), i:b.dimensions.i - (Math.min(b.dimensions.i, (this.danger.dimensions.units.h-1)))});
@@ -75,11 +109,23 @@ export class dangerZoneDimensions {
         return b.grids()
     }
 
+    /**Generates an iterator that can then be used to output a random boundary
+     * 
+     * @returns iterator *
+     */
     async randomDangerBoundary() {
+        //the danger's width, height, and depth. Else the boundary for this dimension (typically 1,1,0)
         const options = {range: this.dangerRelativeDimensions}
+
+        //generate the boundary from the zone boundary, accounting for bleed
         const b = this.zone.dimensions.bleed ? await this.boundaryBleed(options) : await this.boundaryConstrained(options);
+        
+        //if zone dimensions include stretch, adds to the options object either 'bottom' or 'top' value, based on stretch setting
         this.zone.stretch(options);
+
+        //generate the random boundary iterator
         const grids = b.randomBoundary();
+
         dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, boundary: b, grids: grids, zone: this.zone, options: options})
         return grids
     }
@@ -138,7 +184,11 @@ export class dangerZoneDimensions {
 
     /*
         options:{ 
-            inclusive: bool //indicates whether the bottom and right edges are included in the boundary
+            inclusive: bool //indicates whether the bottom and right edges are included in the boundary,
+            retain: bool //
+            universe: Set //
+            bottom: Integer //override value for bottom getter, so that is output rather than the elevation bottom
+            limit: s
         }
     */
 export class boundary{
@@ -153,6 +203,7 @@ export class boundary{
         },
         this.elevation = elevation,
         this.excludes = new Set(),
+        this.gridsArray = [],
         this.gridIndex = new Set(),
         this.options = options,
         this.universe = options.universe ?? (options.limit?.target ? new Set() : '');
@@ -308,8 +359,12 @@ export class boundary{
         this._setGridIndex();
     }
 
+    /**creates a set of indexes for all of the boundary's grids
+     * 
+     */
     _setGridIndex(){
         const grids = this.grids();
+
         for(const grid of grids){
             this.gridIndex.add(boundary.makeIndex(grid))
         }
@@ -339,93 +394,190 @@ export class boundary{
         this.B = canvas.grid.getTopLeftPoint(this.B);
     }
 
+    /** the grids that make up the boundary, as an iterator
+     * 
+     */
     * grids(){
         const dim = this.dimensions; 
-        for(let m=0; (this.inclusive ? m<=dim.w : m<dim.w) || m===0; m++){
-            for(let n=0; (this.inclusive ? n<=dim.h: n<dim.h) || n===0; n++){
-                let coord = {i: dim.i+n, j: dim.j+m}; let coordIndex = boundary.makeIndex(coord);
+
+        const maxW = this.inclusive ? dim.w : dim.w - 1;
+        const maxH = this.inclusive ? dim.h : dim.h - 1;
+
+        for(let m=0; m <= maxW || m===0; m++){
+            for(let n=0; n <= maxH; n++){
+
+                let coord = {i: dim.i+n, j: dim.j+m}; 
+                let coordIndex = boundary.makeIndex(coord);
+
+                //skip if the index is in the excludes Set
                 if(this.excludes.has(coordIndex)) continue;
+
+                //skip if there is a universe and the universe does not include this index
                 if((this.universe && !this.universe.has(coordIndex))) continue;
-                if(!this.region?.object || this._testGridToRegion(coord)){
-                    yield {i:coord.i, j:coord.j, e: this.bottom, index: coordIndex, shift: {w:n, h:m}}
+
+                //skip if boundary is a region and it fails the region test
+                const inRegion = !this.region?.object || this._testGridToRegion(coord)
+                if(!inRegion) continue;
+
+                //output the grid
+                yield {
+                    i:coord.i, 
+                    j:coord.j, 
+                    e: this.bottom, 
+                    index: coordIndex, 
+                    shift: {w:n, h:m}
                 }
             }
         }
     } 
 
+    /** Returns an iterator of every grid point eligible for this boundary
+     * 
+     * @returns 
+     */
     * randomBoundary (){
-        const grids = this.grids(), all = [], ops = {excludes: this.excludes, universe: this.universe};
-        for(const grid of grids){all.push(grid)}
-        if('inclusive' in this.options){ops.inclusive = this.options.inclusive}
-        if('regionUuid' in this.options){ops.regionUuid = this.options.regionUuid}
-        if('bottom' in this.options){ops.bottom = this.options.bottom}
-        if('top' in this.options){ops.top = this.options.top}
-        if('range' in this.options) ops.range = this.range
-        if(all.length < 1 || this.depth < 0){
+
+        //cache the grid array
+        if(!this.gridsArray.length) this.gridsArray = [...this.grids()];
+
+        if(this.gridsArray.length === 0 || this.depth < 0){
             if(this.depth < 0 && game.user.isActiveGM){
                 ui.notifications?.error(game.i18n.localize("DANGERZONE.alerts.danger-depth-exceeds-zone"));
             }
             return dangerZone.log(false,'Invalid zone settings ', {boundary: this})
         }
+
+        const ops = {
+                excludes: this.excludes,
+                universe: this.universe,
+                ...(this.options.inclusive !== undefined && {inclusive: this.options.inclusive}),
+                ...(this.options.regionUuid && {regionUuid: this.options.regionUuid}),
+                ...(this.options.bottom !== undefined && {bottom: this.options.bottom}),
+                ...(this.options.top !== undefined && {top: this.options.top}),
+                ...(this.options.range && {range: this.range})
+            };
+
         const zAdj = this.depth ? (this.range.d ?? this.depth-1) : 0 
+
+        //iterator function
         while(true){
-            const test = all[Math.floor(Math.random() * all.length)]
+            const test = helper.pickRandom(this.gridsArray)
+
             const topLeft = canvas.grid.getTopLeftPoint(test); 
             const bottomRight = point.shiftPoint(topLeft, this.range);
-            const e = test.e + Math.floor(Math.random() * this.depth);
-            const top = e === -Infinity ? Infinity : e + zAdj;
-            yield new boundary(topLeft, bottomRight, {bottom: e, top: top}, ops)
+
+            const randomDepth = this.depthIsInfinite ? 0 : Math.floor((Math.random() * this.depth));
+            const bottom = test.e + randomDepth;
+            const top = this.topIsInfinite ? Infinity : bottom + zAdj;
+
+            yield new boundary(topLeft, bottomRight, {bottom: bottom, top: top}, ops)
         }
 
     }
 
-    /**
+    /**Converts a foundry document into a Danger Zone boundary
      * 
      * @param {*} documentName 
      * @param {*} document 
-     * @param {*} options 
+     * @param {*} options  //options not used here are also passed through into the boundary method
      *  {
-     *      global: {bottom: integar, top: integer}} //used to pass in bottom and top of zone for world zones
+     *      elevation: {bottom: integar, top: integer}} //used to pass in bottom and top of zone for world zones,
      *  }
      * @returns 
      */
     static documentBoundary(documentName, document, options = {}){
-        //dangerZone.log(false,'Determine document boundary ', {documentName: documentName, document: document, options: options})
         let dim;
         switch(documentName){
             case "Wall":
-                const wallHeight = (dangerZone.MODULES.wallHeightOn && document.flags?.['wall-height']) ? document.flags?.['wall-height'] : {bottom: 0, top: 0}
-                dim={x: document.object.bounds.x, y:document.object.bounds.y, width: document.object.bounds.width, height: document.object.bounds.height, bottom: wallHeight.bottom, top: wallHeight.top}
+                const wallElevation = helper.sceneLevelsElevationBounds(document.parent, document.levels) 
+                dim={
+                    x: document.object.bounds.x, 
+                    y:document.object.bounds.y, 
+                    width: document.object.bounds.width, 
+                    height: document.object.bounds.height, 
+                    bottom: wallElevation.bottom, 
+                    top: wallElevation.top
+                }
                 break
             case "AmbientLight":
                 const radius = document.object.radius
-                const dm = (radius*2)-1
-                dim={x:document.object.bounds.x, y:document.object.bounds.y, width: dm, height: dm, bottom: document.elevation - radius , top: document.elevation + radius} 
-                break
+                const dm = (radius * 2) - 1
+                dim={
+                    x:document.object.bounds.x, 
+                    y:document.object.bounds.y, 
+                    width: dm, 
+                    height: dm, 
+                    bottom: document.elevation - radius, 
+                    top: document.elevation + radius
+                } 
+                break;
             case "Drawing":
-                dim={x: document.x, y:document.y, width: document.shape.width, height: document.shape.height, bottom: document.elevation, top: document.elevation}
+                dim={
+                    x: document.x, 
+                    y:document.y, 
+                    width: document.shape.width, 
+                    height: document.shape.height, 
+                    bottom: document.elevation, 
+                    top: document.elevation
+                }
                 break;
             case "Region":
-                dim={x: document.object.bounds.x, y:document.object.bounds.y, width: document.object.bounds.width, height: document.object.bounds.height, bottom: document.elevation.bottom, top: document.elevation.top}
+                dim={
+                    x: document.object.bounds.x, 
+                    y:document.object.bounds.y, 
+                    width: document.object.bounds.width, 
+                    height: document.object.bounds.height, 
+                    bottom: document.elevation.bottom, 
+                    top: document.elevation.top
+                }
                 break;
             case "Scene":
-                dim={x: document.dimensions.sceneX, y:document.dimensions.sceneY, width: document.dimensions.sceneWidth, height: document.dimensions.sceneHeight, bottom: options.global ? options.global.bottom : null, top: options.global ? options.global.top : null}
+                const sceneElevation = helper.sceneLevelsElevationBounds(document, document.levels) 
+                dim={
+                    x: document.dimensions.sceneX, 
+                    y:document.dimensions.sceneY, 
+                    width: document.dimensions.sceneWidth, 
+                    height: document.dimensions.sceneHeight, 
+                    bottom: sceneElevation.bottom, 
+                    top: sceneElevation.top
+                }
                 break;
             case "Tile":
-                dim={x: document.x, y:document.y, width: document.width - 1, height: document.height - 1, bottom: document.elevation, top: document.elevation}
+                dim={
+                    x: document.x, 
+                    y:document.y, 
+                    width: document.width - 1, 
+                    height: document.height - 1, 
+                    bottom: document.elevation, 
+                    top: document.elevation
+                }
                 break;
             case "Token":
                 const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
                 const position = canvas.grid.getOffset(document);
                 const topLeft = canvas.grid.getTopLeftPoint({j:position.j + document.width, i:position.i + document.height}); 
                 const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
-                const Td = (dangerZone.MODULES.wallHeightOn && document.getFlag('wall-height', 'tokenHeight')) ? document.getFlag('wall-height', 'tokenHeight') : (distance * Math.max(document.width, document.height) * multiplier);
-                dim = {x:document.x, y:document.y, width: topLeft.x - document.x, height: topLeft.y - document.y, bottom:document.elevation, top: document.elevation + Td};
+                const Td = (distance * Math.max(document.width, document.height) * multiplier);
+                dim = {
+                    x:document.x, 
+                    y:document.y, 
+                    width: topLeft.x - document.x, 
+                    height: topLeft.y - document.y, 
+                    bottom:document.elevation, 
+                    top: document.elevation + Td
+                };
                 break
             default: 
                 dim=document
         }
-        const b = new boundary({x:dim.x, y:dim.y}, {x: dim.x + dim.width, y: dim.y + dim.height}, {bottom:dim.bottom, top: dim.top}, options)
+
+        //generate the new bound
+        const A = {x: dim.x, y: dim.y}
+        const B = {x: A.x + dim.width, y: A.y + dim.height}
+        const e = {bottom: options.elevation?.bottom ?? dim.bottom, top: options.elevation?.top ?? dim.top}
+        const b = new boundary(A, B, e, options)
+
+        //return the boundary
         return b
     }
 
@@ -474,6 +626,7 @@ export class boundary{
     tokensIn(tokens){
         let kept = [];
         for(let token of tokens){
+            console.log(token, tokens)
             const b = boundary.documentBoundary('Token', token);
             if(this.intersectsBoundary(b)){
                 kept.push(token)

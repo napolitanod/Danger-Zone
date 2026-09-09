@@ -38,7 +38,6 @@ export class dangerZone {
     socketLibOn: false, 
     taggerOn: false, 
     sequencerOn: false, 
-    wallHeightOn: false, 
     portalOn: false, 
     tokenSaysOn: false, 
     fxMasterOn: false, 
@@ -50,11 +49,26 @@ export class dangerZone {
     DANGER: 3
   }
 
+
   /**v13
    * outputs the danger list form last search term in lower case
    */
   static get lastSearchLower(){
     return dangerZone.LASTSEARCH.toLowerCase()
+  }
+
+  /**
+   * outputs the minimum elevation default for the game
+   */
+  static get minElevation(){
+    return game.settings.get(this.ID, 'min-elevation')
+  }
+  
+  /**
+   * outputs the max elevation default for the game
+   */
+  static get maxElevation(){
+    return game.settings.get(this.ID, 'max-elevation')
   }
 
   /** V13
@@ -157,7 +171,6 @@ export class dangerZone {
     if (game.modules.get("fxmaster")?.active){dangerZone.MODULES.fxMasterOn = true} ;
     if (game.modules.get("sequencer")?.active){dangerZone.MODULES.sequencerOn = true} ;
     if (game.modules.get("tagger")?.active){dangerZone.MODULES.taggerOn = true} ;
-    if (game.modules.get("wall-height")?.active){dangerZone.MODULES.wallHeightOn = true} ;
     if (game.modules.get("times-up")?.active && dangerZone.MODULES.daeOn === true){dangerZone.MODULES.timesUpOn = true};
     if (game.modules.get("socketlib")?.active) dangerZone.MODULES.socketLibOn = true
     if(['pf1', 'pf2e'].includes(game.world.system)) dangerZone.MODULES.activeEffectOn = false
@@ -460,7 +473,9 @@ export class zone {
     this.flavor = '',
     this.dimensions = {
       bleed: false,
-      stretch: ''
+      bottom: undefined,
+      stretch: '',
+      top: undefined
     },
     this.trigger = {
       chat: {

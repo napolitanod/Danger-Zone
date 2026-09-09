@@ -1,18 +1,25 @@
 <div class="tab danger-part-group" data-tab="boundary" data-group="sheet">
-        <div class="form-group">
-        <label>
-            {{localize 'DANGERZONE.type-form.globalZone.bottom.label'}}
-        </label>
-        <div class="form-fields">
-            <input type="Number" name="dimensions.bottom" step="1" value={{#if zone.dimensions.bottom}}{{zone.dimensions.bottom}}{{else}}0{{/if}}>
-        </div>
-    </div>
     <div class="form-group">
         <label>
-            {{localize 'DANGERZONE.type-form.globalZone.top.label'}}
+            {{localize 'DANGERZONE.type-form.globalZone.dimensions.label'}}
         </label>
         <div class="form-fields">
-            <input type="Number" name="dimensions.top" step="1" value={{#if zone.dimensions.top}}{{zone.dimensions.top}}{{else}}0{{/if}}>
+            <div class="form-group">
+                <label>
+                    {{localize 'DANGERZONE.type-form.globalZone.bottom.label'}}
+                </label>
+                <div class="form-fields">
+                    <input type="Number" name="dimensions.bottom" step="1" placeholder="{{defaultMinElevation}}" value={{zone.dimensions.bottom}}>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>
+                    {{localize 'DANGERZONE.type-form.globalZone.top.label'}}
+                </label>
+                <div class="form-fields">
+                    <input type="Number" name="dimensions.top" step="1" placeholder="{{defaultMaxElevation}}" value={{zone.dimensions.top}}>
+                </div>
+            </div>
         </div>
     </div>
     <div class="form-group">
