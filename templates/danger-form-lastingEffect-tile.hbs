@@ -1,5 +1,16 @@
 <div class="tab active danger-part-group" data-tab="tile" data-group="sheet">
     <p class="notes">{{localize "DANGERZONE.type-form.tile.description"}}</p>
+    
+    <fieldset>
+        <legend>{{localize "DANGERZONE.levels.label"}}</legend>
+        <div class="form-group">
+            <div class="form-fields">
+                <select name="levels" value="{{data.levels}}" >
+                    {{selectOptions options.LEVELSOPTIONS selected=data.levels localize=true}}
+                </select>
+            </div>
+        </div>
+    </fieldset>
     <div class="form-group">
         <label for="file">{{localize random.visual.FILE}}</label>
         <div class="form-fields">

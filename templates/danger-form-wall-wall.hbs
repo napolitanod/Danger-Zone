@@ -1,5 +1,14 @@
 <div class="tab active danger-part-group" data-tab="wall" data-group="sheet">
-    <p class="notes">{{localize "DANGERZONE.type-form.wall.description"}}</p>
+    <p class="notes">{{localize "DANGERZONE.type-form.wall.description"}}</p>    <fieldset>
+    <legend>{{localize "DANGERZONE.levels.label"}}</legend>
+        <div class="form-group">
+            <div class="form-fields">
+                <select name="levels" value="{{data.levels}}" >
+                    {{selectOptions options.LEVELSOPTIONS selected=data.levels localize=true}}
+                </select>
+            </div>
+        </div>
+    </fieldset>
     <div class="form-group">
         <label for="top">{{localize "DANGERZONE.type-form.wall.top.label"}}</label>
         <div class="form-fields">

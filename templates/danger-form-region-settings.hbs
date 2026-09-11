@@ -5,7 +5,17 @@
         <div class="form-fields">
             <input type="checkbox" data-dtype="Boolean" name="active" {{checked data.active}}>
         </div>
-    </div>
+    </div>    
+    <fieldset>
+        <legend>{{localize "DANGERZONE.levels.label"}}</legend>
+        <div class="form-group">
+            <div class="form-fields">
+                <select name="levels" value="{{data.levels}}" >
+                    {{selectOptions options.LEVELSOPTIONS selected=data.levels localize=true}}
+                </select>
+            </div>
+        </div>
+    </fieldset>
     <div class="form-group">
         <label for="name">{{localize "DANGERZONE.type-form.region.name.label"}}</label>
         <div class="form-fields">

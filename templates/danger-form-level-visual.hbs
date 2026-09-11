@@ -1,0 +1,101 @@
+<div class="tab danger-part-group" data-tab="visual" data-group="sheet">
+     <fieldset>
+        <legend>{{ localize "DANGERZONE.type-form.level.background.label" }}</legend>
+        <div class="form-group">
+            <label for="background.file">{{localize "DANGERZONE.type-form.level.background.file.label"}}</label>
+            <div class="form-fields">
+                <file-picker name="background.file" type="texture" value="{{data.background.file}}"></file-picker>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="background.color">{{localize "DANGERZONE.type-form.level.background.color.label"}}</label>
+            <div class="form-fields">
+                <color-picker name="background.color" value={{data.background.color}}></color-picker>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="background.tint">{{localize "DANGERZONE.type-form.level.background.tint.label"}}</label>
+            <div class="form-fields">
+                <color-picker name="background.tint" value={{data.background.tint}}></color-picker>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="background.alpha">{{localize "DANGERZONE.type-form.level.background.alpha.label"}}</label>
+            <div class="form-fields">
+                <range-picker name="background.alphaThreshold" value="{{data.background.alphaThreshold}}" min="0" max="1" step="0.01"></range-picker>
+            </div>
+        </div>
+    </fieldset>
+
+     <fieldset>
+        <legend>{{ localize "DANGERZONE.type-form.level.foreground.label" }}</legend>
+        <div class="form-group">
+            <label for="foreground.file">{{localize "DANGERZONE.type-form.level.foreground.file.label"}}</label>
+            <div class="form-fields">
+                <file-picker name="foreground.file" type="texture" value="{{data.foreground.file}}"></file-picker>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="foreground.tint">{{localize "DANGERZONE.type-form.level.foreground.tint.label"}}</label>
+            <div class="form-fields">
+                <color-picker name="foreground.tint" value={{data.foreground.tint}}></color-picker>
+            </div>
+        </div>
+    </fieldset>
+
+
+    <fieldset>
+        <legend>{{ localize "DANGERZONE.type-form.level.fog.label" }}</legend>
+        <div class="form-group">
+            <label for="fog.file">{{localize "DANGERZONE.type-form.level.fog.file.label"}}</label>
+            <div class="form-fields">
+                <file-picker name="fog.file" type="texture" value="{{data.fog.file}}"></file-picker>
+            </div>
+        </div>
+    </fieldset>
+
+
+    <fieldset>
+        <legend>{{ localize "DANGERZONE.type-form.level.textures.label" }}</legend>
+        <div class="form-group slim">
+            <label>{{localize "DANGERZONE.type-form.level.textures.anchor.label"}}</label>
+            <div class="form-fields">
+                <label for="textures.anchorX">{{localize "DANGERZONE.type-form.level.textures.anchor.x.label"}}</label>
+                <input type="number" name="textures.anchorX" step="any" value={{data.textures.anchorX}}>
+                <label for="textures.anchorY">{{localize "DANGERZONE.type-form.level.textures.anchor.y.label"}}</label>
+                <input type="number" name="textures.anchorY" step="any" value={{data.textures.anchorY}}>
+            </div>
+        </div>
+        <div class="form-group slim">
+            <label>{{localize "DANGERZONE.type-form.level.textures.offset.label"}}</label>
+            <div class="form-fields">
+                <label for="textures.offsetX">{{localize "DANGERZONE.type-form.level.textures.offset.x.label"}}</label>
+                <input type="number" name="textures.offsetX" step="1" value={{data.textures.offsetX}}>
+                <label for="textures.offsetY">{{localize "DANGERZONE.type-form.level.textures.offset.y.label"}}</label>
+                <input type="number" name="textures.offsetY" step="1" value={{data.textures.offsetY}}>
+            </div>
+        </div>
+        <div class="form-group slim">
+            <label>{{localize "DANGERZONE.type-form.level.textures.scale.label"}}</label>
+            <div class="form-fields">
+                <label for="textures.scaleX">{{localize "DANGERZONE.type-form.level.textures.scale.x.label"}}</label>
+                <input type="number" name="textures.scaleX" step="any" value={{data.textures.scaleX}}>
+                <label for="textures.scaleY">{{localize "DANGERZONE.type-form.level.textures.scale.y.label"}}</label>
+                <input type="number" name="textures.scaleY" step="any" value={{data.textures.scaleY}}>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="textures.fit">{{localize "DANGERZONE.type-form.level.textures.fit.label"}}</label>
+            <select name="textures.fit" value="{{data.textures.fit}}"> 
+                {{selectOptions options.LEVEL.TEXTURESFITMODES selected=data.textures.fit localize=true}}
+            </select>   
+        </div>
+        <div class="form-fields">
+            <label for="textures.rotation">{{localize "DANGERZONE.type-form.level.textures.rotation.label"}}
+                <span class="units">{{localize 'DANGERZONE.degrees'}}</span>
+            </label>
+            <input type="number" name="textures.rotation" step="any" min="0" max="360" value={{data.textures.rotation}}>
+        </div>
+    </fieldset>
+
+</div>

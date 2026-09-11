@@ -626,7 +626,6 @@ export class boundary{
     tokensIn(tokens){
         let kept = [];
         for(let token of tokens){
-            console.log(token, tokens)
             const b = boundary.documentBoundary('Token', token);
             if(this.intersectsBoundary(b)){
                 kept.push(token)

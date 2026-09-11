@@ -181,6 +181,7 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
       case 'scene': 
         return part.active ? true : false
       case 'globalZone': return part.enabled ? true : false
+      case 'level': return part.add ? true : false
       case 'tokenMove': return (part.v.dir || part.hz.dir || part.e.type || part.sToT) ? true : false
       case 'tokenResponse': return (part.save?.enable || part.damage?.enable) ? true : false
       case 'tokenSays': return part.fileType ? true : false
@@ -689,6 +690,7 @@ export class ItemDangerPartConfig extends DangerPartConfig {
    */
   static #pile(event) {
     helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'hide', html: this.element, id: `dz-token-fields`})
+    helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'show', html: this.element, id: `dz-token-levels`})
   }
 }
 
@@ -858,6 +860,23 @@ export class LastingEffectDangerPartConfig extends DangerPartConfig {
 
   /** @override */
   static TABS = this._tabs(this.#partId) 
+}
+
+/**v14
+ * Configures the level danger part
+ */
+export class LevelDangerPartConfig extends DangerPartConfig {
+  static #partId = 'level'
+
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId)
+
+  /** @override */
+  static PARTS = this._parts(this.#partId)
+
+  /** @override */
+  static TABS = this._tabs(this.#partId) 
+
 }
 
 /**v13

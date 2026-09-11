@@ -36,6 +36,22 @@
         "grids": "(Grids)",
         "gridUnits": "units",
         "gridUnits2": "(Grid Units)",
+        "level.label": "Level",
+        "levels": {
+            "label": "Levels",
+            "options": {
+                "scene": "Include in all scene levels",
+                "zone": "Include in all zone levels",
+                "trigger": "Include in all trigger levels",
+                "danger": "Include in level created by this danger"
+            },
+            "options-single": {
+                "scene": "Include in one random scene level",
+                "zone": "Include in one random zone level",
+                "trigger": "Include in one random trigger level",
+                "danger": "Include in level created by this danger"
+            }
+        },
         "location-picker": "Select the zone dimensions",
         "macro.label": "Macro",
         "movement.label": "Movement",
@@ -260,7 +276,18 @@
             },
             "stretch.description": "Adjusts the danger's area of effect so that the stretch location remains fixed while the zone's top and bottom still constrict the possible initial target. 'Ground' uses 0 as the final bottom and 'Sky' uses 99999 as the final top. Example: Given 'rising from bottom' in a zone with bottom=2, top=10, and danger depth=3, and an initial target of bottom=5/top=8. The stretch will keep the top target = 8 but drop the bottom to 2, which equals the bottom of the zone.",
             "stretch.label": "Stretch",
-            "target.description": "On trigger, the danger is placed within the zone's boundaries and tokens within the danger's dimensions become eligble targets.",
+            "target":{
+                "description": "On trigger, the danger is placed within the zone's boundaries and tokens within the danger's dimensions become eligble targets.",
+                "levels":{
+                    "label": "Levels",
+                    "options":{
+                        "any": "Target random zone level",
+                        "all": "Target all zone levels",
+                        "elevation": "Target any zone level within target elevation",
+                        "current": "Target current zone level (GM is viewing)"
+                    }
+                }
+            },
             "targetMovementStart.description": "For aura trigger, the target location will be the moving token's start location (else it is the destination).",
             "targetMovementStart.label": "At Start Position (Aura)",
             "targetCombatant.description": "For combat scoped triggers, this will target the location of the combatant and solely target the combatant unless 'Danger Targets All Tokens' is enabled.",
@@ -742,7 +769,18 @@
                 "description": "Configures this danger so that it becomes available on every scene as a manually triggered zone with a more limited option set.",
                 "dimensions.label": "World Zone Elevation",
                 "top.label": "Top",
-                "label": "World Zone"
+                "label": "World Zone",
+                 "target": {
+                    "levels":{
+                        "label": "Levels",
+                        "options":{
+                            "any": "Target random scene level",
+                            "all": "Target all scene levels",
+                            "elevation": "Target any scene level within target elevation",
+                            "current": "Target current scene level (GM is viewing)"
+                        }
+                    }
+                }
             },
             "icon.label": "Icon",
             "icon.find": "Browse for Icon",
@@ -767,6 +805,84 @@
                 "tag.description": "Tagger tag"
             },
             "lastingEffect.label": "Lasting Effect",
+            "level": {
+                "add": {
+                    "label": "Create New Level",
+                    "description": "If you choose to add a level, and the scene already contains one of that name, the newly added level is still treated as “created” for all other danger parts that reference this created level.",
+                    "options": {
+                        "no": "Do not add level (danger part inactive)",
+                        "replace": "Add level unless one of same name already exists",
+                        "add": "Add level, appending name iterator"
+                    }
+                },
+                "background": {
+                    "label": "Background",
+                    "color.label": "Color",
+                    "file.label": "Texture",
+                    "tint.label": "Tint",
+                    "alpha.label": "Alpha Threshold"
+                },
+                "description": "Add a new level to the scene.",
+                "elevation": {
+                    "label": "Elevation Range",
+                    "options": {
+                        "zone": "Match zone elevation range",
+                        "target": "Match target elevation range"
+                    }
+                },
+                "fog": {
+                    "label": "Fog of War",
+                    "file.label": "Unexplored Image"
+                },
+                "foreground": {
+                    "label": "Foreground",
+                    "file.label": "Texture",
+                    "tint.label": "Tint"
+                },
+                "name.label": "Name of Level",
+                "textures": {
+                    "label": "Positioning",
+                    "anchor": {
+                        "label": "Anchor",
+                        "x.label": "X",
+                        "y.label": "Y"
+                    },
+                    "fit.label": "Fit Mode",
+                    "offset": {
+                        "label": "Offset",
+                        "x.label": "X",
+                        "y.label": "Y"
+                    },
+                    "rotation.label": "Rotation",
+                    "scale": {
+                        "label": "Scale",
+                        "x.label": "X",
+                        "y.label": "Y"
+                    }
+                    
+                },
+                "visibility": {
+                    "from":{
+                        "label": "Visible Levels",
+                        "options": {
+                                "none": "No other levels visible",
+                                "scene": "All scene levels visible",
+                                "zone": "All zone levels visible",
+                                "trigger": "All trigger levels visible"
+                            }
+                        },
+                    "to": {
+                        "label": "Visible From Other Levels",
+                        "options": {
+                                "none": "Visible to no other levels",
+                                "scene": "Visible to all scene levels",
+                                "zone": "Visible to all zone levels",
+                                "trigger": "Visible to all trigger levels"
+                            }
+                        }
+                    },
+                "label":"Level"      
+            },
             "macro.label": "Macro",
             "macro.description": "A macro to execute when this danger triggers.",
             "mutate": {
@@ -1079,6 +1195,15 @@
                     "random.label": "Random"
                     },
                 "label": "Move Tokens",
+                "levels":{
+                    "options-single": {
+                        "none": "Do not move level",
+                        "scene": "Move to one other random scene level",
+                        "zone": "Move to one other random zone level",
+                        "trigger": "Move to one other random trigger level",
+                        "danger": "Move to level created by this danger"
+                    }
+                },
                 "overrides.label": "Movement Overrides",
                 "source-to-target.label": "Move Source to Targeted",
                 "teleport.label": "Teleport",

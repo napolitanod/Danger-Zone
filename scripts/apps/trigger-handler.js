@@ -115,7 +115,7 @@ export class triggerManager {
             if(!rollResult) return
             table = game.tables.get(options.rollTableId)
             if(!table) return
-            results = table.getResultsForRoll(rollResult).map(r => r.text) 
+            results = table.getResultsForRoll(rollResult).map(r => r.description) 
         } else {
             table = options.table
             results = chatMessage.results
@@ -153,6 +153,10 @@ export class triggerManager {
                     if(zn.trigger.combatantInZone){
                         if(this.combatants.size){
                             const inZoneTokens = this.getTriggerCombatant(event)
+                            if(!inZoneTokens){
+                                this._cancelZone(zn, `Failed ${event} combatant in zone check. No tokens in zone.`)
+                                continue
+                            }
                             if(!await zn.tokensInZone(inZoneTokens)) {
                                 this._cancelZone(zn, `Failed ${event} combatant in zone check on combatant ${inZoneTokens.map(t => t.name).join()}`)
                                 continue
@@ -281,7 +285,7 @@ export class triggerManager {
     getTriggerCombatant(event){
         if(COMBAT_PERIOD_COMBAT_EVENTS.includes(event)) return this.combatants.map(t => t.token)
         if(COMBAT_THRESHOLD_END_EVENTS.includes(event)) return [this.previousCombatant.token]
-        return [this.combatant.token]
+        return this.combatant.token ? [this.combatant.token] : null
     }
     
     /**v13

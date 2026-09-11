@@ -6,7 +6,7 @@ import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
 import {wait, getTagEntities, getRandomNumber, joinWithAnd} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
-import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, EffectDangerPartConfig, ForegroundEffectDangerPartConfig, GlobalZoneDangerPartConfig, ItemDangerPartConfig, LastingEffectDangerPartConfig, MacroDangerPartConfig, MutateDangerPartConfig, RegionDangerPartConfig, RolltableDangerPartConfig, SceneDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig, TokenResponseDangerPartConfig, TokenSaysDangerPartConfig, WallDangerPartConfig, WarpgateDangerPartConfig, WeatherDangerPartConfig} from './apps/danger-form.js';
+import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, EffectDangerPartConfig, ForegroundEffectDangerPartConfig, GlobalZoneDangerPartConfig, ItemDangerPartConfig, LastingEffectDangerPartConfig, LevelDangerPartConfig, MacroDangerPartConfig, MutateDangerPartConfig, RegionDangerPartConfig, RolltableDangerPartConfig, SceneDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig, TokenResponseDangerPartConfig, TokenSaysDangerPartConfig, WallDangerPartConfig, WarpgateDangerPartConfig, WeatherDangerPartConfig} from './apps/danger-form.js';
 
 /**
  * A class which holds some constants for dangerZone
@@ -143,6 +143,7 @@ export class dangerZone {
         globalZone: GlobalZoneDangerPartConfig,
         item: ItemDangerPartConfig,
         lastingEffect: LastingEffectDangerPartConfig,
+        level: LevelDangerPartConfig,
         macro: MacroDangerPartConfig,
         mutate: MutateDangerPartConfig,
         region: RegionDangerPartConfig,
@@ -532,6 +533,7 @@ export class zone {
       exclusion: {
         conditions: []
       },
+      levels: 'all',
       quantity: {
         min: 1,
         max: 1

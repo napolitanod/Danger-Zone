@@ -24,6 +24,18 @@
             <input type="checkbox" data-dtype="Boolean" name="pile" {{checked data.pile}} data-action="pile">
         </div>
     </div>
+    
+    <fieldset id="dz-token-levels" class="{{#unless data.pile}}dz-hidden{{/unless}}">
+        <legend>{{localize "DANGERZONE.levels.label"}}</legend>
+        <div class="form-group">
+            <div class="form-fields">
+                <select name="levels" value="{{data.levels}}" >
+                    {{selectOptions options.LEVELSSINGLEOPTIONS selected=data.levels localize=true}}
+                </select>
+            </div>
+        </div>
+    </fieldset>
+
     <div id="dz-token-fields" class="{{#if data.pile}}dz-hidden{{/if}}">
         <div class="form-group">
             <label for="action">{{localize "DANGERZONE.type-form.item.action.label"}} 

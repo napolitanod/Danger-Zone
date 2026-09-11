@@ -1,5 +1,15 @@
 <div class="tab active danger-part-group" data-tab="audio" data-group="sheet">
     <p class="notes">{{localize "DANGERZONE.type-form.sound.description"}}</p>
+    <fieldset>
+        <legend>{{localize "DANGERZONE.levels.label"}}</legend>
+        <div class="form-group">
+            <div class="form-fields">
+                <select name="levels" value="{{data.levels}}" >
+                    {{selectOptions options.LEVELSOPTIONS selected=data.levels localize=true}}
+                </select>
+            </div>
+        </div>
+    </fieldset>
     <div class="form-group">
         <label for="randomFile">{{localize random.audio.LABEL}}</label>
         <div class="form-fields">

@@ -1,0 +1,54 @@
+<div class="tab active danger-part-group add" data-tab="settings" data-group="sheet">
+    <p class="notes add">{{localize "DANGERZONE.type-form.level.description"}}</p>
+
+
+    <div class="form-group add">
+        <label for="add" class="add">{{localize "DANGERZONE.type-form.level.add.label"}}</label>
+        <div class="form-fields class">
+            <select name="add" value="{{data.add}}" id="dz-danger-level-add"> 
+                {{selectOptions options.LEVEL.ADD selected=data.add localize=true}}
+            </select>   
+        </div>
+    </div> 
+    
+    <div class="form-group">
+        <label>{{localize 'DANGERZONE.type-form.level.name.label'}}</label>
+        <div class="form-fields">
+            <input type="text" required name="name" value="{{data.name}}" maxlength="100">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <div class="form-fields">
+            <p class="notes">{{localize "DANGERZONE.type-form.level.add.description"}}</p>
+        </div>
+    </div> 
+
+    <div class="form-group">
+        <label for="elevation">{{localize "DANGERZONE.type-form.level.elevation.label"}}</label>
+        <div class="form-fields">
+            <select name="elevation" value="{{data.elevation}}"> 
+                {{selectOptions options.LEVEL.ELEVATION selected=data.elevation localize=true}}
+            </select>   
+        </div>
+    </div> 
+    
+    <div class="form-group">
+        <label for="visibility.from">{{localize "DANGERZONE.type-form.level.visibility.from.label"}}</label>
+        <div class="form-fields">
+            <select name="visibility.from" value="{{data.visibility.from}}"> 
+                {{selectOptions options.LEVEL.VISIBILITYFROM selected=data.visibility.from localize=true}}
+            </select>   
+        </div>
+    </div> 
+
+    <div class="form-group">
+        <label for="visibility.to">{{localize "DANGERZONE.type-form.level.visibility.to.label"}}</label>
+        <div class="form-fields">
+            <select name="visibility.to" value="{{data.visibility.to}}"> 
+                {{selectOptions options.LEVEL.VISIBILITYTO selected=data.visibility.to localize=true}}
+            </select>   
+        </div>
+    </div> 
+
+</div>

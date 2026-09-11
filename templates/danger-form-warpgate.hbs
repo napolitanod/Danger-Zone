@@ -32,6 +32,16 @@
             <range-picker name="range" value="{{#if data.range}}{{data.range}}{{else}}0{{/if}}" min="0" step="1"></range-picker>  
         </div>
     </div>
+    <fieldset id="dz-token-levels" class="{{#unless data.pile}}dz-hidden{{/unless}}">
+        <legend>{{localize "DANGERZONE.levels.label"}}</legend>
+        <div class="form-group">
+            <div class="form-fields">
+                <select name="levels" value="{{data.levels}}" >
+                    {{selectOptions options.LEVELSSINGLEOPTIONS selected=data.levels localize=true}}
+                </select>
+            </div>
+        </div>
+    </fieldset>
     <div class="form-group">
         <label for="mutate">{{localize "DANGERZONE.type-form.warpgate.mutate.label"}}
             <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.mutate.description'}}"><i class="fas fa-info-circle"></i></span>

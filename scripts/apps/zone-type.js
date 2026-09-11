@@ -34,6 +34,7 @@ export class dangerZoneType {
           delay: 0,
           dim: 0,
           flags: {},
+          levels: '',
           lightAnimation: {
             reverse: false,
             speed: 5,
@@ -172,6 +173,7 @@ export class dangerZoneType {
           action: '',
           compendiumName: '',
           delay: '',
+          levels: '',
           name: [],
           source: '',
           tag: '',
@@ -182,6 +184,7 @@ export class dangerZoneType {
           delay: 0,
           file: '',
           hidden: false,
+          levels: '',
           occlusion: {
             alpha: 0,
             mode: 'FADE'
@@ -209,6 +212,38 @@ export class dangerZoneType {
           loop: true,
           tag: '',
           z: 0
+        },
+        level: {
+          add: '', 
+          background: {
+            color: '',
+            file: '',
+            tint: '#ffffff',
+            alphaThreshold: 0.75
+          },
+          elevation: '',
+          fog: {
+            file: ''
+          },
+          foreground: {
+            file: '',
+            tint: '#ffffff'
+          },
+          name: '',
+          rotation: 0,
+          textures: {
+            anchorX: 0.5,
+            anchorY: 0.5,
+            fit: 'fill',
+            offsetX: 0,
+            offsetY: 0,
+            scaleX: 1,
+            scaleY: 1,
+          },
+          visibility: {
+            from: '',
+            to: ''
+          }
         },
         region: {
           active: false,
@@ -247,6 +282,7 @@ export class dangerZoneType {
           displayMeasurements: false,
           highlightMode: 'shapes',
           hole: false,
+          levels: '',
           name: '',
           offset: {
             x: {
@@ -305,6 +341,7 @@ export class dangerZoneType {
               intensity: 5
             }
           },
+          levels: '',
           offset: {
             x: {
               flip: false,
@@ -367,6 +404,7 @@ export class dangerZoneType {
           e: {max:0, min:0, type: ''},
           flag: true,
           hz: {dir:'', max:0, min:0},
+          levels: '',
           source:'',
           sToT: false,
           teleport: false,
@@ -381,6 +419,7 @@ export class dangerZoneType {
           doorSound: undefined,
           ds: 0,
           left: false,
+          levels: '',
           light: 1,
           offset: {
             x: {
@@ -471,6 +510,10 @@ export class dangerZoneType {
     return (this.combat.targets.add || this.combat.spawn || this.combat.source.add || this.combat.new || this.combat.initiative.type || this.combat.start ) ? true : false
   }
 
+  get hasLevel(){
+    return this.options.level.add
+  }
+
   get globalZone(){
     return this.options.globalZone
   }
@@ -497,6 +540,10 @@ export class dangerZoneType {
 
   get lastingEffect(){
     return this.options.lastingEffect
+  }
+
+  get level(){
+    return this.options.level
   }
 
   get macro(){

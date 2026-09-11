@@ -2044,7 +2044,7 @@ class combat extends executable {
         } else if(this.initiative ==='S'){
             await this.#setInitiative()
         }
-        if(this.start & !this.combat.started) await this.combat.startCombat()
+        if(this.start && !this.combat.started) await this.combat.startCombat()
     }
 
     async #addToCombat(){

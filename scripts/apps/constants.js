@@ -15,6 +15,7 @@ export const DANGERZONEPARTS = new Map([
     ['foregroundEffect', {icon:'fas fa-bolt', templates: new Map([[1, 'visual'], [2, 'source'], [3,'offset']])}],
     ['globalZone', {icon:'fas fa-radiation', templates: new Map([[1, 'basics'], [2, 'boundary'], [3,'trigger'], [4,'source'], [5,'target'], [6,'clear']])}],
     ['lastingEffect', {icon:'fa-solid fa-cubes', templates: new Map([[1, 'tile'], [2,'overhead'], [3,'offset']])}], 
+    ['level', {icon: 'fa-fw fa-solid fa-layer-group', templates: new Map([[1, 'settings'], [2,'visual']])}],
     ['macro', {icon: 'fa-solid fa-code'}],
     ['mutate', {flag: true, icon: 'fas fa-pastafarianism'}],
     ['region', {icon:'fa-regular fa-game-board', templates: new Map([[1, 'settings'], [2, 'visual'], [3, 'offset'], [4, 'behaviors']])}],
@@ -102,6 +103,7 @@ export const DANGERZONECONFIG = {
         DELETE: 'DANGERZONE.delete',
         EFFECTS: 'DANGERZONE.effects.label',
         LIGHT: 'DANGERZONE.light.label',
+        LEVEL: 'DANGERZONE.level.label',
         MACRO: 'DANGERZONE.macro.label',
         MOVEMENT: 'DANGERZONE.movement.label',
         OFFSET: 'DANGERZONE.offset.label',
@@ -247,6 +249,14 @@ export const DANGERFORMOPTIONS = {
             "endEveryTurn": "DANGERZONE.times-up-macro.end"
         }
     },
+    GLOBALZONE: {
+        TARGETLEVELS: {
+            "all": "DANGERZONE.type-form.globalZone.target.levels.options.all",
+            "any": "DANGERZONE.type-form.globalZone.target.levels.options.any",
+            "elevation": "DANGERZONE.type-form.globalZone.target.levels.options.elevation",
+            "current": "DANGERZONE.type-form.globalZone.target.levels.options.current"
+        }
+    },
     ITEM: {
         TARGET: {
             "A": "DANGERZONE.item.target.add",
@@ -263,6 +273,45 @@ export const DANGERFORMOPTIONS = {
             "RADIAL": "DANGERZONE.occlusionmodes.radial",
             "VISION": "DANGERZONE.occlusionmodes.vision"
         }
+    },
+    LEVEL: {
+        ADD: {
+            "": "DANGERZONE.type-form.level.add.options.no",
+            "R": "DANGERZONE.type-form.level.add.options.replace",
+            "A": "DANGERZONE.type-form.level.add.options.add"
+        },
+        ELEVATION: {
+            "Z": "DANGERZONE.type-form.level.elevation.options.zone",
+            "T": "DANGERZONE.type-form.level.elevation.options.target"
+        },
+        TEXTURESFITMODES: CONST.TEXTURE_DATA_FIT_MODES.reduce((obj, key) => {
+            obj[key] = `TEXTURE_DATA.FIT.${key}`;
+            return obj;
+        }, {}),
+        VISIBILITYFROM:{
+            "": "DANGERZONE.type-form.level.visibility.from.options.none",
+            "S": "DANGERZONE.type-form.level.visibility.from.options.scene",
+            "Z": "DANGERZONE.type-form.level.visibility.from.options.zone",
+            "T": "DANGERZONE.type-form.level.visibility.from.options.trigger",
+        },
+        VISIBILITYTO:{
+            "": "DANGERZONE.type-form.level.visibility.to.options.none",
+            "S": "DANGERZONE.type-form.level.visibility.to.options.scene",
+            "Z": "DANGERZONE.type-form.level.visibility.to.options.zone",
+            "T": "DANGERZONE.type-form.level.visibility.to.options.trigger",
+        }
+    },
+    LEVELSOPTIONS: {
+        "": "DANGERZONE.levels.options.scene",
+        "Z": "DANGERZONE.levels.options.zone",
+        "T": "DANGERZONE.levels.options.trigger",
+        "D": "DANGERZONE.levels.options.danger"
+    },
+    LEVELSSINGLEOPTIONS: {
+        "": "DANGERZONE.levels.options-single.scene",
+        "Z": "DANGERZONE.levels.options-single.zone",
+        "T": "DANGERZONE.levels.options-single.trigger",
+        "D": "DANGERZONE.levels.options-single.danger"
     },
     MIRRORIMAGEOPTIONS: {
         "": "DANGERZONE.type-form.offset.flip.options.none.label",
@@ -359,6 +408,13 @@ export const DANGERFORMOPTIONS = {
             "": "",
             "R": "DANGERZONE.type-form.tokenMove.elevation-types.relative.label",
             "S": "DANGERZONE.type-form.tokenMove.elevation-types.set.label"
+        },
+        LEVELSSINGLEOPTIONS: {
+            "": "DANGERZONE.type-form.tokenMove.levels.options-single.none",
+            "S": "DANGERZONE.type-form.tokenMove.levels.options-single.scene",
+            "Z": "DANGERZONE.type-form.tokenMove.levels.options-single.zone",
+            "T": "DANGERZONE.type-form.tokenMove.levels.options-single.trigger",
+            "D": "DANGERZONE.type-form.tokenMove.levels.options-single.danger"
         },
         WALLSBLOCK: {
             "" : "DANGERZONE.walls-block.none.label",
@@ -502,6 +558,12 @@ export const ZONEFORMOPTIONS = {
         "G": "DANGERZONE.stretch.ground.label",
         "S": "DANGERZONE.stretch.sky.label",
         "T": "DANGERZONE.stretch.top.label"
+    },
+    TARGETLEVELS: {
+        "all": "DANGERZONE.edit-form.globalZone.target.levels.options.all",
+        "any": "DANGERZONE.edit-form.globalZone.target.levels.options.any",
+        "elevation": "DANGERZONE.edit-form.globalZone.target.levels.options.elevation",
+        "current": "DANGERZONE.edit-form.globalZone.target.levels.options.current"
     },
     TOKENDISPOSITION: {
         "0": "DANGERZONE.token-disposition.neutral.label",
@@ -885,6 +947,7 @@ export const WORLDZONE = {
         exclusion: {
           conditions: []
         },
+        levels: 'all',
         quantity: {
             min: 1,
             max: 1
@@ -1216,6 +1279,14 @@ export function setExecutableOptions(){
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
+            },
+            'level': {
+                fileTypes: ['image'],
+                title: "Level", 
+                icon: "fa-fw fa-solid fa-layer-group", 
+                document: "Level",  
+                wipeable: false, 
+                scope: "scene"
             },
             'macro': {
                 title: "Macro", 

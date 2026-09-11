@@ -13,6 +13,16 @@
             <input type="checkbox" name="target.choose.prompt" {{checked zone.target.choose.prompt}} />
         </div>
     </div>
+    <div class="form-group">
+        <div class="form-fields">
+            <label>
+                {{localize 'DANGERZONE.type-form.globalZone.target.levels.label'}}
+            </label>
+            <select name="target.levels" value="{{zone.target.levels}}">
+                {{selectOptions zoneOptions.GLOBALZONE.TARGETLEVELS selected=zone.target.levels localize=true}}
+            </select>
+        </div>
+    </div>
     <div class="form-group {{#if zone.target.all}}dz-hidden{{/if}}" id="dz-target-quantity-global">
         <label>
             {{localize 'DANGERZONE.edit-form.numberOfTargets.label'}}
@@ -54,7 +64,7 @@
             <input type="checkbox" name="target.always" {{checked zone.target.always}} />
         </div>
     </div>
-        <fieldset>
+    <fieldset>
         <legend>{{localize 'DANGERZONE.edit-form.actor.label'}}</legend>
         <div class="form-fields actor-select">
             <multi-select name="target.actors" value="{{zone.target.actors}}">
@@ -62,7 +72,7 @@
             </multi-select>
         </div>
     </fieldset> 
-        <fieldset>
+    <fieldset>
         <legend>{{localize 'DANGERZONE.edit-form.token-disposition.label'}}</legend>
         <div class="form-group">
             <div class="form-fields">
@@ -72,7 +82,7 @@
             </div>
         </div>
     </fieldset> 
-        <fieldset>
+    <fieldset>
         <legend>
             {{localize 'DANGERZONE.edit-form.token-condition-ex.label'}}
             <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.token-condition-ex.description'}}"><i class="fas fa-info-circle"></i></span>
