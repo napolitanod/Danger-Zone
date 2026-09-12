@@ -45,10 +45,10 @@ export class api {
      * @param {string} sceneId - the scene id
      * @param {string} identifier - an identifier that user provides that differentiates this highlight layer from other highlight layers created for this zone
      */
-    static async _addHighlightZone(zoneName, sceneId, identifier = ''){
+    static _addHighlightZone(zoneName, sceneId, identifier = ''){
         if(!sceneId){sceneId = canvas.scene?.id}
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        zn ? await dangerZoneDimensions.addHighlightZone(zn.id, sceneId, identifier) : console.log(`A zone with the name provided was not found on scene ${sceneId}`)
+        zn ? dangerZoneDimensions.addHighlightZone(zn.id, sceneId, identifier) : console.log(`A zone with the name provided was not found on scene ${sceneId}`)
     }
 
     /**

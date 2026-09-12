@@ -549,6 +549,8 @@ export const ZONEFORMOPTIONS = {
     },
     SOURCETRIGGERS: {
         "": "DANGERZONE.edit-form.source.triggers.any",
+       // "Z": "DANGERZONE.edit-form.source.triggers.zone", //removed for now because this is complicated - requires comparing document boundaries to zone boundaries
+        "L": "DANGERZONE.edit-form.source.triggers.level",
         "C": "DANGERZONE.edit-form.source.triggers.scene",
         "S": "DANGERZONE.edit-form.source.triggers.source"
     },
@@ -560,10 +562,10 @@ export const ZONEFORMOPTIONS = {
         "T": "DANGERZONE.stretch.top.label"
     },
     TARGETLEVELS: {
-        "all": "DANGERZONE.edit-form.globalZone.target.levels.options.all",
-        "any": "DANGERZONE.edit-form.globalZone.target.levels.options.any",
-        "elevation": "DANGERZONE.edit-form.globalZone.target.levels.options.elevation",
-        "current": "DANGERZONE.edit-form.globalZone.target.levels.options.current"
+        "all": "DANGERZONE.edit-form.target.levels.options.all",
+        "any": "DANGERZONE.edit-form.target.levels.options.any",
+        //"elevation": "DANGERZONE.edit-form.target.levels.options.elevation", //removed for now due to complexity
+        "current": "DANGERZONE.edit-form.target.levels.options.current"
     },
     TOKENDISPOSITION: {
         "0": "DANGERZONE.token-disposition.neutral.label",

@@ -637,8 +637,8 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     /**v13
      * 
     */
-    static async #zoneRefresh(event){
-        await this.refreshZone();
+    static #zoneRefresh(event){
+        this.refreshZone();
     }
 
     /**v13
@@ -809,8 +809,8 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         this.drawBoundaryEligible();
     }
 
-    async refreshZone(){
-        await this.executor.setZone();
+    refreshZone(){
+        this.executor.setZone();
         if(this.rendered){
             this.drawZoneEligible();
             this.drawBoundaryEligible();
@@ -820,7 +820,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     async #setExecutor(){
         this.executor = this.zoneId ? await this.zone.executor(this.executorOptions): {}
         await this.initialize()
-        await this.refreshZone();
+        this.refreshZone();
     }
 
     setVisible(isVisible = true){

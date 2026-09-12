@@ -4,7 +4,7 @@ import {dangerZoneType} from './apps/zone-type.js';
 import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, CONTROLTRIGGERS, DANGERZONECONFIG, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
-import {wait, getTagEntities, getRandomNumber, joinWithAnd} from './apps/helpers.js';
+import {wait, helper, getRandomNumber, joinWithAnd} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
 import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, EffectDangerPartConfig, ForegroundEffectDangerPartConfig, GlobalZoneDangerPartConfig, ItemDangerPartConfig, LastingEffectDangerPartConfig, LevelDangerPartConfig, MacroDangerPartConfig, MutateDangerPartConfig, RegionDangerPartConfig, RolltableDangerPartConfig, SceneDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig, TokenResponseDangerPartConfig, TokenSaysDangerPartConfig, WallDangerPartConfig, WarpgateDangerPartConfig, WeatherDangerPartConfig} from './apps/danger-form.js';
 
@@ -509,6 +509,7 @@ export class zone {
       area: '',
       actors: [],
       dispositions: [],
+      levels: true,
       limit: {
         min: 0,
         max: 0
@@ -659,17 +660,89 @@ export class zone {
   get hasTargetExclusionCondition(){
     return this.target.exclusion.conditions.length ? true : false
   }
+
+  get hasTargetLevels(){
+    return (!this.target.levels || this.target.levels === 'all') ? false : true
+  }
   
   get movementEvents(){
     return this.trigger.events.filter(e => MOVEMENT_EVENTS.includes(e)) 
   }
 
+  /**
+   * returns a string for the id of the level visible to the GM
+   */
+  get levelCurrent(){
+    return this.scene.zoneLevelGMVisible
+  }
+
+  /**
+   * returns an array of level ids for the zone
+   */
+  get levels(){
+    return this.scene.zoneLevels
+  }
+
+  /**
+   * returns an array of tokens that are source actors
+   * @returns array of token documents
+   */
   get sources(){
     return this.scene.scene.tokens.filter(t => this.isSourceActor(t)) 
   }
 
+  /**
+   * called by zone to collect a source area
+   * @returns object holding eligible documents for the given source area and the source target {
+   *  documents: array// array of documents
+   *  target: string// the source.target (A: Adjacent, I: In, B: Both)
+   * }
+   */
+  get sourceArea(){
+    const obj = {documents: [], target: ''}
+    if(this.hasSourceArea){
+      obj.target = this.source.target
+      switch(this.source.area){
+        case 'A':
+          obj['documents'] = this.sources;
+          break;
+        case 'C':
+          obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type));
+          break;
+        case 'D':
+          obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].type && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type));
+          break;
+        case 'T':
+          if(this.hasSourceTags) obj['documents'] = helper.getTagEntities(this.source.tags, this.scene.scene)
+          break;
+        case 'Y':
+          obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId));
+          break;
+        case 'Z':
+          obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].zoneId && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId));
+          break;
+      }
+    }    
+    return obj
+  }
+
+  /**
+   * returns an array of tokens that are source actors associated with a zone level on the scene
+   * @returns array of token documents
+   */
+  get sourceTokensOnZoneLevel(){
+    return this.sources.filter(t => this.tokenInZoneLevel(t)) 
+  }
+
   get titleLong(){
       return this.title + (this.scene.dangerId ? ' (' + game.i18n.localize("DANGERZONE.type-form.globalZone.label") + ') ' :' ') + this.eventsDescription + ' ' + game.i18n.localize("DANGERZONE.scene.trigger")
+  }
+
+  /**
+   * The boundary of the zone, accounting for dimensions, levels, region, universe, and exclusions
+   */
+  get zoneBoundary(){
+    return this.scene.zoneBoundary
   }
 
   /**
@@ -780,11 +853,19 @@ export class zone {
   getExtension(extensionId){
     return this.extensions.find(e => e.id === extensionId)
   }
+
+  /**generate the iterator for this zone for use in danger targeting
+   * 
+   * @returns iterator //iterator of boundary grids
+   */
+  getZoneTargetGridsIterator(){
+    return this.scene.getZoneTargetGridsIterator()
+  }
   
   async highlightZone(){
     if(this.scene.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
-      await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_tzHL', this.scene.dangerId);
+      dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_tzHL', this.scene.dangerId);
       await wait(750)
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
     }
@@ -807,43 +888,67 @@ export class zone {
     return (id && this.target.actors.includes(id)) ? true : false
   }
 
-  async sourceOnScene(){
-    if(this.scene.scene.tokens.find(t => this.isSourceActor(t))) return true
-    const area = await this.sourceArea()
-    return area.documents.length ? true : false
+  /**
+   * Checks to see if there is at least one source token or document on scene
+   * @returns boolean
+   */
+  sourceOnScene(){
+    let onScene = false
+
+    //source token on scene
+    if(this.sources.length) {
+      onScene = true
+    }   
+    else {
+      onScene = this.sourceArea.documents.length ? true : false
+    }
+    
+    return onScene
   }
 
-
-  /**V13
-   * called by zone to collect a source area
-   * @returns object holding eligible documents for the given source area and the source target
+  /**
+   * Checks all source tokens and documents that are on the scene to see if any are in the zone levels
+   * @returns boolean
    */
-  async sourceArea(){
-    const obj = {documents: [], target: ''}
-    if(this.hasSourceArea){
-      obj.target = this.source.target
-      switch(this.source.area){
-        case 'A':
-          obj['documents'] = this.scene.scene.tokens.filter(t => this.isSourceActor(t));
-          break;
-        case 'C':
-          obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type));
-          break;
-        case 'D':
-          obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].type && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.type));
-          break;
-        case 'T':
-          if(this.hasSourceTags) obj['documents'] = await getTagEntities(this.source.tags, this.scene.scene)
-          break;
-        case 'Y':
-          obj['documents'] = this.scene.scene.tiles.filter(t => t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId));
-          break;
-        case 'Z':
-          obj['documents'] = this.flaggablePlaceables.filter(t => t.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].zoneId && this.source.tags.includes(t.flags[dangerZone.ID]?.[dangerZone.FLAGS.SCENETILE]?.zoneId));
-          break;
+  sourceOnZoneLevel(){
+    let onLevel = false
+
+    //source token is on level
+    if(this.sourceTokensOnZoneLevel.length) {
+      onLevel = true
+    } else {
+      //grab area documents
+      const area = this.sourceArea
+
+      //if there are no documents, then none can be on level
+      if(!area.documents.length){
+        onLevel = false
+      } else {
+
+        //if there are no levels, then zone includes all levels
+        if(!this.levels.length){
+          onLevel = true
+        } else {
+
+          //iterate through each document and check to see if document is in level
+          for (const document of area) {
+
+            const levels = document.levels;
+            
+            //if not a set, check string
+            if(!levels) {
+              if(!document.level || this.levels.includes(document.level)) onLevel = true
+            } 
+            
+            //else check that set of levels is either empty (all levels) or contains a level contained by zone levels 
+            else if (!levels.size || this.levels.find(lvl => levels.has(lvl))) {
+              onLevel = true
+            }
+          }
+        }
       }
-    }    
-    return obj
+    }
+    return onLevel
   }
 
   sourceTreatment(treatment, tokens, sources = []){
@@ -860,12 +965,41 @@ export class zone {
     }
   }
 
-  async sourceTrigger(tokens){
-    const trigger = this.source.trigger ? (this.source.trigger === 'C' ? await this.sourceOnScene() : tokens.find(token => this.isSourceActor(token))) : true;
+  /**Intakes an array of tokens and determines if the source can be triggered
+   * 
+   * @param {array} tokens //array of token documents
+   * @returns 
+   */
+  sourceTrigger(tokens){
+    let trigger 
+
+    //if a condition is set on triggering dependant on source, determine if trigger will proceed
+    if(this.source.trigger){
+      if(this.source.trigger === 'C'){
+        //source is on scene
+        trigger = this.sourceOnScene()
+      } else if (this.source.trigger === 'L') {
+        //source is on level
+        trigger = this.sourceOnZoneLevel()
+      } else if (this.source.trigger === 'S') {
+        //only source actor can trigger
+        trigger = tokens.find(token => this.isSourceActor(token))
+      }
+    } 
+    //else trigger (no source constraints)  
+    else {
+        trigger = true
+    }
+
     dangerZone.log(false,'Determining Source Trigger ', {zone: this, triggeTokens: tokens, trigger: trigger});
     return trigger
   }
 
+  /**
+   * 
+   * @param {object} options //the options object passed into the boundary. This adds the appropriate settings to factor in the stretch
+   * @returns 
+   */
   stretch(options){
     switch(this.dimensions.stretch){
       case "B":
@@ -910,9 +1044,40 @@ export class zone {
     return token.actor?.appliedEffects?.find(e => this[type].exclusion.conditions.includes(e.name)) ? true : false
   }
 
-  async tokensInZone(tokens){
+  /**
+   * Check passed in token to confirm that it exists within the zone level(s)
+   * @param {tokenDocument} token 
+   * @returns Boolean
+   */
+  tokenInZoneLevel(token){
+    let inZone = false
+
+    //if either the token doesn't have a level, or there are no levels defined on zone (meaning all levels are applicable)
+    if(!token.level || !this.levels.length){
+      inZone = true
+    } 
+    
+    //if targeting requires the GM be viewing the level that the token is on
+    else if(this.target.levels === 'current'){
+      if(this.levelCurrent === token.level) inZone = true
+    } 
+
+    //if token level is one of the zone levels
+    else if (this.levels.includes(token.level)) {
+      inZone = true
+    }
+
+    return inZone
+  }
+
+  /**
+   * 
+   * @param {array} tokens //an array of token documents
+   * @returns 
+   */
+  tokensInZone(tokens){
     if(!tokens?.length) return false
-    const b = await this.scene.getZoneBoundary();
+    const b = this.zoneBoundary;
     const eligible = this.zoneEligibleTokens(b.tokensIn(tokens));
     dangerZone.log(false, 'Finding tokens in zone...', {boundary: b, tokens: tokens, eligible: eligible})
     return eligible.length ? true : false
@@ -982,9 +1147,16 @@ export class zone {
 
   zoneEligibleTokens(tokens){
     let kept = [];
-    if(this.hasTargetActor || this.hasTargetDisposition || this.hasTargetExclusionCondition){
+    if(this.hasTargetActor || this.hasTargetDisposition || this.hasTargetExclusionCondition || this.hasTargetLevels){
       for(let token of tokens){
         let keep = 1;
+
+        //if zone targets specific levels and the token does not exist in one of those levels
+        //cannot account for setting 'target random zone level', in that it can ensure that tokens are on some zone level, but will not know the random level actually used
+        if(this.hasTargetLevels && !this.tokenInZoneLevel(token)){
+          dangerZone.log(false, 'Token not eligible not in zone level...', {zone: this, token: token})
+          keep = 0;
+        }
         if(this.hasTargetActor && !this.isTargetActor(token.actor?.id)){
           dangerZone.log(false, 'Token not eligible not a target actor...', {zone: this, token: token})
           keep = 0;
@@ -1048,7 +1220,7 @@ export class zone {
   async _promptXY(){ 
     let xy
     dangerZoneDimensions.destroyHighlightZone(this.id, '', this.scene.dangerId);
-    await dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_wf', this.scene.dangerId);
+    dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_wf', this.scene.dangerId);
 
     let currentLayer = canvas.activeLayer;
     currentLayer.deactivate();

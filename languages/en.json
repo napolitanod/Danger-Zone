@@ -122,7 +122,7 @@
             "bleed.label": "Bleed",
             "bleed.description": "If set, the danger's boundary (based on its width, height and depth) can partially exceed this zone's boundary. Danger effects will span into the bleed but tokens that are not in the zone boundary will not be targeted in the bleed. This ensures that each grid in the zone has an equal chance of being randomly targeted. If not set, units closer to the zone's center will have a greater likelihood of being targeted.",
             "dimensions":{
-                "description": "Uses Danger Zone world settings for elevation if no value provided.",
+                "description": "When left blank, the zone will fallback to use the Danger Zone world settings for 'Lowest Zone Elevation' or 'Highest Zone Elevation', depending on field. \nIn the event that a fallback value results in an invalid boundary (e.g. a top that is below the bottom), the zone will throw an error at time of trigger.",
                 "bottom.label": "Bottom",
                 "label": "Zone Elevation Range",
                 "top.label": "Top",
@@ -253,6 +253,7 @@
                 "area.description": "Defines a source area within the zone which may influence targeting",
                 "description": "The source may influence when and if a zone triggers. Many danger parts can be defined in relation to the zone's source.",
                 "label": "Source",
+                "levels.label": "Must Be on Zone Level",
                 "limit": {
                     "description": "In the event that there is more than one source, caps the total sources involved when the zone is triggered to be between the minimum and maximum. Set to 0 to ignore.",
                     "label": "Quantity",
@@ -270,6 +271,8 @@
                 "trigger.label": "Trigger Influence",
                 "triggers":{
                     "any": "Zone triggers regardless of source",
+                    "level": "Zone only triggers if source on zone level",
+                    "zone": "Zone only triggers if source in zone",
                     "scene": "Zone only triggers if source on scene",
                     "source": "Only source actor can trigger zone"
                 }

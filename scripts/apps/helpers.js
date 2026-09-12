@@ -107,6 +107,31 @@ export class helper {
     return (val === Infinity || val === -Infinity || val === null || val === undefined) ? dangerZone.maxElevation : val;
   }
 
+  
+
+/**Returns documents on a scene that match given tag
+ * 
+ * @param {string} tag //the tag to return entities for
+ * @param {document} scene //the scene to search
+ * @returns 
+ */
+static getTagEntities(tag, scene){
+  let d
+
+  //tags can be added as drawings
+  d = scene.getEmbeddedCollection("Drawing").filter(d => d.text === tag);
+
+  //if the tagger module is loaded, that can also be used
+  if(dangerZone.MODULES.taggerOn){
+      const t = Tagger.getByTag(tag, {caseInsensitive: false, matchAny: true, sceneId: scene.id })
+      d = d.concat(t)
+  }
+
+  return d
+}
+
+
+
   /**  returns a random value from the array
    * 
    * @param {array} arr 
@@ -118,16 +143,29 @@ export class helper {
 
   /**returns levels for the given scene, filtered down by the optionally provided set of level ids
    * 
-   * @param {*} scene 
-   * @param {*} filterIds 
+   * @param {document} scene 
+   * @param {array} 
+   * @param {object} options 
+   *    //output {string}: 'ids' use to only output an array of ids versus and array of documents, 'documents' use to output an array of documents
+   *    //filterIds {array}: provide an array of ids to be used to filter down the scene levels
    * @returns 
    */
-  static sceneLevels(scene, filterIds = []){
-      let levels = []
+  static filterLevels(scene, options = {output: 'documents', filterIds: []}){
+      let levels = [], arr;
+
+      //get the scene levels, filtering if a filter array was provided
       if(scene.levels?.length){
-          levels = filterIds.length ? scene.levels?.filter(l => filterIds.includes(l.id)) : scene.levels
+          levels = options.filterIds?.length ? scene.levels?.filter(l => options.filterIds.includes(l.id)) : scene.levels
       }
-      return levels
+
+      //set the output to either just the ids or the full documents, based on the passed in options
+      if(options.output === 'ids'){
+        arr = levels.map(lvl => lvl.id)
+      } else {
+        arr = levels
+      }
+
+      return arr
   }
 
   /**returns the minimum bottom and maximum top for elevation related to a scene's levels, with optional abbility to filter to certain levels
@@ -137,7 +175,7 @@ export class helper {
    * @returns 
    */
   static sceneLevelsElevationBounds(scene, filterIds = []){
-      const elevations = this.sceneLevels(scene, filterIds).map(l => l.elevation);
+      const elevations = this.filterLevels(scene, {filterIds: filterIds, output: 'documents'}).map(l => l.elevation);
       return{
           bottom: Math.min(...elevations.map(e => e.bottom ?? -Infinity)),
           top: Math.max(...elevations.map(e => e.top ?? Infinity))
@@ -241,15 +279,6 @@ export function getSceneRegionList(sceneId){
     list[region.id] = region.name;
   }
   return list
-}
-
-export async function getTagEntities(tag, scene){
-  const d = scene.getEmbeddedCollection("Drawing").filter(d => d.text === tag);
-  if(dangerZone.MODULES.taggerOn){
-      const t = await Tagger.getByTag(tag, {caseInsensitive: false, matchAll: false, sceneId: scene.id })
-      return d.concat(t)
-  }
-  return d
 }
 
 export function joinWithAnd(arr){

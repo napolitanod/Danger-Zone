@@ -132,7 +132,7 @@ export class triggerManager {
 
     async chatTrigger(){
         for(const zn of this.sceneZones) { 
-            if(!(await zn.sourceTrigger(this.scene.tokens))){
+            if(!(zn.sourceTrigger(this.scene.tokens))){
                 this._cancelZone(zn, `Failed manual source trigger check on zone`)
                 continue
             }
@@ -157,7 +157,7 @@ export class triggerManager {
                                 this._cancelZone(zn, `Failed ${event} combatant in zone check. No tokens in zone.`)
                                 continue
                             }
-                            if(!await zn.tokensInZone(inZoneTokens)) {
+                            if(!zn.tokensInZone(inZoneTokens)) {
                                 this._cancelZone(zn, `Failed ${event} combatant in zone check on combatant ${inZoneTokens.map(t => t.name).join()}`)
                                 continue
                             }
@@ -166,19 +166,19 @@ export class triggerManager {
                         }
                     }  
                     if(event === 'turn-start'){
-                        if(!(await zn.sourceTrigger([this.combatant.token]))){
+                        if(!(zn.sourceTrigger([this.combatant.token]))){
                             this._cancelZone(zn, `Failed ${event} source trigger check on combatant ${this.combatant.name}`)
                             continue
                         }
                     }
                     else if(event == 'turn-end'){
-                        if(!(await zn.sourceTrigger([this.previousCombatant.token]))){
+                        if(!(zn.sourceTrigger([this.previousCombatant.token]))){
                             this._cancelZone(zn, `Failed ${event} source trigger check on previous combatant ${this.previousCombatant.name}`)
                             continue
                         }
                     } 
                     else {
-                        if(!(await zn.sourceTrigger(this.combatants.map(c => c.token)))){
+                        if(!(zn.sourceTrigger(this.combatants.map(c => c.token)))){
                             this._cancelZone(zn, `Failed ${event} source trigger check on combatants ${this.combatants.map(c => c.name)}`)
                             continue
                         }
@@ -258,10 +258,10 @@ export class triggerManager {
         if(options.end) await token.object.movementAnimationPromise 
 
         for (const zn of sceneZones) {
-            if(!(await zn.sourceTrigger([token]))){
+            if(!(zn.sourceTrigger([token]))){
                 continue;
             }
-            const zoneBoundary = await zn.scene.getZoneBoundary();
+            const zoneBoundary = zn.zoneBoundary;
 
             const zoneTokens = zoneBoundary.tokensIn([token]);
 
@@ -378,7 +378,7 @@ export class triggerManager {
         if(!this.zones.length) return
 
         if(this.zones[0].event === 'manual' || this.data.force){
-            if(!(await this.zones[0].zone.sourceTrigger(this.scene.tokens))){
+            if(!(this.zones[0].zone.sourceTrigger(this.scene.tokens))){
                 this._cancelZone(this.zones[0].zone, `Failed manual source trigger check on zone`)
                 ui.notifications?.error(game.i18n.localize("The zone was not triggered due to failing the zone's source trigger condition."));
                 return

@@ -14,12 +14,12 @@
         </div>
     </div>
     <div class="form-group">
+        <label>
+            {{localize 'DANGERZONE.type-form.globalZone.target.levels.label'}}
+        </label>
         <div class="form-fields">
-            <label>
-                {{localize 'DANGERZONE.type-form.globalZone.target.levels.label'}}
-            </label>
             <select name="target.levels" value="{{zone.target.levels}}">
-                {{selectOptions zoneOptions.GLOBALZONE.TARGETLEVELS selected=zone.target.levels localize=true}}
+                {{selectOptions options.GLOBALZONE.TARGETLEVELS selected=zone.target.levels localize=true}}
             </select>
         </div>
     </div>

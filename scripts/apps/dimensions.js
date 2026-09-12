@@ -1,5 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
-import {circleAreaGrid, getTagEntities, rayIntersectsGrid, helper} from './helpers.js';
+import {circleAreaGrid, rayIntersectsGrid, helper} from './helpers.js';
 
 export class dangerZoneDimensions {
     /**
@@ -14,6 +14,9 @@ export class dangerZoneDimensions {
         this.levels = [];
     }
 
+    /**returns the zone's pure boundary, without factoring in levels, region, exclusions, universe
+     * 
+     */
     get boundary(){
         let docType, document
         
@@ -25,11 +28,14 @@ export class dangerZoneDimensions {
             document = this.scene
         }
 
-        const opts = {elevation: this.elevation}
+        const el = {elevation: this.elevation}
 
-        return boundary.documentBoundary(docType, document, opts)
+        return boundary.documentBoundary(docType, document, el)
     }
-    
+
+    /**Returns the danger class for the zone
+     * 
+     */
     get danger(){
         return this.zone.danger;
     }
@@ -42,6 +48,9 @@ export class dangerZoneDimensions {
             }
     }
 
+    /**
+     * Create the zone elevation, also patching up infinities to allow for some boundary to the zone targeting
+     */
     get elevation(){
         const e = this.hasRegion ? this.region.elevation : this.zone.dimensions
         const elevation = {
@@ -51,82 +60,210 @@ export class dangerZoneDimensions {
         return elevation
     }
 
+    /**Returns the entities tagged on the scene with exclusions
+     * 
+     */
+    get excludedTaggedEntities(){
+        return helper.getTagEntities(game.settings.get(dangerZone.ID, 'zone-exclusion-tag'), this.scene)
+    }
+
+    /**
+     * The presence of a danger id means that this dangerZoneDimensions class was created as part of a pseudo zone to facilitate global danger functionality
+     * This is a temporary class and thus the id is also transient
+     */
     get hasWorldZone(){
         return this.dangerId ? true : false
     }
 
-    get hasSceneLevels(){
-        return this.sceneLevels?.length ? true : false
-    }
-
+    /**
+     * A region is associated to this zone
+     */
     get hasRegion(){
         return this.region?.id ? true : false
     }
 
+
+    /**
+     * returns the region document for the given region id
+     */
     get region(){
         const region = this.regionId ? this.scene.getEmbeddedDocument("Region",this.regionId) : {}
         return region ?? {}
     }
 
+    /**
+     * returns the scene document for the given zone scene id
+     */
     get scene(){
         return game.scenes.get(this.sceneId);
+    }
+
+    /**
+     * Array of scene level ids
+     */
+    get regionLevels(){
+        if(!this.hasRegion) return []
+        return this.region.levels.size ? [...this.region.levels] : []
+    }
+
+    /**
+     * Array of scene level documents
+     */
+    get sceneLevels(){
+        return helper.filterLevels(this.scene, {output: 'documents'})
     }
 
     get zone(){
         return this.dangerId ? dangerZone.getGlobalZone(this.dangerId, this.sceneId) : dangerZone.getZoneFromScene(this.zoneId, this.sceneId);
     }
 
-    async _excludedTagged(){
-        return getTagEntities(game.settings.get(dangerZone.ID, 'zone-exclusion-tag'), this.scene)
+    /**
+     * Generates the boundary for this zone
+     * @returns boundary class
+     */
+    get zoneBoundary(){
+        //return the boundary for the zone, with settings for exclude, universe, and region
+        return new boundary(this.boundary.A, this.boundary.B, this.boundary.elevation, this.zoneBoundaryOptions)
     }
 
     /**
-     * 
+     * returns an object typically submitted into the boundary constructor when pulling the actual zone boundary
+     */
+    get zoneBoundaryOptions(){
+        return {
+            exclude: this.excludedTaggedEntities,    //Generate the exclusion list of documents 
+            levels: this.zoneLevels,    //include the zone levels   
+            limit: this.zone.sourceArea,   //Generate a universe of documents for the boundary to use that consists of the zone's sources
+            regionUuid: this.region.uuid  //include the region
+        }
+    }
+
+    /**
+     * Array of zone level ids
+     * An empty array = all levels
+     */
+    get zoneLevels(){
+        let levels
+        if(this.hasRegion){
+            levels = this.regionLevels
+        } else if(this.levels.length) {
+            //filter out level ids on zone that are no longer on the scene (were deleted)
+            levels = helper.filterLevels(this.scene, {output: 'ids', filterIds: this.levels}) 
+        } else {
+            levels = []
+        }
+        return levels
+    }
+
+    /**
+     * id of zone level visible to GM. 
+     * Is blank if no zone level is visible to GM
+     * Assumes that all danger zone processing is on the GM's instance
+     */
+    get zoneLevelGMVisible(){
+        let visible
+
+        //return array of level documents from scene that are considered zone levels
+        const arr = helper.filterLevels(this.scene, {output: 'documents', filterIds:this.zoneLevels}) 
+
+        //return the id for the level in view
+        if(arr.length){
+            visible = arr.find(lvl => lvl.isView)?.id
+        }
+
+        return visible
+    }
+
+
+
+    /** a boundary that includes grids outside of the defined boundary, 
+     * allows enough room for the options range to select any grid in boundary, even the lowest row or column, which, if range dimensions exceed 1 grid, would overrun the boundary dimensions
+     * @param {boundary} b // the boundary class for the zone
      * @param {object} options {range: {w: , h: , d:}}//object set by dimensions class dangerRelativeDimensions(). Sets the danger's dimensions
      * @returns 
      */
-    async boundaryBleed(options = {}){
-        const b = await this.getZoneBoundary();
-        const topLeft = canvas.grid.getTopLeftPoint({j:b.dimensions.j -(Math.min(b.dimensions.j, (this.danger.dimensions.units.w -1))), i:b.dimensions.i - (Math.min(b.dimensions.i, (this.danger.dimensions.units.h-1)))});
+    boundaryBleed(b, options = {}){
+
+        //means to adjust the area to account for situations where the zone's danger dimensions exceeds zone boundary
+        //this adjustment is used to factor in the bleed
+        const adjustedDim = {
+            j: b.dimensions.j - (Math.min(b.dimensions.j, (this.danger.dimensions.units.w - 1))), 
+            i: b.dimensions.i - (Math.min(b.dimensions.i, (this.danger.dimensions.units.h - 1)))
+        }
+
+        //ensure that the adjusted dimension point position is on the left corner of the top left grid spot
+        const topLeft = canvas.grid.getTopLeftPoint(adjustedDim);
+
+        //creates a new point, including the elevation that calculates a similar bleed
         const p = new point(topLeft, b.bottom - this.danger.dimensions.units.d )
-        return new boundary(p.coords, b.B, {bottom: p.elevation, top: b.top}, Object.assign(options, {excludes: b.excludes, universe: b.universe, regionUuid: this.region.uuid, inclusive: false}))
+
+        //create the new boundary with the bleed dimensions, setting inclusive to 
+        b = new boundary(
+                p.coords, 
+                b.B, 
+                {bottom: p.elevation, top: b.top}, 
+                options
+            )
+        
+        return b
     }
 
-    async boundaryConstrained(options = {}){
-        const b = await this.getZoneBoundary();
-        const dim = {d:b.depth - this.dangerRelativeDimensions.d, h: b.dimensions.h - (this.dangerRelativeDimensions.h - 1), w: b.dimensions.w - (this.dangerRelativeDimensions.w - 1)}
-        return boundary.locationToBoundary(b.A, b.elevation, dim, Object.assign(options, {excludes: b.excludes, universe: b.universe, regionUuid: this.region.uuid, inclusive: false}))
+
+
+    /** a boundary that includes grids within the defined boundary or a reduced set, 
+     * constraining the number of grids so that the options range to can select top left of any grid in boundary and not overrun the boundary
+     * @param {boundary} b // the boundary class
+     * @param {object} options {range: {w: , h: , d:}}//object set by dimensions class dangerRelativeDimensions(). Sets the danger's dimensions
+     * @returns 
+     */
+    boundaryConstrained(b, options = {}){
+
+        //this adjustment is used to factor constrain so any danger target will fit fully in zone
+        const adjustedDim = {
+            d: b.depth - options.range.d, 
+            h: b.dimensions.h - (options.range.h - 1), 
+            w: b.dimensions.w - (options.range.w - 1)
+        }
+
+        //generate the new boundary for the adjusted dimensions
+        b = boundary.locationToBoundary(
+            b.A, 
+            b.elevation, 
+            adjustedDim, 
+            options
+        )
+
+        return b
     }
 
-    async getZoneBoundary(){
-        const ex = await this._excludedTagged();
-        const un = await this.zone.sourceArea();
-        return new boundary(this.boundary.A, this.boundary.B, this.boundary.elevation, {exclude: ex, limit: un, regionUuid: this.region.uuid})
-    }
 
-    async grids(){
-        const b = await this.getZoneBoundary();
-        return b.grids()
-    }
 
     /**Generates an iterator that can then be used to output a random boundary
      * 
      * @returns iterator *
      */
-    async randomDangerBoundary() {
-        //the danger's width, height, and depth. Else the boundary for this dimension (typically 1,1,0)
-        const options = {range: this.dangerRelativeDimensions}
+    getZoneTargetGridsIterator() {
+        //start with zone boundary
+        const b = this.zoneBoundary
 
-        //generate the boundary from the zone boundary, accounting for bleed
-        const b = this.zone.dimensions.bleed ? await this.boundaryBleed(options) : await this.boundaryConstrained(options);
-        
+        //the danger's width, height, and depth. Else the boundary for this dimension (typically 1,1,0)
+        const options = {
+            ...this.zoneBoundaryOptions,
+            range: this.dangerRelativeDimensions,
+            inclusive: false //set the inclusive key on the options to false
+        }
+
         //if zone dimensions include stretch, adds to the options object either 'bottom' or 'top' value, based on stretch setting
         this.zone.stretch(options);
 
+        //generate the boundary from the zone boundary, accounting for bleed
+        this.zone.dimensions.bleed ? this.boundaryBleed(b, options) : this.boundaryConstrained(b, options);
+        
         //generate the random boundary iterator
-        const grids = b.randomBoundary();
+        const grids = b.boundaryRangeIterator();
 
-        dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, boundary: b, grids: grids, zone: this.zone, options: options})
+        dangerZone.log(false,'Zone Danger Target Grid Iterator Created  ', {"zoneScene": this, boundary: b, grids: grids, zone: this.zone, options: options})
+
         return grids
     }
 
@@ -160,13 +297,14 @@ export class dangerZoneDimensions {
 		}
     }
 
-    static async addHighlightZone(zoneId, sceneId, nameModifier = '', dangerId = ''){
+    /****Highlighting methods */
+    static addHighlightZone(zoneId, sceneId, nameModifier = '', dangerId = ''){
         const zn = dangerId ? dangerZone.getGlobalZone(dangerId, sceneId)?.scene : dangerZone.getZoneFromScene(zoneId, sceneId)?.scene;
-        if(zn) await zn.addHighlightZone(nameModifier)
+        if(zn) zn.addHighlightZone(nameModifier)
     }
 
-    async addHighlightZone(nameModifier = ''){
-        const boundary = await this.getZoneBoundary()
+    addHighlightZone(nameModifier = ''){
+        const boundary = this.zoneBoundary
         this.dangerId ? boundary.highlight(this.dangerId + nameModifier, 10737280) : boundary.highlight(this.zoneId + nameModifier, 16737280)
     }
 
@@ -185,10 +323,15 @@ export class dangerZoneDimensions {
     /*
         options:{ 
             inclusive: bool //indicates whether the bottom and right edges are included in the boundary,
-            retain: bool //
+            retain: bool //prevents the boundary during initialization to locking the boundary points to the grid. Instead, point may be anywhere and not residing on a grid intersection
             universe: Set //
             bottom: Integer //override value for bottom getter, so that is output rather than the elevation bottom
-            limit: s
+            limit: object { //object for universe definition that is returned from the SourceArea() functionA
+                target: string// the source.target (A: Adjacent, I: In, B: Both)
+                documents: array //an array of documents that are used to build the universe for establishing boundary dimensions
+                }   
+            exclude: array //an array of documents that are used to exclude areas from the boundary
+            levels: array// passed in for constructor. These are the leves that further define the boundary
         }
     */
 export class boundary{
@@ -205,14 +348,140 @@ export class boundary{
         this.excludes = new Set(),
         this.gridsArray = [],
         this.gridIndex = new Set(),
+        this.levels = options.levels ?? [],
         this.options = options,
         this.universe = options.universe ?? (options.limit?.target ? new Set() : '');
         this._init()
     }
+
+    /****Initialization Activities */
     
-    get region(){
-        return this.regionUuid ? fromUuidSync(this.regionUuid) : {}
+
+
+    /**
+     * Initializes additional index and positional data for boundary
+     */
+    _init(){
+        //if not set to keep points where they are, locks the boundary points to the grid 
+        if(!('retain' in this.options)) this._toTopLeft();
+
+        //index the exclusion grids
+        if(this.exclude) this._exclude();
+
+        //index the universe grids
+        if(this.limit.target) this._universe();
+
+        //initialize the array of grid indices that make up the boundary, accounting for universe and exclusion
+        this._setGridIndex();
     }
+    
+
+
+
+    /**Initialization: Exclusion Index
+     * run through the documents in the exclude option and index them for future reference
+     */
+    _exclude(){
+        this._indexDocuments(this.exclude, this.excludes)
+    }
+
+
+
+
+    /**Initialization: Universe Index
+     * run through the documents in the limit option and index them for future reference
+     */
+    _universe(){
+        //index the universe and load to the class
+        this._indexDocuments(this.limit.documents, this.universe)
+
+        //if target is I 'in' for inside the dimensions only, then return the universe as is
+        if(this.limit.target === 'I') return
+
+        //else iterate through the univers to find adjacent grids
+        const newUniv = new Set() 
+        this.universe.forEach((value) => {
+            const[i, j] = value.split('_')
+            const nghbrs = canvas.grid.getAdjacentOffsets({i:Number(i), j:Number(j)})
+            for(const pos of nghbrs){
+                let index = boundary.makeIndex(pos)
+
+                //of target is A 'adjacent', add this
+                if(this.limit.target === 'A') {
+                    if (!this.universe.has(index)) newUniv.add(index)
+                } 
+                //If not adjacent, then it is both in and adjacent
+                else {
+                    newUniv.add(index)
+                }
+            }
+        })
+
+        //replace the universe with the new universe
+        this.universe = newUniv
+    }
+
+
+
+
+    /**Initialization: Indexing function
+     * intakes a list of documents to index and then insert into the indices class array
+     * 
+     * @param {array} documents //array of documents
+     * @param {array} indices  //class array 
+     */
+    _indexDocuments(documents, indices){
+        for(const document of documents){
+            const documentName = document.documentName ?? document.document.documentName;
+            const b = boundary.documentBoundary(documentName, document, {inclusive: (documentName === "Token" ? false : true)});
+            const grids = b.grids()  
+            for(const grid of grids){
+                let index = boundary.makeIndex(grid);
+                if(indices.has(index)) continue
+                switch(documentName){
+                    case "Wall":
+                        if(!rayIntersectsGrid(grid, document.object.toRay())) continue
+                        break
+                    case "AmbientLight":
+                        if(!circleAreaGrid(grid.shift.w, grid.shift.h, b.dimensions)) continue
+                        break
+                    default:
+                }
+                indices.add(index)
+            }
+        }
+        dangerZone.log(false, 'Tagged ', {tagged: documents, boundary: this, indices: indices});
+    }
+
+
+
+
+    /**Initialization: adds the boundary grids to the grid index
+     * creates a set of indexes for all of the boundary's grids
+     * 
+     */
+    _setGridIndex(){
+        const grids = this.grids();
+
+        for(const grid of grids){
+            this.gridIndex.add(boundary.makeIndex(grid))
+        }
+    }
+
+
+
+
+    /**Initialization: lock into grid
+     * Used to ensure that that boundary points are locked to the grid points (as opposed to mid-grid)
+     */
+    _toTopLeft(){    
+        this.A = canvas.grid.getTopLeftPoint(this.A);
+        this.B = canvas.grid.getTopLeftPoint(this.B);
+    }
+
+
+
+    /**Getters */
     
     get bottom(){
         return this.options.bottom ?? this.elevation.bottom
@@ -286,6 +555,10 @@ export class boundary{
         return this.options.range ?? {w: 1, h:1, d:0}
     }
 
+    get region(){
+        return this.regionUuid ? fromUuidSync(this.regionUuid) : {}
+    }
+
     get regionUuid(){
         return this.options.regionUuid ?? ''
     }
@@ -305,70 +578,6 @@ export class boundary{
     get width(){
         return Math.abs(this.B.x - this.A.x)
     }
-    
-    _exclude(){
-        this._indexDocuments(this.exclude, this.excludes)
-    }
-
-    _universe(){
-        this._indexDocuments(this.limit.documents, this.universe)
-        if(this.limit.target === 'I') return
-        const newUniv = new Set() 
-        this.universe.forEach((value) => {
-            const[i, j] = value.split('_')
-            const nghbrs = canvas.grid.getAdjacentOffsets({i:Number(i), j:Number(j)})
-            for(const pos of nghbrs){
-                let index = boundary.makeIndex(pos)
-                if(this.limit.target === 'A') {
-                    if (!this.universe.has(index)) newUniv.add(index)
-                } else {
-                    newUniv.add(index)
-                }
-            }
-        })
-        this.universe = newUniv
-    }
-
-    _indexDocuments(documents, indices){
-        for(const document of documents){
-            const documentName = document.documentName ?? document.document.documentName;
-            const b = boundary.documentBoundary(documentName, document, {inclusive: (documentName === "Token" ? false : true)});
-            const grids = b.grids()  
-            for(const grid of grids){
-                let index = boundary.makeIndex(grid);
-                if(indices.has(index)) continue
-                switch(documentName){
-                    case "Wall":
-                        if(!rayIntersectsGrid(grid, document.object.toRay())) continue
-                        break
-                    case "AmbientLight":
-                        if(!circleAreaGrid(grid.shift.w, grid.shift.h, b.dimensions)) continue
-                        break
-                    default:
-                }
-                indices.add(index)
-            }
-        }
-        dangerZone.log(false, 'Tagged ', {tagged: documents, boundary: this, indices: indices});
-    }
-
-    _init(){
-        if(!('retain' in this.options)) this._toTopLeft();
-        if(this.exclude) this._exclude();
-        if(this.limit.target) this._universe();
-        this._setGridIndex();
-    }
-
-    /**creates a set of indexes for all of the boundary's grids
-     * 
-     */
-    _setGridIndex(){
-        const grids = this.grids();
-
-        for(const grid of grids){
-            this.gridIndex.add(boundary.makeIndex(grid))
-        }
-    }
 
     _testGridToRegion(dim = {}){
         let inRegion = false, i = 0;
@@ -387,11 +596,6 @@ export class boundary{
             i++
         } while (!inRegion && i < vertices.length)
         return inRegion
-    }
-
-    _toTopLeft(){    
-        this.A = canvas.grid.getTopLeftPoint(this.A);
-        this.B = canvas.grid.getTopLeftPoint(this.B);
     }
 
     /** the grids that make up the boundary, as an iterator
@@ -431,11 +635,14 @@ export class boundary{
         }
     } 
 
+
+
+
     /** Returns an iterator of every grid point eligible for this boundary
      * 
-     * @returns 
+     * @returns iterator of grid boundaries for any given range included in this boundary
      */
-    * randomBoundary (){
+    * boundaryRangeIterator (){
 
         //cache the grid array
         if(!this.gridsArray.length) this.gridsArray = [...this.grids()];
@@ -474,6 +681,9 @@ export class boundary{
         }
 
     }
+
+
+
 
     /**Converts a foundry document into a Danger Zone boundary
      * 
@@ -581,12 +791,21 @@ export class boundary{
         return b
     }
 
+
+
     static locationToBoundary(coords, elevation, units, options={}){
         let position = point.shiftPoint(coords, units)
         dangerZone.log(false,'Location to boundary...', {point: coords, units: units, options: options});
         return new boundary(coords, position, {bottom: elevation.bottom, top: elevation.bottom + units.d}, options)
     }
 
+
+
+    /**Makes an index out of given coordinates
+     * 
+     * @param {obj} coords //obj with {i,j} coordinates
+     * @returns string //index of those coordinates understood by Danger Zone processing
+     */
     static makeIndex(coords) {
         return coords.i + '_' + coords.j
     }
@@ -623,14 +842,25 @@ export class boundary{
         return new boundary(obj.A, obj.B, obj.elevation, obj.options)
     }
 
+    /**Intakes an array of tokens and outputs an array consisting of those tokens that exist within the document bounds. 
+     * Does not account for levels
+     * 
+     * @param {array} tokens //an array of token documents
+     * @returns 
+     */
     tokensIn(tokens){
         let kept = [];
+
+        //iterate over tokens, keeping those that exist in the boundary
         for(let token of tokens){
+
+            //generates a boundary for the token
             const b = boundary.documentBoundary('Token', token);
-            if(this.intersectsBoundary(b)){
-                kept.push(token)
-            }
+
+            //checks intersection of token boundary with this boundary, keeping token on intersect
+            if(this.intersectsBoundary(b)) kept.push(token)
         }
+
         return kept
     } 
 
@@ -644,9 +874,20 @@ export class boundary{
         return false
     }
 
+    /**Highlights a grid highlight layer with the dimensions of this boundary
+     * 
+     * @param {*} name //highlight layer name to use for locating the highlight and turning it off
+     * @param {*} color //the color to use for highlight
+     */
     highlight(name, color = 16737280){
+
+        //append to id for the highlight layer the danger zone prefix
         let hId = 'dz-' + name;
+
+        //add the highlight level
         canvas.interface.grid.addHighlightLayer(hId);
+
+        //for each grid of this boundary, add the highlight color
         const grids = this.grids();
         for(const grid of grids){ 
             let position = canvas.grid.getTopLeftPoint(grid);
@@ -654,6 +895,7 @@ export class boundary{
         }
     }
 
+    //destroy a highlight layer previously created for displaying this boundary in highlight
     destroyHighlight(name){
         canvas.interface.grid.destroyHighlightLayer('dz-' + name)
     }
