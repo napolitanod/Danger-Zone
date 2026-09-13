@@ -40,15 +40,16 @@
         "levels": {
             "label": "Levels",
             "options": {
-                "scene": "Include in all scene levels",
-                "zone": "Include in all zone levels",
-                "trigger": "Include in all trigger levels",
+                "all": "Include in all scene levels",
+                "both": "Include in zone levels and any created by this danger",
+                "zone": "Include in zone levels",
+                "target": "Include in targeted levels",
                 "danger": "Include in level created by this danger"
             },
             "options-single": {
-                "scene": "Include in one random scene level",
-                "zone": "Include in one random zone level",
-                "trigger": "Include in one random trigger level",
+                "both": "Include in either the zone level or one created by this danger",
+                "zone": "Include in one zone level",
+                "target": "Include in one target level",
                 "danger": "Include in level created by this danger"
             }
         },

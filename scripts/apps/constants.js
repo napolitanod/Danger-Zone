@@ -302,16 +302,17 @@ export const DANGERFORMOPTIONS = {
         }
     },
     LEVELSOPTIONS: {
-        "": "DANGERZONE.levels.options.scene",
+        "": "DANGERZONE.levels.options.all",
         "Z": "DANGERZONE.levels.options.zone",
-        "T": "DANGERZONE.levels.options.trigger",
-        "D": "DANGERZONE.levels.options.danger"
+        "T": "DANGERZONE.levels.options.target",
+        "D": "DANGERZONE.levels.options.danger",
+        "B": "DANGERZONE.levels.options.both"
     },
     LEVELSSINGLEOPTIONS: {
-        "": "DANGERZONE.levels.options-single.scene",
         "Z": "DANGERZONE.levels.options-single.zone",
-        "T": "DANGERZONE.levels.options-single.trigger",
-        "D": "DANGERZONE.levels.options-single.danger"
+        "T": "DANGERZONE.levels.options-single.target",
+        "D": "DANGERZONE.levels.options-single.danger",
+        "B": "DANGERZONE.levels.options-single.both"
     },
     MIRRORIMAGEOPTIONS: {
         "": "DANGERZONE.type-form.offset.flip.options.none.label",
@@ -1219,6 +1220,7 @@ export function setExecutableOptions(){
             'effect': {
                 title: "Active Effect", 
                 icon: "fas fa-hand-sparkles",
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.activeEffectOn, name: "game-system", dependent: true}],
                 scope: "token"
             },
@@ -1226,12 +1228,14 @@ export function setExecutableOptions(){
                 fileTypes: ['audio'],
                 title: "Audio", 
                 icon: "fas fa-music", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: false}],
                 scope: "scene"
             },
             'combat': {
                 title: "Combat", 
                 icon: "fas fa-swords", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.portalOn, name: "portal", dependent: false}],
                 scope: "scene"
             },
@@ -1239,6 +1243,7 @@ export function setExecutableOptions(){
                 fileTypes: ['image'],
                 title: "Primary Effect", 
                 icon: "fas fa-bolt", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
@@ -1247,6 +1252,7 @@ export function setExecutableOptions(){
                 icon: "fa-regular fa-lightbulb", 
                 document: "AmbientLight", 
                 wipeable: true, 
+                levels: 'Y',
                 modules: [
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
@@ -1255,6 +1261,7 @@ export function setExecutableOptions(){
             'canvas': {
                 title: "Canvas", 
                 icon: "fas fa-wind", 
+                levels: 'N',
                 modules: [
                     {active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}
                 ],
@@ -1263,11 +1270,13 @@ export function setExecutableOptions(){
             'damage': {
                 title: "Damage", 
                 icon: "fas fa-skull", 
+                levels: 'N',
                 scope: "token"
             },
             'item': {
                 title: "Item", 
                 icon: "fas fa-suitcase", 
+                levels: 'S',
                 modules: [{active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false},{active: dangerZone.MODULES.itemPileOn, name: "item-piles", dependent: false}],
                 scope: "token"
             },
@@ -1277,6 +1286,7 @@ export function setExecutableOptions(){
                 icon: "fa-solid fa-cubes", 
                 document: "Tile",  
                 wipeable: true, 
+                levels: 'Y',
                 modules: [
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
@@ -1287,17 +1297,20 @@ export function setExecutableOptions(){
                 title: "Level", 
                 icon: "fa-fw fa-solid fa-layer-group", 
                 document: "Level",  
+                levels: 'N',
                 wipeable: false, 
                 scope: "scene"
             },
             'macro': {
                 title: "Macro", 
                 icon: "fas fa-file-code",
+                levels: 'N',
                 scope: "scene"
             },
             'mutate': {
                 title: "Mutate", 
                 icon: "fas fa-pastafarianism", 
+                levels: 'N',
                 modules:[
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
@@ -1307,6 +1320,7 @@ export function setExecutableOptions(){
                 fileTypes: ['image', 'audio'],
                 title: "Secondary Effect", 
                 icon: "fas fa-bomb", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
@@ -1314,17 +1328,20 @@ export function setExecutableOptions(){
                 document: "Region", 
                 title: "Region", 
                 icon: "fa-regular fa-game-board",
+                levels: 'Y',
                 scope: "boundary",
                 wipeable: true
             },
             'rolltable':{
                 title: 'Roll Table',
                 icon: "fas fa-th-list",
+                levels: 'N',
                 scope: "scene"
             },
             'save': {
                 title: "Save", 
                 icon: "fas fa-shield-alt",
+                levels: 'N',
                 scope: "token"
             },
             'scene': {
@@ -1332,6 +1349,7 @@ export function setExecutableOptions(){
                 title: "Scene", 
                 icon: "fas fa-map", 
                 document: 'scene',
+                levels: 'Y',
                 wipeable: false,
                 modules:[],
                 scope: "scene"
@@ -1341,6 +1359,7 @@ export function setExecutableOptions(){
                 title: "Sound", 
                 icon: "fa-solid fa-music", 
                 document: "AmbientSound", 
+                levels: 'Y',
                 modules:[],
                 wipeable: true, 
                 scope: "boundary"
@@ -1349,12 +1368,14 @@ export function setExecutableOptions(){
                 fileTypes: ['image', 'audio'],
                 title: "Source Effect", 
                 icon: "fas fa-dragon", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
             'warpgate': {
                 title: "Spawn", 
                 icon: "fas fa-circle-notch", 
+                levels: 'Y',
                 modules:[
                     {active: dangerZone.MODULES.portalOn, name: "portal", dependent: true}, 
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
@@ -1364,18 +1385,21 @@ export function setExecutableOptions(){
             'tokenMove': {
                 title: "Token Move", 
                 icon: "fas fa-arrows-alt",
+                levels: 'N',
                 scope: "token"
             },
             'tokenEffect': {
                 fileTypes: ['image'],
                 title: "Token Effect", 
                 icon: "fas fa-male", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "token"
             },
             'tokenSays': {
                 title: "Token Says", 
                 icon: "fas fa-comment", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.tokenSaysOn, name: "token-says", dependent: true}],
                 scope: "token"
             },
@@ -1384,6 +1408,7 @@ export function setExecutableOptions(){
                 icon: "fa-solid fa-block-brick", 
                 document: "Wall",  
                 wipeable: true,
+                levels: 'Y',
                 modules:[
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
@@ -1394,6 +1419,7 @@ export function setExecutableOptions(){
                 icon: "fas fa-cloud-rain", 
                 document: 'fxmaster-particle',
                 wipeable: true,
+                levels: 'N',
                 modules:[
                     {active: dangerZone.MODULES.fxMasterOn, name: "fxmaster", dependent: false}
                 ],
@@ -1402,6 +1428,7 @@ export function setExecutableOptions(){
             'flavor': {
                 title: "Flavor", 
                 icon:"fas fa-book",
+                levels: 'N',
                 scope: "scene"
             } 
         });

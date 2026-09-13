@@ -8,6 +8,106 @@ import {ZoneListForm} from './zone-list-form.js';
 
 export class helper {
 
+
+
+
+  /**returns the world bottom elevation in the event that the value passed in is infinity or null
+   * 
+   * @param {int} val 
+   * @returns 
+   */
+  static fallbackElevationBottom(val){
+    return (val === Infinity || val === -Infinity || val === null || val === undefined) ? dangerZone.minElevation : val;
+  }
+
+
+
+
+  /**returns the world top elevation in the event that the value passed in is infinity or null
+   * 
+   * @param {int} val 
+   * @returns 
+   */
+  static fallbackElevationTop(val){
+    return (val === Infinity || val === -Infinity || val === null || val === undefined) ? dangerZone.maxElevation : val;
+  }
+
+
+
+  /**returns levels for the given scene, filtered down by the optionally provided set of level ids
+   * 
+   * @param {document} scene 
+   * @param {array} 
+   * @param {object} options 
+   *    //output {string}: 'ids' use to only output an array of ids versus and array of documents, 'documents' use to output an array of documents
+   *    //filterIds {array}: provide an array of ids to be used to filter down the scene levels
+   * @returns 
+   */
+  static filterLevels(scene, options = {output: 'documents', filterIds: []}){
+      let levels = [], arr;
+
+      //get the scene levels, filtering if a filter array was provided
+      if(scene.levels?.size){
+          levels = options.filterIds?.length ? scene.levels?.filter(l => options.filterIds.includes(l.id)) : scene.levels
+      }
+
+      //set the output to either just the ids or the full documents, based on the passed in options
+      if(options.output === 'ids'){
+        arr = levels.map(lvl => lvl.id)
+      } else {
+        arr = levels
+      }
+
+      return arr
+  }
+
+
+
+
+/**
+ * Checks the passed in grid locations and confirms whether they exist within the circle dimensions boundary by excluding corners
+ * It could be more precise - as circles get larger the grid corners outside of the dimensions increases
+ * @param {int} xLoc //the grid x position
+ * @param {int} yLoc //the grid y position
+ * @param {obj} dimension //the circle dimension
+ * @returns boolean
+ */
+static GridWithinCircleDimension(xLoc, yLoc, dimension = {w:w, h:h}){
+  const isCorner =
+    (xLoc === 0 && yLoc === 0) ||
+    (xLoc === 0 && yLoc === dimension.h) ||
+    (xLoc === dimension.w && yLoc === 0) ||
+    (xLoc === dimension.w && yLoc === dimension.h);
+
+  return !isCorner;
+}
+
+
+
+/**Returns documents on a scene that match given tag
+ * 
+ * @param {string} tag //the tag to return entities for
+ * @param {document} scene //the scene to search
+ * @returns array of documents
+ */
+static getTagEntities(tag, scene){
+  let d
+
+  //tags can be added as drawings
+  d = scene.getEmbeddedCollection("Drawing").filter(d => d.text === tag);
+
+  //if the tagger module is loaded, that can also be used
+  if(dangerZone.MODULES.taggerOn){
+      const t = Tagger.getByTag(tag, {caseInsensitive: false, matchAny: true, sceneId: scene.id })
+      d = d.concat(t)
+  }
+
+  return d
+}
+
+
+
+
   static htmlBuildInput(options){
     let htmlInner = '';
     const value = options.inputValue ?? options.value;
@@ -34,6 +134,9 @@ export class helper {
     let html = `<div class="form-group"><label>${game.i18n.localize(options.label)}</label><div class="form-fields">${htmlInner}</div></div>`
     return html;     
   }
+
+
+
 
   /**v13
    * 
@@ -84,52 +187,10 @@ export class helper {
       case 'show':
         value ? target.classList.remove('dz-hidden') : target.classList.add('dz-hidden')
         break;
-    }  console.log(getEventData(options.event).target.value , form, options, target, value)
-  
+    }  
+
     form.setPosition()
   }
-
-  /**returns the world bottom elevation in the event that the value passed in is infinity or null
-   * 
-   * @param {int} val 
-   * @returns 
-   */
-  static fallbackElevationBottom(val){
-    return (val === Infinity || val === -Infinity || val === null || val === undefined) ? dangerZone.minElevation : val;
-  }
-
-  /**returns the world top elevation in the event that the value passed in is infinity or null
-   * 
-   * @param {int} val 
-   * @returns 
-   */
-  static fallbackElevationTop(val){
-    return (val === Infinity || val === -Infinity || val === null || val === undefined) ? dangerZone.maxElevation : val;
-  }
-
-  
-
-/**Returns documents on a scene that match given tag
- * 
- * @param {string} tag //the tag to return entities for
- * @param {document} scene //the scene to search
- * @returns 
- */
-static getTagEntities(tag, scene){
-  let d
-
-  //tags can be added as drawings
-  d = scene.getEmbeddedCollection("Drawing").filter(d => d.text === tag);
-
-  //if the tagger module is loaded, that can also be used
-  if(dangerZone.MODULES.taggerOn){
-      const t = Tagger.getByTag(tag, {caseInsensitive: false, matchAny: true, sceneId: scene.id })
-      d = d.concat(t)
-  }
-
-  return d
-}
-
 
 
   /**  returns a random value from the array
@@ -141,32 +202,52 @@ static getTagEntities(tag, scene){
         return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  /**returns levels for the given scene, filtered down by the optionally provided set of level ids
-   * 
-   * @param {document} scene 
-   * @param {array} 
-   * @param {object} options 
-   *    //output {string}: 'ids' use to only output an array of ids versus and array of documents, 'documents' use to output an array of documents
-   *    //filterIds {array}: provide an array of ids to be used to filter down the scene levels
-   * @returns 
+
+
+  /**
+   * Builds out the dimensions of the grid then checks if the ray passes throught it
+   * @param {object} coords //grid coordinates
+   * @param {ray} r //ray
+   * @returns boolean
    */
-  static filterLevels(scene, options = {output: 'documents', filterIds: []}){
-      let levels = [], arr;
+  static rayIntersectsGrid(coords, r){
 
-      //get the scene levels, filtering if a filter array was provided
-      if(scene.levels?.length){
-          levels = options.filterIds?.length ? scene.levels?.filter(l => options.filterIds.includes(l.id)) : scene.levels
-      }
+    //get top left points for the given grid coordinates then save to variables
+    const topLeft = canvas.grid.getTopLeftPoint(coords);
+    const { x: xl, y: yl } = topLeft;
 
-      //set the output to either just the ids or the full documents, based on the passed in options
-      if(options.output === 'ids'){
-        arr = levels.map(lvl => lvl.id)
-      } else {
-        arr = levels
-      }
+    //obtain the center point for the grid. Assumes square grid, where the boundary is drawn by starting point and multiplying center distance to that point by 2
+    const center = canvas.grid.getCenterPoint(topLeft);
+    const width = (center.x - xl) * 2;
+    const height = (center.y - yl) * 2;
 
-      return arr
+    //generate the right side points
+    const xr = xl + width;
+    const yr = yl + height;
+
+    //build the edges for the ray testing
+    const edges = [
+      [xl, yl, x2, yl],     // top
+      [xl, yl, xl, y2],     // left
+      [xl, y2, x2, y2],     // bottom
+      [x2, yl, x2, y2]      // right
+    ];
+
+    //test the array of edges for any intersection
+    return edges.some(e => r.intersectSegment(e));
   }
+
+
+
+  /**
+   * rolls a d100 for use with calculating likelihood
+   * @returns evaluated roll
+   */
+  static async rollLikelihood(){
+    const roll = await new Roll(`1d100`).evaluate()
+    return roll
+  }
+
 
   /**returns the minimum bottom and maximum top for elevation related to a scene's levels, with optional abbility to filter to certain levels
    * 
@@ -183,10 +264,9 @@ static getTagEntities(tag, scene){
   }
 }
 
-export function circleAreaGrid(xLoc,yLoc, dimension = {w:w, h:h}){
-  if((!xLoc &&!yLoc) || (yLoc===dimension.h&&!xLoc) || (xLoc===dimension.w&&!yLoc) || (xLoc===dimension.w&&yLoc===dimension.h)){return false}
-  return true
-}
+
+
+
 
 export function furthestShiftPosition(token, [xGrids, yGrids] = [0,0]){
   let collisionTestX = false, collisionTestY = false, xTest = 0, yTest = 0, test, options =  {type: 'move', mode: "any"};
@@ -212,6 +292,9 @@ export function furthestShiftPosition(token, [xGrids, yGrids] = [0,0]){
   return position
 }
 
+
+
+
 export function getActorOwner(document){
     const actor = document.actor ?? document
     const activePlayers = game.users?.players.filter(p => p.active)
@@ -222,6 +305,9 @@ export function getActorOwner(document){
     if (!user && actor.ownership.default === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) user = activePlayers[0]
     return user  
 }
+
+
+
 
 /**v13
  * intakes a pointer event and outputs key data elements used in forms
@@ -248,6 +334,8 @@ export function getEventData(event){
   return data
 }
 
+
+
 export async function getFilesFromPattern(pattern) {
     let source = "data";
     const browseOptions = { wildcard: true };
@@ -265,6 +353,8 @@ export async function getFilesFromPattern(pattern) {
     return content.files;      
 }
 
+
+
 export function getSceneLevelList(sceneId){
   let list = {'':'[All Levels]'};
   for (let level of game.scenes.get(sceneId).levels.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
@@ -272,6 +362,9 @@ export function getSceneLevelList(sceneId){
   }
   return list
 }
+
+
+
 
 export function getSceneRegionList(sceneId){
   let list = {'':'[Use Scene Dimensions]'};
@@ -281,28 +374,17 @@ export function getSceneRegionList(sceneId){
   return list
 }
 
+
+
+
 export function joinWithAnd(arr){
   if(arr?.length <= 1) return arr?.[0]
   return [arr.slice(0, arr.length - 1).join(', '), ...arr.slice(-1)].join(' and ')
 }
 
-export async function maybe(){
-  const roll = await new Roll(`1d100`).evaluate()
-  return roll
-}
 
-export function rayIntersectsGrid(coords, r){
-  const topLeft = canvas.grid.getTopLeftPoint(coords);
-  const xl = topLeft.x; const yl = topLeft.y;
-  const center = canvas.grid.getCenterPoint(topLeft);
-  const wg = (center.x - xl) * 2, hg = (center.y - yl) * 2;
-  if(r.intersectSegment([xl, yl, xl+wg, yl]) || r.intersectSegment([xl, yl, xl, yl+hg])
-      || r.intersectSegment([xl, yl+hg, xl+wg, yl+hg]) || r.intersectSegment([xl+wg, yl, xl+wg, yl+hg])
-      ){
-          return true
-      }
-  return false
-}
+
+
 
 /** v13
  * Adds the dangers launch button to the Scenes sidebar

@@ -1,5 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
-import {circleAreaGrid, rayIntersectsGrid, helper} from './helpers.js';
+import {helper} from './helpers.js';
 
 export class dangerZoneDimensions {
     /**
@@ -440,10 +440,10 @@ export class boundary{
                 if(indices.has(index)) continue
                 switch(documentName){
                     case "Wall":
-                        if(!rayIntersectsGrid(grid, document.object.toRay())) continue
+                        if(!helper.rayIntersectsGrid(grid, document.object.toRay())) continue
                         break
                     case "AmbientLight":
-                        if(!circleAreaGrid(grid.shift.w, grid.shift.h, b.dimensions)) continue
+                        if(!helper.GridWithinCircleDimension(grid.shift.w, grid.shift.h, b.dimensions)) continue
                         break
                     default:
                 }
@@ -708,6 +708,7 @@ export class boundary{
                     bottom: wallElevation.bottom, 
                     top: wallElevation.top
                 }
+                options['levels'] = document.levels
                 break
             case "AmbientLight":
                 const radius = document.object.radius
@@ -720,6 +721,7 @@ export class boundary{
                     bottom: document.elevation - radius, 
                     top: document.elevation + radius
                 } 
+                options['levels'] = document.levels
                 break;
             case "Drawing":
                 dim={
@@ -730,6 +732,7 @@ export class boundary{
                     bottom: document.elevation, 
                     top: document.elevation
                 }
+                options['levels'] = document.levels
                 break;
             case "Region":
                 dim={
@@ -740,6 +743,7 @@ export class boundary{
                     bottom: document.elevation.bottom, 
                     top: document.elevation.top
                 }
+                options['levels'] = document.levels
                 break;
             case "Scene":
                 const sceneElevation = helper.sceneLevelsElevationBounds(document, document.levels) 
@@ -751,6 +755,7 @@ export class boundary{
                     bottom: sceneElevation.bottom, 
                     top: sceneElevation.top
                 }
+                options['levels'] = helper.filterLevels(document, {output: 'ids'})
                 break;
             case "Tile":
                 dim={
@@ -761,6 +766,7 @@ export class boundary{
                     bottom: document.elevation, 
                     top: document.elevation
                 }
+                options['levels'] = document.levels
                 break;
             case "Token":
                 const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
@@ -776,9 +782,11 @@ export class boundary{
                     bottom:document.elevation, 
                     top: document.elevation + Td
                 };
+                options['levels'] = [document.level]
                 break
             default: 
                 dim=document
+                options['levels'] = document.levels
         }
 
         //generate the new bound
@@ -864,13 +872,44 @@ export class boundary{
         return kept
     } 
 
+
+    /**
+     * checks the sent in array of levels and outputs if this boundary includes one of those levels
+     * @param {array} levels 
+     * @param {object} options //an object of options. {
+     *                          match: 'any' - returns true on any match. currently code for just this option
+     *  }
+     * @returns boolean
+     */
+    levelsInBoundary(levels, options = {match: 'any'}){
+
+        //one of the two being compared are 'all'
+        if(!levels?.length || !this.levels?.length) return true
+
+        //return true on any match
+        return levels.find(lvl => this.levels.includes(lvl)) ? true : false
+    }
+
+
+
+    /**
+     * compares this boundary against the one past in. If any grid indexes are shared, these are considered intersecting.
+     * Factors in levels
+     * @param {boundary} bound 
+     * @returns boolean
+     */
     intersectsBoundary(bound = boundary){
+        
+        //check for being on a boundary level
+        if(!this.levelsInBoundary(bound.levels)) return false
+
         if((this.bottomIsInfinite || this.bottom < bound.top) && (this.topIsInfinite || this.top >= bound.bottom)) {
             const grids = bound.grids()
             for(const grid of grids){
                 if(this.gridIndex.has(grid.index)) return true
             }
         }
+
         return false
     }
 

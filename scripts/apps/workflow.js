@@ -1,7 +1,7 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
 import {EVENTS, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
-import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getRandomNumber, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd, helper} from './helpers.js';
+import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getRandomNumber, limitArray, shuffleArray, stringToObj, wait, joinWithAnd, helper} from './helpers.js';
 
 async function delay(delay){
     if(delay) await wait(delay)
@@ -427,7 +427,6 @@ class executorData {
                 `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Workflow Details</div><div class="danger-zone-chat-message-body">
                 <div><label class="danger-zone-label">Danger:</label><span> ${this.danger.name}</span></div>
                 <div><label class="danger-zone-label">Danger dimensions:</label><span> w${this.danger.dimensions.units.w}  h${this.danger.dimensions.units.h}  d${this.danger.dimensions.units.d}${this.zone.dimensions.bleed ? ' (bleed)' : ''}</span></div>
-                <div><label class="danger-zone-label">Eligible zone levels:</label><span> ${this.levelsNames}</span></div>
                 <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => t.name)}</span></div>
                 <div><label class="danger-zone-label">Trigger:</label><span> ${game.i18n.localize(EVENTS[this.event]?.label)}</span></div>
                 <div><label class="danger-zone-label">Likelihood:</label><span> ${this.zone.trigger.likelihood}</span> <label class="danger-zone-label">Likelihood result:</label><span> ${this.likelihoodResult}</span></div>
@@ -437,6 +436,7 @@ class executorData {
                 content += `
                 <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.bottomIsInfinite ? '-&infin;' : this.boundary.bottom}</span></div>
                 <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.topIsInfinite ? '&infin;' : this.boundary.top}</span></div>
+                <div><label class="danger-zone-label">Target levels:</label><span> ${this.levelsNames}</span></div>
                 <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => t.name)}</span></div>
                 <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => t.name)}</span></div></div>`
             } 
@@ -449,7 +449,7 @@ class executorData {
 
     async checkLikelihood() {
         if(this.zone.trigger.likelihood < 100){
-            const roll = await maybe();
+            const roll = await rollLikelihood();
             this.likelihoodResult = roll.result;
         }
         return this.likelihoodMet
@@ -488,13 +488,19 @@ class executorData {
         this.spawn.tokens = tokens;
     }
 
+
+    /**
+     * Prompts user for the boundary, which then records that boundary to the zone as part of the final call
+     * Final method also sets boundary eligible targets
+     */
     async promptBoundary(){ 
         this.location = await this.zone.promptTemplate();
-        if(!this.hasLocation) {
-            return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
-        }
-        return this._setLocationBoundary()
+        if(!this.hasLocation) return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
+       this._setLocationBoundary()
     }
+
+
+
 
     /**
      * Iterates over the possible target grids within the zone, seeking one to target
@@ -524,20 +530,38 @@ class executorData {
         //set the levels for the executor data
         this._setLevels();
 
+        //set the target boundary and the eligible tokens
         await this.setBoundary(asRun)
+
+        //populate executor source data
         this._setSources();
+
+
+        //set the 
         this.setTargets()
+
+        //if twin boundary exists, generate that
         if(this.danger.hasTwinBoundary) this.setTwinBoundary()
+
+        //throw validation error if boundary is not set    
         if(!this.hasBoundary) this.valid = false
     }
     
     async setBoundary(asRun = false) {
+
+        //if a boundary is already present, set the tokens in that boundary as eligible targets
         if(this.hasBoundary) return this.setBoundaryEligibleTargets();
+
+        //if location is present, set the boundary using the location. This also sets eligible targets
         if(this.hasLocation) return this._setLocationBoundary();
+
+        //if this involves a prompt at this point, then prompt for boundary. That prompt flow also sets eligible targets
         if(asRun && this.zone.target.choose.enable) {
             await this.promptBoundary();
             return
         }
+
+        //default is to pull a random boundary and assign eligible targets
         this.randomBoundary()
     }
 
@@ -575,7 +599,13 @@ class executorData {
                     break;
                 //add zone level that is currently visible to GM
                 case 'current':
-                    targetData.all = this.zone.levelCurrent ? [this.zone.levelCurrent] : undefined
+                    //if the current level is not a zone level, throw the validation error. Set the array to prevent other errors before the plan is abandoned
+                    if(!this.zone.levelCurrent) {
+                        this.valid = false
+                        targetData.all = []
+                    } else {
+                        targetData.all = [this.zone.levelCurrent] 
+                    }
                     break;
             }
             //pick a random one from array for singleton placeables (ones that accept only one level)
@@ -591,12 +621,48 @@ class executorData {
 
     }
 
+    
+    /**
+     * Sets the boundary for that executor target using location data passed into the class, typically when the constructor is created
+     */
+    _setLocationBoundary(){
+        const options = {
+            excludes: this.zoneBoundary.excludes, 
+            universe: this.zoneBoundary.universe,
+            levels: this.levelData.target.all
+        }
+        this.zone.stretch(options);
+        this.boundary = boundary.locationToBoundary(
+            this.location.coords, 
+            {bottom: this.location.elevation, top: this.location.elevation}, 
+            this.danger.dimensions.units, 
+            options
+        );
+        this.setBoundaryEligibleTargets();
+    }
+    
+
+    /**
+     * Populates the different source data stored on this executor data class
+     * @param {boolean} fill //true = insert more into the existing array. false = replace existing array
+     */
     _setSources(fill = false){
+
+        //sets the executors token sources
         this.setTokenSources(fill);
+
+        //sets the executors source areas
         this.setSourceAreas(fill);
+
+        //blends the source areas with the source tokens
         this.setBlendedSources(fill);
     }
 
+
+     /**
+     * sets this executor data's sourcesBlended, which combines tokens and source areas, sticking within the limit
+     * @param {boolean} fill //true = new sources are added to existing array. false = any existing sources are replaced entirely by new
+     */
     setBlendedSources(fill = false){
         const all = this.sourceAreas.concat(this.sources.filter(s => !this.sourceAreas.find(a => a.id === s.id)))
         if (this.sourceLimit === -1 || all.length <= this.sourceLimit) {this.sourcesBlended = all} 
@@ -607,27 +673,77 @@ class executorData {
         }
     }
 
+
+
+    /**
+     * takes the eligible zone tokens and selects those that are in this executor boundary and sets those as the eligible targets
+     * The tokensIn does check for level criteria
+     */
+    setBoundaryEligibleTargets(){
+        this.eligibleTargets = !this.hasBoundary ? [] : this.boundary.tokensIn(this.zoneEligibleTokens);
+    }
+
+
+    /**
+     * sets this executor data's token sources
+     * @param {boolean} fill //true = new sources are added to existing array. false = any existing sources are replaced entirely by new
+     */
     setTokenSources(fill = false){
-        if(this._sources.length) {this.sources = this._sources}
-        else if (this.sourceLimit === -1 || this.zone.sources.length <= this.sourceLimit) {this.sources = this.zone.sources}
-        else if(!fill){this.sources = limitArray(shuffleArray(this.zone.sources),this.sourceLimit)} 
+
+        //if the sources were passed into the constructor, then set the sources to those
+        if(this._sources.length) {
+            this.sources = this._sources
+        }
+
+        //if the source limit is not set or cannot be exceed by the max sources, then set sources to all eligible sources
+        else if (this.sourceLimit === -1 || this.zone.sources.length <= this.sourceLimit) {
+            this.sources = this.zone.sources
+        }
+
+        //if not additive (if full replace), then set the sources up to the source limit
+        else if(!fill){
+            this.sources = limitArray(shuffleArray(this.zone.sources),this.sourceLimit)
+        } 
+
+        //if additive, then add in more sources until the limit is reached
         else {
             const fillCount = this.sourceLimit - this.zone.sources.length;
             if(fillCount) this.sources = this.sources.concat(limitArray(shuffleArray(this.eligibleSources),fillCount))
         }
     }
 
+    /**
+     * sets this executor data's  source areas
+     * @param {boolean} fill //true = new sources are added to existing array. false = any existing sources are replaced entirely by new
+     */
     setSourceAreas(fill = false){
-        if(this._sourceAreas.length){this.sourceAreas = this._sourceAreas}
+
+        //if the sources were passed into the constructor, then set the sources to those
+        if(this._sourceAreas.length){
+            this.sourceAreas = this._sourceAreas
+        }
         else {
             let area;
-            if(this.zone.source.area === 'A') {area = this.sources}
+            if(this.zone.source.area === 'A') {
+                area = this.sources
+            }
+
             else {
                 const ar = this.zone.sourceArea;
                 area = ar.documents;
             } 
-            if (this.sourceLimit === -1) {this.sourceAreas = area}
-            else if(!fill){this.sourceAreas = limitArray(shuffleArray(area),this.sourceLimit)} 
+
+            //if the source limit is not set or cannot be exceed by the max sources, then set sources to all eligible sources
+            if (this.sourceLimit === -1) {
+                this.sourceAreas = area
+            }
+
+            //if not additive (if full replace), then set the sources up to the source limit
+            else if(!fill){
+                this.sourceAreas = limitArray(shuffleArray(area),this.sourceLimit)
+            } 
+
+            //if additive, then add in more sources until the limit is reached
             else {
                 const fillCount = this.sourceLimit - this.sourceAreas.length;
                 if(fillCount) this.sourceAreas = this.sourceAreas.concat(limitArray(shuffleArray(area.filter(s => !this.sourceAreas.find(c => c.id === s.id))),fillCount))
@@ -635,46 +751,57 @@ class executorData {
         }
         if(!this.sourceAreas) this.sourceAreas = []
     }
+
     
+    /**Sets the targets for the executor
+     * 
+     */
     setTargets(){
-        let targets = []
-        if (this.hasTargets) {//if has targets, then just return that array filtered by eligible
-            targets = this.eligibleTargets.filter(e => this.targets.find(t => e.id === t.id))
-        } else if(this.zone.target.all) {//if targets all tokens, set targets to all eligible tokens
-            targets = this.eligibleTargets
-            this.targets = targets
-        } else if(this.eligibleTargets.length > 1){//else return from the random target quantity
+
+        //if has targets, then just return 
+        if (this.hasTargets) return
+        
+        //if targets all tokens, set targets to all eligible tokens
+        else if(this.zone.target.all) {
+            this.targets.push(...this.eligibleTargets) 
+        } 
+        
+        //else return from the random target quantity
+        else if(this.eligibleTargets.length > 1){
+
+            //retrieve the zone's target quantity
             const totalToTarget = this.zone.targetQuantity()
-            //shallow copy shuffle
+
+            //shallow copy then shuffle then slice
             const shuffled = [...this.eligibleTargets].sort(() => 0.5 - Math.random());
-            targets = shuffled.slice(0, totalToTarget);
+            const targets = shuffled.slice(0, totalToTarget);
             this.targets.push(...targets);
         }    
         
-        return targets;
     }
 
+
+
+    /**
+     * Populates the twin boundary, used most often when creating teleporting regions
+     */
     setTwinBoundary(){
         const itr = this.zone.scene.getZoneTargetGridsIterator();
         this.twinBoundary = itr.next().value
     }
 
+
+
+    /**
+     * sets the executors zone boundary, zone tokens, and the eligible tokens in the zone
+     */
     setZone(){
         this.zoneBoundary = this.zone.zoneBoundary;
         this.zoneTokens = this.zoneBoundary.tokensIn(this.sceneTokens);
         this.zoneEligibleTokens = this.zone.zoneEligibleTokens(this.zoneTokens);
     }
 
-    setBoundaryEligibleTargets(){
-        this.eligibleTargets = !this.hasBoundary ? [] : this.boundary.tokensIn(this.zoneEligibleTokens);
-    }
 
-    _setLocationBoundary(){
-        const options = {excludes: this.zoneBoundary.excludes, universe: this.zoneBoundary.universe}
-        this.zone.stretch(options);
-        this.boundary = boundary.locationToBoundary(this.location.coords, {bottom: this.location.elevation, top: this.location.elevation}, this.danger.dimensions.units, options);
-        this.setBoundaryEligibleTargets();
-    }
 
     insertSaveFailed(failed){
         this.save.failed = failed?.length ? this.save.failed.concat(failed.filter(t => !this.save.failed.find(tg => tg.id === t.id))) : [];
@@ -944,7 +1071,7 @@ export class executor {
                 }
             }
             if(ex.likelihood < 100){
-                const roll = await maybe();
+                const roll = await rollLikelihood();
                 dangerZone.log(false,'Extension likelihood result', {extension: ex, roll: roll})
                 if(roll.result > ex.likelihood) {
                     console.log(`Zone extension likelihood of ${ex.likelihood} was not met with a roll of ${roll.result}`)
@@ -1326,6 +1453,38 @@ class executable {
         return this.#likelihoodResult
     }
 
+    get levels(){
+        let levels
+
+        //take in the levels metadata to determine if this outputs a single level 'S' or multiple 'Y'
+        let opt = this.#options.levels
+
+        if(!['Y', 'S'].includes(opt)) return
+
+        switch(this.part.levels){
+            //add the level created by this execution
+            case 'D':
+                levels = (opt === 'S' ?  this.data.levelAdded : [this.data.levelAdded])
+                break;
+            //add the target levels from this execution. For singleton, default to the single level randomly chosen.
+            case 'T':
+                levels = (opt === 'S' ?  this.data.levelSingle : this.data.levels)   
+                break;
+            //add the target levels and the level created by this execution. For singleton, pick between the added and the single level randomly chosen.
+            case 'B':
+                levels = (opt === 'S' ?  helper.pickRandom([this.data.levelSingle, this.data.levelAdded]) : this.data.levels.concat(this.data.levelAdded))   
+                break;
+            //add the zone levels. For singleton, default to the single level randomly chosen.
+            case 'Z':
+                levels = (opt === 'S' ?  this.data.levelSingle : this.data.zone.levels)
+                break;
+            //default has to assign something to singleton. For many, leave as all levels
+            default:
+                levels = (opt === 'S' ?  this.data.levelSingle : [])
+        }    
+        return levels
+    }
+
     get report(){
         return {"danger": this.name, "data": this, "executed": this.#executed, "modules": this.modules}
     }
@@ -1353,7 +1512,7 @@ class executable {
     get sourcesSelected(){
         switch(this.part.target){
             case 'A':
-                return this.data.sources;
+                return this.sources;
             case 'R':
                 return this.data.sourceAreas;
             default:
@@ -1363,6 +1522,10 @@ class executable {
     
     get save(){
         return 0
+    }
+
+    get sources(){
+        return this.data.sources
     }
 
     get stoppable(){
@@ -1378,7 +1541,7 @@ class executable {
     }
     
     get targets(){
-        return this.zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.data.sources);
+        return this.zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.sources);
     }  
 
     get wipeable(){
@@ -1408,7 +1571,7 @@ class executable {
     
     async checkLikelihood() {
         if(this.likelihood < 100){
-            const roll = await maybe();
+            const roll = await rollLikelihood();
             this.setLikelihoodResult(roll.result);
         }
     }
@@ -1964,6 +2127,7 @@ class ambientLight extends executable{
             },   
             elevation: this.boundary.bottomToElevation,            
             hidden: false,
+            levels: this.levels,
             rotation: this.#flipRotation(),
             vision: this.vision,
             x: this.boundary.center.x,
@@ -2219,7 +2383,7 @@ class combat extends executable {
 
     #setTargets(){
         if(this.addTargets) this.#setInitiativeTargets(this.targets)
-        if(this.addSource && this.data.hasSources) this.#appendInitiativeTargets(this.data.sources)
+        if(this.addSource && this.data.hasSources) this.#appendInitiativeTargets(this.sources)
         if(dangerZone.MODULES.portalOn && this.spawn) this.#appendInitiativeTargets(this.data.spawn.tokens)
     }
 
@@ -2339,7 +2503,7 @@ class damageToken extends executable{
     } 
     
     get targets(){
-        return this.data.zone.sourceTreatment(this.source, this.data.targets, this.data.sources);
+        return this.data.zone.sourceTreatment(this.source, this.data.targets, this.sources);
     }
 
     get targetNames(){
@@ -2641,7 +2805,14 @@ class item extends executable {
         }
         if(this.pile && dangerZone.MODULES.itemPileOn) {
             const pilePos = canvas.grid.getTopLeftPoint({x:this.boundary.center.x, y:this.boundary.center.y})
-            await ItemPiles.API.createItemPile({position: {x: pilePos.x, y: pilePos.y}, sceneId: this.data.scene.id, items: this.items, pileActorName: false})
+            await ItemPiles.API.createItemPile({
+                position: {x: pilePos.x, y: pilePos.y}, 
+                sceneId: this.data.scene.id, 
+                items: this.items, 
+                pileActorName: false,
+                tokenOverrides: {levels: this.levels}
+                }
+            )
             return
         }
         for (const token of this.targets) { 
@@ -2770,6 +2941,7 @@ class lastingEffect extends executableWithFile{
             hidden: this.hidden,
             locked: false,
             height: this.boundary.height,
+            levels: this.levels,
             occlusion: {
                 alpha: this.occlusion.alpha,
                 mode: CONST.TILE_OCCLUSION_MODES[this.occlusion.mode] 
@@ -3051,6 +3223,25 @@ class region extends executable{
         return this.part.attachedToken ?? ""
     }
 
+    get attachedTokenArray(){
+        arr = []
+
+        //attach to source tokens
+        if(this.attachedToken === 'S'){
+            arr.push(...this.sources) 
+        } 
+        //attach to tokens
+        else if(this.attachedToken === 'T') {
+            arr.push(...this.targets) 
+        }
+        //send in string blank to facilitate iterator on build
+        else {
+            arr.push('')
+        }
+
+        return arr
+    }
+
     get boundaries(){
         return this.#boundaries
     }
@@ -3121,7 +3312,14 @@ class region extends executable{
     }
 
     get type(){
-        return this.part.type ?? 'rectangle'
+        let type = this.part.type ?? 'rectangle'
+
+        //if the boundary is not equal width and height, convert to an ellipse
+        if(type === 'circle' && this.boundary.width !== this.boundary.height){
+            type = 'ellipse'
+        }
+
+        return type
     }
 
     get visibility(){
@@ -3156,8 +3354,25 @@ class region extends executable{
 
     #build(){
         this.#boundaries = this.data.twinDanger ? this.dualBoundaries : [this.boundary]
+        const tokenDuplicationCount = this.attachedTokenArray.length
+
+        //for each boundary, of which there are 2 when twinned
         for(let i = 0; i < this.boundaries.length; i++){
-            this.#regionUpdates.push(this.#getRegionData(this.boundaries[i], i))
+
+            //for each token being attached to. If there is no token attachment, the array will have ''
+            for(let j = 0; j < tokenDuplicationCount; j++){
+
+                const token = this.attachedTokenArray[j]
+                const obj = this.#getRegionData(this.boundaries[i], i)
+
+                //set the region to attach to token and update the name to the token name plus the existing name
+                if(token){
+                    obj['attachment'] = {token: token.id} 
+                    if(tokenDuplicationCount > 1) obj['name'] = obj['name'] + ' ' + token.name
+                }
+
+                this.#regionUpdates.push(this.#getRegionData(this.boundaries[i], i))
+            }
         }
     }
 
@@ -3213,15 +3428,35 @@ class region extends executable{
     }
 
     #buildShape(boundary){
-        return Object.assign( {
+        const obj = {
             type: this.type,
             hole: this.hole,
-            rotation: 0,
-            x: boundary.A.x,
-            y: boundary.A.y
-        }, this.type ==='rectangle' ? 
-            {x: boundary.A.x, y: boundary.A.y, width: boundary.width, height: boundary.height} : 
-            {x: boundary.center.x, y: boundary.center.y, radiusX: boundary.width/2, radiusY: boundary.height/2})
+            rotation: 0
+        }
+        let dim
+
+        //dimensions differ based on shape
+        if(this.type ==='rectangle'){
+           dim = {
+                    x: boundary.A.x,
+                    y: boundary.A.y
+                }
+        } else if (this.type ==='ellipse'){
+           dim = {
+                x: boundary.center.x, 
+                y: boundary.center.y, 
+                radiusX: boundary.width/2, 
+                radiusY: boundary.height/2
+            }
+        } else {
+           dim = {
+                x: boundary.center.x, 
+                y: boundary.center.y, 
+                radius: boundary.width/2
+            }
+        }
+
+        return Object.assign(obj, dim)
     }
 
     #buildSuppressWeather(){
@@ -3254,6 +3489,7 @@ class region extends executable{
             elevation: {bottom: boundary.bottom, top: boundary.top}, 
             flags: this.data.flag,
             highlightMode: this.highlightMode,
+            levels: this.levels,
             name: this.regionName,
             restriction: this.restriction,
             shapes: [shape],
@@ -3731,6 +3967,7 @@ class sound extends executableWithFile {
             easing: this.easing,
             effects: this.effects,
             flags: this.data.flag,
+            levels: this.levels,
             path: this.files.audio,
             radius: this.radius,
             volume: this.volume, 
@@ -3918,7 +4155,7 @@ class spawn extends executable {
     }
 
     get updates(){
-        const updates = {token: {}}
+        const updates = {token: {levels: this.levels}}
         if(this.tag) updates.token['flags'] = {"tagger":this.taggerTag}
         return updates
     }
@@ -4070,7 +4307,7 @@ class tokenMove extends executable {
     
     get targets(){
         let targets = super.targets
-        if(this.sToT) targets = targets.concat(this.data.sources.filter(s => targets.find(t => t.id !== s.id))) 
+        if(this.sToT) targets = targets.concat(this.sources.filter(s => targets.find(t => t.id !== s.id))) 
         return targets
     }
 
@@ -4099,7 +4336,7 @@ class tokenMove extends executable {
     #build(){
         for (const token of this.targets) { 
             let h = this.#getV(), w = this.#getHz(), amtE = this.#getE(), e, x, y;
-            if(this.sToT && this.data.sources.find(s => s.id === token.id)){
+            if(this.sToT && this.sources.find(s => s.id === token.id)){
                 let location = this.boundary.center;
                 let tokenBoundary = boundary.documentBoundary("Token", token);
                 x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
@@ -4340,6 +4577,7 @@ class wall extends executable {
             move: this.move,
             sight: this.sense,
             sound: this.sound,
+            levels: this.levels,
             light: this.light,
             threshold: this.threshold,
             flags: this.data.flag
