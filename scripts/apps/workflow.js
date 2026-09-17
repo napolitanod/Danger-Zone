@@ -241,7 +241,8 @@ class executorData {
             added: '',
             target: {
                 all: options.levels?.target ? options.levels?.target.all : [],
-                single: options.levels?.target ? options.levels?.target.single : ''
+                single: options.levels?.target ? options.levels?.target.single : '',
+                zone: options.levels?.zone ? options.levels?.target.zone : ''
             }
         },
         this.location = options.location ? (new point(options.location.coords ?? {x: options.location.x, y: options.location.y}, options.location.elevation ?? options.location.z)) : {},
@@ -370,6 +371,13 @@ class executorData {
         return this.levelData.target.single
     }
 
+    /**
+     * For documents created that an only have one level, use this for the random zone level
+     */
+    get levelSingleZone(){
+        return this.levelData.target.zone
+    }
+
     get likelihoodMet(){
         return this.likelihoodResult <= this.zone.trigger.likelihood
     }
@@ -427,7 +435,7 @@ class executorData {
                 `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Workflow Details</div><div class="danger-zone-chat-message-body">
                 <div><label class="danger-zone-label">Danger:</label><span> ${this.danger.name}</span></div>
                 <div><label class="danger-zone-label">Danger dimensions:</label><span> w${this.danger.dimensions.units.w}  h${this.danger.dimensions.units.h}  d${this.danger.dimensions.units.d}${this.zone.dimensions.bleed ? ' (bleed)' : ''}</span></div>
-                <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => t.name)}</span></div>
+                <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div>
                 <div><label class="danger-zone-label">Trigger:</label><span> ${game.i18n.localize(EVENTS[this.event]?.label)}</span></div>
                 <div><label class="danger-zone-label">Likelihood:</label><span> ${this.zone.trigger.likelihood}</span> <label class="danger-zone-label">Likelihood result:</label><span> ${this.likelihoodResult}</span></div>
                 <div><label class="danger-zone-label">Targeting:</label><span> ${this.zone.target.always ? 'Must target a location with a token' : 'Can target any location in zone'}. ${tokenTargets} at location.</span></div>
@@ -437,8 +445,8 @@ class executorData {
                 <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.bottomIsInfinite ? '-&infin;' : this.boundary.bottom}</span></div>
                 <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.topIsInfinite ? '&infin;' : this.boundary.top}</span></div>
                 <div><label class="danger-zone-label">Target levels:</label><span> ${this.levelsNames}</span></div>
-                <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => t.name)}</span></div>
-                <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => t.name)}</span></div></div>`
+                <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div>
+                <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div></div>`
             } 
             ChatMessage.create({
                 content: content,
@@ -508,17 +516,50 @@ class executorData {
      * @returns nothing returned, but sets the boundary and eligible target list
      */
     randomBoundary() {
-        let max = 1, i=0;
-        const test = this.zone.scene.getZoneTargetGridsIterator();
+        //max number of tries for finding a random boundary
+        let max = 1;
+        
+        //variable for passing in indexes to restrict the zone boundary to for purposes of targeting.
+        let restrictedIndexes;
+
+        //the current test boundary
+        let testBoundary;
+
+        //if targets are already known, that is the pool for targinet, else the tokens that are eligible to be targeted within the zone boundary
         const targetPool = this.targets.length ? this.targets : this.zoneEligibleTokens;
-        if((this.targets.length || this.zone.target.always) && targetPool.length) max = 10000;
+
+        //get boundaries for tokens
+        const targetTokenBoundarys = helper.getTokenBoundarys(targetPool);
+
+        //targeting with be random, but if there are already targets or the zone always targets, set some limit on when one is randomly selected. 
+        //Then also restrict the array of boundary indexes that are targeted
+        //Then select one randomly. Else, the area targeted is the first one randomly pulled
+        if((this.targets.length || this.zone.target.always) && targetPool.length) {
+            max = 10000;
+            restrictedIndexes = this.zoneBoundary.getIndexRestrictedByBoundaries(targetTokenBoundarys)
+        }
+        //create the iterator for the grids within the zone boundary
+        const test = this.zone.scene.getZoneTargetGridsIterator(restrictedIndexes);
+
+        //Perform the random targeting
+        let i=0;
         do {
             i++;
+
+            //pull the next randomly targeted area
             const b = test.next()
             if(!b || b.done) return
-            this.boundary = b.value;
-            this.eligibleTargets = this.boundary.tokensIn(targetPool);
+            testBoundary = b.value;
+
+            //attempt to set the eligible targets if the boundary finds tokens in it from the target pool
+            this.eligibleTargets = testBoundary.tokensIn(targetPool, targetTokenBoundarys);
+            
         } while(!this.eligibleTargets.length && i < max);
+
+        //set the boundary to the passed or final test boundary
+        this.boundary = testBoundary;
+
+        //set the twin boundary if there is one remaining to pull and danger involves twinning
         (test.done && !this.hasDualBoundaries) ? this.twinBoundary = this.boundary : this.twinBoundary = test.next().value
     }
 
@@ -612,11 +653,15 @@ class executorData {
             //should there be an issue with a level not being decided, an individual one must still be assigned to allow for token creation when it happens
             const single = targetData.all?.length ? targetData.all : this.zone.levels
             targetData.single = helper.pickRandom(single)
+
+            //finally, set a singleton for the one level to satisfy settings that pick one level from zone
+            targetData.zone = helper.pickRandom(this.zone.levels)
         } 
         //case for when all levels are part of zone and array is []
         else {
             targetData.all = []
             targetData.single = helper.pickRandom(helper.filterLevels(this.zone.scene.sceneLevels, 'ids'))
+            targetData.zone = helper.pickRandom(helper.filterLevels(this.zone.scene.sceneLevels, 'ids'))
         }
 
     }
@@ -767,7 +812,7 @@ class executorData {
         } 
         
         //else return from the random target quantity
-        else if(this.eligibleTargets.length > 1){
+        else if(this.eligibleTargets.length >= 1){
 
             //retrieve the zone's target quantity
             const totalToTarget = this.zone.targetQuantity()
@@ -884,6 +929,9 @@ export class executor {
                     break;
                 case 'lastingEffect': 
                     be = new lastingEffect(this.danger.lastingEffect, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'level': 
+                    be = new level(this.danger.level, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'macro': 
                     be = new macro(this.danger.macro, this.data, name, EXECUTABLEOPTIONS[name]); 
@@ -1453,6 +1501,9 @@ class executable {
         return this.#likelihoodResult
     }
 
+    /**
+     * generate the levels based on what this part accepts - multiple levels or single
+     */
     get levels(){
         let levels
 
@@ -1461,26 +1512,64 @@ class executable {
 
         if(!['Y', 'S'].includes(opt)) return
 
+        levels = opt === 'S' ?  this.levelSingle : this.levelsMulti
+           
+        return levels
+    }
+    
+    /**
+     * the level to use when a single level is accepted
+     */
+    get levelSingle(){
+        let levels
+
         switch(this.part.levels){
             //add the level created by this execution
             case 'D':
-                levels = (opt === 'S' ?  this.data.levelAdded : [this.data.levelAdded])
-                break;
-            //add the target levels from this execution. For singleton, default to the single level randomly chosen.
-            case 'T':
-                levels = (opt === 'S' ?  this.data.levelSingle : this.data.levels)   
+                levels = this.data.levelAdded 
                 break;
             //add the target levels and the level created by this execution. For singleton, pick between the added and the single level randomly chosen.
             case 'B':
-                levels = (opt === 'S' ?  helper.pickRandom([this.data.levelSingle, this.data.levelAdded]) : this.data.levels.concat(this.data.levelAdded))   
+                levels = helper.pickRandom([this.data.levelSingle, this.data.levelAdded])  
                 break;
             //add the zone levels. For singleton, default to the single level randomly chosen.
             case 'Z':
-                levels = (opt === 'S' ?  this.data.levelSingle : this.data.zone.levels)
+                levels = this.data.levelSingleZone 
+                break;
+            //add the target levels from this execution. For singleton, default to the single level randomly chosen. (T)
+            //default has to assign something to singleton. For many, leave as all levels
+            default:
+                levels = this.data.levelSingle
+        }    
+        return levels
+    }
+
+    /**
+     * the level to use when multiple levels are accepted
+     */
+    get levelsMulti(){
+        let levels
+
+        switch(this.part.levels){
+            //add the level created by this execution
+              case 'D':
+                levels = [this.data.levelAdded]
+                break;
+            //add the target levels from this execution. For singleton, default to the single level randomly chosen.
+            case 'T':
+                levels = this.data.levels
+                break;
+            //add the target levels and the level created by this execution. For singleton, pick between the added and the single level randomly chosen.
+            case 'B':
+                levels = this.data.levels.concat(this.data.levelAdded)   
+                break;
+            //add the zone levels. For singleton, default to the single level randomly chosen.
+            case 'Z':
+                levels = this.data.zone.levels
                 break;
             //default has to assign something to singleton. For many, leave as all levels
             default:
-                levels = (opt === 'S' ?  this.data.levelSingle : [])
+                levels =  []
         }    
         return levels
     }
@@ -3175,6 +3264,7 @@ class primaryEffect extends executableWithAnimation {
             this.sequence.effect()
                 .file(this.files.image)
                 .zIndex(boundary.topToElevation)
+                .elevation([boundary.bottom, boundary.top])
                 .mirrorX(this.flipContent('x'))
                 .mirrorY(this.flipContent('y'))
                 .name(`${this.data.id}primaryEffect`)
@@ -3197,6 +3287,56 @@ class primaryEffect extends executableWithAnimation {
     }
 
 
+}
+
+/**
+ *
+
+          name: '',
+
+
+ */
+class level extends executable {
+
+    get background(){
+        return this.part.background
+    }
+
+    get elevationSource(){
+        return this.part.elevation ?? 'T'
+    }
+
+    get fog(){
+        return this.part.fog
+    }
+
+    get foreground(){
+        return this.part.foreground
+    }
+    
+    get has(){
+        return (super.has && this.data.danger.hasLevel) ? true : false
+    }
+
+    get levelsVisibleFrom(){
+        return this.part.visible.to
+    }
+
+    get name(){
+        return this.part.name
+    }
+
+    get rotation(){
+        return this.part.rotation
+    }
+
+    get textures(){
+        return this.part.textures
+    }
+
+    get visibleLevels(){
+        return this.part.visible.from
+    }
 }
 
 class region extends executable{
@@ -3224,7 +3364,7 @@ class region extends executable{
     }
 
     get attachedTokenArray(){
-        arr = []
+        const arr = []
 
         //attach to source tokens
         if(this.attachedToken === 'S'){
@@ -3233,10 +3373,6 @@ class region extends executable{
         //attach to tokens
         else if(this.attachedToken === 'T') {
             arr.push(...this.targets) 
-        }
-        //send in string blank to facilitate iterator on build
-        else {
-            arr.push('')
         }
 
         return arr
@@ -3266,8 +3402,18 @@ class region extends executable{
         return this.part.hole ?? false
     }
 
+    /**Override
+     * if wall restriction is enabled then only a single level can be returned, though field expects array
+     */
+    get levels(){
+        return this.restriction.enabled ? [this.levelSingle] : super.levels    
+    }
+
     get macro(){
-        return this.part.behavior.macro?.uuid ? this.part.behavior.macro : false
+        if(this.part.behavior.macro?.uuid && this.part.behavior.macro?.events?.length){
+            return this.part.behavior.macro
+        }
+        return false
     }
 
     get pause(){
@@ -3323,7 +3469,7 @@ class region extends executable{
     }
 
     get visibility(){
-        return CONST.REGION_VISIBILITY[this.part.visibility] ?? 0
+        return this.part.visibility ?? 0
     }
 
     /** @override */
@@ -3354,24 +3500,35 @@ class region extends executable{
 
     #build(){
         this.#boundaries = this.data.twinDanger ? this.dualBoundaries : [this.boundary]
-        const tokenDuplicationCount = this.attachedTokenArray.length
+        const tokenDuplicationCount = this.attachedTokenArray.length 
 
         //for each boundary, of which there are 2 when twinned
         for(let i = 0; i < this.boundaries.length; i++){
+            
+            const baseObj = this.#getRegionData(this.boundaries[i], i)
+
+            //if not attaching to token, then insert the object ready for update
+            if(!tokenDuplicationCount) {
+                this.#regionUpdates.push(baseObj);
+                continue
+            } 
 
             //for each token being attached to. If there is no token attachment, the array will have ''
+            //must have at least 1 iteration
             for(let j = 0; j < tokenDuplicationCount; j++){
 
                 const token = this.attachedTokenArray[j]
-                const obj = this.#getRegionData(this.boundaries[i], i)
+
+                const obj = structuredClone(baseObj);
 
                 //set the region to attach to token and update the name to the token name plus the existing name
                 if(token){
                     obj['attachment'] = {token: token.id} 
-                    if(tokenDuplicationCount > 1) obj['name'] = obj['name'] + ' ' + token.name
+                    obj['levels'] = [token.level] //level of region must match token level
+                    if(tokenDuplicationCount > 1) obj['name'] = `${obj.name} ${token.name}`;
                 }
 
-                this.#regionUpdates.push(this.#getRegionData(this.boundaries[i], i))
+                this.#regionUpdates.push(obj)
             }
         }
     }
@@ -3435,24 +3592,29 @@ class region extends executable{
         }
         let dim
 
+        const width = (boundary.width * this.scale);
+        const height = (boundary.height * this.scale);
+
         //dimensions differ based on shape
         if(this.type ==='rectangle'){
            dim = {
                     x: boundary.A.x,
-                    y: boundary.A.y
+                    y: boundary.A.y,
+                    width: width, 
+                    height: height
                 }
         } else if (this.type ==='ellipse'){
            dim = {
                 x: boundary.center.x, 
                 y: boundary.center.y, 
-                radiusX: boundary.width/2, 
-                radiusY: boundary.height/2
+                radiusX: width/2, 
+                radiusY: height/2
             }
         } else {
            dim = {
                 x: boundary.center.x, 
                 y: boundary.center.y, 
-                radius: boundary.width/2
+                radius: width/2
             }
         }
 
@@ -3482,7 +3644,9 @@ class region extends executable{
     }
 
     #getRegionData(boundary, index){
+
         let shape = this.#buildShape(boundary);
+
         const rg = {
             color: this.color,
             displayMeasurements: this.displayMeasurements,
@@ -3495,12 +3659,15 @@ class region extends executable{
             shapes: [shape],
             visibility: this.visibility
         };
+
         if(dangerZone.MODULES.taggerOn && this.tag) rg.flags['tagger'] = this.taggerTag
+
         if(index) {
             rg.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].istwin = true
         } else {
             this.data.regionData.shapes.push(shape)
         }
+
         return rg
     } 
 }
@@ -3918,6 +4085,7 @@ class secondaryEffect extends executableWithAnimation {
                     .file(this.files.image)
                     .zIndex(boundary.bottomToElevation)
                     .atLocation(boundary.center)
+                    .elevation([boundary.bottom, boundary.top])
                     .mirrorX(this.flipContent('x'))
                     .mirrorY(this.flipContent('y'))
                     .scale(this.scale)
@@ -4053,6 +4221,7 @@ class sourceEffect extends executableWithAnimation {
                     .file(this.files.image)
                     .zIndex(boundary.bottomToElevation)
                     .atLocation(boundary.center)
+                    .elevation([boundary.bottom, boundary.top])
                     .mirrorX(this.flipContent('x'))
                     .mirrorY(this.flipContent('y'))
                     .scale(this.scale)
@@ -4238,7 +4407,7 @@ class  tokenEffect extends executableWithAnimation {
         this.replaceSequence(
             this.sequence.effect()
                 .file(this.files.image)
-                .attachTo(target)
+                .attachTo(target, {bindElevation: true})
                 .scale(this.scale)
         )
         if(this.duration) {
@@ -4259,7 +4428,7 @@ class tokenMove extends executable {
      * array
      * the update data passed into the token update call
      */
-    #wallUpdates
+    #tokenUpdates
 
     get e(){
         return this.part.e
@@ -4315,14 +4484,14 @@ class tokenMove extends executable {
         return this.part.teleport
     }
 
-    get wallUpdates(){
-        return this.#wallUpdates
+    get tokenUpdates(){
+        return this.#tokenUpdates
     }
 
     /** @override */
     async initialize(){
         await super.initialize()
-        this.#wallUpdates = []
+        this.#tokenUpdates = []
     }
 
     /** @override */
@@ -4335,29 +4504,66 @@ class tokenMove extends executable {
 
     #build(){
         for (const token of this.targets) { 
-            let h = this.#getV(), w = this.#getHz(), amtE = this.#getE(), e, x, y;
-            if(this.sToT && this.sources.find(s => s.id === token.id)){
+            const update = {"_id": token.id,};
+
+            //move the level if there is a setting to do so.
+            if(this.levels) update['level'] = this.levels
+
+            //set height, width, and elevation constants, which may be assigned randomly over a range.
+            const h = this.#getV();
+            const w = this.#getHz();
+            const amtE = this.#getE();
+            
+            //set variables for use in the final update
+            let e, x, y;
+
+            //identify is source to target and a source
+            const isSToTSource = this.sToT && this.sources.some(s => s.id === token.id);
+
+            //when source to target is set and this token is a source - move the source to the target
+            if(isSToTSource){
                 let location = this.boundary.center;
                 let tokenBoundary = boundary.documentBoundary("Token", token);
-                x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
+
+                //given various token sizes, calculate the differ for use in the final placement of token in the new location
+                const adjX = tokenBoundary.center.x - tokenBoundary.A.x;
+                const adjY = tokenBoundary.center.y - tokenBoundary.A.y;
+
+                //place source in new location
+                x = location.x - adjX; 
+                y = location.y - adjY;
                 e = this.boundary.bottomToElevation;
-            } else if (this.movesTargets) {
+            } 
+            
+            //else if the targets are moved
+            else if (this.movesTargets) {
+
+                //calculate the grid coordinates based on the grid shift
                 const shift = this.walls ? furthestShiftPosition(token, [w, h]) : point.shiftPoint(token, {w: w, h: h})
-                x = shift.x; y = shift.y;
-                e = this.e.type === 'S' ? amtE : token.elevation + amtE;
-                this.data.tokenMovement.push({tokenId: token.id, hz: Math.abs(w), v: Math.abs(h), e: Math.abs(e - token.elevation)})
+                const adjE = this.e.type === 'S' ? amtE : token.elevation + amtE;
+
+                x = shift.x; 
+                y = shift.y;
+                e = adjE;
+
+                //record the token movement into the executor data for reference by other parts
+                this.data.tokenMovement.push({tokenId: token.id, hz: Math.abs(w), v: Math.abs(h), e: Math.abs(adjE - token.elevation)})
             }
-            if(x < this.data.sceneBoundary.x.min) {
-                x = this.data.sceneBoundary.x.min
-            } else if (x > this.data.sceneBoundary.x.max) {
-                x = this.data.sceneBoundary.x.max
-            }
-            if(y < this.data.sceneBoundary.y.min) {
-                y = this.data.sceneBoundary.y.min
-            } else if (y > this.data.sceneBoundary.y.max) {
-                y = this.data.sceneBoundary.y.max
-            }
-            this.#wallUpdates.push({"_id": token.id,"x": x,"y": y, "elevation": e});
+
+            //get the sceneBoundary, and then perform updates that ensure token is not moved off of the scene
+            const { x: xBounds, y: yBounds } = this.data.sceneBoundary
+
+            x = Math.min(Math.max(x, xBounds.min), xBounds.max);
+            y = Math.min(Math.max(y, yBounds.min), yBounds.max);
+
+            //merge the updates and add to the final update
+            this.#tokenUpdates.push(
+                Object.assign(update, {
+                "x": x,
+                "y": y, 
+                "elevation": e
+                })
+            );
         }
     }
 
@@ -4383,7 +4589,7 @@ class tokenMove extends executable {
             opts.teleport = true;
             opts.forced = true;
         }
-        await this.data.scene.updateEmbeddedDocuments("Token", this.wallUpdates, opts);
+        await this.data.scene.updateEmbeddedDocuments("Token", this.tokenUpdates, opts);
     }
 }
 

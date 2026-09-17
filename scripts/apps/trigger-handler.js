@@ -2,7 +2,7 @@ import {dangerZone} from '../danger-zone.js';
 import {dangerZoneDimensions, boundary} from './dimensions.js'
 import {workflow} from './workflow.js';
 import {COMBAT_EVENTS, DANGERZONETRIGGERSORT, COMBAT_PERIOD_COMBAT_EVENTS, COMBAT_THRESHOLD_END_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS} from './constants.js';
-
+import {helper} from './helpers.js';
 
 /**
  * 
@@ -263,7 +263,9 @@ export class triggerManager {
             }
             const zoneBoundary = zn.zoneBoundary;
 
-            const zoneTokens = zoneBoundary.tokensIn([token]);
+            const tokenBoundary = helper.getTokenBoundarys([token]);
+
+            const zoneTokens = zoneBoundary.tokensIn([token], tokenBoundary);
 
             if('x' in update) token.x = update.x
             if('y' in update) token.y = update.y

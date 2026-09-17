@@ -221,6 +221,7 @@ export class dangerZoneType {
             tint: '#ffffff',
             alphaThreshold: 0.75
           },
+          delay: 0,
           elevation: '',
           fog: {
             file: ''
@@ -301,7 +302,7 @@ export class dangerZoneType {
           scale: 1.0,
           tag: '',
           type: 'rectangle',
-          visibility: 'LAYER'
+          visibility: 0
         },
         rolltable: {
           delay: 0,

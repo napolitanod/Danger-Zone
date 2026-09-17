@@ -240,11 +240,12 @@ export class dangerZoneDimensions {
 
     /**Generates an iterator that can then be used to output a random boundary
      * 
+     * @param {array} restrictedGrids//an array of grid indexes to restrict this iterator to
      * @returns iterator *
      */
-    getZoneTargetGridsIterator() {
+    getZoneTargetGridsIterator(restrictedGrids) {
         //start with zone boundary
-        const b = this.zoneBoundary
+        const startBoundary = this.zoneBoundary
 
         //the danger's width, height, and depth. Else the boundary for this dimension (typically 1,1,0)
         const options = {
@@ -257,10 +258,10 @@ export class dangerZoneDimensions {
         this.zone.stretch(options);
 
         //generate the boundary from the zone boundary, accounting for bleed
-        this.zone.dimensions.bleed ? this.boundaryBleed(b, options) : this.boundaryConstrained(b, options);
+        const b = this.zone.dimensions.bleed ? this.boundaryBleed(startBoundary, options) : this.boundaryConstrained(startBoundary, options);
         
         //generate the random boundary iterator
-        const grids = b.boundaryRangeIterator();
+        const grids = b.boundaryRangeIterator(restrictedGrids);
 
         dangerZone.log(false,'Zone Danger Target Grid Iterator Created  ', {"zoneScene": this, boundary: b, grids: grids, zone: this.zone, options: options})
 
@@ -366,25 +367,47 @@ export class boundary{
         if(!('retain' in this.options)) this._toTopLeft();
 
         //index the exclusion grids
-        if(this.exclude) this._exclude();
+        this._exclude();
 
         //index the universe grids
-        if(this.limit.target) this._universe();
+        this._universe();
 
         //initialize the array of grid indices that make up the boundary, accounting for universe and exclusion
         this._setGridIndex();
     }
     
 
+    /**
+     * Intakes a set of documents and outputs an array
+     * @param {set} documents //set of documents
+     * @returns 
+     */
+    _documentsInBoundaryLevel(documents){
+        let docs
+        if(!this.levels.length) {
+            //all leves are included
+            docs = documents
+        } else {
+            docs = documents.filter(doc =>
+                    this.levels.some(id => doc.locatedInLevel(id))
+                );
+
+        }
+        return docs
+    }
 
 
     /**Initialization: Exclusion Index
      * run through the documents in the exclude option and index them for future reference
      */
     _exclude(){
-        this._indexDocuments(this.exclude, this.excludes)
-    }
+        if(!this.options.exclude?.length) return 
 
+        //reduce the passed in exclusion documents to only those that are applicable (those locate on a level in the boundary)
+        const docs = this._documentsInBoundaryLevel(this.options.exclude)
+        
+        this._indexDocuments(docs, this.excludes)
+    }
 
 
 
@@ -392,8 +415,13 @@ export class boundary{
      * run through the documents in the limit option and index them for future reference
      */
     _universe(){
+        if(!this.limit.target) return 
+
+        //reduce the passed in universe documents to only those that are applicable (those locate on a level in the boundary)
+        const docs = this._documentsInBoundaryLevel(this.limit.documents)
+
         //index the universe and load to the class
-        this._indexDocuments(this.limit.documents, this.universe)
+        this._indexDocuments(docs, this.universe)
 
         //if target is I 'in' for inside the dimensions only, then return the universe as is
         if(this.limit.target === 'I') return
@@ -433,7 +461,9 @@ export class boundary{
     _indexDocuments(documents, indices){
         for(const document of documents){
             const documentName = document.documentName ?? document.document.documentName;
+            
             const b = boundary.documentBoundary(documentName, document, {inclusive: (documentName === "Token" ? false : true)});
+
             const grids = b.grids()  
             for(const grid of grids){
                 let index = boundary.makeIndex(grid);
@@ -527,10 +557,6 @@ export class boundary{
         return arr
     }
 
-    get exclude(){
-        return this.options.exclude
-    }
-
     get height(){
         return Math.abs(this.B.y - this.A.y)
     }
@@ -599,9 +625,9 @@ export class boundary{
     }
 
     /** the grids that make up the boundary, as an iterator
-     * 
+     * @param {set} restrictedGrids //a set of grid indexes to restrict this iterator to
      */
-    * grids(){
+    * grids(restrictedGrids){
         const dim = this.dimensions; 
 
         const maxW = this.inclusive ? dim.w : dim.w - 1;
@@ -615,6 +641,9 @@ export class boundary{
 
                 //skip if the index is in the excludes Set
                 if(this.excludes.has(coordIndex)) continue;
+
+                //skip if the index is not in the restricted grid Set
+                if(restrictedGrids && !restrictedGrids.has(coordIndex)) continue;
 
                 //skip if there is a universe and the universe does not include this index
                 if((this.universe && !this.universe.has(coordIndex))) continue;
@@ -639,13 +668,13 @@ export class boundary{
 
 
     /** Returns an iterator of every grid point eligible for this boundary
-     * 
+     * @param {set} restrictedGrids //a set of grid indexes to restrict this iterator to
      * @returns iterator of grid boundaries for any given range included in this boundary
      */
-    * boundaryRangeIterator (){
+    * boundaryRangeIterator (restrictedGrids){
 
         //cache the grid array
-        if(!this.gridsArray.length) this.gridsArray = [...this.grids()];
+        if(!this.gridsArray.length) this.gridsArray = [...this.grids(restrictedGrids)];
 
         if(this.gridsArray.length === 0 || this.depth < 0){
             if(this.depth < 0 && game.user.isActiveGM){
@@ -664,7 +693,12 @@ export class boundary{
                 ...(this.options.range && {range: this.range})
             };
 
-        const zAdj = this.depth ? (this.range.d ?? this.depth-1) : 0 
+        let rangeDepth = 0
+        if(this.depth > 0){
+            //if the boundary has depth, set that to this range depth
+            //if the reference range (e.g. the danger range) has a depth of 0, set to full depth of boundary - 1
+            rangeDepth = this.range.d ?? (this.depth - 1)
+        } 
 
         //iterator function
         while(true){
@@ -673,11 +707,17 @@ export class boundary{
             const topLeft = canvas.grid.getTopLeftPoint(test); 
             const bottomRight = point.shiftPoint(topLeft, this.range);
 
-            const randomDepth = this.depthIsInfinite ? 0 : Math.floor((Math.random() * this.depth));
-            const bottom = test.e + randomDepth;
-            const top = this.topIsInfinite ? Infinity : bottom + zAdj;
+            const boundaryAbsoluteBottomElevation = test.e 
+            //provided that there is a depth that is not infinite, generate the starting bottom elevation relative to the boundary bottom
+            const rangeRelativeBottomElevation = this.depthIsInfinite ? 0 : Math.floor((Math.random() * this.depth));
 
-            yield new boundary(topLeft, bottomRight, {bottom: bottom, top: top}, ops)
+            //add the relative range bottom to the boundary absolute bottom to get to the absolute bottom of the range
+            const rangeAbsoluteBottomElevation = boundaryAbsoluteBottomElevation + rangeRelativeBottomElevation;
+            
+            //if there is a top, add the range depth to it
+            const rangeAbsoluteTopElevation = this.topIsInfinite ? Infinity : (rangeAbsoluteBottomElevation + rangeDepth)
+         
+            yield new boundary(topLeft, bottomRight, {bottom: rangeAbsoluteBottomElevation, top: rangeAbsoluteTopElevation}, ops)
         }
 
     }
@@ -769,21 +809,28 @@ export class boundary{
                 options['levels'] = document.levels
                 break;
             case "Token":
-                const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
+
+                //the token depth calculates using the distance represented for each grid on the scene, multiplied by the width or height of token within the grids, multiplied by danger zone global settings multiplie
+                //This is intended to represent how tall the token is
+                const tokenDepth = helper.getTokenDepth(document);
+
+                //establish grid positions for the token to assist in calculating token depth
                 const position = canvas.grid.getOffset(document);
                 const topLeft = canvas.grid.getTopLeftPoint({j:position.j + document.width, i:position.i + document.height}); 
-                const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
-                const Td = (distance * Math.max(document.width, document.height) * multiplier);
+
                 dim = {
                     x:document.x, 
                     y:document.y, 
                     width: topLeft.x - document.x, 
                     height: topLeft.y - document.y, 
                     bottom:document.elevation, 
-                    top: document.elevation + Td
+                    top: document.elevation + tokenDepth
                 };
+
                 options['levels'] = [document.level]
-                break
+
+                //dangerZone.log('Token boundary variables', {diim: dim, options: options, tokenDepth: tokenDepth, token: document})
+                break;
             default: 
                 dim=document
                 options['levels'] = document.levels
@@ -799,12 +846,41 @@ export class boundary{
         return b
     }
 
+    /**
+     * 
+     * @param {array} boundaries //an array of id/boundary pair objects returned from getTokenBoundarys
+     * @returns a set of grid indexes for this boundary that match one of the gridIndexes in the passed in boundaries
+     */
+    getIndexRestrictedByBoundaries(boundaries){
+
+         // merge the sets for the passed in boundaries into a single set
+        const lookup = new Set(boundaries.flatMap(s => [...s.boundary.gridIndex]));
+
+        // create a new set from this boundary's grid index that is filtered to those in the passed in boundaries
+        const filtered = new Set([...this.gridIndex].filter(v => lookup.has(v)));
+
+        return filtered
+    }
 
 
-    static locationToBoundary(coords, elevation, units, options={}){
-        let position = point.shiftPoint(coords, units)
-        dangerZone.log(false,'Location to boundary...', {point: coords, units: units, options: options});
-        return new boundary(coords, position, {bottom: elevation.bottom, top: elevation.bottom + units.d}, options)
+    /**Generates a new boundary based on a given location and dimensions
+     * 
+     * @param {*} startingCoords 
+     * @param {*} elevation 
+     * @param {*} dimension 
+     * @param {*} options 
+     * @returns 
+     */
+    static locationToBoundary(startingCoords, elevation, dimension, options={}){
+
+        //Define the ending coordinates for the boundary end point given the start point and dimension
+        const endingCoords = point.shiftPoint(startingCoords, dimension)
+
+        //generate the new boundary
+        const b = new boundary(startingCoords, endingCoords, {bottom: elevation.bottom, top: elevation.bottom + dimension.d}, options)
+
+        dangerZone.log(false,'Location to boundary...', {newBoundary: b, startingCoords: startingCoords, dimension: dimension, options: options});
+        return b
     }
 
 
@@ -854,16 +930,28 @@ export class boundary{
      * Does not account for levels
      * 
      * @param {array} tokens //an array of token documents
+     * @param {array} tokenBoundaries //an array of objects with ids and token boundaries, which can be precalculated and passed in to optimize upstream use of this method {
+     *                                  id: token.id,
+     *                                  boundary: token boundary
+     *                              }
      * @returns 
      */
-    tokensIn(tokens){
+    tokensIn(tokens, tokenBoundaries = []){
         let kept = [];
+        const boundariesProvided = tokenBoundaries.length ? true : false;
 
         //iterate over tokens, keeping those that exist in the boundary
         for(let token of tokens){
 
-            //generates a boundary for the token
-            const b = boundary.documentBoundary('Token', token);
+            let passedInBoundary
+
+            //retrieve boundary if one was provided
+            if(boundariesProvided){
+                passedInBoundary = tokenBoundaries.find(t => t.id === token.id)?.boundary 
+            }
+            
+            //generates a boundary for the token if not provided
+            const b = passedInBoundary ?? boundary.documentBoundary('Token', token);
 
             //checks intersection of token boundary with this boundary, keeping token on intersect
             if(this.intersectsBoundary(b)) kept.push(token)
@@ -904,6 +992,7 @@ export class boundary{
         if(!this.levelsInBoundary(bound.levels)) return false
 
         if((this.bottomIsInfinite || this.bottom < bound.top) && (this.topIsInfinite || this.top >= bound.bottom)) {
+            
             const grids = bound.grids()
             for(const grid of grids){
                 if(this.gridIndex.has(grid.index)) return true

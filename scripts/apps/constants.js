@@ -355,15 +355,16 @@ export const DANGERFORMOPTIONS = {
             CONST.EDGE_RESTRICTION_TYPES.map(key => [key, `REGION.RESTRICTION_TYPES.${key}.label`])
         ),
         SHAPETYPE: {
+            "circle": "DANGERZONE.type-form.region.type.options.circle",
             "ellipse": "DANGERZONE.type-form.region.type.options.ellipse",
             "rectangle": "DANGERZONE.type-form.region.type.options.rectangle"
         },
         VISIBILITY: {
-            "LAYER_UNLOCKED": "DANGERZONE.type-form.region.visibility.options.layer_unlocked",
-            "LAYER": "DANGERZONE.type-form.region.visibility.options.layer",
-            "GAMEMASTER": "DANGERZONE.type-form.region.visibility.options.gamemaster",
-            "OBESERVER": "DANGERZONE.type-form.region.visibility.options.observer",
-            "ALWAYS": "DANGERZONE.type-form.region.visibility.options.always"
+            4: "DANGERZONE.type-form.region.visibility.options.layer_unlocked",
+            0: "DANGERZONE.type-form.region.visibility.options.layer",
+            1: "DANGERZONE.type-form.region.visibility.options.gamemaster",
+            3: "DANGERZONE.type-form.region.visibility.options.observer",
+            2: "DANGERZONE.type-form.region.visibility.options.always"
         }
     },
     SCENE: {
@@ -412,7 +413,6 @@ export const DANGERFORMOPTIONS = {
         },
         LEVELSSINGLEOPTIONS: {
             "": "DANGERZONE.type-form.tokenMove.levels.options-single.none",
-            "S": "DANGERZONE.type-form.tokenMove.levels.options-single.scene",
             "Z": "DANGERZONE.type-form.tokenMove.levels.options-single.zone",
             "T": "DANGERZONE.type-form.tokenMove.levels.options-single.trigger",
             "D": "DANGERZONE.type-form.tokenMove.levels.options-single.danger"

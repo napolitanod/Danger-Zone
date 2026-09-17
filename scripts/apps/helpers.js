@@ -3,7 +3,7 @@
  */
 
 import {dangerZone} from '../danger-zone.js';
-import {point} from './dimensions.js'
+import {point, boundary} from './dimensions.js'
 import {ZoneListForm} from './zone-list-form.js';
 
 export class helper {
@@ -84,29 +84,58 @@ static GridWithinCircleDimension(xLoc, yLoc, dimension = {w:w, h:h}){
 
 
 
-/**Returns documents on a scene that match given tag
- * 
- * @param {string} tag //the tag to return entities for
- * @param {document} scene //the scene to search
- * @returns array of documents
- */
-static getTagEntities(tag, scene){
-  let d
+  /**Returns documents on a scene that match given tag
+   * 
+   * @param {string} tag //the tag to return entities for
+   * @param {document} scene //the scene to search
+   * @returns array of documents
+   */
+  static getTagEntities(tag, scene){
+    let d
 
-  //tags can be added as drawings
-  d = scene.getEmbeddedCollection("Drawing").filter(d => d.text === tag);
+    //tags can be added as drawings
+    d = scene.getEmbeddedCollection("Drawing").filter(d => d.text === tag);
 
-  //if the tagger module is loaded, that can also be used
-  if(dangerZone.MODULES.taggerOn){
-      const t = Tagger.getByTag(tag, {caseInsensitive: false, matchAny: true, sceneId: scene.id })
-      d = d.concat(t)
+    //if the tagger module is loaded, that can also be used
+    if(dangerZone.MODULES.taggerOn){
+        const t = Tagger.getByTag(tag, {caseInsensitive: false, matchAny: true, sceneId: scene.id })
+        d = d.concat(t)
+    }
+
+    return d
   }
 
-  return d
-}
+  /**
+   * 
+   * @param {array} tokens //array of tokens
+   * @returns {array} objects // an array of objects that holds token document boundaries and token ids {id: token.id, boundary: boundary}
+   */
+  static getTokenBoundarys(tokens = []){
+      const targetTokenBoundarys = []
+      for(let token of tokens){
 
+          //generates a boundary for the token
+          const b = boundary.documentBoundary('Token', token);
 
+          targetTokenBoundarys.push({id: token.id, boundary: b})
+      }
 
+      return targetTokenBoundarys
+  }
+
+  static getTokenDepth(token){
+    //multiplier used for calculating depth aka standing height of token
+    const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
+
+    //distance is taken from the scene distance, which is the distance that each grid represents
+    const distance = token.parent?.dimensions?.distance ? token.parent?.dimensions?.distance : 1
+
+    //the token depth calculates using the distance represented for each grid on the scene, multiplied by the width or height of token within the grids, multiplied by danger zone global settings multiplie
+    //This is intended to represent how tall the token is
+    const tokenDepth = (distance * Math.max(token.width, token.height) * multiplier);
+
+    return tokenDepth
+  }
 
   static htmlBuildInput(options){
     let htmlInner = '';

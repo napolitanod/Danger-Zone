@@ -40,17 +40,17 @@
         "levels": {
             "label": "Levels",
             "options": {
-                "all": "Include in all scene levels",
-                "both": "Include in zone levels and any created by this danger",
-                "zone": "Include in zone levels",
-                "target": "Include in targeted levels",
-                "danger": "Include in level created by this danger"
+                "all": "All scene levels",
+                "both": "Zone levels and any created by this danger",
+                "zone": "Zone levels",
+                "target": "Targeted levels",
+                "danger": "Level created by this danger"
             },
             "options-single": {
-                "both": "Include in either the zone level or one created by this danger",
-                "zone": "Include in one zone level",
-                "target": "Include in one target level",
-                "danger": "Include in level created by this danger"
+                "both": "Either the zone level or one created by this danger",
+                "zone": "One zone level",
+                "target": "One targeted level",
+                "danger": "Level created by this danger"
             }
         },
         "location-picker": "Select the zone dimensions",
@@ -1005,6 +1005,7 @@
                 "scale.label": "Region Scale",
                 "type.label": "Shape",
                 "type.options": {
+                    "circle": "Circle",
                     "rectangle": "Rectangle",
                     "ellipse": "Ellipse"
                 },
@@ -1202,9 +1203,8 @@
                 "levels":{
                     "options-single": {
                         "none": "Do not move level",
-                        "scene": "Move to one other random scene level",
-                        "zone": "Move to one other random zone level",
-                        "trigger": "Move to one other random trigger level",
+                        "zone": "Move to one zone level",
+                        "target": "Move to one targeted level",
                         "danger": "Move to level created by this danger"
                     }
                 },
