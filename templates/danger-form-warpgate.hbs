@@ -51,15 +51,9 @@
         </div>
     </div>
     <div class="form-group">
-        <label for="delay">{{localize "DANGERZONE.type-form.warpgate.delay.label"}}</label>
+        <label for="delay">{{localize "DANGERZONE.delay.label"}}</label>
         <div class="form-fields">
             <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.delay}}{{data.delay}}{{else}}0{{/if}}>
-        </div>
-    </div>
-    <div class="form-group dz-hidden">
-        <label for="spawnDelay">{{localize "DANGERZONE.type-form.warpgate.spawnDelay.label"}}</label>
-        <div class="form-fields">
-            <input type="number" required data-dtype="Number" name="spawnDelay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.spawnDelay}}{{data.spawnDelay}}{{else}}0{{/if}}>
         </div>
     </div>
     <div class="form-group {{#unless modules.taggerOn}}dz-hidden{{/unless}}">

@@ -4,7 +4,7 @@ import {DangerForm} from './danger-form.js';
 import {ZoneForm} from './zone-form.js';
 import {triggerManager} from './trigger-handler.js';
 import {CONTROLTRIGGERS, DANGERZONECONFIG} from './constants.js';
-import {getEventData} from './helpers.js';
+import {getEventData, helper} from './helpers.js';
 
 export class ExecutorForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
     constructor(sceneId, executor = {}, zones, ...args) {
@@ -113,6 +113,8 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
             hasSourcing: this.hasSourcing,
             hasTargeting: this.hasTargeting,
             includesIncludeRandomTrigger: this.triggerZones.find(zn => zn.enabled && zn.hasManualEvent && zn.trigger.random) ? true : false,
+            levelOps: this.levelOps,
+            levels: this.levels,
             locked: this.locked,
             randomTitle: game.i18n.localize("DANGERZONE.scene.random-trigger.label"),
             saveList: this.saveList,
@@ -215,6 +217,14 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         }
     }
 
+    get levelOps(){
+        return helper.getSceneLevelList(this.sceneId);
+    }
+
+    get levels(){
+        return this.zone.levels
+    }
+
     get saveList(){
         return (this.hasSaveFails || this.hasSaveSuccesses) ? this.executor.saveSucceeded.map(t => t.name + ' <i class="fas fa-thumbs-up"></i>').concat(this.executor.saveFailed.map(t => t.name + ' <i class="fas fa-thumbs-down"></i>' )).concat(this.executor.targets.filter(t=> !this.executor.saveFailed.find(s=>s.id === t.id) && !this.executor.saveSucceeded.find(s=>s.id === t.id) ).map(t => t.name + ' <i class="fas fa-question"></i>')).join(', ') : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.save.none.label")
     }
@@ -270,7 +280,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
             zone: data.parentId, 
             event: event, 
             force: data.target.type === 'button' ? false : true,
-            options: {}
+            options: {levels: {target: {all: this.levels}}}
         }
         if(this.locked.boundary) triggerData.options['location'] = this.boundary.location
         await triggerManager.manualTrigger(triggerData);

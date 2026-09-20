@@ -92,7 +92,7 @@ export class helper {
    * @returns object for use in form input select
    */
   static getSceneLevelList(sceneId, options = {filterIds: []}){
-    const list = {'':'[All Levels]'};
+    const list = {};
     const scene = game.scenes.get(sceneId)
     if(scene){
       const levels = options.filterIds?.length ? scene.levels?.filter(l => options.filterIds.includes(l.id)) : scene.levels
@@ -100,7 +100,6 @@ export class helper {
         list[level.id] = level.name;
       }
     }
-    console.log(list)
     return list
   }
 

@@ -241,9 +241,9 @@ class executorData {
         this.levelData = {
             added: '',
             target: {
-                all: options.levels?.target ? options.levels?.target.all : [],
-                single: options.levels?.target ? options.levels?.target.single : '',
-                zone: options.levels?.target ? options.levels?.target.zone : ''
+                all: options.levels?.target ? options.levels.target.all : [],
+                single: options.levels?.target ? options.levels.target.single : '',
+                zone: options.levels?.target ? options.levels.target.zone : ''
             }
         },
         this.location = options.location ? (new point(options.location.coords ?? {x: options.location.x, y: options.location.y}, options.location.elevation ?? options.location.z)) : {},
@@ -615,8 +615,8 @@ class executorData {
         //if twin boundary exists, generate that
         if(this.danger.hasTwinBoundary) this.setTwinBoundary()
 
-        //throw validation error if boundary is not set    
-        if(!this.hasBoundary) this.valid = false
+        //perform data validations
+        this.validate()
     }
     
     async setBoundary(asRun = false) {
@@ -642,11 +642,22 @@ class executorData {
      * Uses settings from zone Targetting
      */
     _setLevels(){
-
-        //levels are already determined - were passed in
-        if(this.hasOverrideLevelTargets) return
         
         const targetData = this.levelData.target
+
+        //levels are already determined - were passed in. Check to ensure the singletons are populated
+        if(this.hasOverrideLevelTargets) {
+            if(!targetData.single || !targetData.zone) {
+                const zoneLevels = helper.filterLevels(this.data.scene, {output: 'ids', filterIds: this.zoneLevels})
+                if(!targetData.zone) targetData.zone = helper.pickRandom(zoneLevels);
+
+                if(!targetData.single){
+                    const choiceSingleArray = choiceLevels.length ? choiceLevels : zoneLevels    
+                    targetData.single = helper.pickRandom(choiceSingleArray)
+                }
+            }
+            return        
+        }
 
         //handling when levels are specified (else assume all levels)
         if(this.zone.levels.length) {
@@ -913,6 +924,18 @@ class executorData {
 
     updateTargets(targets){
         this.targets = targets?.length ? targets : [];
+    }
+
+    /**
+     * Perform a validation of the data to ensure it is ready for use 
+     * Set to invalid should an issue be encountered
+     */
+    validate(){
+        //throw validation error if boundary is not set    
+        if(!this.hasBoundary) this.valid = false
+
+        //test the boundary
+        if(!this.boundary.validate()) this.valid = false
     }
 }
 
@@ -1183,6 +1206,7 @@ export class executor {
     async extensionTrigger(extension, zn){
         const ops = {};
         if(extension.boundary) ops.boundary = this.data.boundary;
+        if(extension.levels) ops.levels = this.data.levelData;
         if(extension.target) ops.targets = this.data.targets;
         if(extension.save) ops.save = this.data.save;
         if(extension.source) ops.sources = this.data.sources;
@@ -4472,10 +4496,6 @@ class spawn extends executable {
         return this.#rollTable
     }
 
-    get spawnDelay(){
-        return this.part.spawnDelay 
-    }
-
     get texture(){
         return game.actors.getName(this.actor)?.thumbnail
     }
@@ -4499,7 +4519,6 @@ class spawn extends executable {
         const obj = Object.assign(this.settings, {updateData: this.updates});
         this.#portal = await new Portal()
         //if(this.color) this.data.spawn.portal = this.data.spawn.portal.color(this.color)
-        //if(this.spawnDelay) this.data.spawn.portal = this.data.spawn.portal.delay(this.spawnDelay)
         //if(this.texture) this.data.spawn.portal = this.data.spawn.portal.texture(this.texture)
         this.#portal = this.#portal.addCreature(this.actor, obj).origin(this.location).setLocation(this.location)//.range(this.range)
     }

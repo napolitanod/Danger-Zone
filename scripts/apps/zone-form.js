@@ -102,7 +102,7 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
    * @param {SubmitEvent} event         The pointer event.
    */
   static async #addExtension(event) {
-    this.renderChild(new ZoneExtensionForm({}));
+    this.renderChild(new ZoneExtensionForm(this, {}));
   }
 
   /**v13
@@ -123,7 +123,7 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
    */
   static async #editExtension(event) {
     const data = getEventData(event)
-    this.renderChild(new ZoneExtensionForm(this.extensions.find(e => e.id === data.parentId)));
+    this.renderChild(new ZoneExtensionForm(this, this.extensions.find(e => e.id === data.parentId)));
   }
 
   /**v13
@@ -346,9 +346,10 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
 } 
 
 export class ZoneExtensionForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
-  constructor(extension = {}, ...args) {
+  constructor(parentForm, extension = {}, ...args) {
       super(...args);
-      this.extension = extension;
+      this.extension = extension,
+      this.parentForm = parentForm;
       this.zones = dangerZone.getExtendedZones(this.scene.id, this.triggeringZone.id);
       if(!this.extension.id) this.extension.id = foundry.utils.randomID(16)
   }
@@ -401,7 +402,8 @@ export class ZoneExtensionForm extends foundry.applications.api.HandlebarsApplic
   }
 
   get scene(){
-    return this.parent.scene
+    console.log(this, this.parentForm)
+    return this.parentForm.scene
   }
 
   get sceneZones(){
@@ -409,7 +411,7 @@ export class ZoneExtensionForm extends foundry.applications.api.HandlebarsApplic
   }
 
   get triggeringZone(){
-    return this.parent.zone;
+    return this.parentForm.zone;
   }
 
   get worldZoneOps(){
@@ -452,7 +454,7 @@ export class ZoneExtensionForm extends foundry.applications.api.HandlebarsApplic
    */
   static async #onSubmit(_event, _form, submitData) {
     const expandedData = foundry.utils.expandObject(submitData.object); 
-    this.parent.updateExtension(expandedData)
+    this.parentForm.updateExtension(expandedData)
   }
 
   /**v13

@@ -15,6 +15,7 @@
         "copy": "Copy",
         "damage.label": "Damage",
         "degrees": "(Degrees)",
+        "delay.label": "Delay Start",
         "delete": "Delete",
         "distance": "(Distance)",
         "edit": "Edit",
@@ -55,6 +56,8 @@
         },
         "location-picker": "Select the zone dimensions",
         "macro.label": "Macro",
+        "min.label": "Min",
+        "max.label": "Max",
         "movement.label": "Movement",
         "ms": "ms",
         "none": "None",
@@ -155,10 +158,7 @@
                 "clear.label": "Bypass Clearing",
                 "clear.description": "This extension's clearing settings will be ignored",
                 "delay":{
-                    "description": "Delays the extension's trigger for the given amount of milliseconds. This is in addition to any delay already on the triggering zone.\nIf the maximum value exceeds the minimum value, then the delay will randomly vary within this range.",
-                    "label": "Delay Start",
-                    "min.label": "Minimum",
-                    "max.label": "Maximum"
+                    "description": "Delays the extension's trigger for the given amount of milliseconds. This is in addition to any delay already on the triggering zone.\nIf the maximum value exceeds the minimum value, then the delay will randomly vary within this range."
                 },
                 "interaction.label": "Interaction",
                 "interaction.options": {
@@ -174,6 +174,7 @@
                 "interaction.shape": "In order to have a shape to copy, this (source) zone must trigger first and this zone's danger must create a region. The target zone must be associated with a region. ",
                 "likelihood.description": "Set the probability that this extension will be interacted with when the triggering zone triggers. Note that zone likelihood of this extension (as configured on the zone itself) will still be assessed in addition to what is set here.",
                 "likelihood.label": "Likelihood",
+                "levels.label": "Pass in Target Levels",
                 "once.label": "Do Once",
                 "once.description": "This extension is interacted with only once regardless of how many loops the triggering zone performs",
                 "sequence.label": "Sequencing",
@@ -186,6 +187,7 @@
                 "save.label": "Pass in Saving Throws",
                 "source.description": "This extension will use the same source as the triggering zone.",
                 "source.label": "Pass in Sources",
+                "target-settings.label": "Target Settings",
                 "target.description": "This extension will use the same target tokens as the triggering zone.",
                 "target.label": "Pass in Target Tokens",
                 "trigger.label": "Trigger Settings",
@@ -197,9 +199,7 @@
             "convert-global.notes": "Save a version of this global zone to this scene (the global zone will still exist).",
             "delay":{
                 "description": "Delays the danger from starting for a given amount of milliseconds.\nFor loops, the delay will be added between each loop.\nIf the maximum value exceeds the minimum value, then the delay will randomly vary each time within this range.",
-                "label": "Delay Start",
-                "min.label": "Minimum",
-                "max.label": "Maximum"
+                "label": "Delay Start"
             },
             "enabled.label": "Active",
             "events.label": "Events",
@@ -207,7 +207,7 @@
             "flavor.label": "Flavor",
             "flavor.description": "This text will output to a chat message when this zone triggers. Flavor will only output once regardless of how many loops are in the zone.",
             "levels": {
-                "description": "Limit zone to specific scene levels. Danger parts created by zone will be associated to these levels.",
+                "description": "Limit the zone to specific scene levels. If you select no levels, the zone applies to all levels.",
                 "label":"Levels",
                 "usesRegion.description": "Uses region's levels."
             },
@@ -220,15 +220,13 @@
             "name": "Configure Zone",
             "numberOfTargets":{
                 "description": "Sets the number of tokens the danger may target\nIf the maximum value exceeds the minimum value, the number of targets will randomly vary within that range.",
-                "label": "Tokens Targeted",
-                "min.label": "Minimum",
-                "max.label": "Maximum"
+                "label": "Tokens Targeted"
             },
             "operation.description": "Determines the trigger operation of each loop.\n  Sequential: Next loop fires once the current loop completes.\n  Staggered: All loops fire at the same time and 'Delay Start' is calculated separately for each loop.\n  Together: 'Delay Start' is calculated and performed once and then all loops are triggered directly after.\nnote: a danger's weather part is only played on the first loop.",
             "operation.label": "Loop Operation",
             "placeTemplate.label": "Choose Location",
             "placeTemplate.description": "On trigger, you will be prompted to select the scene location to target with the danger (otherwise the location is randomly selected from within the bounds of the zone and bleed). If the location that you select is fully outside of the zone, the danger effects will generate but tokens outside of the zone will not be targeted. ",
-            "promptElevation.label": "Choose Elevation",
+            "promptElevation.label": "Choose Elevation and Levels",
             "promptTrigger.label": "Prompt GM on Trigger",
             "promptTrigger.description": "When the zone trigger is initiated, this will evoke a prompt to the GM that queries whether or not the trigger should proceed. Useful for automated triggers where you want the option to cancel.",
             "random.label": "Randomize",
@@ -257,9 +255,7 @@
                 "levels.label": "Must Be on Zone Level",
                 "limit": {
                     "description": "In the event that there is more than one source, caps the total sources involved when the zone is triggered to be between the minimum and maximum. Set to 0 to ignore.",
-                    "label": "Quantity",
-                    "min.label": "Minimum",
-                    "max.label": "Maximum"
+                    "label": "Quantity"
                 },
                 "tag":{
                     "zone.label": "Zone",
@@ -627,7 +623,6 @@
                 "contrast.description": "Adjust the contrast of surfaces that are illuminated by this light source. The default value for a standard light source is 0.",
                 "contrast.label": "Contrast",
                 "darkness.label": "Darkness Activation Range",
-                "delay.label": "Delay Start",
                 "description": "Add ambient lighting to the targeted area.",
                 "dimLight.label": "Dim",
                 "emission.label": "Emission Angle",
@@ -659,7 +654,6 @@
             "audio":{
                 "description": "Plays a sound when the danger triggers.",
                 "label": "Audio",
-                "delay.label": "Delay Start",
                 "duration.description": "If the sound file is longer than the duration (in seconds) entered, then it will stop the sound at the provided duration following start of play. If duration = 0 then the sound plays for the entire length.",
                 "duration.label": "Duration",
                 "fade.label": "Fade",
@@ -672,7 +666,6 @@
                     "volume.label": "Sound Volume"
                 },
                 "below.label": "Display Below Token",
-                "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays beneath the target area, such as an explosion or impact animation.",
                 "label": "Target Effect",
                 "rotate.label": "Random Rotation",
@@ -687,7 +680,6 @@
                 "targets":{
                     "add.label": "Add Targets to Combat"
                 },
-                "delay.label": "Delay Start",
                 "description": "Interact with the active combat or create a new combat.",
                 "initiative": {
                     "player.label": "Roll for Player Owned",
@@ -715,7 +707,6 @@
             "dimensions.description": "Width and height dimensions are measured in scene grids.\nIf the width or height = 0 then that dimension will default to the zone's dimension.\nFor depth, specify the difference in grid units between the top and bottom elevations.\nA depth of 0 will default to the zone's depth.",
             "canvas": {
                 "active.label": "Pan to Targeted Location",
-                "delay.label":"Delay Start",
                 "description": "Invoke canvas-wide effects and panning.",
                 "duration.label":"Duration",
                 "effect.label": "Effect",
@@ -732,7 +723,6 @@
                 }
             },
             "effect":{
-                "delay.label": "Delay Start",
                 "description": "Adds an active effect to targeted tokens.",
                 "deleteEffects.description": "Enter a list of active effect names to delete from the target.",
                 "delete-effects.label": "Delete Effects",
@@ -752,7 +742,6 @@
                 "delete.title": "Delete Active Effect"
             },
             "foregroundEffect":{
-                "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays above the target area, such as a lightning bolt or falling rocks animation.",
                 "label": "Primary Effect",
                 "scale.label": "Scale",
@@ -796,7 +785,6 @@
                     "label": "Item Compendium",
                     "placeholder": "compendium name"
                 },
-                "delay.label": "Delay Start",
                 "description": "Adds, removes or updates an item on the target tokens.",
                 "interpolate.description": "Updates can refer to existing item data using [[path]] placeholder (e.g. name: '[[name]] Mutated').",
                 "label": "Item",
@@ -892,7 +880,6 @@
             "mutate": {
                 "actor.label": "Token Actor Data",
                 "actor.description": "Updates token actor by passing in object data. Expects key: value pairs.",
-                "delay.label": "Delay Start",
                 "description": "Mutates targeted tokens with PERMANENT updates.",
                 "embedded.label": "Embedded Data",
                 "embedded.description": "Updates token items or active effects by passing in object data. Expects key: value pairs.",
@@ -927,8 +914,8 @@
                     },
                     "label": "Location Offset",
                     "x.label": "X Offset",
-                    "min.label": "Min.",
-                    "max.label": "Max.",
+                    "min.label": "Min",
+                    "max.label": "Max",
                     "type": {
                         "label": "Measure",
                         "options": {
@@ -983,7 +970,6 @@
                     }
                 },
                 "color.label": "Color",
-                "delay.label": "Delay Start",
                 "description": "Create a region in the target area.",
                 "displayMeasurements.label": "Display Measurements",
                 "highlightMode": {
@@ -1022,7 +1008,6 @@
             },
             "rolltable": {
                 "name.label": "Rollable Table Name",
-                "delay.label":"Delay Start",
                 "description": "Roll a rollable table and send result to chat.",
                 "label": "Rollable Table",
                 "whisper.label": "Results to GM Only?"
@@ -1037,15 +1022,12 @@
                     "enable.label": "Update Darkness Level",
                     "value.label": "Darkness Level"
                 },
-                "delay.label": "Delay Start",
                 "foreground":{
                     "label": "Foreground",    
                     "e": {
                         "label": "Foreground Elevation",
                         "distance": {
-                            "label": "Elevation Range",
-                            "max.label": "Maximum",
-                            "min.label": "Minimum"
+                            "label": "Elevation Range"
                         },
                         "type.label": "Elevation Change Type",
                         "types": {
@@ -1077,7 +1059,6 @@
                     "label": "Special Effects"
                 },
                 "label": "Sound",
-                "delay.label": "Delay Start",
                 "easing.label": "Volume Easing",
                 "random.label": "Random from Playlist",
                 "walls.label": "Constrained by Walls",
@@ -1088,7 +1069,6 @@
                 "audio":{
                     "volume.label": "Sound Volume"
                 },
-                "delay.label": "Delay Start",
                 "description": "Generate a temporary effect that plays beneath the source area, such as an puff of smoke or waving wand.",
                 "label": "Source Effect",
                 "rotate.label": "Random Rotation",
@@ -1104,7 +1084,6 @@
             },
             "tile":{
                 "alpha.label": "Tile Opacity",
-                "delay.label": "Delay Start",
                 "description": "Create a tile with an embedded video or image in the target area.",
                 "effect.description": "This field is required in order for the tile to generate. To generate a blank tile, use a transparent image.",
                 "effect.label": "Tile Image or Video",
@@ -1144,7 +1123,6 @@
                 "compendium.description": "Identify the compendium that holds the 'Source' playlist or rollable table. If 'Compendium' is left blank, then Token Says will use the default compendium or the world source following Token Says settings.",
                 "compendium.label": "RollTable Compendium",
                 "compendium.placeholder": "compendium name",
-                "delay.label":"Delay Start",
                 "description": "Cause danger targets to say something in text or audibly using Token Says module.",
                 "label": "Token Says",
                 "likelihood.label": "Likelihood",
@@ -1170,18 +1148,14 @@
             },
             "tokenEffect":{
                 "below.label": "Display Below Token",
-                "delay.label": "Delay Start",
                 "description": "Create an effect that plays upon the targeted token and, if made permanent, moves with the token.",
                 "label": "Token Effect",
                 "scale.label": "Scale",
                 "duration.label": "Duration"
             },  
             "tokenMove":{
-                "delay.label": "Delay Start",
                 "elevation.label": "Elevation Movement",
                 "elevation-distance.label": "Movement Distance",
-                "elevation-distance-max.label": "Maximum",
-                "elevation-distance-min.label": "Minimum",
                 "elevation-type.label": "Movement Type",
                 "elevation-types": {
                     "relative.label": "Relative to Token Elevation",
@@ -1191,8 +1165,6 @@
                 "flag.label": "Doesn't Trigger Zones",
                 "horizontal.label": "Horizontal Movement",
                 "horizontal-distance.label": "Movement Distance",
-                "horizontal-distance-max.label": "Maximum",
-                "horizontal-distance-min.label": "Minimum",
                 "horizontal-direction.label": "Movement Direction",
                 "horizontal-directions": {
                     "left.label": "Left",
@@ -1215,8 +1187,6 @@
                 "walls-block.label": "Walls Block Move",
                 "vertical.label": "Vertical Movement",
                 "vertical-distance.label": "Movement Distance",
-                "vertical-distance-max.label": "Maximum",
-                "vertical-distance-min.label": "Minimum",
                 "vertical-direction.label": "Movement Direction",
                 "vertical-directions": {
                     "down.label": "Down",
@@ -1230,7 +1200,6 @@
                     "amount.description": "e.g. 1d6+1",
                     "amount.label": "Damage Roll or Amount",
                     "amount.title": "Include parameters for variable roll:\n@elevation for token elevation amount changed by danger*\n@moved for token grids moved by danger*\n* these are individual by token so will force individual damage rolls and chat cards.",
-                    "delay.label": "Delay Start",
                     "description": "Roll damage on each targeted token. Whether or not damage is automatically applied depends on your Danger Zone damage settings.",
                     "enable.label": "Activate Damage",
                     "flavor.label": "Flavor (Chat Card)",
@@ -1298,14 +1267,12 @@
                 "actor.placeholder": "actor or rollable table name",
                 "color.label": "Portal Color",
                 "duplicates.label": "Number to Spawn",
-                "delay.label": "Portal Delay Start",
                 "isRolltable.label": "Is Rollable Table",
                 "label": "Token Spawn",
                 "mutate.label": "Is Mutation Target",
                 "mutate.description": "If this danger includes a Mutate danger part, enabling this will apply the mutation to the spawned tokens instead of the normal zone targets. Be sure that the Mutate danger part 'Delay Start' is set to occur after this part's 'Delay Start'.",
                 "range.description": "Sets the range of the portal. If = 0, range will be the scene's distance * the danger's maximum width or height.",
                 "range.label": "Range",
-                "spawnDelay.label": "Token Spawn Delay",
                 "tag.label": "Tag",
                 "tag.description": "Tagger tag"
             },

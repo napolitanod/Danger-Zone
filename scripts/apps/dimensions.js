@@ -605,6 +605,7 @@ export class boundary{
         return Math.abs(this.B.x - this.A.x)
     }
 
+
     _testGridToRegion(dim = {}){
         let inRegion = false, i = 0;
         let vertices = []//canvas.grid.getVertices(dim)
@@ -863,6 +864,30 @@ export class boundary{
     }
 
 
+
+    /**
+     * compares this boundary against the one past in. If any grid indexes are shared, these are considered intersecting.
+     * Factors in levels
+     * @param {boundary} bound 
+     * @returns boolean
+     */
+    intersectsBoundary(bound = boundary){
+        
+        //check for being on a boundary level
+        if(!this.levelsInBoundary(bound.levels)) return false
+
+        if((this.bottomIsInfinite || this.bottom < bound.top) && (this.topIsInfinite || this.top >= bound.bottom)) {
+            
+            const grids = bound.grids()
+            for(const grid of grids){
+                if(this.gridIndex.has(grid.index)) return true
+            }
+        }
+
+        return false
+    }
+
+
     /**Generates a new boundary based on a given location and dimensions
      * 
      * @param {*} startingCoords 
@@ -978,28 +1003,18 @@ export class boundary{
         return levels.find(lvl => this.levels.includes(lvl)) ? true : false
     }
 
-
-
     /**
-     * compares this boundary against the one past in. If any grid indexes are shared, these are considered intersecting.
-     * Factors in levels
-     * @param {boundary} bound 
-     * @returns boolean
+     * Checks boundary data for correctness
+     * @returns boolen //true = valid boundary, false = invalid
      */
-    intersectsBoundary(bound = boundary){
-        
-        //check for being on a boundary level
-        if(!this.levelsInBoundary(bound.levels)) return false
+    validate(){
 
-        if((this.bottomIsInfinite || this.bottom < bound.top) && (this.topIsInfinite || this.top >= bound.bottom)) {
-            
-            const grids = bound.grids()
-            for(const grid of grids){
-                if(this.gridIndex.has(grid.index)) return true
-            }
+        //check elevations
+        if(!this.bottomIsInfinite && !this.topIsInfinite && this.top < this.bottom) {
+            dangerZone.log(true, 'Boundary dimensions are invalid - top at a lower elevation than bottom', {boundary: this})
+            return false
         }
-
-        return false
+        return true
     }
 
     /**Highlights a grid highlight layer with the dimensions of this boundary
@@ -1027,6 +1042,7 @@ export class boundary{
     destroyHighlight(name){
         canvas.interface.grid.destroyHighlightLayer('dz-' + name)
     }
+
 }
 
 export class point{
