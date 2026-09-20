@@ -231,13 +231,13 @@ export class dangerZoneType {
             tint: '#ffffff'
           },
           name: '',
-          rotation: 0,
           textures: {
             anchorX: 0.5,
             anchorY: 0.5,
             fit: 'fill',
             offsetX: 0,
             offsetY: 0,
+            rotation: 0,
             scaleX: 1,
             scaleY: 1,
           },
@@ -302,7 +302,7 @@ export class dangerZoneType {
           scale: 1.0,
           tag: '',
           type: 'rectangle',
-          visibility: 0
+          visibility: 'LAYER'
         },
         rolltable: {
           delay: 0,

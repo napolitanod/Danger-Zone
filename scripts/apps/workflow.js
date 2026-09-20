@@ -221,8 +221,9 @@ class plan {
  * ** keys {
  * levels {
  *  target: {
- *      all: [] //an array of all level ids to be used as the target levels by dangers and placeables which can be associated to more than 1 level
- *      single: ''//a string for the level id to be used by dangers that generate a placeable that can only have 1 level.
+ *      all: array //an array of all level ids to be used as the target levels by dangers and placeables which can be associated to more than 1 level
+ *      single: 'string//a string for the level id to be used by dangers that generate a placeable that can only have 1 level.
+ *      zone: string // whereas single is one of the targeted levels, zone is one of the zone levels, whether or not targeted
  *  }
  * }
  * 
@@ -242,7 +243,7 @@ class executorData {
             target: {
                 all: options.levels?.target ? options.levels?.target.all : [],
                 single: options.levels?.target ? options.levels?.target.single : '',
-                zone: options.levels?.zone ? options.levels?.target.zone : ''
+                zone: options.levels?.target ? options.levels?.target.zone : ''
             }
         },
         this.location = options.location ? (new point(options.location.coords ?? {x: options.location.x, y: options.location.y}, options.location.elevation ?? options.location.z)) : {},
@@ -417,6 +418,9 @@ class executorData {
         return this.zone.target.levels ?? 'all'
     }
 
+    /**
+     * Creates a whispered chat to the GM with details on the trigger, danger, target range, and tokens targeted
+     */
     about() {
         if(game.user.isActiveGM && game.settings.get(dangerZone.ID, 'chat-details-to-gm')) {   
             let tokenTargets
@@ -457,7 +461,7 @@ class executorData {
 
     async checkLikelihood() {
         if(this.zone.trigger.likelihood < 100){
-            const roll = await rollLikelihood();
+            const roll = await helper.rollLikelihood();
             this.likelihoodResult = roll.result;
         }
         return this.likelihoodMet
@@ -491,22 +495,50 @@ class executorData {
         }
     }
 
-    updateSpawn(tokens){
-        this.spawn.mutate = true;
-        this.spawn.tokens = tokens;
+    
+    insertSaveFailed(failed){
+        this.save.failed = failed?.length ? this.save.failed.concat(failed.filter(t => !this.save.failed.find(tg => tg.id === t.id))) : [];
     }
 
+    insertSaveSucceeded(success){
+        this.save.succeeded = success?.length ? this.save.succeeded.concat(success.filter(t => !this.save.succeeded.find(tg => tg.id === t.id))) : [];
+    }
+
+    insertSources(sources){
+        this._sources = sources?.length ? this.sources.concat(sources.filter(t => !this.sources.find(tg => tg.id === t.id))) : [];
+    }
+
+    insertTargets(targets){
+        this.targets = targets?.length ? this.targets.concat(targets.filter(t => !this.targets.find(tg => tg.id === t.id))) : [];
+    }
 
     /**
      * Prompts user for the boundary, which then records that boundary to the zone as part of the final call
      * Final method also sets boundary eligible targets
      */
     async promptBoundary(){ 
-        this.location = await this.zone.promptTemplate();
-        if(!this.hasLocation) return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
-       this._setLocationBoundary()
-    }
+        const choice = await this.zone.promptTemplate()
+        if(choice) return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
+        
+        //set the override location on the data
+        this.location = {
+            coords: choice.coords,
+            elevation: choice.elevation
+        }
 
+        //set the override levels on the data
+        const choiceLevels = choice.levels ?? []
+        const zoneLevels = helper.filterLevels(this.data.scene, {output: 'ids', filterIds: this.zoneLevels})
+        const choiceSingleArray = choiceLevels.length ? choiceLevels : zoneLevels        
+        object.Assign(this.levelData.target, {
+                all: choiceLevels,
+                single: helper.pickRandom(choiceSingleArray),
+                zone: helper.pickRandom(zoneLevels)
+            });
+
+        //set the boundary now
+        this._setLocationBoundary()
+    }
 
 
 
@@ -577,8 +609,7 @@ class executorData {
         //populate executor source data
         this._setSources();
 
-
-        //set the 
+        //set the targets
         this.setTargets()
 
         //if twin boundary exists, generate that
@@ -660,8 +691,9 @@ class executorData {
         //case for when all levels are part of zone and array is []
         else {
             targetData.all = []
-            targetData.single = helper.pickRandom(helper.filterLevels(this.zone.scene.sceneLevels, 'ids'))
-            targetData.zone = helper.pickRandom(helper.filterLevels(this.zone.scene.sceneLevels, 'ids'))
+            const sceneLevelIds = helper.filterLevels(this.data.scene, {output: 'ids'})
+            targetData.single = helper.pickRandom(sceneLevelIds)
+            targetData.zone = helper.pickRandom(sceneLevelIds)
         }
 
     }
@@ -726,6 +758,11 @@ class executorData {
      */
     setBoundaryEligibleTargets(){
         this.eligibleTargets = !this.hasBoundary ? [] : this.boundary.tokensIn(this.zoneEligibleTokens);
+    }
+
+
+    setLevelAdded(level){
+        this.levelData.added = level
     }
 
 
@@ -847,23 +884,6 @@ class executorData {
     }
 
 
-
-    insertSaveFailed(failed){
-        this.save.failed = failed?.length ? this.save.failed.concat(failed.filter(t => !this.save.failed.find(tg => tg.id === t.id))) : [];
-    }
-
-    insertSaveSucceeded(success){
-        this.save.succeeded = success?.length ? this.save.succeeded.concat(success.filter(t => !this.save.succeeded.find(tg => tg.id === t.id))) : [];
-    }
-
-    insertSources(sources){
-        this._sources = sources?.length ? this.sources.concat(sources.filter(t => !this.sources.find(tg => tg.id === t.id))) : [];
-    }
-
-    insertTargets(targets){
-        this.targets = targets?.length ? this.targets.concat(targets.filter(t => !this.targets.find(tg => tg.id === t.id))) : [];
-    }
-
     updateBoundary(boundary){
         this.boundary = boundary ?? {}
         this.setBoundaryEligibleTargets();
@@ -879,6 +899,11 @@ class executorData {
 
     updateSaveSucceeded(saves){
         this.save.succeeded = saves?.length ? saves : [] 
+    }
+
+    updateSpawn(tokens){
+        this.spawn.mutate = true;
+        this.spawn.tokens = tokens;
     }
 
     updateSources(sources){
@@ -1119,7 +1144,7 @@ export class executor {
                 }
             }
             if(ex.likelihood < 100){
-                const roll = await rollLikelihood();
+                const roll = await helper.rollLikelihood();
                 dangerZone.log(false,'Extension likelihood result', {extension: ex, roll: roll})
                 if(roll.result > ex.likelihood) {
                     console.log(`Zone extension likelihood of ${ex.likelihood} was not met with a roll of ${roll.result}`)
@@ -1180,7 +1205,7 @@ export class executor {
     async load(){
         if(this.previouslyExecuted) return true
         const promises = this.partsWithFile.map(p => p.load());
-        const files = await Promise.all(promises).then((results) => {return results.filter(r => r)}).catch((e) => {return console.log('Danger Zone file caching failed.')});
+        await Promise.all(promises).then((results) => {return results.filter(r => r)}).catch((e) => {return console.log('Danger Zone file caching failed.')});
         return this.report('Load')
     }
 
@@ -1660,7 +1685,7 @@ class executable {
     
     async checkLikelihood() {
         if(this.likelihood < 100){
-            const roll = await rollLikelihood();
+            const roll = await helper.rollLikelihood();
             this.setLikelihoodResult(roll.result);
         }
     }
@@ -3054,6 +3079,186 @@ class lastingEffect extends executableWithFile{
     } 
 }
 
+class level extends executable {
+
+    //holds the level class that is built
+    #level
+
+    //name of the level
+    #name
+
+    //update obj used in update to other levels on scene
+    #otherLevelsUpdate = []
+
+    get background(){
+        return this.part.background
+    }
+
+    /**@override */
+    /**
+     * Within plan, this comes after save (-2) and before all else, so the dimensions are available for use
+     */
+    get delay(){
+        return -1
+    }
+
+    get elevationSource(){
+        return this.part.elevation ?? 'T'
+    }
+
+    /**Elevation is set either to zone or target elevation
+        Z: Zone
+        T: Target
+     */
+    get elevation(){
+        let elevation
+        if(this.elevationSource === 'Z'){ //zone elevation
+            elevation = {bottom: this.zone.scene.elevation.bottom, top: this.zone.scene.elevation.top, base: 0}
+        } else { //target elevation
+            elevation = {bottom: this.boundary.bottom, top: this.boundary.top, base: 0}
+        }
+        return elevation
+    }
+
+    get flag(){
+        const flg = foundry.utils.mergeObject({}, this.data.flag)
+        return flg
+    }
+
+    get fog(){
+        return this.part.fog
+    }
+
+    get foreground(){
+        return this.part.foreground
+    }
+    
+    get has(){
+        //don't trigger if executable has not met or this is not enabled
+        if (!super.has || !this.data.danger.hasLevel) return false
+
+        //don't trigger if set to only add if name doesn't already exits
+        if(this.data.danger.add === 'X' && this._nameExists()) return false
+
+        return true
+    }
+
+    get levelId(){
+        return this.#level?.[0]?.id ?? ''
+    }
+
+    /**
+     * Levels this level is visible from
+     */
+    get levelsVisibleFrom(){
+         return this._levelsFromParameter(this.part.visibility.to)
+    }
+
+    /**
+     * return the name
+     */
+    get name(){
+        return this.#name
+    }
+
+    get textures(){
+        return this.part.textures
+    }
+    
+    get updateData(){
+        return [{
+            background: this.background,
+            elevation: this.elevation,
+            fog: this.fog,
+            flags: this.flag,
+            foreground: this.foreground,
+            name: this.name,
+            textures: this.textures,
+            visibility: {levels: this.visibleLevels}
+        }]
+    }
+
+    /**
+     * Levels visible to this level
+     */
+    get visibleLevels(){
+        return this._levelsFromParameter(this.part.visibility.from)
+    }
+
+    /** @override */
+    async execute(){
+        await super.execute()
+        await this.#build();
+        this.data.setLevelAdded(this.levelId)
+    }
+
+    async #build(){
+
+        //set a unique name
+        this._setName()
+
+        //create the level
+        this.#level = await this.data.scene.createEmbeddedDocuments("Level", this.updateData);
+
+        //update the other levels on the scene to see this level, as applicable
+        if(this.levelsVisibleFrom.length) await this.#updateOtherLevels()
+    }
+
+    //
+    async #updateOtherLevels(){
+
+        //iterate through each level id in the array and 
+        for(const id of this.levelsVisibleFrom){
+            let level = this.data.scene.levels.get(id)
+            if(level){
+                const updateObj = {
+                    _id: id, 
+                    visibility: [...level.visibility.levels.add(this.levelId)]
+                }
+                this.#otherLevelsUpdate.push(updateObj);
+            }
+        }
+        await this.data.scene.updateEmbeddedDocuments("Level", this.#otherLevelsUpdate)
+    }
+
+    /**
+     * 
+     * @param {string} inParameter //code from constant that represents a set of levels to return
+     * @returns 
+     */
+    _levelsFromParameter(inParameter){
+        let levels
+        switch(inParameter){
+            case 'S':
+                levels = helper.filterLevels(this.data.scene, {output: 'ids'})
+                break;
+            case 'Z':
+                levels = this.data.zone.levels
+                break;
+            case 'T':
+                levels = this.data.levels
+                break;
+            default:
+                levels = []
+        }
+        return levels
+    }
+
+    _nameExists(){
+        return this.data.scene.levels.some(lvl => lvl.name === this.part.name) ? true : false
+    }
+
+    _setName(){
+        let name
+        if(!this._nameExists()) {
+            name = this.part.name
+        } else {
+            name =  helper.nameIterator(this.part.name, new Set(helper.sceneLevelsNames(this.data.scene)))
+        }
+        this.#name = name
+    }
+}
+
 class macro extends executable{
     
     get has(){
@@ -3289,56 +3494,6 @@ class primaryEffect extends executableWithAnimation {
 
 }
 
-/**
- *
-
-          name: '',
-
-
- */
-class level extends executable {
-
-    get background(){
-        return this.part.background
-    }
-
-    get elevationSource(){
-        return this.part.elevation ?? 'T'
-    }
-
-    get fog(){
-        return this.part.fog
-    }
-
-    get foreground(){
-        return this.part.foreground
-    }
-    
-    get has(){
-        return (super.has && this.data.danger.hasLevel) ? true : false
-    }
-
-    get levelsVisibleFrom(){
-        return this.part.visible.to
-    }
-
-    get name(){
-        return this.part.name
-    }
-
-    get rotation(){
-        return this.part.rotation
-    }
-
-    get textures(){
-        return this.part.textures
-    }
-
-    get visibleLevels(){
-        return this.part.visible.from
-    }
-}
-
 class region extends executable{
 
     /**v13
@@ -3469,7 +3624,9 @@ class region extends executable{
     }
 
     get visibility(){
-        return this.part.visibility ?? 0
+        let v
+        if(this.part.visibility) v = CONST.REGION_VISIBILITY[this.part.visibility] 
+        return v ?? 0
     }
 
     /** @override */
@@ -3763,7 +3920,7 @@ class save extends executable{
     }
 
     get delay(){
-        return -1
+        return -2
     }
 
     get diff(){
@@ -4324,7 +4481,7 @@ class spawn extends executable {
     }
 
     get updates(){
-        const updates = {token: {levels: this.levels}}
+        const updates = {token: {level: this.levels}}
         if(this.tag) updates.token['flags'] = {"tagger":this.taggerTag}
         return updates
     }

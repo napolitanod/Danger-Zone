@@ -277,7 +277,7 @@ export const DANGERFORMOPTIONS = {
     LEVEL: {
         ADD: {
             "": "DANGERZONE.type-form.level.add.options.no",
-            "R": "DANGERZONE.type-form.level.add.options.replace",
+            "X": "DANGERZONE.type-form.level.add.options.not-exists",
             "A": "DANGERZONE.type-form.level.add.options.add"
         },
         ELEVATION: {
@@ -292,13 +292,13 @@ export const DANGERFORMOPTIONS = {
             "": "DANGERZONE.type-form.level.visibility.from.options.none",
             "S": "DANGERZONE.type-form.level.visibility.from.options.scene",
             "Z": "DANGERZONE.type-form.level.visibility.from.options.zone",
-            "T": "DANGERZONE.type-form.level.visibility.from.options.trigger",
+            "T": "DANGERZONE.type-form.level.visibility.from.options.target",
         },
         VISIBILITYTO:{
             "": "DANGERZONE.type-form.level.visibility.to.options.none",
             "S": "DANGERZONE.type-form.level.visibility.to.options.scene",
             "Z": "DANGERZONE.type-form.level.visibility.to.options.zone",
-            "T": "DANGERZONE.type-form.level.visibility.to.options.trigger",
+            "T": "DANGERZONE.type-form.level.visibility.to.options.target",
         }
     },
     LEVELSOPTIONS: {
@@ -360,11 +360,11 @@ export const DANGERFORMOPTIONS = {
             "rectangle": "DANGERZONE.type-form.region.type.options.rectangle"
         },
         VISIBILITY: {
-            4: "DANGERZONE.type-form.region.visibility.options.layer_unlocked",
-            0: "DANGERZONE.type-form.region.visibility.options.layer",
-            1: "DANGERZONE.type-form.region.visibility.options.gamemaster",
-            3: "DANGERZONE.type-form.region.visibility.options.observer",
-            2: "DANGERZONE.type-form.region.visibility.options.always"
+            'LAYER_UNLOCKED': "DANGERZONE.type-form.region.visibility.options.layer_unlocked",
+            'LAYER': "DANGERZONE.type-form.region.visibility.options.layer",
+            'GAMEMASTER': "DANGERZONE.type-form.region.visibility.options.gamemaster",
+            'OBSERVER': "DANGERZONE.type-form.region.visibility.options.observer",
+            'ALWAYS': "DANGERZONE.type-form.region.visibility.options.always"
         }
     },
     SCENE: {
@@ -1375,7 +1375,7 @@ export function setExecutableOptions(){
             'warpgate': {
                 title: "Spawn", 
                 icon: "fas fa-circle-notch", 
-                levels: 'Y',
+                levels: 'S',
                 modules:[
                     {active: dangerZone.MODULES.portalOn, name: "portal", dependent: true}, 
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}

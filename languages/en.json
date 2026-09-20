@@ -77,7 +77,7 @@
         "alerts": {
             "cancel-target-select": "Target selection and zone trigger have been cancelled.",
             "danger-depth-exceeds-zone": "The danger's depth may not exceed the zone's depth nor can a danger have a depth > 0 when a zone's depth is infinite (equal to 0).",
-            "enter-z": "Enter the danger's elevation",
+            "enter-z": "Enter the target elevation and level",
             "json-invalid": "data is not in a valid object format.",
             "no-active-combat": "There is no active combat. The Combat danger part has been canceled.",
             "no-trigger-if-not-on-combat-scene": "Danger Zones do not trigger while you are not active on the current combat scene.",
@@ -815,7 +815,7 @@
                     "description": "If you choose to add a level, and the scene already contains one of that name, the newly added level is still treated as “created” for all other danger parts that reference this created level.",
                     "options": {
                         "no": "Do not add level (danger part inactive)",
-                        "replace": "Add level unless one of same name already exists",
+                        "not-exists": "Add level unless one of same name already exists",
                         "add": "Add level, appending name iterator"
                     }
                 },
@@ -872,7 +872,7 @@
                                 "none": "No other levels visible",
                                 "scene": "All scene levels visible",
                                 "zone": "All zone levels visible",
-                                "trigger": "All trigger levels visible"
+                                "target": "All target levels visible"
                             }
                         },
                     "to": {
@@ -881,7 +881,7 @@
                                 "none": "Visible to no other levels",
                                 "scene": "Visible to all scene levels",
                                 "zone": "Visible to all zone levels",
-                                "trigger": "Visible to all trigger levels"
+                                "target": "Visible to all target levels"
                             }
                         }
                     },

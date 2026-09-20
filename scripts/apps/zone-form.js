@@ -1,7 +1,7 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
 import {DangerForm} from './danger-form.js';
-import {getEventData, getSceneRegionList, getSceneLevelList} from './helpers.js';
+import {getEventData, getSceneRegionList, helper} from './helpers.js';
 import {actorOps, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, DANGERZONECONFIG, EVENT_OPTIONS, MOVEMENT_EVENTS, ZONEFORMOPTIONS} from './constants.js';
 
 export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
@@ -70,7 +70,7 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
       defaultMaxElevation: dangerZone.maxElevation,
       hideLevels: this.zone.scene.regionId ? true : false,
       hideOperation: this.zone.trigger.loop > 1 ? false : true,
-      levelOps: getSceneLevelList(this.sceneId),
+      levelOps: helper.getSceneLevelList(this.sceneId),
       options: ZONEFORMOPTIONS,
       regionOps: getSceneRegionList(this.sceneId),
       eventOps: EVENT_OPTIONS,

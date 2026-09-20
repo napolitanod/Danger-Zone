@@ -64,24 +64,45 @@ export class helper {
 
 
 
-/**
- * Checks the passed in grid locations and confirms whether they exist within the circle dimensions boundary by excluding corners
- * It could be more precise - as circles get larger the grid corners outside of the dimensions increases
- * @param {int} xLoc //the grid x position
- * @param {int} yLoc //the grid y position
- * @param {obj} dimension //the circle dimension
- * @returns boolean
- */
-static GridWithinCircleDimension(xLoc, yLoc, dimension = {w:w, h:h}){
-  const isCorner =
-    (xLoc === 0 && yLoc === 0) ||
-    (xLoc === 0 && yLoc === dimension.h) ||
-    (xLoc === dimension.w && yLoc === 0) ||
-    (xLoc === dimension.w && yLoc === dimension.h);
+  /**
+   * Checks the passed in grid locations and confirms whether they exist within the circle dimensions boundary by excluding corners
+   * It could be more precise - as circles get larger the grid corners outside of the dimensions increases
+   * @param {int} xLoc //the grid x position
+   * @param {int} yLoc //the grid y position
+   * @param {obj} dimension //the circle dimension
+   * @returns boolean
+   */
+  static GridWithinCircleDimension(xLoc, yLoc, dimension = {w:w, h:h}){
+    const isCorner =
+      (xLoc === 0 && yLoc === 0) ||
+      (xLoc === 0 && yLoc === dimension.h) ||
+      (xLoc === dimension.w && yLoc === 0) ||
+      (xLoc === dimension.w && yLoc === dimension.h);
 
-  return !isCorner;
-}
+    return !isCorner;
+  }
 
+
+
+  /**
+   * 
+   * @param {string} sceneId //the id for the given scene
+   * @param {object} options 
+   *    //filterIds {array}: provide an array of ids to be used to filter down the scene levels
+   * @returns object for use in form input select
+   */
+  static getSceneLevelList(sceneId, options = {filterIds: []}){
+    const list = {'':'[All Levels]'};
+    const scene = game.scenes.get(sceneId)
+    if(scene){
+      const levels = options.filterIds?.length ? scene.levels?.filter(l => options.filterIds.includes(l.id)) : scene.levels
+      for (const level of levels.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
+        list[level.id] = level.name;
+      }
+    }
+    console.log(list)
+    return list
+  }
 
 
   /**Returns documents on a scene that match given tag
@@ -137,6 +158,16 @@ static GridWithinCircleDimension(xLoc, yLoc, dimension = {w:w, h:h}){
     return tokenDepth
   }
 
+
+  /**
+   * Builds an html input from a set of options
+   * @param {object} options //{
+   *        options: obj of key, value option pairs
+   *        allDefaultLable: when selecting 'all' or nothing for optional selects, often this is blank
+   *        selected: the value that should be selected to match to the select value
+   * }
+   * @returns string html options list
+  */
   static htmlBuildInput(options){
     let htmlInner = '';
     const value = options.inputValue ?? options.value;
@@ -149,23 +180,23 @@ static GridWithinCircleDimension(xLoc, yLoc, dimension = {w:w, h:h}){
         break;
       case 'select':
       case 'options':
+        //the options list
         const sortedList = Object.entries(options.options).sort(([,a],[,b]) => a.localeCompare(b))
-        let optionList = '<option value=""></option>';
+        let optionList = `<option value="">${options.allDefaultLable ?? ''}</option>`;
         for(let i = 0; i < sortedList.length; i++) {
           let selected = '';
           if (sortedList[i][0] === value) selected = ' selected '
           optionList += `<option value="${sortedList[i][0]}"${selected}>${game.i18n.localize(sortedList[i][1])}</option>`;
         }
         if('options') return optionList;
+
+        //the select
         htmlInner = `<select name="${options.name}" value="${value}">${optionList}</select>`
         break;
     }
     let html = `<div class="form-group"><label>${game.i18n.localize(options.label)}</label><div class="form-fields">${htmlInner}</div></div>`
     return html;     
   }
-
-
-
 
   /**v13
    * 
@@ -219,6 +250,19 @@ static GridWithinCircleDimension(xLoc, yLoc, dimension = {w:w, h:h}){
     }  
 
     form.setPosition()
+  }
+
+
+  /**
+   * Simple helper to output a name that is unique
+   * @param {string} name  //name that you want to ensure is unique
+   * @param {set} comparisonName 
+   * @returns 
+   */
+  static nameIterator(name, comparisonNames){
+    let i = 1;
+    while (comparisonNames.has(`${name}_${i}`)) i++;
+    return `${name}_${i}`;
   }
 
 
@@ -290,6 +334,15 @@ static GridWithinCircleDimension(xLoc, yLoc, dimension = {w:w, h:h}){
           bottom: Math.min(...elevations.map(e => e.bottom ?? -Infinity)),
           top: Math.max(...elevations.map(e => e.top ?? Infinity))
       }
+  }
+
+  /**
+   * returns an array of names for a given scene
+   * @param {scene} scene //scene document class
+   * @returns array
+   */
+  static sceneLevelsNames(scene){
+    return scene.levels.map(lvl => lvl.name)
   }
 }
 
@@ -382,15 +435,6 @@ export async function getFilesFromPattern(pattern) {
     return content.files;      
 }
 
-
-
-export function getSceneLevelList(sceneId){
-  let list = {'':'[All Levels]'};
-  for (let level of game.scenes.get(sceneId).levels.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
-    list[level.id] = level.name;
-  }
-  return list
-}
 
 
 

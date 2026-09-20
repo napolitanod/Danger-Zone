@@ -1194,27 +1194,74 @@ export class zone {
 
   /*prompts the user to select the zone location point (top left grid location) and captures the location*/
   async promptTemplate() {
-    const elevation = (this.target.choose.prompt) ? await this._promptElevation() : 0 ;
-    const xy = await this._promptXY();
-    return (xy ? {coords: {x: xy.x, y: xy.y}, elevation: elevation} : {})
+    const choice = {}
+    const {x, y} = await this._promptXY();
+
+    //if the location prompt is canceled
+    if(!xy) return {}
+
+    //set the chosen coordinates
+    choice.coords = {x: x, y: y}
+
+    //add in level and elevation if configured to prompt for this also
+    if(this.target.choose.prompt){
+      const chosenElevationLevel = await this._promptElevation()
+      choice.elevation = chosenElevationLevel.elevation
+      choice.levels = chosenElevationLevel.levels      
+    } else {
+      choice.elevation = 0
+    }
+
+    return choice
   }
 
+
   async _promptElevation(){
-    let elevation
+    let promptAnswer
+    const levelOptionsArray = helper.getSceneLevelList(this.scene.sceneId, [this.zoneLevels])
+    const levelOptions = helper.htmlBuildInput(
+      {
+        type: 'options',
+        value: '',
+        options: levelOptionsArray,
+        allDefaultLable: levelOptionsArray[0]
+      }
+    )
     try{
-        elevation = await foundry.applications.api.DialogV2.prompt({
+        promptAnswer = await foundry.applications.api.DialogV2.prompt({
           window: {title: game.i18n.localize("DANGERZONE.alerts.enter-z")},
-          content: `<input name="elevation" type="number" id="zInput" min="0" steps="1" value="0">`,
+          content: `
+            <div class="form-group">
+                <label>Elevation (Bottom)</label>
+                <div class="form-fields">
+                    <input name="elevation" type="number" id="zInput" min="0" steps="1" value="0">
+                </div>
+            </div> 
+            <fieldset>
+                <legend>Zone Levels</legend>
+                <div class="form-fields levels-select">
+                    <multi-select name="levels" value="" >
+                        ${levelOptions}
+                    </multi-select>
+                </div>
+            </fieldset> 
+            `,
           ok: {
                 label: game.i18n.localize("DANGERZONE.yes"),
                 icon: '<i class="fas fa-check"></i>',
-                callback: (event, button, dialog) => button.form.elements.elevation.valueAsNumber 
+                callback: (event, button) => {
+                    const form = button.form
+                    return {
+                      elevation: form.elements.elevation.valueAsNumber,
+                      levels: Array.from(form.elements.levels.selectedOptions).map(o => o.value)
+                    }
+                  }
                 }
       });  
     } catch {
       dangerZone.log(false, `No value entered.`)
     }
-    return elevation
+    return promptAnswer
   }
 
   async _promptXY(){ 
