@@ -540,18 +540,24 @@ export class EffectDangerPartConfig extends DangerPartConfig {
       })
     }
   
-    const effect = Object.assign(this.data, {
+    const effect = Object.assign({
       documentName: "ActiveEffect",
       testUserPermission: (...args) => { return true},
       parent: {documentName: "Actor"},
       apps: {},
       isOwner: true,
       uuid: `ActiveEffect.${this.parentApp.dangerId}`
-    });
+    }, this.data);
     
     const doc = new ActiveEffect(effect, {})
-    
-    this.renderChild(new DangerZoneActiveEffectForm(data.parent, this.parentApp.dangerId, doc))
+
+    const options = {
+      origin: this.parentApp.dangerId,
+      parentApp: this, 
+      document: doc
+    }
+    console.log(this)
+    this.renderChild(new DangerZoneActiveEffectForm(options))
   }
 
   /**v13
@@ -566,26 +572,40 @@ export class EffectDangerPartConfig extends DangerPartConfig {
     this._mergeData(expandedData)
     this.parentApp.updatePart(this.partId, this.data, this.parentHtml);
   }
+
 }
 
 /**v13
  * form that extends the activeeffectconfig form to collect active effect data
  */
 class DangerZoneActiveEffectForm extends foundry.applications.sheets.ActiveEffectConfig {
-  constructor(eventParent, origin, ...args) {
-    super(...args);
-    this.eventParent = eventParent,
-    this.origin = origin
+  constructor( _options = {}) {
+    super(_options);
+    this.#data = _options
     }
 
-    static get defaultOptions(){
-        const defaults = super.defaultOptions;
+    #data;
 
-        return foundry.utils.mergeObject(defaults, {
-          sheetConfig: false,
-          height: "600px"
-        });
+    /** @inheritDoc */
+    static DEFAULT_OPTIONS = {
+
+      form: {
+        handler: DangerZoneActiveEffectForm.#onSubmit
       }
+    };
+
+    /**         GETTERS         **/
+    get data() {
+      return this.#data.data
+    }
+
+    get parentApp() {
+      return this.#data.parentApp
+    }
+
+    get origin() {
+      return this.#data.origin
+    }
 
     get title() {
       const reference = this.document.name ? ` ${this.document.name}` : "";
@@ -593,19 +613,19 @@ class DangerZoneActiveEffectForm extends foundry.applications.sheets.ActiveEffec
     }
 
     getData(options) {
-      const d = this.parent.data
+      const d = this.parentApp.data
       const data = {
         changes: d.changes ?? [],
         description: d.description ?? "",
         disabled: d.disabled ?? false,
         duration: d.duration ?? {},
         flags: d.flags ?? {},
-        img: d.icon,
         isSuppressed: false,
         name: d.name ?? d.label ?? "",
         origin: this.origin,
         tint: d.tint,
-        transfer: true
+        transfer: true,title: this.title,
+        icon: this.parentApp?.data?.img
       }
       return {
         cssClass: "editable",
@@ -619,10 +639,10 @@ class DangerZoneActiveEffectForm extends foundry.applications.sheets.ActiveEffec
         modes: Object.entries(CONST.ACTIVE_EFFECT_MODES).reduce((obj, e) => {
           obj[e[1]] = game.i18n.localize("EFFECT.MODE_"+e[0]);
           return obj;
-        }, {}),
-        title: this.title
+        }, {})
       };
     }
+    
 
     render(force=false, options={}) {
       super.render(force, options)
@@ -662,12 +682,21 @@ class DangerZoneActiveEffectForm extends foundry.applications.sheets.ActiveEffec
       this.setPosition()
     }  
   
-    async _updateObject(event, formData) {
-      const expandedData = foundry.utils.expandObject(formData);
-      this.parent.data = expandedData;
-      this.parent.data['icon'] = this.parent.data['img']; delete this.parent.data['img'];//v12 compat
+    /**v13
+     * Save the changes to the danger.
+     * @this {ApplicationV2}
+     * @param {SubmitEvent} _event         The form submission event.
+     * @param {HTMLFormElement} _form      The form element that was submitted.
+     * @param {FormDataExtended} submitData  Processed data for the submitted form.
+     */
+   static async #onSubmit(_event, _form, submitData) {
+      const expandedData = foundry.utils.expandObject(submitData.object);
+      expandedData.icon = expandedData.img
+      delete expandedData.img;//v12 compat
+      this.parentApp._mergeData(expandedData)
+      //this.parentApp.updatePart(this.origin, expandedData, this.parentHtml);
     }
-}
+  }
 
 /**v13
  * Configures the item danger part

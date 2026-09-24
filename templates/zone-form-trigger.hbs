@@ -18,7 +18,7 @@
                 <input type="Number" name="trigger.initiative" step="1" value="{{zone.trigger.initiative}}" placeholder="{{localize 'DANGERZONE.edit-form.initiative-count.label'}}" required>
             </div>
         </div>
-        <div class="form-group {{#unless zone.hasCombatEvent}}dz-hidden{{/unless}}" id="dz-combatantInZone">
+        <div class="form-group slim {{#unless zone.hasCombatEvent}}dz-hidden{{/unless}}" id="dz-combatantInZone">
             <label>
                 {{localize 'DANGERZONE.edit-form.combatantInZone.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.combatantInZone.description'}}"><i class="fas fa-info-circle"></i></span>
@@ -27,7 +27,7 @@
                 <input type="checkbox" name="trigger.combatantInZone" {{checked zone.trigger.combatantInZone}}/>
             </div>
         </div>
-        <div class="form-group {{#unless zone.hasMovementEvent}} dz-hidden{{/unless}}" id="dz-trigger-movement-wait">
+        <div class="form-group slim {{#unless zone.hasMovementEvent}} dz-hidden{{/unless}}" id="dz-trigger-movement-wait">
             <label>
                 {{localize 'DANGERZONE.edit-form.trigger.movement.wait.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.trigger.movement.wait.description'}}"><i class="fas fa-info-circle"></i></span>
@@ -46,7 +46,7 @@
             </div>
         </div>
     </fieldset>
-    <div class="form-group">
+    <div class="form-group slim">
         <label>
             {{localize 'DANGERZONE.edit-form.promptTrigger.label'}}
                 <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.promptTrigger.description'}}"><i class="fas fa-info-circle"></i></span>

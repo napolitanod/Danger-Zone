@@ -1,6 +1,6 @@
 import {dangerZone, zone} from '../danger-zone.js';
 import {point, boundary} from './dimensions.js';
-import {EVENTS, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
+import {EVENTS, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES, ZONEFORMOPTIONS} from './constants.js';
 import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getRandomNumber, limitArray, shuffleArray, stringToObj, wait, joinWithAnd, helper} from './helpers.js';
 
 async function delay(delay){
@@ -402,6 +402,10 @@ class executorData {
         }
     }
 
+    get sceneLevelNames(){
+        return helper.sceneLevelsNames(this.scene)
+    }
+
     get sceneTokens() {
         return this.scene.tokens
     }
@@ -424,6 +428,7 @@ class executorData {
     about() {
         if(game.user.isActiveGM && game.settings.get(dangerZone.ID, 'chat-details-to-gm')) {   
             let tokenTargets
+            let stretch
             const minTarget = this.zone.target.quantity?.min ?? 1
             const maxTarget = this.zone.target.quantity?.max ?? 1
 
@@ -433,6 +438,10 @@ class executorData {
                 tokenTargets = `Hits between ${minTarget} and ${maxTarget} eligible tokens`
             } else {
                 tokenTargets = `Hits ${minTarget} eligible tokens`
+            }
+
+            if(this.boundary.options.stretch?.type) {
+               stretch =`<div><label class="danger-zone-label">Stretch:</label><span> ${ game.i18n.localize(ZONEFORMOPTIONS.STRETCH[this.boundary.options.stretch?.type])}</span></div>`
             }
 
             let content =
@@ -448,6 +457,7 @@ class executorData {
                 content += `
                 <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.bottomIsInfinite ? '-&infin;' : this.boundary.bottom}</span></div>
                 <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.topIsInfinite ? '&infin;' : this.boundary.top}</span></div>
+                ${stretch}
                 <div><label class="danger-zone-label">Target levels:</label><span> ${this.levelsNames}</span></div>
                 <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div>
                 <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div></div>`
@@ -518,19 +528,19 @@ class executorData {
      */
     async promptBoundary(){ 
         const choice = await this.zone.promptTemplate()
-        if(choice) return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
+        if(!choice) return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
         
         //set the override location on the data
-        this.location = {
-            coords: choice.coords,
-            elevation: choice.elevation
-        }
+        this.location = new point(
+            choice.coords,
+            choice.elevation
+        )
 
         //set the override levels on the data
         const choiceLevels = choice.levels ?? []
-        const zoneLevels = helper.filterLevels(this.data.scene, {output: 'ids', filterIds: this.zoneLevels})
+        const zoneLevels = helper.filterLevels(this.scene, {output: 'ids', filterIds: this.zone.levels})
         const choiceSingleArray = choiceLevels.length ? choiceLevels : zoneLevels        
-        object.Assign(this.levelData.target, {
+        Object.assign(this.levelData.target, {
                 all: choiceLevels,
                 single: helper.pickRandom(choiceSingleArray),
                 zone: helper.pickRandom(zoneLevels)
@@ -648,7 +658,7 @@ class executorData {
         //levels are already determined - were passed in. Check to ensure the singletons are populated
         if(this.hasOverrideLevelTargets) {
             if(!targetData.single || !targetData.zone) {
-                const zoneLevels = helper.filterLevels(this.data.scene, {output: 'ids', filterIds: this.zoneLevels})
+                const zoneLevels = helper.filterLevels(this.scene, {output: 'ids', filterIds: this.zone.levels})
                 if(!targetData.zone) targetData.zone = helper.pickRandom(zoneLevels);
 
                 if(!targetData.single){
@@ -702,7 +712,7 @@ class executorData {
         //case for when all levels are part of zone and array is []
         else {
             targetData.all = []
-            const sceneLevelIds = helper.filterLevels(this.data.scene, {output: 'ids'})
+            const sceneLevelIds = helper.filterLevels(this.scene, {output: 'ids'})
             targetData.single = helper.pickRandom(sceneLevelIds)
             targetData.zone = helper.pickRandom(sceneLevelIds)
         }
@@ -714,18 +724,26 @@ class executorData {
      * Sets the boundary for that executor target using location data passed into the class, typically when the constructor is created
      */
     _setLocationBoundary(){
+
+        //boundary options
         const options = {
             excludes: this.zoneBoundary.excludes, 
             universe: this.zoneBoundary.universe,
             levels: this.levelData.target.all
         }
+
+        //add the elevation stretch on the options
         this.zone.stretch(options);
+
+        //generate boundary from the location coordinates
         this.boundary = boundary.locationToBoundary(
             this.location.coords, 
-            {bottom: this.location.elevation, top: this.location.elevation}, 
+            this.location.elevation, 
             this.danger.dimensions.units, 
             options
         );
+
+        //fill in the eligible targets
         this.setBoundaryEligibleTargets();
     }
     
@@ -932,10 +950,10 @@ class executorData {
      */
     validate(){
         //throw validation error if boundary is not set    
-        if(!this.hasBoundary) this.valid = false
+        if(!this.hasBoundary) return this.valid = false
 
         //test the boundary
-        if(!this.boundary.validate()) this.valid = false
+        if(!this.boundary.validate()) return this.valid = false
     }
 }
 
@@ -3161,9 +3179,6 @@ class level extends executable {
         //don't trigger if executable has not met or this is not enabled
         if (!super.has || !this.data.danger.hasLevel) return false
 
-        //don't trigger if set to only add if name doesn't already exits
-        if(this.data.danger.add === 'X' && this._nameExists()) return false
-
         return true
     }
 
@@ -3218,6 +3233,12 @@ class level extends executable {
 
     async #build(){
 
+        //don't trigger if set to only add if name doesn't already exits
+        if(this.part.add === 'X' && this._nameExists()) {
+            this.#level = this.data.scene.levels.filter(l => l.name === this.part.name)
+            return 
+        }
+
         //set a unique name
         this._setName()
 
@@ -3235,9 +3256,10 @@ class level extends executable {
         for(const id of this.levelsVisibleFrom){
             let level = this.data.scene.levels.get(id)
             if(level){
+                const arr = [...level.visibility.levels.add(this.levelId)]
                 const updateObj = {
                     _id: id, 
-                    visibility: [...level.visibility.levels.add(this.levelId)]
+                    visibility: {levels: arr}
                 }
                 this.#otherLevelsUpdate.push(updateObj);
             }
@@ -3269,7 +3291,7 @@ class level extends executable {
     }
 
     _nameExists(){
-        return this.data.scene.levels.some(lvl => lvl.name === this.part.name) ? true : false
+        return this.data.sceneLevelNames.includes(this.part.name) ? true : false
     }
 
     _setName(){
@@ -3277,7 +3299,7 @@ class level extends executable {
         if(!this._nameExists()) {
             name = this.part.name
         } else {
-            name =  helper.nameIterator(this.part.name, new Set(helper.sceneLevelsNames(this.data.scene)))
+            name =  helper.nameIterator(this.part.name, new Set(this.data.sceneLevelNames))
         }
         this.#name = name
     }

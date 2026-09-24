@@ -998,24 +998,24 @@ export class zone {
   /**
    * 
    * @param {object} options //the options object passed into the boundary. This adds the appropriate settings to factor in the stretch
-   * @returns 
    */
-  stretch(options){
+  stretch(options = {}){
+    //initialize the options object for stretch
+    options.stretch = {type: this.dimensions.stretch}
     switch(this.dimensions.stretch){
       case "B":
-          options.bottom = this.scene.bottom
+          options.stretch.bottom = this.scene.bottom
           break;
       case "G":
-          options.bottom = 0
+          options.stretch.bottom = 0
           break;
       case "S":
-          options.top = Infinity
+          options.stretch.top = Infinity
           break;
       case "T":
-          options.top = this.scene.top
+          options.stretch.top = this.scene.top
           break;
     }
-    return options
   }
 
   targetQuantity(){ 
@@ -1198,7 +1198,7 @@ export class zone {
     const {x, y} = await this._promptXY();
 
     //if the location prompt is canceled
-    if(!xy) return {}
+    if(x === undefined || y === undefined) return {}
 
     //set the chosen coordinates
     choice.coords = {x: x, y: y}
@@ -1251,9 +1251,15 @@ export class zone {
                 icon: '<i class="fas fa-check"></i>',
                 callback: (event, button) => {
                     const form = button.form
+
+                    //get the multi select chosen options and package into an array
+                    const multi = form.querySelector('multi-select[name="levels"]');
+                    const tags = multi.querySelectorAll('.tag[data-key]');
+                    const levels = Array.from(tags).map(tag => tag.dataset.key);
+
                     return {
                       elevation: form.elements.elevation.valueAsNumber,
-                      levels: Array.from(form.elements.levels.selectedOptions).map(o => o.value)
+                      levels: levels
                     }
                   }
                 }

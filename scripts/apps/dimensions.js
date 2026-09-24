@@ -130,12 +130,16 @@ export class dangerZoneDimensions {
      * returns an object typically submitted into the boundary constructor when pulling the actual zone boundary
      */
     get zoneBoundaryOptions(){
-        return {
+        const options = {
             exclude: this.excludedTaggedEntities,    //Generate the exclusion list of documents 
             levels: this.zoneLevels,    //include the zone levels   
             limit: this.zone.sourceArea,   //Generate a universe of documents for the boundary to use that consists of the zone's sources
             regionUuid: this.region.uuid  //include the region
         }
+
+        this.zone.stretch(options)
+
+        return options
     }
 
     /**
@@ -254,9 +258,6 @@ export class dangerZoneDimensions {
             inclusive: false //set the inclusive key on the options to false
         }
 
-        //if zone dimensions include stretch, adds to the options object either 'bottom' or 'top' value, based on stretch setting
-        this.zone.stretch(options);
-
         //generate the boundary from the zone boundary, accounting for bleed
         const b = this.zone.dimensions.bleed ? this.boundaryBleed(startBoundary, options) : this.boundaryConstrained(startBoundary, options);
         
@@ -333,6 +334,7 @@ export class dangerZoneDimensions {
                 }   
             exclude: array //an array of documents that are used to exclude areas from the boundary
             levels: array// passed in for constructor. These are the leves that further define the boundary
+            stretch: object //top: the top number elevation of the stretched targeting area. bottom: the bottom number elevation of the stretched targeting area
         }
     */
 export class boundary{
@@ -518,7 +520,7 @@ export class boundary{
     }
 
     get bottomIsInfinite(){
-        return this.bottom === -Infinity || this.bottom === null
+        return helper.isInfinite(this.bottom)
     }
     
     get bottomToElevation(){
@@ -594,7 +596,7 @@ export class boundary{
     }
 
     get topIsInfinite(){
-        return this.top === Infinity || this.top === null
+        return helper.isInfinite(this.top)
     }
     
     get topToElevation(){
@@ -691,7 +693,8 @@ export class boundary{
                 ...(this.options.regionUuid && {regionUuid: this.options.regionUuid}),
                 ...(this.options.bottom !== undefined && {bottom: this.options.bottom}),
                 ...(this.options.top !== undefined && {top: this.options.top}),
-                ...(this.options.range && {range: this.range})
+                ...(this.options.range && {range: this.range}),
+                ...(this.options.stretch !== undefined && {stretch: this.options.stretch})
             };
 
         let rangeDepth = 0
@@ -869,14 +872,20 @@ export class boundary{
      * compares this boundary against the one past in. If any grid indexes are shared, these are considered intersecting.
      * Factors in levels
      * @param {boundary} bound 
+     * @param {object} options //stretch object (see boundary class for description)
      * @returns boolean
      */
-    intersectsBoundary(bound = boundary){
+    intersectsBoundary(bound = boundary, options = {}){
         
+        //Include stretch in the calculation if included as an options
+        const bottom = options.stretch?.bottom !== undefined ? options.stretch?.bottom : this.bottom
+        const top = options.stretch?.top !== undefined ? options.stretch?.top : this.top
+
         //check for being on a boundary level
         if(!this.levelsInBoundary(bound.levels)) return false
 
-        if((this.bottomIsInfinite || this.bottom < bound.top) && (this.topIsInfinite || this.top >= bound.bottom)) {
+        
+        if((helper.isInfinite(bottom) || bottom < bound.top) && (helper.isInfinite(top) || top >= bound.bottom)) {
             
             const grids = bound.grids()
             for(const grid of grids){
@@ -964,22 +973,22 @@ export class boundary{
     tokensIn(tokens, tokenBoundaries = []){
         let kept = [];
         const boundariesProvided = tokenBoundaries.length ? true : false;
-
+    
         //iterate over tokens, keeping those that exist in the boundary
         for(let token of tokens){
 
             let passedInBoundary
 
-            //retrieve boundary if one was provided
+            //retrieve the token's boundary if one was provided (as a performance improvementS)
             if(boundariesProvided){
                 passedInBoundary = tokenBoundaries.find(t => t.id === token.id)?.boundary 
             }
-            
+
             //generates a boundary for the token if not provided
             const b = passedInBoundary ?? boundary.documentBoundary('Token', token);
 
             //checks intersection of token boundary with this boundary, keeping token on intersect
-            if(this.intersectsBoundary(b)) kept.push(token)
+            if(this.intersectsBoundary(b, this.options)) kept.push(token)
         }
 
         return kept

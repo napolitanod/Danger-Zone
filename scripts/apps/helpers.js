@@ -29,7 +29,7 @@ export class helper {
    * @returns 
    */
   static fallbackElevationTop(val){
-    return (val === Infinity || val === -Infinity || val === null || val === undefined) ? dangerZone.maxElevation : val;
+    return helper.isInfinite(val) ? dangerZone.maxElevation : val;
   }
 
 
@@ -251,6 +251,24 @@ export class helper {
     form.setPosition()
   }
 
+
+  /**
+   * Checks value for infinity. may include nulls or undefined
+   * @param {int} val 
+   * @param {boolean} includeNulls 
+   * @param {boolean} includeUndefined
+   * @returns boolean 
+   */
+  static isInfinite(val, includeNulls = true, includeUndefined = true){
+    return (
+        val === Infinity 
+        || val === -Infinity 
+        || (includeNulls && val === null) 
+        || (includeUndefined && val === undefined)
+      ) 
+      ? true 
+      : false
+  }
 
   /**
    * Simple helper to output a name that is unique

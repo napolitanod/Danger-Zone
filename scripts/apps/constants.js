@@ -1297,7 +1297,7 @@ export function setExecutableOptions(){
                 title: "Level", 
                 icon: "fa-fw fa-solid fa-layer-group", 
                 document: "Level",  
-                levels: 'N',
+                levels: 'Y',
                 wipeable: false, 
                 scope: "scene"
             },
