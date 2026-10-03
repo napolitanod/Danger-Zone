@@ -323,7 +323,12 @@ export class dangerZoneDimensions {
 
 
     /*
-        options:{ 
+        options:{
+            name: string //name of region. Default is Boundary Region
+            type: string //type of region. Default is rectangle.
+            topInclusive: //indicates if the top of the elevation provide is inclusive in the boundary
+            hole: boolean //creates the hole
+
             inclusive: bool //indicates whether the bottom and right edges are included in the boundary,
             retain: bool //prevents the boundary during initialization to locking the boundary points to the grid. Instead, point may be anywhere and not residing on a grid intersection
             universe: Set //
@@ -339,34 +344,68 @@ export class dangerZoneDimensions {
     */
 export class boundary{
     constructor (a = {x:0, y:0}, b = {x:0, y:0}, elevation = {bottom: -Infinity, top: Infinity}, options = {}) {
-        this.A = {
+        this.#A = {
             x: a.x ? Math.min(a.x, a.x ? b.x : b.x) : 0,
             y: a.y ? Math.min(a.y, a.y ? b.y : b.y) : 0
         },
-        this.B = {
+        this.#B = {
             x: b.x ? Math.max(a.x ? a.x : b.x, b.x) : 0,
             y: b.y ? Math.max(a.y ? a.y : b.y, b.y) : 0
         },
-        this.elevation = elevation,
+        this.#options = options;
+
         this.excludes = new Set(),
         this.gridsArray = [],
         this.gridIndex = new Set(),
-        this.levels = options.levels ?? [],
-        this.options = options,
-        this.universe = options.universe ?? (options.limit?.target ? new Set() : '');
-        this._init()
+        this.universe = this.options.universe ?? (this.options.limit?.target ? new Set() : '');
+
+        //if not set to keep points where they are, locks the boundary points to the grid 
+        if(!('retain' in this.options)) this.#toTopLeft();
+
+        this.#regionOptions = {
+            name: this.name,
+            elevation: {
+                bottom: this.options.bottom ?? elevation.bottom,
+                top: this.options.top ?? elevation.top,
+                topInclusive: this.options.topInclusive ?? false
+            },
+            attachment: {
+                token: null
+            },
+            levels:this.options.levels ?? [],
+            shapes: [
+                {
+                    type: this.type,
+                    x: Math.min(this.A.x, this.A.x ? this.B.x : this.B.x),
+                    y: Math.min(this.A.y, this.A.y ? this.B.y : this.B.y),
+                    width: Math.abs(this.B.x - this.A.x),
+                    height: Math.abs(this.B.y - this.A.y),
+                    hole: this.options.hole ?? false
+                }
+            ],
+        }
+
+        this.#init()
     }
 
     /****Initialization Activities */
-    
+    #A
 
+    #B
+
+    #options
+
+    #region
+
+    #regionOptions
+
+    #tokenTargetingRegion
 
     /**
      * Initializes additional index and positional data for boundary
      */
-    _init(){
-        //if not set to keep points where they are, locks the boundary points to the grid 
-        if(!('retain' in this.options)) this._toTopLeft();
+    #init(){
+        
 
         //index the exclusion grids
         this._exclude();
@@ -374,10 +413,55 @@ export class boundary{
         //index the universe grids
         this._universe();
 
+        //set the region
+        this.#setRegion();
+
+        //set the stretch region
+        this.#setStretchRegion();
+
         //initialize the array of grid indices that make up the boundary, accounting for universe and exclusion
         this._setGridIndex();
+
+    }
+
+    #setRegion(){
+        //set the boundary region
+        this.#region = this.regionUuid ? fromUuidSync(this.regionUuid) : RegionDocument.implementation.fromSource(this.#regionOptions, {parent: canvas.scene})
+        
     }
     
+    #setStretchRegion(){
+        if(!this.options.stretch) {
+            this.#tokenTargetingRegion = this.region
+        } else {
+        //create stretech top and bottom
+        //seems that topInclusive must be true - if original region is false, the top would have been reduced by one already, so setting false here would reduce again
+            const obj = {
+                elevation: {
+                    top: this.options.stretch.top === undefined ? this.top : this.options.stretch.top,
+                    bottom: this.options.stretch.bottom === undefined ? this.bottom : this.options.stretch.bottom,
+                    topInclusive: true //this.#regionOptions.elevation.topInclusive
+                }
+            }
+
+            //create options matching that of boundary region, with the exception of the top/bottom stretch
+            const options = Object.assign(
+                foundry.utils.deepClone(this.regionOptions),
+                obj
+            );
+
+            //set the stretch boundary region, used for token targeting once target boundary established
+            this.#tokenTargetingRegion = RegionDocument.implementation.fromSource(options, {parent: canvas.scene})
+        }
+    }
+
+    /**Initialization: lock into grid
+     * Used to ensure that that boundary points are locked to the grid points (as opposed to mid-grid)
+     */
+    #toTopLeft(){    
+        this.#A = canvas.grid.getTopLeftPoint(this.A);
+        this.#B = canvas.grid.getTopLeftPoint(this.B);
+    }
 
     /**
      * Intakes a set of documents and outputs an array
@@ -502,21 +586,20 @@ export class boundary{
 
 
 
+    /**Getters */
 
-    /**Initialization: lock into grid
-     * Used to ensure that that boundary points are locked to the grid points (as opposed to mid-grid)
-     */
-    _toTopLeft(){    
-        this.A = canvas.grid.getTopLeftPoint(this.A);
-        this.B = canvas.grid.getTopLeftPoint(this.B);
+    //this initial coordinate passed in for top left
+    get A(){
+        return this.#A
     }
 
-
-
-    /**Getters */
+    //this initial coordinate passed in for bottom right
+    get B(){
+        return this.#B
+    }
     
     get bottom(){
-        return this.options.bottom ?? this.elevation.bottom
+        return this.elevation.bottom
     }
 
     get bottomIsInfinite(){
@@ -527,8 +610,12 @@ export class boundary{
         return this.bottomIsInfinite ? 0 : this.bottom
     }
 
+    get bounds(){
+        return this.region.bounds
+    }
+
     get center(){
-        return {x: this.A.x + (this.width/2), y: this.A.y + (this.height/2)}
+        return this.bounds.center
     }
 
     get depth(){
@@ -550,6 +637,10 @@ export class boundary{
         return {w: w, h: h, j:top.j, i:top.i, top: top, left: left, right: right, bottom: bottom}
     }
 
+    get elevation(){
+        return this.region.elevation
+    }
+
     get elevationArray(){
         if (this.depthIsInfinite) return [0]
         const arr = []
@@ -560,7 +651,7 @@ export class boundary{
     }
 
     get height(){
-        return Math.abs(this.B.y - this.A.y)
+        return this.bounds.width 
     }
 
     get inclusive(){
@@ -571,12 +662,24 @@ export class boundary{
         return this.options.limit ?? {}
     }
 
+    get levels(){
+        return this.region.levels
+    }
+
     get location(){
-        return {x:this.A.x, y:this.A.y, elevation: this.bottom}
+        return {x:this.bounds.x, y:this.bounds.y, elevation: this.bottom}
+    }
+
+    get name(){
+        return this.options.name ?? "Boundary Region"
     }
 
     get offset(){
         return this.options.offset
+    }
+
+    get options(){
+        return this.#options
     }
 
     get range(){
@@ -584,7 +687,11 @@ export class boundary{
     }
 
     get region(){
-        return this.regionUuid ? fromUuidSync(this.regionUuid) : {}
+        return this.#region
+    }
+
+    get regionOptions(){
+        return this.#regionOptions
     }
 
     get regionUuid(){
@@ -592,7 +699,7 @@ export class boundary{
     }
 
     get top(){
-        return this.options.top ?? this.elevation.top
+        return this.elevation.top
     }
 
     get topIsInfinite(){
@@ -603,8 +710,12 @@ export class boundary{
         return this.topIsInfinite ? 0 : this.top
     }
 
+    get type(){
+        return this.options.type ?? "rectangle"
+    }
+
     get width(){
-        return Math.abs(this.B.x - this.A.x)
+        return this.bounds.width
     }
 
 
@@ -689,6 +800,7 @@ export class boundary{
         const ops = {
                 excludes: this.excludes,
                 universe: this.universe,
+                levels: this.levels,
                 ...(this.options.inclusive !== undefined && {inclusive: this.options.inclusive}),
                 ...(this.options.regionUuid && {regionUuid: this.options.regionUuid}),
                 ...(this.options.bottom !== undefined && {bottom: this.options.bottom}),
@@ -725,9 +837,6 @@ export class boundary{
         }
 
     }
-
-
-
 
     /**Converts a foundry document into a Danger Zone boundary
      * 
@@ -1058,10 +1167,10 @@ export class point{
     constructor(coords = {x: 0, y: 0}, elevation = null){
         this.coords = coords,
         this.elevation = elevation;
-        this._toTopLeft();
+        this.#toTopLeft();
     }
     
-    _toTopLeft(){    
+    #toTopLeft(){    
         this.coords = canvas.grid.getTopLeftPoint(this.coords);
     }
 

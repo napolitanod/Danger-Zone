@@ -1004,7 +1004,7 @@ export class zone {
     options.stretch = {type: this.dimensions.stretch}
     switch(this.dimensions.stretch){
       case "B":
-          options.stretch.bottom = this.scene.bottom
+          options.stretch.bottom = this.scene.elevation.bottom
           break;
       case "G":
           options.stretch.bottom = 0
@@ -1013,7 +1013,7 @@ export class zone {
           options.stretch.top = Infinity
           break;
       case "T":
-          options.stretch.top = this.scene.top
+          options.stretch.top = this.scene.elevation.top
           break;
     }
   }

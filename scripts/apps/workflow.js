@@ -2056,6 +2056,10 @@ class activeEffect extends executable {
      */
     #updates
 
+    get add(){
+        return this.data.danger.effectAddEffects
+    }
+
     get delay(){
         return this.flag.delay ? this.flag.delay : 0
     }
@@ -2087,6 +2091,21 @@ class activeEffect extends executable {
 
     get flag(){
         return this.hasFlag ? this.effect.flags[dangerZone.ID] : {}
+    }
+
+    //data not within flags was deprecated in v14 
+    get hasDeprecatedEffect(){
+        if(
+            this.effect.name ||
+            this.effect.icon ||
+            this.effect.duration ||
+            this.effect.description ||
+            this.effect.img ||
+            this.effect.changes
+        ) {
+            return true
+        }
+        return false
     }
 
     get hasFlag(){
@@ -2121,11 +2140,29 @@ class activeEffect extends executable {
     }
 
     async #addEffects(token){
-        if(this.limit && token.actor.effects.find(e => e.flags[dangerZone.ID]?.origin === this.data.danger.id)){
-            return;
+        const tokenEffects = token.actor.effects
+        const adds = []
+        const uuidList = this.add.filter(
+            uuid => !this.limit || !tokenEffects.find(e => e.flags[dangerZone.ID]?.uuid === uuid)
+            )
+                
+        if(uuidList.length){
+            uuidList.map(u => adds.push(
+                    Object.assign(fromUuidSync(u), {flags: {[dangerZone.ID]: {uuid: u}}})
+                )
+            )
+        }       
+        if(this.hasDeprecatedEffect) {//v14 deprecated data handling
+            if(!this.limit || !tokenEffects.find(e => e.flags[dangerZone.ID]?.origin === this.data.danger.id)){
+                adds.push(this.effect)
+            }
+            
         }
-        const add = await token.actor.createEmbeddedDocuments("ActiveEffect", [this.effect]);
-        this.#adds.push({token: token, data: add}) 
+        console.log(adds, this.add, this.limit, this)
+        if(adds.length){
+            const add = await token.actor.createEmbeddedDocuments("ActiveEffect", adds);
+            this.#adds.push({token: token, data: add}) 
+        }
     }
 
     async #deleteEffects(token){

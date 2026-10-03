@@ -60,6 +60,10 @@
     display: flex;
 }
 
+#danger-zone-danger-effect .danger-part-form {
+    overflow-y: auto;
+}
+
 .danger-zone-scene-header, 
 .danger-zone-types-header {
     flex: 1 1 100%;

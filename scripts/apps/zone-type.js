@@ -463,6 +463,10 @@ export class dangerZoneType {
     return this.options.effect
   }
 
+  get effectAddEffects(){
+    return this.effect.flags?.[`${dangerZone.ID}`]?.addEffects ?? []
+  }
+
   get effectDeleteEffects(){
     return this.effect.flags?.[`${dangerZone.ID}`]?.deleteEffects ?? []
   }

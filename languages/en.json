@@ -20,6 +20,7 @@
         "distance": "(Distance)",
         "edit": "Edit",
         "effects.label": "Effects",
+        "enter-uuid.label": "Enter UUID or Drop Active Effect",
         "export-danger": "Export Danger",
         "file": {
             "audio": {
@@ -723,7 +724,7 @@
                 }
             },
             "effect":{
-                "description": "Adds an active effect to targeted tokens.",
+                "description": "Interacts with targeted tokens' active effects.",
                 "deleteEffects.description": "Enter a list of active effect names to delete from the target.",
                 "delete-effects.label": "Delete Effects",
                 "disable-effects.description": "Enter a list of active effect names to disable on the target.",
@@ -738,7 +739,9 @@
                 "notes": "Active effect will be transferred to each danger target.",
                 "toggle-effects.description": "Enter a list of active effect names to toggle on the target.",
                 "toggle-effects.label": "Toggle Effects",
-                "edit.title": "Edit Active Effect",
+                "add-effects.label": "Add Effects",
+                "convert.title": "Transfer Deprecated Effect to Target",
+                "convert.description": "Editing the danger active effect is deprecated with Foundry VTT v14. However, the existing effect created on this danger should continue to work for some time. To convert to new format, first target a token on the canvas. Then select this button. This will transfer the effect on the target. You can then move the effect from the token actor to your Active Effect compendium. Effects can now be added to this danger by dragging from a compendium to the Add Effects box.",
                 "delete.title": "Delete Active Effect"
             },
             "foregroundEffect":{
