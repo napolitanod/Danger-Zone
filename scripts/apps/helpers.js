@@ -9,6 +9,230 @@ import {ZoneListForm} from './zone-list-form.js';
 export class helper {
 
 
+  /**Creates a region from a given document
+   * 
+   * @param {document} document 
+   * @param {scene} parent 
+   * @param {obj} options 
+   *    hole: boolean - if this is creating a hole.
+   *    asObject: boolean - if set to true, returns the source object used to create region and not the region
+   * @returns region class or shape object
+   */
+  static documentToRegion(document, parent = document.parent, options = {}){
+    
+    const documentName = document.documentName;
+
+    //this will represent the object sent in to create the region
+    let source 
+
+    //documents have different structures to convert to the correct obj expected by the region constructor
+    switch(documentName){
+      case 'AmbientLight':
+        source = helper.ambientLightRegionSourceDeconstruction(document, options);
+        break;
+      case 'AmbientSound': 
+        source = helper.ambientSoundRegionSourceDeconstruction(document, options);
+        break;
+      case 'Drawing': 
+        source = helper.drawingSoundRegionSourceDeconstruction(document, options);
+        break;
+      case 'Region':
+        source = document.toObject();
+        break;
+      case 'Scene':
+        source = helper.sceneRegionSourceDeconstruction(document, options);
+        break;
+      case 'Tile':
+        source = helper.tileRegionSourceDeconstruction(document, options);
+        break;
+      case 'Token':
+        source = helper.tokenRegionSourceDeconstruction(document, options);
+        break;
+      case 'Wall':
+        source = helper.wallRegionSourceDeconstruction(document, options);
+        break;
+    }
+    
+    //create the region and return it
+    return options.asObject ? source : RegionDocument.implementation.fromSource(source, {parent: parent})
+  }
+
+
+
+  /**Generates the source object needed to create a region from a ambient light
+   * 
+   * @param {ambientLight} ambientLight 
+   * @param {obj} options //see documentToRegion for options
+   * @returns source object for RegionDocument constructor
+   */
+  static ambientLightRegionSourceDeconstruction(ambientLight, options = {}){
+    const {
+      name, 
+      levels,
+      config: { 
+        dim: radius
+      },
+      shape,
+      elevation
+    } = ambientLight;
+
+    shape.hole = options.hole;
+
+    return {name, elevation: {top: elevation + radius, bottom: elevation - radius}, levels, shapes: [shape]};
+  }
+
+
+  /**Generates the source object needed to create a region from a ambient sound
+   * 
+   * @param {ambientSound} ambientSound 
+   * @param {obj} options //see documentToRegion for options
+   * @returns source object for RegionDocument constructor
+  */
+  static ambientSoundRegionSourceDeconstruction(ambientSound, options = {}){
+    const {
+      name, 
+      levels,
+      radius,
+      shape,
+      elevation
+    } = ambientSound;
+
+    shape.hole = options.hole;
+
+    return {name, elevation: {top: elevation + radius, bottom: elevation - radius}, levels, shapes: [shape]};
+  }
+
+  /**Generates the source object needed to create a region from a drawing document
+   * 
+   * @param {drawing} drawing 
+   * @param {obj} options //see documentToRegion for options
+   * @returns source object for RegionDocument constructor
+   */
+  static drawingRegionSourceDeconstruction(drawing, options = {}){
+    const {
+      name, 
+      levels,
+      shape,
+      elevation
+    } = drawing;
+
+    shape.hole = options.hole;
+
+    return {name, elevation: {top: elevation, bottom: elevation}, levels, shapes: [shape]};
+  }
+
+  /**Generates the source object needed to create a region from a scene document
+   * 
+   * @param {scene} scene 
+   * @param {obj} options //see documentToRegion for options
+   * @returns source object for RegionDocument constructor
+   */
+  static sceneRegionSourceDeconstruction(scene, options = {}){
+    const {
+      name, 
+      dimensions: { 
+        sceneWidth: width, 
+        sceneHeight: height,
+        sceneX: x,
+        sceneY: y
+      } 
+    } = scene;
+
+    const elevation = helper.sceneLevelsElevationBounds(scene, scene.levels)
+    const levels = helper.filterLevels(scene, {output: 'ids'})
+    const type = "rectangle";
+    const {hole} = options;
+
+    return {name, elevation, levels, shapes: [{type, x, y, height, width, hole}]};
+  }
+
+  /**Generates the source object needed to create a region from a tile document
+   * 
+   * @param {tile} tile 
+   * @param {obj} options //see documentToRegion for options
+   * @returns source object for RegionDocument constructor
+   */
+  static tileRegionSourceDeconstruction(tile, options = {}){
+    const {
+      name, 
+      levels,
+      shape,
+      elevation
+    } = tile;
+
+    shape.hole = options.hole;
+
+    return {name, elevation: {top: elevation, bottom: elevation}, levels, shapes: [shape]};
+  }
+
+  /**Generates the source object needed to create a region from a token document
+   * 
+   * @param {token} token 
+   * @param {obj} options //see documentToRegion for options
+   * @returns source object for RegionDocument constructor
+   */
+  static tokenRegionSourceDeconstruction(token, options = {}){
+
+    //send back if token is invalid
+    if(!token?.object?.bounds) return
+
+    const {
+      name, 
+      level,
+      object: {
+        bounds: {
+          x,
+          y,
+          height,
+          width
+        }
+      },
+      elevation
+    } = token;
+
+    const hole = options.hole;
+
+    const type = "rectangle"
+
+    //the token depth calculates using the distance represented for each grid on the scene, multiplied by the width or height of token within the grids, multiplied by danger zone global settings multiplie
+    //This is intended to represent how tall the token is
+    const tokenDepth = helper.getTokenDepth(token);
+
+    return {name, elevation: {top: elevation + tokenDepth, bottom: elevation}, levels: [level], shapes: [{type, x, y, height, width, hole}]};
+  }
+
+  /**Generates the source object needed to create a region from a wall document
+   * 
+   * @param {wall} wall 
+   * @param {obj} options //see documentToRegion for options
+   * @returns source object for RegionDocument constructor
+   */
+  static wallRegionSourceDeconstruction(wall, options = {}){
+    const {
+      id: name, 
+      levels,
+      object: { 
+        bounds: {
+          width: boundaryWidth, 
+          height: boundaryHeight,
+          x,
+          y
+        }
+      } 
+    } = wall;
+
+    const elevation = helper.sceneLevelsElevationBounds(wall.parent, levels) 
+    const type = "line";
+    const {hole} = options;
+
+    //create the line
+    const length = Math.hypot(boundaryWidth, boundaryHeight);
+    const width = 1
+    const rotation = Math.atan2(boundaryHeight, boundaryWidth) * 180 / Math.PI;
+
+    return {name, elevation, levels, shapes: [{type, x, y, width, length, rotation, hole}]};
+  }
+
 
 
   /**returns the world bottom elevation in the event that the value passed in is infinity or null
@@ -135,7 +359,7 @@ export class helper {
       for(let token of tokens){
 
           //generates a boundary for the token
-          const b = boundary.documentBoundary('Token', token);
+          const b = boundary.documentBoundary(token);
 
           targetTokenBoundarys.push({id: token.id, boundary: b})
       }

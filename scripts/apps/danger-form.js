@@ -518,6 +518,7 @@ export class EffectDangerPartConfig extends DangerPartConfig {
 
   static #partId = 'effect'
 
+  //v14 deprecate - flags true to manage the delete of old data once it is exported.
   #clearDeprecatedEffect = 0
 
   /** @inheritDoc */
@@ -533,29 +534,35 @@ export class EffectDangerPartConfig extends DangerPartConfig {
   /** @override */
   async _prepareContext() {
   const parentData = await super._prepareContext();
-  const addEffects = this.data.flags?.['danger-zone']?.addEffects ?? []
   return foundry.utils.mergeObject(parentData, {
-      addEffects: addEffects,
       hasDeprecatedEffect: Object.keys(this.data).some(k => ['name', 'icon', 'duration', 'changes', 'description'].includes(k))
     } )
   }
 
-  //converts an active effect that was previously created directly on this danger to one on an actor, then deletes the data.
+  /**
+   * converts an active effect that was previously created directly on this danger to one on an actor, then deletes the data.
+   * Data is now deprecated
+   * @param {event} event 
+   * @returns 
+   */
   static async #convertEffect(event){
+    //do this to prevent the button from submitting the form
     event.preventDefault();
 
     let updates = []
 
+    //user is guided to target who they want to add the deprecated effects to
     const targets = game.user.targets
     if(!targets.size) return ui.notifications.warn('You must select at least one token')
 
+    //add the effect to each target. 
     targets.forEach((value) => {
       const result = value.actor.createEmbeddedDocuments("ActiveEffect", [this.data])
       updates.push(result)
     } ) 
-
     await Promise.all(updates)
 
+    //if at least one token updated, hide the button and mark the data for delete on final submit. Else warn that something went wrong.
     if(updates.length) {
       ui.notifications.info('Effect transfered to tokens')
       this._setClearDeprecatedEffect(1)
@@ -584,6 +591,8 @@ export class EffectDangerPartConfig extends DangerPartConfig {
   static async #onSubmit(_event, _form, submitData) {
     const expandedData = foundry.utils.expandObject(submitData.object);
     let data
+
+    //if the deprecated data is marked for delete then don't merge in the update object to the deprecated data. This will effectively cause it to be saved over.
     if(this.clearDeprecatedEffect) {
       data = expandedData
     } else {

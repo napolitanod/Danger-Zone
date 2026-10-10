@@ -48,7 +48,7 @@ export class api {
     static _addHighlightZone(zoneName, sceneId, identifier = ''){
         if(!sceneId){sceneId = canvas.scene?.id}
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        zn ? dangerZoneDimensions.addHighlightZone(zn.id, sceneId, identifier) : console.log(`A zone with the name provided was not found on scene ${sceneId}`)
+        zn ? dangerZoneDimensions.addHighlightZone(zn, sceneId, identifier) : console.log(`A zone with the name provided was not found on scene ${sceneId}`)
     }
 
     /**
@@ -101,7 +101,7 @@ export class api {
     static _tokensInBoundary(A,B, elevation = {bottom: -Infinity, top: Infinity}){
         if(elevation.bottom === -Infinity && A.z) elevation.bottom = A.z
         if(elevation.top === Infinity && B.z) elevation.top = B.z
-        const b = new boundary(A,B,elevation);
+        const b = new boundary(A,B,elevation,canvas.scene);
         return b.tokensIn(canvas.scene.tokens);
     }
 
@@ -111,7 +111,7 @@ export class api {
      * @returns a danger zone boundary
      */
     static _boundary(document){
-        return boundary.documentBoundary(document.documentName, document);
+        return boundary.documentBoundary(document);
     }
     
     /**

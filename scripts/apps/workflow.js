@@ -724,11 +724,12 @@ class executorData {
      * Sets the boundary for that executor target using location data passed into the class, typically when the constructor is created
      */
     _setLocationBoundary(){
+        const {exclude, limit} = this.zone.scene.zoneBoundaryOptions;
 
         //boundary options
         const options = {
-            excludes: this.zoneBoundary.excludes, 
-            universe: this.zoneBoundary.universe,
+            exclude, 
+            limit,
             levels: this.levelData.target.all
         }
 
@@ -740,6 +741,7 @@ class executorData {
             this.location.coords, 
             this.location.elevation, 
             this.danger.dimensions.units, 
+            this.scene,
             options
         );
 
@@ -2158,7 +2160,7 @@ class activeEffect extends executable {
             }
             
         }
-        console.log(adds, this.add, this.limit, this)
+        
         if(adds.length){
             const add = await token.actor.createEmbeddedDocuments("ActiveEffect", adds);
             this.#adds.push({token: token, data: add}) 
@@ -3533,8 +3535,7 @@ class primaryEffect extends executableWithAnimation {
                  } 
                 if(this.partSources.length){
                     for(const document of this.partSources){
-                        const documentName = document.documentName ? document.documentName : document.document.documentName;
-                        const source = boundary.documentBoundary(documentName, document, {retain:true});
+                        const source = boundary.documentBoundary(document, this.data.scene, {retain:true});
                         if(source.A.x === bound.A.x && source.A.y === bound.A.y && source.B.x === bound.B.x && source.B.y === bound.B.y){continue}
                         this.source.swap ? this.#buildSequence(source, bound) : this.#buildSequence(bound, source);
                     }
@@ -4447,8 +4448,7 @@ class sourceEffect extends executableWithAnimation {
 
     async #build(){
         for (const source of this.sourcesSelected){
-            const documentName = source.documentName ? source.documentName : source.document.documentName;
-            const docBound = boundary.documentBoundary(documentName, source)
+            const docBound = boundary.documentBoundary(source, this.data.scene)
             const bound = !this.offset ? docBound : boundary.offsetBoundary(docBound, this.data.offset, this.offset, this.data.scene)
             this.#buildSequence(bound);
         }
@@ -4758,7 +4758,7 @@ class tokenMove extends executable {
             //when source to target is set and this token is a source - move the source to the target
             if(isSToTSource){
                 let location = this.boundary.center;
-                let tokenBoundary = boundary.documentBoundary("Token", token);
+                let tokenBoundary = boundary.documentBoundary(token, this.data.scene);
 
                 //given various token sizes, calculate the differ for use in the final placement of token in the new location
                 const adjX = tokenBoundary.center.x - tokenBoundary.A.x;

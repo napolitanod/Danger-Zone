@@ -865,7 +865,7 @@ export class zone {
   async highlightZone(){
     if(this.scene.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
-      dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_tzHL', this.scene.dangerId);
+      dangerZoneDimensions.addHighlightZone(this, this.scene.sceneId, '_tzHL', this.scene.dangerId);
       await wait(750)
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
     }
@@ -1273,7 +1273,7 @@ export class zone {
   async _promptXY(){ 
     let xy
     dangerZoneDimensions.destroyHighlightZone(this.id, '', this.scene.dangerId);
-    dangerZoneDimensions.addHighlightZone(this.id, this.scene.sceneId, '_wf', this.scene.dangerId);
+    dangerZoneDimensions.addHighlightZone(this, this.scene.sceneId, '_wf', this.scene.dangerId);
 
     let currentLayer = canvas.activeLayer;
     currentLayer.deactivate();
