@@ -865,7 +865,7 @@ export class zone {
   async highlightZone(){
     if(this.scene.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
-      dangerZoneDimensions.addHighlightZone(this, this.scene.sceneId, '_tzHL', this.scene.dangerId);
+      dangerZoneDimensions.addHighlightZone(this, this.scene.sceneId,  {id: '_tzHL', danger: this.scene.dangerId});
       await wait(750)
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
     }
@@ -928,22 +928,11 @@ export class zone {
         //if there are no levels, then zone includes all levels
         if(!this.levels.length){
           onLevel = true
-        } else {
-
+        } 
+        else {
           //iterate through each document and check to see if document is in level
           for (const document of area) {
-
-            const levels = document.levels;
-            
-            //if not a set, check string
-            if(!levels) {
-              if(!document.level || this.levels.includes(document.level)) onLevel = true
-            } 
-            
-            //else check that set of levels is either empty (all levels) or contains a level contained by zone levels 
-            else if (!levels.size || this.levels.find(lvl => levels.has(lvl))) {
-              onLevel = true
-            }
+            if(this.levels.some(l => document.locatedInLevel(l))) onLevel = true
           }
         }
       }
@@ -995,28 +984,6 @@ export class zone {
     return trigger
   }
 
-  /**
-   * 
-   * @param {object} options //the options object passed into the boundary. This adds the appropriate settings to factor in the stretch
-   */
-  stretch(options = {}){
-    //initialize the options object for stretch
-    options.stretch = {type: this.dimensions.stretch}
-    switch(this.dimensions.stretch){
-      case "B":
-          options.stretch.bottom = this.scene.elevation.bottom
-          break;
-      case "G":
-          options.stretch.bottom = 0
-          break;
-      case "S":
-          options.stretch.top = Infinity
-          break;
-      case "T":
-          options.stretch.top = this.scene.elevation.top
-          break;
-    }
-  }
 
   targetQuantity(){ 
     let quantity 
@@ -1195,13 +1162,6 @@ export class zone {
   /*prompts the user to select the zone location point (top left grid location) and captures the location*/
   async promptTemplate() {
     const choice = {}
-    const {x, y} = await this._promptXY();
-
-    //if the location prompt is canceled
-    if(x === undefined || y === undefined) return {}
-
-    //set the chosen coordinates
-    choice.coords = {x: x, y: y}
 
     //add in level and elevation if configured to prompt for this also
     if(this.target.choose.prompt){
@@ -1211,6 +1171,16 @@ export class zone {
     } else {
       choice.elevation = 0
     }
+
+    const {x, y} = await this._promptXY(choice.levels?.length ? choice.levels[0] : this.levelCurrent);
+
+    //if the location prompt is canceled
+    if(x === undefined || y === undefined) return {}
+
+    //set the chosen coordinates
+    choice.coords = {x: x, y: y}
+
+
 
     return choice
   }
@@ -1270,10 +1240,11 @@ export class zone {
     return promptAnswer
   }
 
-  async _promptXY(){ 
+  async _promptXY(level){ 
     let xy
+    
     dangerZoneDimensions.destroyHighlightZone(this.id, '', this.scene.dangerId);
-    dangerZoneDimensions.addHighlightZone(this, this.scene.sceneId, '_wf', this.scene.dangerId);
+    dangerZoneDimensions.addHighlightZone(this, this.scene.sceneId, {level: level, id: '_wf', danger: this.scene.dangerId});
 
     let currentLayer = canvas.activeLayer;
     currentLayer.deactivate();

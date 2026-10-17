@@ -1,7 +1,7 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneDimensions} from './dimensions.js';
 import {DANGERZONECONFIG, sceneOps, regionOps} from './constants.js';
-import {getEventData} from './helpers.js';
+import {getEventData, helper} from './helpers.js';
 import {ZoneForm} from './zone-form.js';
 
 export class ZoneListForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
@@ -46,10 +46,13 @@ export class ZoneListForm extends foundry.applications.api.HandlebarsApplication
 
     /** @override */
   async _prepareContext() {
+    const level = helper.getDefaultLevel()
+    const levelName = canvas.scene?.levels.find(l => l.id === level).name
     return {
           dangerZones: dangerZone.getAllZonesFromScene(this.sceneId, {enabled: false, typeRequired: false, triggerRequired: false}).sort((a, b) => a.title.localeCompare(b.title)),
           sceneId: this.sceneId,
-          regions: regionOps(this.sceneId)
+          regions: regionOps(this.sceneId),
+          visibleLevel: levelName ? `${levelName}` : ''
       }
   }
 

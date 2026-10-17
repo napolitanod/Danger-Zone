@@ -1,5 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
-import {dangerZoneDimensions, boundary} from './dimensions.js'
+import {dimensionBoundary} from './dimensions.js'
 import {workflow} from './workflow.js';
 import {COMBAT_EVENTS, DANGERZONETRIGGERSORT, COMBAT_PERIOD_COMBAT_EVENTS, COMBAT_THRESHOLD_END_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS} from './constants.js';
 import {helper} from './helpers.js';
@@ -81,7 +81,7 @@ export class triggerManager {
         const options = {}
         if(!['move'].includes(event)){
             if(this.data?.options?.location && Object.keys(this.data.options.location).length && !['aura'].includes(event)) options['location'] = this.data.options.location
-            if(this.data?.options?.boundary && Object.keys(this.data.options.boundary).length) options['boundary'] = new boundary(this.data.options.boundary.A, this.data.options.boundary.B, this.data.options.boundary.elevation, this.data.options.boundary.scene)
+            if(this.data?.options?.boundary && Object.keys(this.data.options.boundary).length) options['boundary'] = new dimensionBoundary(this.data.options.boundary.elevation, this.data.options.boundary.scene, {A: this.data.options.boundary.A, B:this.data.options.boundary.B})
             if(this.data?.options?.targets && this.data.options.targets.length) options.targets = this._loadTokens(this.data.options.targets, {zone: zone, event: event, type: 'target'})
             if(this.data?.options?.sources && this.data.options.sources.length) options.sources = this._loadTokens(this.data.options.sources, {zone: zone, event: event, type: 'source'})
             if(zone.target.isCombatant && COMBAT_EVENTS.includes(event)){
@@ -254,7 +254,7 @@ export class triggerManager {
         if(!sceneZones.length) return
 
         const zones = []
-        const move = dangerZoneDimensions.tokenMovement(token, update);
+        const move = helper.measureTokenMovement(token, update);
         if(options.end) await token.object.movementAnimationPromise 
 
         for (const zn of sceneZones) {

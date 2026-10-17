@@ -471,7 +471,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     #showZoneHighlight(event){
         const data = this._getEventIds(event)
         if(!data) return
-        dangerZoneDimensions.addHighlightZone(data.zoneId, this.sceneId, '', data.dangerId);
+        dangerZoneDimensions.addHighlightZone(data.zoneId, this.sceneId, {id:'', danger: data.dangerId});
     } 
 
     /**v13

@@ -3,7 +3,7 @@
  */
 
 import {dangerZone} from '../danger-zone.js';
-import {point, boundary} from './dimensions.js'
+import {point, dimensionBoundary} from './dimensions.js'
 import {ZoneListForm} from './zone-list-form.js';
 
 export class helper {
@@ -34,7 +34,7 @@ export class helper {
         source = helper.ambientSoundRegionSourceDeconstruction(document, options);
         break;
       case 'Drawing': 
-        source = helper.drawingSoundRegionSourceDeconstruction(document, options);
+        source = helper.drawingRegionSourceDeconstruction(document, options);
         break;
       case 'Region':
         source = document.toObject();
@@ -174,20 +174,16 @@ export class helper {
   static tokenRegionSourceDeconstruction(token, options = {}){
 
     //send back if token is invalid
-    if(!token?.object?.bounds) return
+    if(!token?.scene) return
 
     const {
       name, 
       level,
-      object: {
-        bounds: {
-          x,
-          y,
-          height,
-          width
-        }
-      },
-      elevation
+      elevation,
+      x,
+      y,
+      height: initialHeight,
+      width: initialWidth
     } = token;
 
     const hole = options.hole;
@@ -197,6 +193,12 @@ export class helper {
     //the token depth calculates using the distance represented for each grid on the scene, multiplied by the width or height of token within the grids, multiplied by danger zone global settings multiplie
     //This is intended to represent how tall the token is
     const tokenDepth = helper.getTokenDepth(token);
+    const gridX = token.scene.grid.sizeX
+    const gridY = token.scene.grid.sizeY
+
+    //get the token dimensions as on scene
+    const width = Math.max(initialWidth * gridX, gridX)
+    const height = Math.max(initialHeight * gridY, gridY)
 
     return {name, elevation: {top: elevation + tokenDepth, bottom: elevation}, levels: [level], shapes: [{type, x, y, height, width, hole}]};
   }
@@ -211,7 +213,7 @@ export class helper {
     const {
       id: name, 
       levels,
-      object: { 
+      edge: { 
         bounds: {
           width: boundaryWidth, 
           height: boundaryHeight,
@@ -272,7 +274,8 @@ export class helper {
 
       //get the scene levels, filtering if a filter array was provided
       if(scene.levels?.size){
-          levels = options.filterIds?.length ? scene.levels?.filter(l => options.filterIds.includes(l.id)) : scene.levels
+          const lvls = [...scene.levels]
+          levels = options.filterIds?.length ? lvls.filter(l => options.filterIds.includes(l.id)) : lvls
       }
 
       //set the output to either just the ids or the full documents, based on the passed in options
@@ -286,6 +289,51 @@ export class helper {
   }
 
 
+
+
+  /**Selects best level for use in function when level is not provided
+   * 
+   * @param {string or scene} scene id of scene or scene
+   * @returns string id of the level
+   */
+  static getDefaultLevel(scene){
+    
+    //get the id, either passed in or on the scene object
+    const sceneId = scene?.id ?? scene
+
+    //if scene is unknown or the scene is the current scene, return the level in view
+    if(!sceneId || sceneId === canvas.scene.id) {
+      return helper.getVisibleLevel().id
+    }
+
+    //else return the default level
+    const s = game.scenes.get(sceneId)
+    if(s) return s.levels.find(l => l.index === 0).id
+  }
+
+
+  /**
+   * 
+   * @param {scene} scene 
+   * @param {array} levels array of level ids
+   * @returns string of level names
+   */
+  static getLevelsNames(scene, levels = []){
+    if(!levels.length) {
+          return 'All levels'
+    }
+    return scene.levels.filter(lvl => levels.includes(lvl.id)).map(lvl => lvl.name).join(", ")
+  }
+
+
+
+  /**the level currently visible to GM
+   * 
+   * @returns level
+   */
+  static getVisibleLevel(){
+    return canvas.scene.levels.find(l => l.isView)
+  }
 
 
   /**
@@ -359,7 +407,7 @@ export class helper {
       for(let token of tokens){
 
           //generates a boundary for the token
-          const b = boundary.documentBoundary(token);
+          const b = dimensionBoundary.documentBoundary(token);
 
           targetTokenBoundarys.push({id: token.id, boundary: b})
       }
@@ -494,6 +542,42 @@ export class helper {
       : false
   }
 
+
+
+
+  /**Return position information between current token position and the update object
+   * 
+   * @param {token} token 
+   * @param {object} update 
+   * @returns 
+   */
+  static measureTokenMovement(token, update){
+    const {x, y, elevation} = token
+    const coords = {x, y}
+    const startPos = {coords, elevation};
+    const endPos = {
+        coords: {
+            x: update.x !== undefined ? update.x : x,
+            y: update.y !== undefined ? update.y : y
+        },
+        elevation: update.elevation !== undefined ? update.elevation : elevation 
+    };
+    const startGrid = canvas.grid.getOffset(token);
+    const endGrid = canvas.grid.getOffset(endPos.coords);
+    return {
+            start:startPos,
+            end: endPos,
+            dimensions: {
+                h: Math.abs(startGrid.i - endGrid.i),
+                w: Math.abs(startGrid.j - endGrid.j),
+                d: Math.abs(startPos.elevation - endPos.elevation)
+            },
+      height: Math.abs(startPos.coords.y - endPos.coords.y ),
+      width: Math.abs(startPos.coords.x - endPos.coords.x)
+    }
+  }
+
+
   /**
    * Simple helper to output a name that is unique
    * @param {string} name  //name that you want to ensure is unique
@@ -507,16 +591,26 @@ export class helper {
   }
 
 
-  /**  returns a random value from the array
+  /**  returns a random value from the array or between two numbers
    * 
-   * @param {array} arr 
+   * @param {array or int} a
+   * @param {int} 
    * @returns 
    */
-  static pickRandom(arr) {
-        return arr[Math.floor(Math.random() * arr.length)];
+  static pickRandom(a, b) {
+    if (Array.isArray(a)) {
+      return a[Math.floor(Math.random() * a.length)];
+    }
+
+    if(a === b) return a
+
+    //convert to integers
+    a = a | 0;
+    b = b | 0;
+  
+    return Math.floor(Math.random() * (b - a + 1)) + a;
   }
-
-
+  
 
   /**
    * Builds out the dimensions of the grid then checks if the ray passes throught it
@@ -585,6 +679,8 @@ export class helper {
   static sceneLevelsNames(scene){
     return scene.levels.map(lvl => lvl.name)
   }
+
+
 }
 
 

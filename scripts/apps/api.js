@@ -1,6 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
-import {boundary, dangerZoneDimensions} from './dimensions.js';
+import {dimensionBoundary} from './dimensions.js';
 import {triggerManager} from './trigger-handler.js';
 
 export class api {
@@ -48,7 +48,7 @@ export class api {
     static _addHighlightZone(zoneName, sceneId, identifier = ''){
         if(!sceneId){sceneId = canvas.scene?.id}
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        zn ? dangerZoneDimensions.addHighlightZone(zn, sceneId, identifier) : console.log(`A zone with the name provided was not found on scene ${sceneId}`)
+        zn ? zn.addHighlightZone({id: identifier}) : console.log(`A zone with the name provided was not found on scene ${sceneId}`)
     }
 
     /**
@@ -60,7 +60,7 @@ export class api {
     static _destroyHighlightZone(zoneName, sceneId, identifier = ''){
         if(!sceneId){sceneId = canvas.scene?.id}
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        zn ? dangerZoneDimensions.destroyHighlightZone(zn.id, identifier) : console.log(`A scene zone with the name provided was not found on scene ${sceneId}`)
+        zn ? zn.destroyHighlightZone(identifier) : console.log(`A scene zone with the name provided was not found on scene ${sceneId}`)
     }
 
     /**
@@ -101,7 +101,7 @@ export class api {
     static _tokensInBoundary(A,B, elevation = {bottom: -Infinity, top: Infinity}){
         if(elevation.bottom === -Infinity && A.z) elevation.bottom = A.z
         if(elevation.top === Infinity && B.z) elevation.top = B.z
-        const b = new boundary(A,B,elevation,canvas.scene);
+        const b = new dimensionBoundary(elevation,canvas.scene,{A,B});
         return b.tokensIn(canvas.scene.tokens);
     }
 
@@ -111,7 +111,7 @@ export class api {
      * @returns a danger zone boundary
      */
     static _boundary(document){
-        return boundary.documentBoundary(document);
+        return dimensionBoundary.documentBoundary(document);
     }
     
     /**

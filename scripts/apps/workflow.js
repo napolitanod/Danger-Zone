@@ -1,5 +1,5 @@
 import {dangerZone, zone} from '../danger-zone.js';
-import {point, boundary} from './dimensions.js';
+import {point, dimensionBoundary} from './dimensions.js';
 import {EVENTS, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES, ZONEFORMOPTIONS} from './constants.js';
 import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getRandomNumber, limitArray, shuffleArray, stringToObj, wait, joinWithAnd, helper} from './helpers.js';
 
@@ -270,6 +270,7 @@ class executorData {
         this.sourceAreas = [],
         this.sourcesBlended = [],
         this.sourceLimit = zone.generateSourceCount(),
+        this.targetDimensions,
         this.targets = options.targets ?? [],
         this.tokenMovement = [],
         this.twinBoundary = {},
@@ -281,9 +282,13 @@ class executorData {
         this.initializeSpawn()
     }
 
+    //the boundary used when targeting
+    
+
     get danger(){
         return this.zone.danger
     }
+
 
     get dualBoundaries(){
         return Object.keys(this.twinBoundary).length ? [this.boundary, this.twinBoundary] : [this.boundary]
@@ -359,10 +364,7 @@ class executorData {
      * Names of the levels associated with this danger's targeting
      */
     get levelsNames(){
-        if(!this.levels.length) {
-            return 'All levels'
-        }
-        return this.scene.levels.filter(lvl => this.levels.includes(lvl.id)).map(lvl => lvl.name).join(", ")
+        return helper.getLevelsNames(this.scene, this.levels)
     }
     
     /**
@@ -411,7 +413,7 @@ class executorData {
     }
 
     get range(){
-        return this.scene.dimensions.distance * Math.max(this.danger.dimensions.units.w, this.danger.dimensions.units.h)
+        return this.scene.dimensions.distance * Math.max(this.targetDimensions.w, this.targetDimensions.h)
     }
 
     get targetBoundary(){
@@ -428,7 +430,7 @@ class executorData {
     about() {
         if(game.user.isActiveGM && game.settings.get(dangerZone.ID, 'chat-details-to-gm')) {   
             let tokenTargets
-            let stretch
+            let stretch = ''
             const minTarget = this.zone.target.quantity?.min ?? 1
             const maxTarget = this.zone.target.quantity?.max ?? 1
 
@@ -447,8 +449,9 @@ class executorData {
             let content =
                 `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Workflow Details</div><div class="danger-zone-chat-message-body">
                 <div><label class="danger-zone-label">Danger:</label><span> ${this.danger.name}</span></div>
-                <div><label class="danger-zone-label">Danger dimensions:</label><span> w${this.danger.dimensions.units.w}  h${this.danger.dimensions.units.h}  d${this.danger.dimensions.units.d}${this.zone.dimensions.bleed ? ' (bleed)' : ''}</span></div>
-                <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div>
+                <div><label class="danger-zone-label">Danger dimensions:</label><span> w${this.targetDimensions.w}  h${this.targetDimensions.h}  d${this.targetDimensions.d}${this.zone.dimensions.bleed ? ' (bleed)' : ''}</span></div>
+                <div><label class="danger-zone-label">Zone levels:</label><span> ${this.levelsNames}</span></div>
+               <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div>
                 <div><label class="danger-zone-label">Trigger:</label><span> ${game.i18n.localize(EVENTS[this.event]?.label)}</span></div>
                 <div><label class="danger-zone-label">Likelihood:</label><span> ${this.zone.trigger.likelihood}</span> <label class="danger-zone-label">Likelihood result:</label><span> ${this.likelihoodResult}</span></div>
                 <div><label class="danger-zone-label">Targeting:</label><span> ${this.zone.target.always ? 'Must target a location with a token' : 'Can target any location in zone'}. ${tokenTargets} at location.</span></div>
@@ -458,7 +461,7 @@ class executorData {
                 <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.bottomIsInfinite ? '-&infin;' : this.boundary.bottom}</span></div>
                 <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.topIsInfinite ? '&infin;' : this.boundary.top}</span></div>
                 ${stretch}
-                <div><label class="danger-zone-label">Target levels:</label><span> ${this.levelsNames}</span></div>
+                <div><label class="danger-zone-label">Target level:</label><span> ${this.boundary.levelsNames}</span></div>
                 <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div>
                 <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div></div>`
             } 
@@ -488,7 +491,7 @@ class executorData {
 
     async highlightBoundary(override = false){
         if(this.hasBoundary && game.user.isActiveGM && (override || game.settings.get(dangerZone.ID, 'display-danger-boundary'))){
-            this.boundary.highlight(this.id, 16711719)
+            this.boundary.highlight({id: this.id, color: 16711719})
             await wait(1000)
             this.boundary.destroyHighlight(this.id);
         }
@@ -558,51 +561,32 @@ class executorData {
      * @returns nothing returned, but sets the boundary and eligible target list
      */
     randomBoundary() {
-        //max number of tries for finding a random boundary
-        let max = 1;
-        
-        //variable for passing in indexes to restrict the zone boundary to for purposes of targeting.
-        let restrictedIndexes;
 
-        //the current test boundary
-        let testBoundary;
+        const tokens = this.targets.length ? this.targets : this.zoneEligibleTokens
 
-        //if targets are already known, that is the pool for targinet, else the tokens that are eligible to be targeted within the zone boundary
-        const targetPool = this.targets.length ? this.targets : this.zoneEligibleTokens;
-
-        //get boundaries for tokens
-        const targetTokenBoundarys = helper.getTokenBoundarys(targetPool);
-
-        //targeting with be random, but if there are already targets or the zone always targets, set some limit on when one is randomly selected. 
-        //Then also restrict the array of boundary indexes that are targeted
-        //Then select one randomly. Else, the area targeted is the first one randomly pulled
-        if((this.targets.length || this.zone.target.always) && targetPool.length) {
-            max = 10000;
-            restrictedIndexes = this.zoneBoundary.getIndexRestrictedByBoundaries(targetTokenBoundarys)
+        const options = {
+            bleed: this.zone.dimensions.bleed,
+            levels: this.levels,
+            units: this.targetDimensions
         }
-        //create the iterator for the grids within the zone boundary
-        const test = this.zone.scene.getZoneTargetGridsIterator(restrictedIndexes);
 
-        //Perform the random targeting
-        let i=0;
-        do {
-            i++;
+        //if targets are already known, that is the pool for target, 
+        // else when the zone is set to always target a token, add the tokens that are eligible to be targeted within the zone boundary
+        if(this.targets.length || this.zone.target.always){
+            options.documents = tokens
+        } 
 
-            //pull the next randomly targeted area
-            const b = test.next()
-            if(!b || b.done) return
-            testBoundary = b.value;
+        const b = this.zoneBoundary.getRandomBoundary(options)
 
-            //attempt to set the eligible targets if the boundary finds tokens in it from the target pool
-            this.eligibleTargets = testBoundary.tokensIn(targetPool, targetTokenBoundarys);
-            
-        } while(!this.eligibleTargets.length && i < max);
+        this.eligibleTargets = b.tokensIn(tokens)
 
         //set the boundary to the passed or final test boundary
-        this.boundary = testBoundary;
+        this.boundary = b;
+
+        console.log(b)
 
         //set the twin boundary if there is one remaining to pull and danger involves twinning
-        (test.done && !this.hasDualBoundaries) ? this.twinBoundary = this.boundary : this.twinBoundary = test.next().value
+        if(this.hasDualBoundaries) this.twinBoundary = this.zoneBoundary.getRandomBoundary({units: options.units, levels: b.levels})
     }
 
 
@@ -733,14 +717,11 @@ class executorData {
             levels: this.levelData.target.all
         }
 
-        //add the elevation stretch on the options
-        this.zone.stretch(options);
-
         //generate boundary from the location coordinates
-        this.boundary = boundary.locationToBoundary(
+        this.boundary = dimensionBoundary.locationToBoundary(
             this.location.coords, 
             this.location.elevation, 
-            this.danger.dimensions.units, 
+            this.targetDimensions, 
             this.scene,
             options
         );
@@ -895,6 +876,21 @@ class executorData {
 
 
 
+    /**Sets the dimensions used for targeting, which is based on the danger else boundary when danger has no value for h,w,d
+     * 
+     */
+    setTargetDimensions(){
+        const units= this.danger.dimensions.units;
+        const grid = this.zoneBoundary.gridDimensions;
+
+        this.targetDimensions = {
+            w: units.w ?? grid.w,
+            h: units.h ?? grid.h,
+            d: units.d < 1 ? Math.abs(this.zoneBoundary.elevation.top - this.zoneBoundary.elevation.bottom) : units.d
+        };
+    }
+
+
     /**
      * Populates the twin boundary, used most often when creating teleporting regions
      */
@@ -910,6 +906,8 @@ class executorData {
      */
     setZone(){
         this.zoneBoundary = this.zone.zoneBoundary;
+        console.log(this.zoneBoundary)
+        this.setTargetDimensions()
         this.zoneTokens = this.zoneBoundary.tokensIn(this.sceneTokens);
         this.zoneEligibleTokens = this.zone.zoneEligibleTokens(this.zoneTokens);
     }
@@ -1783,8 +1781,8 @@ class executable {
             this.boundary = this.data.boundary;
             this.twinBoundary = this.data.twinBoundary
         } else {
-            this.boundary = boundary.offsetBoundary(this.data.boundary, this.data.offset, this.offset, this.data.scene)
-            if(this.data.danger.hasTwinBoundary) this.twinBoundary = boundary.offsetBoundary(this.data.twinBoundary, this.data.offset, this.offset, this.data.scene)
+            this.boundary = dimensionBoundary.offsetBoundary(this.data.boundary, this.data.offset, this.offset, this.data.scene)
+            if(this.data.danger.hasTwinBoundary) this.twinBoundary = dimensionBoundary.offsetBoundary(this.data.twinBoundary, this.data.offset, this.offset, this.data.scene)
         }
        
     }
@@ -3535,7 +3533,7 @@ class primaryEffect extends executableWithAnimation {
                  } 
                 if(this.partSources.length){
                     for(const document of this.partSources){
-                        const source = boundary.documentBoundary(document, this.data.scene, {retain:true});
+                        const source = dimensionBoundary.documentBoundary(document, this.data.scene, {retain:true});
                         if(source.A.x === bound.A.x && source.A.y === bound.A.y && source.B.x === bound.B.x && source.B.y === bound.B.y){continue}
                         this.source.swap ? this.#buildSequence(source, bound) : this.#buildSequence(bound, source);
                     }
@@ -4448,8 +4446,8 @@ class sourceEffect extends executableWithAnimation {
 
     async #build(){
         for (const source of this.sourcesSelected){
-            const docBound = boundary.documentBoundary(source, this.data.scene)
-            const bound = !this.offset ? docBound : boundary.offsetBoundary(docBound, this.data.offset, this.offset, this.data.scene)
+            const docBound = dimensionBoundary.documentBoundary(source, this.data.scene)
+            const bound = !this.offset ? docBound : dimensionBoundary.offsetBoundary(docBound, this.data.offset, this.offset, this.data.scene)
             this.#buildSequence(bound);
         }
     }
@@ -4758,7 +4756,7 @@ class tokenMove extends executable {
             //when source to target is set and this token is a source - move the source to the target
             if(isSToTSource){
                 let location = this.boundary.center;
-                let tokenBoundary = boundary.documentBoundary(token, this.data.scene);
+                let tokenBoundary = dimensionBoundary.documentBoundary(token, this.data.scene);
 
                 //given various token sizes, calculate the differ for use in the final placement of token in the new location
                 const adjX = tokenBoundary.center.x - tokenBoundary.A.x;
