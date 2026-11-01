@@ -50,14 +50,14 @@
             </div>
         </div>
         {{formField fields.restriction.fields.type value=source.restriction.type options=restrictionTypes classes="slim" rootId=rootId}}
-        <div class="form-group">
+        <div class="form-group slim">
             <label for="restriction.priority">{{localize "DANGERZONE.type-form.region.restriction.priority.label"}}</label>
             <div class="form-fields">
                 <input type="number" required data-dtype="Number" name="restriction.priority" min="0" step="1" value={{#if data.restriction.priority}}{{data.restriction.priority}}{{else}}0{{/if}}>
             </div>
         </div>
     </fieldset>
-    <div class="form-group">
+    <div class="form-group slim">
         <label for="delay">{{localize "DANGERZONE.delay.label"}}</label>
         <div class="form-fields">
             <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.delay}}{{data.delay}}{{else}}0{{/if}}>

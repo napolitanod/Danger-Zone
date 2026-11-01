@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {actorOps,  DANGERZONEPARTS, DANGERZONECONFIG, DANGERFORMOPTIONS,determineMacroList,  getCompendiumOps, weatherParameters, WORLDZONE, ZONEFORMOPTIONS} from './constants.js';
-import { helper, getEventData, stringToObj} from './helpers.js';
+import { helper} from './helpers.js';
 
 /**v13
  * The main danger form from which danger part forms are launched. Used to configure a danger.
@@ -101,7 +101,7 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
    */
   static async #edit(event) {
     event.preventDefault();
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     
     const options = {
       partId: data.parentId,
@@ -120,7 +120,7 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
    */
   static async #delete(event) {
     event.preventDefault();
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
   
     const choice = await foundry.applications.api.DialogV2.confirm({
       content: `${game.i18n.localize("DANGERZONE.type-form.clear")} ${data.label}?`,
@@ -301,7 +301,7 @@ export class DangerPartConfig extends foundry.applications.api.HandlebarsApplica
    * @param {SubmitEvent} event         The pointer event.
    */
   static #random(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     const meta = DANGERZONECONFIG.RANDOM[data.targetId]
     const filepicker = this.element.querySelector([`[data-id='${meta.SELECTOR}']`])
     if(data.target.checked){
@@ -689,7 +689,7 @@ export class GlobalZoneDangerPartConfig extends DangerPartConfig {
   }
 
   handleSourceTag(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     const sourceArea = data.target.value ?? this.data?.source?.area ?? ''
     const tag = this.element.querySelector('#dz-source-tag-global')
     const sourceT = this.element.querySelector('#dz-source-tag-tag-global')
@@ -734,7 +734,7 @@ export class GlobalZoneDangerPartConfig extends DangerPartConfig {
   }
 
   #templateToggle(event){
-    helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'hide', html: this.element, id: `dz-elevation-prompt-global`})
+    helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'show', html: this.element, id: `dz-elevation-prompt-global`})
   }
   
 }
@@ -774,9 +774,9 @@ export class MutateDangerPartConfig extends DangerPartConfig {
    */
   static async #onSubmit(_event, _form, submitData) {
     const expandedData = foundry.utils.expandObject(submitData.object);
-    if (expandedData.token) stringToObj(expandedData.token, {type: 'Token', notify: true})
-    if (expandedData.actor) stringToObj(expandedData.actor, {type: 'Actor', notify: true})
-    if (expandedData.embedded) stringToObj(expandedData.embedded, {type:'Embedded', notify:true})
+    if (expandedData.token) helper.stringToObj(expandedData.token, {type: 'Token', notify: true})
+    if (expandedData.actor) helper.stringToObj(expandedData.actor, {type: 'Actor', notify: true})
+    if (expandedData.embedded) helper.stringToObj(expandedData.embedded, {type:'Embedded', notify:true})
     this.parentApp.updatePart(this.partId, expandedData, this.parentHtml);
   }
 }
@@ -1034,7 +1034,7 @@ export class WallDangerPartConfig extends DangerPartConfig {
    * @param {SubmitEvent} event         The pointer event.
    */
   #toggleProximity(event) {
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     switch(data.action){
       case "door":
         this.element.querySelector(".door-options").classList.toggle("hidden", data.target.value === '0' ? true : false)

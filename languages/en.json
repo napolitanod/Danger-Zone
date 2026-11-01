@@ -1,5 +1,6 @@
 {
     "DANGERZONE": {
+        "activation.label": "Activation",
         "add": "Add",
         "advanced.label": "Advanced Options",
         "after": "After",
@@ -38,6 +39,7 @@
         "grids": "(Grids)",
         "gridUnits": "units",
         "gridUnits2": "(Grid Units)",
+        "hidden.label":"Hidden",
         "level.label": "Level",
         "levels": {
             "label": "Levels",
@@ -56,6 +58,7 @@
             }
         },
         "location-picker": "Select the zone dimensions",
+        "locked.label": "Locked",
         "macro.label": "Macro",
         "min.label": "Min",
         "max.label": "Max",
@@ -64,6 +67,7 @@
         "none": "None",
         "offset.label": "Offset",
         "overhead.label": "Overhead",
+        "placement.label": "Placement",
         "play": "Play",
         "preview": "Preview",
         "ratio": "(Ratio)",
@@ -74,8 +78,11 @@
         "stop": "Stop",
         "tile.label": "Tile", 
         "view": "View",
+        "volume.label": "Volume",
         "wall.label": "Wall",
         "visual.label": "Visual",
+        "x.label": "X",
+        "y.label": "Y",
         "yes": "Ok",
         "zones": "Configure Zones",
         "alerts": {
@@ -129,8 +136,9 @@
             "dimensions":{
                 "description": "When left blank, the zone will fallback to use the Danger Zone world settings for 'Lowest Zone Elevation' or 'Highest Zone Elevation', depending on field. \nIn the event that a fallback value results in an invalid boundary (e.g. a top that is below the bottom), the zone will throw an error at time of trigger.",
                 "bottom.label": "Bottom",
-                "label": "Zone Elevation Range",
+                "label": "Elevation",
                 "top.label": "Top",
+                "topInclusive.label": "Top Inclusive",
                 "usesRegion.description": "Uses region's elevation."
             },
             "boundary": {
@@ -141,9 +149,7 @@
                 "label": "Dimensions",
                 "description": "A zone's dimensions fall within the region selected or, if no region is selected, this scene's dimensions are at infinite depth.",
                 "start.label": "Start Grid Location",
-                "top.label": "Top",
-                "x.label": "x",
-                "y.label": "y"
+                "top.label": "Top"
             },
             "extend": {
                 "label": "Extend",
@@ -615,6 +621,7 @@
             "ambientLight":{
                 "animationIntensity.label": "Animation Intensity",
                 "animation.label": "Light Animation Type",
+                "appearance.label": "Light Appearance",
                 "attenuation.description": "Transition illumination gradually between bright, dim, and dark.",
                 "brightLight.label": "Bright",
                 "clear.label": "Post Creation Event",
@@ -633,6 +640,7 @@
                 "luminosity.label": "Luminosity",
                 "luminosity.description": "Adjust the brightness of this light source. More luminous lights are less diminished by darkness. The default value for a standard light source is 0.5.",
                 "negative.label": "Is Darkness Source",
+                "placement.label": "Light Placement",
                 "priority.label": "Priority",
                 "radius.label": "Light Radius",
                 "reverseAnimation.label": "Reverse Direction",
@@ -646,7 +654,7 @@
                 "tag.label": "Tag",
                 "tag.description": "Tagger tag",
                 "vision.label": "Provide Vision",
-                "walls.label": "Constrained by Walls"
+                "walls.label": "Constrained by Walls and Surfaces"
             },
             "animation.label": "Animation",
             "area-x.label": "Width",
@@ -763,8 +771,9 @@
             "globalZone": {
                 "bottom.label": "Bottom",
                 "description": "Configures this danger so that it becomes available on every scene as a manually triggered zone with a more limited option set.",
-                "dimensions.label": "World Zone Elevation",
+                "dimensions.label": "Elevation",
                 "top.label": "Top",
+                "topInclusive.label": "Top Inclusive",
                 "label": "World Zone",
                  "target": {
                     "levels":{
@@ -838,21 +847,15 @@
                 "textures": {
                     "label": "Positioning",
                     "anchor": {
-                        "label": "Anchor",
-                        "x.label": "X",
-                        "y.label": "Y"
+                        "label": "Anchor"
                     },
                     "fit.label": "Fit Mode",
                     "offset": {
-                        "label": "Offset",
-                        "x.label": "X",
-                        "y.label": "Y"
+                        "label": "Offset"
                     },
                     "rotation.label": "Rotation",
                     "scale": {
-                        "label": "Scale",
-                        "x.label": "X",
-                        "y.label": "Y"
+                        "label": "Scale"
                     }
                     
                 },
@@ -916,9 +919,6 @@
                         }
                     },
                     "label": "Location Offset",
-                    "x.label": "X Offset",
-                    "min.label": "Min",
-                    "max.label": "Max",
                     "type": {
                         "label": "Measure",
                         "options": {
@@ -926,8 +926,7 @@
                             "pct.label": "Percent (of grid distance)",
                             "pxl.label": "Pixels"
                         }
-                    },
-                    "y.label": "Y Offset"
+                    }
             },
             "region":{
                 "active.label": "Enable Region",
@@ -1064,7 +1063,7 @@
                 "label": "Sound",
                 "easing.label": "Volume Easing",
                 "random.label": "Random from Playlist",
-                "walls.label": "Constrained by Walls",
+                "walls.label": "Constrained by Walls and Surfaces",
                 "radius.label": "Effect Radius",
                 "volume.label": "Maximum Volume"
             },
@@ -1087,10 +1086,10 @@
             },
             "tile":{
                 "alpha.label": "Tile Opacity",
-                "description": "Create a tile with an embedded video or image in the target area.",
+                "autoplay.label": "Autoplay Video",
+                "description": "Create a tile in the target area.",
                 "effect.description": "This field is required in order for the tile to generate. To generate a blank tile, use a transparent image.",
                 "effect.label": "Tile Image or Video",
-                "hidden.label":"Hidden",
                 "label": "Lasting Effect",
                 "occlusion":{
                     "alpha.label": "Occlusion Alpha",
@@ -1101,9 +1100,13 @@
                 "loop.label": "Loop Video",
                 "restrictsLight.label": "Restricts Light",
                 "restrictsWeather.label": "Restricts Weather",
-                "scale.label": "Effect Scale",
+                "rotation.label": "Rotation",
+                "scale.label": "Tile Scale",
                 "tag.label": "Tile Tag",
                 "tag.description": "Tagger tag",
+                "color.label": "Tint Color",
+                "video.label": "Video Options",
+                "volume.label": "Video Volume",
                 "z.label": "Sort"
             },
             "tokenSays": {
@@ -1184,7 +1187,7 @@
                     }
                 },
                 "overrides.label": "Movement Overrides",
-                "source-to-target.label": "Move Source to Targeted",
+                "source-to-target.label": "Move Source to Target",
                 "teleport.label": "Teleport",
                 "tiles-block.label": "Tiles Block Target Depth Move",
                 "walls-block.label": "Walls Block Move",

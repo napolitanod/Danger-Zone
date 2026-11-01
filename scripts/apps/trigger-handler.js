@@ -105,25 +105,48 @@ export class triggerManager {
         return tm
     }
 
-    static async findChatEvents(chatMessage, hook, options) {
-        let rollResult, table, results;
+    /**
+     * 
+     * @param {object} chatMessage chat message class or object quasi of class
+     * @param {string} hook name of hoook
+     * @param {object} data {table, rollTableId}  the rolltable or rolltable id
+     * @returns 
+     */
+    static async findChatEvents(chatMessage, hook, data) {
+
+        //establish the scene
 	    const sceneId = chatMessage.speaker?.scene ?? canvas.scene.id
-        const sceneZones = dangerZone.getRolltableZonesFromScene(sceneId)
-        if(!sceneZones.length) return
+        const scene = game.scenes.get(sceneId)
+        if(!scene) return
+        
+        //establish the speaker
+	    const tokenId = chatMessage.speaker?.token
+        const token = tokenId ? scene.tokens.get(tokenId) : ''
+
+        //const options
+        const options = token ? {levels: [token.level]} : {}
+
+        //return the zones
+        const zones = dangerZone.getRolltableZonesFromScene(sceneId, options)
+        if(!zones.length) return
+
+        let table, results;
         if(hook === "createChatMessage"){
-            rollResult = chatMessage.rolls[0].result
+            const rollResult = chatMessage.rolls[0].result
             if(!rollResult) return
-            table = game.tables.get(options.rollTableId)
+            table = game.tables.get(data.rollTableId)
             if(!table) return
             results = table.getResultsForRoll(rollResult).map(r => r.description) 
         } else {
-            table = options.table
+            table = data.table
             results = chatMessage.results
         }
         if(!results) return
         
-        const eligibleZones = sceneZones.filter(s => s.trigger.chat.phrases.find(r => results.includes(r)))
-        dangerZone.log(false, 'Searching for Rolltable Result Trigger', {chatMessage: chatMessage, sceneZones: sceneZones, eligibleZones: eligibleZones, rollResult: rollResult, table: table, tableResults: results})
+        const eligibleZones = zones.filter(s => s.trigger.chat.phrases.find(r => results.includes(r)))
+
+        dangerZone.log(false, 'Searching for Rolltable Result Trigger', {chatMessage: chatMessage, sceneZones: zones, eligibleZones: eligibleZones, rollResult: rollResult, table: table, tableResults: results})
+        
         if(eligibleZones.length){
             const tm = new triggerManager(sceneId, chatMessage, eligibleZones, hook);
             await tm.chatTrigger();
@@ -250,7 +273,8 @@ export class triggerManager {
     }
 
     static async findMovementEvents(token, update, options){
-        const sceneZones = options.end ? dangerZone.getMovementCompleteZonesFromScene(options.sceneId) : dangerZone.getMovementNotCompleteZonesFromScene(options.sceneId);
+        const opt = {levels: [token.level]}
+        const sceneZones = options.end ? dangerZone.getMovementCompleteZonesFromScene(options.sceneId, opt) : dangerZone.getMovementNotCompleteZonesFromScene(options.sceneId, opt);
         if(!sceneZones.length) return
 
         const zones = []

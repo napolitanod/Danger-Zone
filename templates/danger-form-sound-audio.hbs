@@ -1,50 +1,72 @@
 <div class="tab active danger-part-group" data-tab="audio" data-group="sheet">
     <p class="notes">{{localize "DANGERZONE.type-form.sound.description"}}</p>
     <fieldset>
-        <legend>{{localize "DANGERZONE.levels.label"}}</legend>
+        <legend>{{localize "DANGERZONE.source.label"}}</legend>
+        <div class="form-group slim">
+            <label for="randomFile">{{localize random.audio.LABEL}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-id="audio" data-action="random" data-dtype="Boolean" name="randomFile" {{checked data.randomFile}}>
+            </div>
+        </div>
+        <div data-id="audio-file" class="form-group {{#if randomFile}}hidden-picker{{/if}}">
+            <label for="file">{{#if data.randomFile}}{{localize random.audio.CHECKED.LABEL}}{{else}}{{localize random.audio.NOTCHECKED.LABEL}}{{/if}}</label>
+            <div class="form-fields">
+            <file-picker name="file" type="audio" class="image" placeholder="{{#if data.randomFile}}{{localize random.audio.CHECKED.PLACEHOLDER}}{{else}}{{localize random.audio.NOTCHECKED.PLACEHOLDER}}{{/if}}" value="{{data.file}}"></file-picker>
+            </div>
+        </div>
+    </fieldset>
+    <fieldset>
+        <legend>{{localize "DANGERZONE.placement.label"}}</legend>
         <div class="form-group">
             <div class="form-fields">
+                <label for="levels">{{localize "DANGERZONE.levels.label"}}</label>
                 <select name="levels" value="{{data.levels}}" >
                     {{selectOptions options.LEVELSOPTIONS selected=data.levels localize=true}}
                 </select>
             </div>
         </div>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.sound.radius.label" }} 
+                <span class="units">{{localize "DANGERZONE.gridUnits" }} </span>
+            </label>
+            <div class="form-fields">
+                <input type="number" name="radius" value="{{data.radius}}" step="any"/>
+            </div>
+        </div>
+        <div class="form-group slim">
+            <label for="locked">{{localize "DANGERZONE.locked.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="locked" {{checked data.locked}}>
+            </div>
+        </div>
     </fieldset>
-    <div class="form-group">
-        <label for="randomFile">{{localize random.audio.LABEL}}</label>
-        <div class="form-fields">
-            <input type="checkbox" data-id="audio" data-action="random" data-dtype="Boolean" name="randomFile" {{checked data.randomFile}}>
+    <fieldset>
+        <legend>{{localize "DANGERZONE.volume.label"}}</legend>
+        <div class="form-group">
+            <label for="volume">{{localize "DANGERZONE.type-form.sound.volume.label"}}&nbsp;&nbsp;<i class="volume-icon fas fa-volume-down"></i></label>
+            <div class="form-fields">
+                <range-picker name="volume" value="{{data.volume}}" min="0" max="1" step="0.05"></range-picker>
+            </div>
         </div>
-    </div>
-    <div data-id="audio-file" class="form-group {{#if randomFile}}hidden-picker{{/if}}">
-        <label for="file">{{#if data.randomFile}}{{localize random.audio.CHECKED.LABEL}}{{else}}{{localize random.audio.NOTCHECKED.LABEL}}{{/if}}</label>
-        <div class="form-fields">
-           <file-picker name="file" type="audio" class="image" placeholder="{{#if data.randomFile}}{{localize random.audio.CHECKED.PLACEHOLDER}}{{else}}{{localize random.audio.NOTCHECKED.PLACEHOLDER}}{{/if}}" value="{{data.file}}"></file-picker>
+        <div class="form-group">
+            <label>{{localize "DANGERZONE.type-form.sound.easing.label"}}</label>
+            <input type="checkbox" name="easing" {{checked data.easing}}/>
         </div>
-    </div>
-    <div class="form-group">
-        <label>{{localize "DANGERZONE.type-form.sound.radius.label" }} 
-            <span class="units">{{localize "DANGERZONE.gridUnits" }} </span>
-        </label>
-        <div class="form-fields">
-            <input type="number" name="radius" value="{{data.radius}}" step="any"/>
+    </fieldset>
+    <fieldset>
+        <legend>{{localize "DANGERZONE.activation.label"}}</legend>
+        <div class="form-group">
+            <label for="hidden">{{localize "DANGERZONE.hidden.label"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" data-dtype="Boolean" name="hidden" {{checked data.hidden}}>
+            </div>
         </div>
-    </div>
-    <div class="form-group">
-        <label for="volume">{{localize "DANGERZONE.type-form.sound.volume.label"}}&nbsp;&nbsp;<i class="volume-icon fas fa-volume-down"></i></label>
-        <div class="form-fields">
-            <range-picker name="volume" value="{{data.volume}}" min="0" max="1" step="0.05"></range-picker>
+        <div class="form-group slim">
+            <label>{{localize "DANGERZONE.type-form.sound.walls.label"}}</label>
+            <input data-action="walls" type="checkbox" name="walls" {{checked data.walls}}/>
         </div>
-    </div>
-    <div class="form-group">
-        <label>{{localize "DANGERZONE.type-form.sound.easing.label"}}</label>
-        <input type="checkbox" name="easing" {{checked data.easing}}/>
-    </div>
-    <div class="form-group">
-        <label>{{localize "DANGERZONE.type-form.sound.walls.label"}}</label>
-        <input data-action="walls" type="checkbox" name="walls" {{checked data.walls}}/>
-    </div>
-    <div class="form-group">
+    </fieldset>
+    <div class="form-group slim">
         <label for="delay">{{localize "DANGERZONE.delay.label"}}</label>
         <div class="form-fields">
             <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>

@@ -113,13 +113,26 @@ export class helper {
       name, 
       levels,
       shape,
-      elevation
+      elevation,
+      x,
+      y
     } = drawing;
 
-    shape.hole = options.hole;
+    const shapeObj = shape.toObject()
 
-    return {name, elevation: {top: elevation, bottom: elevation}, levels, shapes: [shape]};
+    shapeObj.hole = options.hole;
+
+    if(shapeObj.type === "r"){
+      Object.assign(shapeObj, {
+        type: "rectangle",
+        x,
+        y
+      })
+    }
+
+    return {name, elevation: {top: elevation, bottom: elevation}, levels, shapes: [shapeObj]};
   }
+
 
   /**Generates the source object needed to create a region from a scene document
    * 
@@ -236,6 +249,14 @@ export class helper {
   }
 
 
+  /**Select true or false at random
+   * 
+   * @returns boolean at random
+   */
+  static biRandom() {
+    return Math.random() < 0.5 ? true : false
+  }
+
 
   /**returns the world bottom elevation in the event that the value passed in is infinity or null
    * 
@@ -288,7 +309,67 @@ export class helper {
       return arr
   }
 
+  /**finds how far a token can move in a given x/y grid direction before colliding
+   * 
+   * @param {token} token 
+   * @param {array} param1 
+   * @returns position
+   */
+  static furthestShiftPosition(token, [xGrids, yGrids] = [0,0]){
+    let collisionTestX = false, collisionTestY = false, xTest = 0, yTest = 0, test, options =  {type: 'move', mode: "any"};
+    const xSign = Math.sign(xGrids); const ySign = Math.sign(yGrids);
+    const placeable = canvas.tokens.placeables.find(t => t.id === token.id)
+    const max = Math.abs(xGrids) + Math.abs(yGrids)
+    let i = 0, position = {x: placeable.x,y: placeable.y};
+    do{
+        if(!collisionTestX && xTest < Math.abs(xGrids) && (xTest <= yTest || yTest === Math.abs(yGrids))){
+          xTest++
+          test = point.shiftPoint(position, {w: (1 * xSign), h:0}) 
+          collisionTestX = placeable.checkCollision(canvas.grid.getCenterPoint(test), options);
+          if(!collisionTestX) position = test
+        } else if(!collisionTestY && yTest < Math.abs(yGrids))  {
+          yTest++
+          test = point.shiftPoint(position, {w: 0, h: (1 * ySign)}) 
+          collisionTestY = placeable.checkCollision(canvas.grid.getCenterPoint(test), options);
+          if(!collisionTestY) position = test
+        }
+        dangerZone.log(false,'Wall Collision Test ', {"shiftPos": test, token: token, placeable: placeable,  grids:[xGrids,yGrids]});
+        i++
+    } while (!collisionTestX && !collisionTestY && i < max);
+    return position
+  }
 
+
+  /**Returns the user that owns the actor
+   * 
+   * @param {token or actor} document 
+   * @returns 
+   */
+  static getActorOwner(document){
+    const actor = document.actor ?? document
+    const activePlayers = game.users?.players.filter(p => p.active)
+
+    if(!actor?.id || !actor?.ownership || !activePlayers?.length) return
+
+    let user;
+
+    // 1. Player who owns the actor via character assignment
+    if (actor.hasPlayerOwner) {
+      user = activePlayers.find(u => u.character === actor.id);
+    }
+
+    // 2. Player who owns the actor via explicit ownership
+    if (!user) {
+      user = activePlayers.find(p => actor.ownership[p.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)
+    }
+
+    //3. Fallback
+    if (!user && actor.ownership.default === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) {
+      user = activePlayers[0]
+    }
+    
+    return user  
+  }
 
 
   /**Selects best level for use in function when level is not provided
@@ -309,6 +390,65 @@ export class helper {
     //else return the default level
     const s = game.scenes.get(sceneId)
     if(s) return s.levels.find(l => l.index === 0).id
+  }
+
+
+
+
+  /**v13
+   * intakes a pointer event and outputs key data elements used in forms
+   * @param {object} event 
+   * @returns object of event data 
+   */
+  static getEventData(event){
+      const data = {
+          target: '',
+          targetId: '',
+          parent: '',
+          action: '',
+          parentId: '',
+          label: ''
+      };
+
+      if (!event) return data;
+
+      const target = event.target.dataset.action
+          ? event.target
+          : event.target.parentElement;
+
+      const parent = target?.parentElement;
+
+      return {
+          target,
+          targetId: target?.dataset.id ?? '',
+          action: target?.dataset.action ?? '',
+          parent,
+          parentId: parent?.dataset.id ?? '',
+          label: parent?.title ?? ''
+      };
+  }
+
+
+  /**Return files from repository that match the pattern. Modeled on a Foundary function.
+   * 
+   * @param {string} pattern 
+   * @returns array of files
+   */
+  static async getFilesFromPattern(pattern) {
+    let source = "data";
+    const browseOptions = { wildcard: true };
+    
+    if ( /\.s3\./.test(pattern) ) {
+      source = "s3";
+      const {bucket, keyPrefix} = foundry.utils.parseS3URL(pattern);
+      if ( bucket ) {
+        browseOptions.bucket = bucket;
+        pattern = keyPrefix;
+      }
+    }
+    else if ( pattern.startsWith("icons/") ) source = "public";
+    const content = await  foundry.applications.apps.FilePicker.implementation.browse(source, pattern, browseOptions);
+    return content.files;      
   }
 
 
@@ -336,25 +476,6 @@ export class helper {
   }
 
 
-  /**
-   * Checks the passed in grid locations and confirms whether they exist within the circle dimensions boundary by excluding corners
-   * It could be more precise - as circles get larger the grid corners outside of the dimensions increases
-   * @param {int} xLoc //the grid x position
-   * @param {int} yLoc //the grid y position
-   * @param {obj} dimension //the circle dimension
-   * @returns boolean
-   */
-  static GridWithinCircleDimension(xLoc, yLoc, dimension = {w:w, h:h}){
-    const isCorner =
-      (xLoc === 0 && yLoc === 0) ||
-      (xLoc === 0 && yLoc === dimension.h) ||
-      (xLoc === dimension.w && yLoc === 0) ||
-      (xLoc === dimension.w && yLoc === dimension.h);
-
-    return !isCorner;
-  }
-
-
 
   /**
    * 
@@ -371,6 +492,21 @@ export class helper {
       for (const level of levels.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
         list[level.id] = level.name;
       }
+    }
+    return list
+  }
+
+
+
+  /**returns an object of regions on a scene for use as a reference list
+   * 
+   * @param {string} sceneId 
+   * @returns object
+   */
+  static getSceneRegionList(sceneId){
+    let list = {'':'[Use Scene Dimensions]'};
+    for (let region of game.scenes.get(sceneId).regions.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
+      list[region.id] = region.name;
     }
     return list
   }
@@ -496,13 +632,13 @@ export class helper {
     let value //the value from the event
     switch(options.condition){
       case 'check':
-        value = getEventData(options.event).target.checked 
+        value = helper.getEventData(options.event).target.checked 
         break;
       case 'eq':
-        value = options.test === getEventData(options.event).target.value ? true : false
+        value = options.test === helper.getEventData(options.event).target.value ? true : false
         break;
       case 'less_than':
-        value = getEventData(options.event).target.value < options.test ? true : false
+        value = helper.getEventData(options.event).target.value < options.test ? true : false
         break;
     }
 
@@ -543,6 +679,27 @@ export class helper {
   }
 
 
+
+/**Concatenate and array and end with 'and'
+ * 
+ * @param {array} arr 
+ * @returns string
+ */
+  static joinWithAnd(arr){
+    if(arr?.length <= 1) return arr?.[0]
+    return [arr.slice(0, arr.length - 1).join(', '), ...arr.slice(-1)].join(' and ')
+  }
+
+  /**removes a certain amount of items from the array
+   * 
+   * @param {array} array 
+   * @param {number} limitAmount 
+   * @returns array
+   */
+  static limitArray(array, limitAmount) {
+    if(!limitAmount) return []
+    return limitAmount !== -1 ? array.slice(0,limitAmount) : array
+  }
 
 
   /**Return position information between current token position and the update object
@@ -610,41 +767,6 @@ export class helper {
   
     return Math.floor(Math.random() * (b - a + 1)) + a;
   }
-  
-
-  /**
-   * Builds out the dimensions of the grid then checks if the ray passes throught it
-   * @param {object} coords //grid coordinates
-   * @param {ray} r //ray
-   * @returns boolean
-   */
-  static rayIntersectsGrid(coords, r){
-
-    //get top left points for the given grid coordinates then save to variables
-    const topLeft = canvas.grid.getTopLeftPoint(coords);
-    const { x: xl, y: yl } = topLeft;
-
-    //obtain the center point for the grid. Assumes square grid, where the boundary is drawn by starting point and multiplying center distance to that point by 2
-    const center = canvas.grid.getCenterPoint(topLeft);
-    const width = (center.x - xl) * 2;
-    const height = (center.y - yl) * 2;
-
-    //generate the right side points
-    const xr = xl + width;
-    const yr = yl + height;
-
-    //build the edges for the ray testing
-    const edges = [
-      [xl, yl, x2, yl],     // top
-      [xl, yl, xl, y2],     // left
-      [xl, y2, x2, y2],     // bottom
-      [x2, yl, x2, y2]      // right
-    ];
-
-    //test the array of edges for any intersection
-    return edges.some(e => r.intersectSegment(e));
-  }
-
 
 
   /**
@@ -681,158 +803,59 @@ export class helper {
   }
 
 
-}
-
-
-
-
-
-export function furthestShiftPosition(token, [xGrids, yGrids] = [0,0]){
-  let collisionTestX = false, collisionTestY = false, xTest = 0, yTest = 0, test, options =  {type: 'move', mode: "any"};
-  const xSign = Math.sign(xGrids); const ySign = Math.sign(yGrids);
-  const placeable = canvas.tokens.placeables.find(t => t.id === token.id)
-  const max = Math.abs(xGrids) + Math.abs(yGrids)
-  let i = 0, position = {x: placeable.x,y: placeable.y};
-  do{
-      if(!collisionTestX && xTest < Math.abs(xGrids) && (xTest <= yTest || yTest === Math.abs(yGrids))){
-        xTest++
-        test = point.shiftPoint(position, {w: (1 * xSign), h:0}) 
-        collisionTestX = placeable.checkCollision(canvas.grid.getCenterPoint(test), options);
-        if(!collisionTestX) position = test
-      } else if(!collisionTestY && yTest < Math.abs(yGrids))  {
-        yTest++
-        test = point.shiftPoint(position, {w: 0, h: (1 * ySign)}) 
-        collisionTestY = placeable.checkCollision(canvas.grid.getCenterPoint(test), options);
-        if(!collisionTestY) position = test
-      }
-      dangerZone.log(false,'Wall Collision Test ', {"shiftPos": test, token: token, placeable: placeable,  grids:[xGrids,yGrids]});
-      i++
-  } while (!collisionTestX && !collisionTestY && i < max);
-  return position
-}
-
-
-
-
-export function getActorOwner(document){
-    const actor = document.actor ?? document
-    const activePlayers = game.users?.players.filter(p => p.active)
-    if(!actor?.id || !actor?.ownership || !activePlayers || !activePlayers.length) return
-    let user;
-    if (actor.hasPlayerOwner) user = activePlayers.find(u => u.character === actor.id);
-    if (!user) user = activePlayers.find(p => actor.ownership[p.id] === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)
-    if (!user && actor.ownership.default === CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER) user = activePlayers[0]
-    return user  
-}
-
-
-
-
-/**v13
- * intakes a pointer event and outputs key data elements used in forms
- * @param {object} event 
- * @returns 
- */
-export function getEventData(event){
-  const data = {
-    target: '',
-    targetId: '',
-    parent: '',
-    action: '',
-    parentId: '',
-    label: ''
-  }
-  if(event){
-    data.target = event.target.dataset.action ? event.target : event.target.parentElement;
-    data.targetId = data.target.dataset.id;
-    data.parent = data.target.parentElement;
-    data.action = data.target.dataset.action;
-    data.parentId =  data.parent.dataset.id;
-    data.label = data.parent.title;
-  }
-  return data
-}
-
-
-
-export async function getFilesFromPattern(pattern) {
-    let source = "data";
-    const browseOptions = { wildcard: true };
-    
-    if ( /\.s3\./.test(pattern) ) {
-      source = "s3";
-      const {bucket, keyPrefix} = foundry.utils.parseS3URL(pattern);
-      if ( bucket ) {
-        browseOptions.bucket = bucket;
-        pattern = keyPrefix;
-      }
+  /**Shuffles array values
+   * 
+   * @param {array} array 
+   * @returns array
+   */
+  static shuffleArray(array) {
+    let currentIndex = array.length,  randomIndex;
+    while (currentIndex != 0) {
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
     }
-    else if ( pattern.startsWith("icons/") ) source = "public";
-    const content = await FilePicker.browse(source, pattern, browseOptions);
-    return content.files;      
-}
-
-
-
-
-
-export function getSceneRegionList(sceneId){
-  let list = {'':'[Use Scene Dimensions]'};
-  for (let region of game.scenes.get(sceneId).regions.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
-    list[region.id] = region.name;
+    return array;
   }
-  return list
+
+
+  /**Converts a string to an object
+   * 
+   * @param {string} string 
+   * @param {object} param1 
+   * @returns object
+   */
+  static stringToObj(string, {type = '', notify = false, document = {}}={}) {
+    let obj;
+
+    try {
+      obj = (new Function( "return " + `{${interpolateString(string, document)}}`) )()
+    } catch (e) {
+      const error = `${type} ${game.i18n.localize("DANGERZONE.alerts.json-invalid")}`;
+      return notify ? ui.notifications?.error(error) : console.log(error);
+    }
+
+    return obj;
+  }
+
+
+  /**Waits
+   * 
+   * @param {number} delay 
+   * @returns 
+   */
+  static wait(delay) {
+    return new Promise(resolve => setTimeout(resolve, delay));
+  }
 }
 
-
-
-
-export function joinWithAnd(arr){
-  if(arr?.length <= 1) return arr?.[0]
-  return [arr.slice(0, arr.length - 1).join(', '), ...arr.slice(-1)].join(' and ')
+function interpolateString(str, obj) {
+  return str.replace(/\[\[(.+?)]]/g, function(m, orig){
+      return orig.split('.').reduce(function(obj, key){return obj[key]??'';}, obj);
+  });
 }
 
-
-
-
-
-/** v13
- * Adds the dangers launch button to the Scenes sidebar
- * @param {object} app 
- * @param {object} html 
- * @param {object} updates 
- */
-export function addDangerButton(app, html, updates) {
-  dangerZone.addDangersLaunch(app, html);
-} 
-
-/** V13
- * Adds to the controls for the given appliactiona launch for zones form
- */
-export function addSceneFormLaunch(application, controls){
-  const scene = application?.document?.documentName === 'Scene' ? application?.document : canvas.scene
-  if(!game.user.isActiveGM) return
-  controls.push({
-      onClick: (event) => {
-          launchSceneForm(scene, application)
-      },
-      icon: 'fas fa-radiation',
-      label: 'DANGERZONE.zones'
-  })
-}
-
-export function getRandomNumber(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-/**v13
- * Launches the form that lists all zones associated to the given scene.
- * @param {object} scene the scene class
- * @param {object} application 
- */
-export function launchSceneForm(scene, application = ''){ 
-  application ? application.renderChild(new ZoneListForm(scene.id)) : new ZoneListForm(scene.id).render(true)
-}
 
 export async function requestSavingThrow(tokenUuid, saveType, time){
   const token = await fromUuid(tokenUuid)
@@ -843,42 +866,8 @@ export async function requestSavingThrow(tokenUuid, saveType, time){
   })
   
   const query = token.actor.rollSavingThrow({ability: saveType}, {chatMessage: false})
-  const race = wait(time)
+  const race = helper.wait(time)
   await Promise.race([query, race]).then((value) => {result = value?.[0] ; dialog?.close()})
   return result
 }
 
-export function limitArray(array, limitAmount) {
-  if(!limitAmount) return []
-  return limitAmount !== -1 ? array.slice(0,limitAmount) : array
-}
-
-export function shuffleArray(array) {
-  let currentIndex = array.length,  randomIndex;
-  while (currentIndex != 0) {
-    randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex], array[currentIndex]];
-  }
-  return array;
-}
-
-export function stringToObj(string, {type = '', notify = false, document = {}}={}) {
-  let obj;
-  const error = `${type} ${game.i18n.localize("DANGERZONE.alerts.json-invalid")}`;
-  try {
-      obj = (new Function( "return " + `{${interpolateString(string, document)}}`) )()
-  } catch (e) {
-      return notify ? ui.notifications?.error(error) : console.log(error);
-  }
-  return obj;
-}
-
-function interpolateString(str, obj) {
-  return str.replace(/\[\[(.+?)]]/g, function(m, orig){
-      return orig.split('.').reduce(function(obj, key){return obj[key]??'';}, obj);
-  });
-}
-
-export const wait = (delay) => new Promise((resolve) => setTimeout(resolve, delay));

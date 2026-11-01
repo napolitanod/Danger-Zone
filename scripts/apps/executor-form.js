@@ -4,7 +4,7 @@ import {DangerForm} from './danger-form.js';
 import {ZoneForm} from './zone-form.js';
 import {triggerManager} from './trigger-handler.js';
 import {CONTROLTRIGGERS, DANGERZONECONFIG} from './constants.js';
-import {getEventData, helper} from './helpers.js';
+import {helper} from './helpers.js';
 
 export class ExecutorForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
     constructor(sceneId, executor = {}, zones, ...args) {
@@ -142,7 +142,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     }
 
     get boundaryInfo(){
-        return this.boundary ? `x: ${this.boundary.A.x} y: ${this.boundary.A.y} bottom: ${this.boundary.bottomIsInfinite ? '&infin;' : this.boundary.bottom} to x: ${this.boundary.B.x} y: ${this.boundary.B.y} top: ${this.boundary.topIsInfinite ? '&infin;' : this.boundary.top}` : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.boundary.none.label")
+        return this.boundary ? `${this.boundary.infoBoundaryStart} to ${this.boundary.infoBoundaryEnd}` : ''
     }
 
     get control(){
@@ -273,7 +273,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     */
     static async #triggerZone(event) {
         event.preventDefault();
-        const data = getEventData(event)
+        const data = helper.getEventData(event)
         const triggerData = {
             scene: this.sceneId, 
             dangerId: data.targetId, 
@@ -288,14 +288,14 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
 
    /************ PRIVATE METHODS  ***************/
    _getExecutable(event){
-        const data = getEventData(event)
+        const data = helper.getEventData(event)
         data['executable'] = data.parentId ? this.executor.executable[data.parentId] : {}
         return data
     }
 
     _getEventIds(event){
         if(this.sceneId !== canvas.scene?.id || !canvas.scene?.grid?.type) return false
-        const data = getEventData(event)
+        const data = helper.getEventData(event)
         const obj = {
             zoneId: data.parentId ?? this.zoneId,
             dangerId: data.parentId ? data.targetId : this.worldId
@@ -607,7 +607,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
      * 
     */
     static #toggleLock(event){
-        const data = getEventData(event)
+        const data = helper.getEventData(event)
         const icon = data.target.firstChild
         if(this.locked[data.targetId]){
             icon.classList.add('fa-unlock')

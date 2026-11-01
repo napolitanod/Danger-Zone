@@ -34,6 +34,7 @@ export class dangerZoneType {
           delay: 0,
           dim: 0,
           flags: {},
+          hidden: false,
           levels: '',
           lightAnimation: {
             reverse: false,
@@ -41,6 +42,7 @@ export class dangerZoneType {
             intensity: 5,
             type: ""
           },
+          locked: false,
           luminosity: 0.5,
           negative: false,
           offset: {
@@ -181,10 +183,12 @@ export class dangerZoneType {
         },
         lastingEffect: {
           alpha: 1,
+          autoplay: true,
           delay: 0,
           file: '',
           hidden: false,
           levels: '',
+          locked: false,
           occlusion: {
             alpha: 0,
             mode: 'FADE'
@@ -208,9 +212,13 @@ export class dangerZoneType {
             light: false,
             weather: false
           },
+          rotation: 0,
           scale: 1.0,
+          scaleY: 1.0,
           loop: true,
           tag: '',
+          tint: '',
+          volume: 0,
           z: 0
         },
         level: {
@@ -342,7 +350,9 @@ export class dangerZoneType {
               intensity: 5
             }
           },
+          hidden: false,
           levels: '',
+          locked: false,
           offset: {
             x: {
               flip: false,

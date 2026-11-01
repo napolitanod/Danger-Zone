@@ -4,7 +4,7 @@ import {dangerZoneType} from './apps/zone-type.js';
 import {AUTOMATED_EVENTS, CHAT_EVENTS, COMBAT_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS, CONTROLTRIGGERS, DANGERZONECONFIG, EVENTS, MANUAL_EVENTS, MOVEMENT_EVENTS, PLACEABLESBYDOCUMENT, WORLDZONE} from './apps/constants.js';
 import {executor} from './apps/workflow.js';
 import {ExecutorForm} from './apps/executor-form.js';
-import {wait, helper, getRandomNumber, joinWithAnd} from './apps/helpers.js';
+import {helper} from './apps/helpers.js';
 import {setHooks} from './apps/hooks.js';
 import {AmbientLightDangerPartConfig, AudioDangerPartConfig, BackgroundEffectDangerPartConfig, CanvasDangerPartConfig, CombatDangerPartConfig, EffectDangerPartConfig, ForegroundEffectDangerPartConfig, GlobalZoneDangerPartConfig, ItemDangerPartConfig, LastingEffectDangerPartConfig, LevelDangerPartConfig, MacroDangerPartConfig, MutateDangerPartConfig, RegionDangerPartConfig, RolltableDangerPartConfig, SceneDangerPartConfig, SoundDangerPartConfig, SourceEffectDangerPartConfig, TokenEffectDangerPartConfig, TokenMoveDangerPartConfig, TokenResponseDangerPartConfig, TokenSaysDangerPartConfig, WallDangerPartConfig, WarpgateDangerPartConfig, WeatherDangerPartConfig} from './apps/danger-form.js';
 
@@ -193,16 +193,31 @@ export class dangerZone {
     return game.scenes.get(sceneId).getFlag(this.ID, this.FLAGS.SCENEZONE) ? true : false 
   }
 
-  static getAllZonesFromScene(sceneId, options = {enabled: true, typeRequired: true, triggerRequired: true}){
+  static getAllZonesFromScene(sceneId, options = {enabled: true, typeRequired: true, triggerRequired: true, levels: []}){
+    const {enabled, levels, triggerRequired, typeRequired} = options
     const ar = [];
     const scene = game.scenes?.get(sceneId);
-    const flag = scene ? scene.getFlag(this.ID, this.FLAGS.SCENEZONE) : ar; 
-    for (var zn in flag) {
-        if((!options.enabled || flag[zn].enabled) && (!options.triggerRequired || flag[zn].trigger.events.length) && flag[zn].scene?.sceneId) ar.push(dangerZone.#toClass(flag[zn]));
+    const zones = scene ? scene.getFlag(this.ID, this.FLAGS.SCENEZONE) : ar; 
+    for (const zn of Object.values(zones)) {
+        const keep = 
+          (!enabled || zn.enabled) 
+          && (!triggerRequired || zn.trigger.events.length) 
+          && zn.scene?.sceneId
+          && (!levels?.length || !zn.levels.length || levels.some(lvl => zn.levels.includes(lvl)))
+        ;
+        if(keep) ar.push(dangerZone.#toClass(zn));
     }
-    return ar.filter(z => !options.typeRequired || z.danger)
+    return ar.filter(z => !typeRequired || z.danger)
   }
   
+
+
+  /**Retrieves an object for use as a list of zones from the scene. When zone id provided, retrieves that zone
+   * Does not filter out by level
+   * @param {string} sceneId 
+   * @param {string} zoneId 
+   * @returns object of zone id zone title pairs
+   */
   static getZoneList(sceneId, zoneId = ''){
     const list = {};
     for (const zn of this.getAllZonesFromScene(sceneId).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)})) {
@@ -211,19 +226,33 @@ export class dangerZone {
     return list;
   }
 
-  static getRolltableZonesFromScene(sceneId) {
-    return this.getAllZonesFromScene(sceneId).filter(zn => zn.hasChatEvent)
+
+
+  /**returns a list of zones on the given scene that have a chat event trigger
+   * 
+   * @param {*} sceneId 
+   * @param {*} options  //see getAllZonesFromScene for options
+   * @returns array of zones
+   */
+  static getRolltableZonesFromScene(sceneId, options = {}) {
+    return this.getAllZonesFromScene(sceneId, options).filter(zn => zn.hasChatEvent)
   }  
 
   /**
    * Returns all zones on a given scene that automatically triggered during combat
    * @param {string} sceneId  the scene id
-   * @returns 
+   * @returns array of zones
    */
   static getCombatZonesFromScene(sceneId) {
     return this.getAllZonesFromScene(sceneId).filter(zn => zn.hasCombatEvent)
   }  
 
+
+  /**Returns all zones on the scene, plus all world zones, plus all dangers as quasi zones
+   * 
+   * @param {string} sceneId 
+   * @returns array of zones
+   */
   static getExtendedZones(sceneId){
     return this.getAllZonesFromScene(sceneId, {enabled: false, typeRequired: true}).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)})
       .concat(this.getGlobalZones(sceneId).sort((a, b) => { return a.title < b.title ? -1 : (a.title > b.title ? 1 : 0)}))
@@ -233,18 +262,31 @@ export class dangerZone {
     /**
   * Returns all zones on a given scene that are enabled and that are triggered by movement
   * @param {string} sceneId  the scene id
+  * @param {object} options //see getAllZonesFromScene for options
   * @returns array of zones
   */
-  static getMovementZonesFromScene(sceneId) {
-    return this.getAllZonesFromScene(sceneId).filter(zn => zn.hasMovementEvent)
+  static getMovementZonesFromScene(sceneId,  options = {}) {
+    return this.getAllZonesFromScene(sceneId, options).filter(zn => zn.hasMovementEvent)
   }
 
-  static getMovementCompleteZonesFromScene(sceneId) {
-    return this.getMovementZonesFromScene(sceneId).filter(zn => zn.hasMovementComplete)
+  /**
+  * Returns all zones on a given scene that are enabled and that are triggered by movement complete
+  * @param {string} sceneId  the scene id
+  * @param {object} options //see getAllZonesFromScene for options
+  * @returns array of zones
+  */
+  static getMovementCompleteZonesFromScene(sceneId,  options = {}) {
+    return this.getMovementZonesFromScene(sceneId, options).filter(zn => zn.hasMovementComplete)
   }
 
-  static getMovementNotCompleteZonesFromScene(sceneId) {
-    return this.getMovementZonesFromScene(sceneId).filter(zn => !zn.hasMovementComplete)
+  /**
+  * Returns all zones on a given scene that are enabled and that are triggered by movement start
+  * @param {string} sceneId  the scene id
+  * @param {object} options //see getAllZonesFromScene for options
+  * @returns array of zones
+  */
+  static getMovementNotCompleteZonesFromScene(sceneId,  options = {}) {
+    return this.getMovementZonesFromScene(sceneId, options).filter(zn => !zn.hasMovementComplete)
   }
 
   
@@ -318,14 +360,6 @@ export class dangerZone {
     return this.getAllZonesFromScene(sceneId).filter(zn => zn.trigger?.random)
   }
 
-  /**V13
-   * Returns all zones on a given scene that are either manual and enabled or triggered in an automated fashion
-   * @param {string} sceneId  the scene id
-   * @returns array of zones
-   */
-  static getTriggerZonesFromScene(sceneId) {
-      return this.getAllZonesFromScene(sceneId, {enabled: false, typeRequired: true}).filter(zn => zn.enabled || zn.hasAutomatedEvent).concat(this.getGlobalZones(sceneId))
-  }
 
  /**V13
    * Returns a specific zone from the given scene
@@ -476,7 +510,8 @@ export class zone {
       bleed: false,
       bottom: undefined,
       stretch: '',
-      top: undefined
+      top: undefined, 
+      topInclusive: false
     },
     this.trigger = {
       chat: {
@@ -509,7 +544,7 @@ export class zone {
       area: '',
       actors: [],
       dispositions: [],
-      levels: true,
+      levels: false,
       limit: {
         min: 0,
         max: 0
@@ -559,7 +594,7 @@ export class zone {
   }
 
   get eventsDescription(){
-    return this.hasEvents ? joinWithAnd(this.trigger.events.map(e => game.i18n.localize(EVENTS[e]?.label))) : ''
+    return this.hasEvents ? helper.joinWithAnd(this.trigger.events.map(e => game.i18n.localize(EVENTS[e]?.label))) : ''
   }
 
   get eventsIncludingInitiative(){
@@ -847,26 +882,18 @@ export class zone {
 
   generateSourceCount(){
     if(!this.source.limit.max && !this.source.limit.min) return -1
-    return getRandomNumber(this.source.limit.min, this.source.limit.max)
+    return helper.pickRandom(this.source.limit.min, this.source.limit.max)
   }
 
   getExtension(extensionId){
     return this.extensions.find(e => e.id === extensionId)
   }
 
-  /**generate the iterator for this zone for use in danger targeting
-   * 
-   * @returns iterator //iterator of boundary grids
-   */
-  getZoneTargetGridsIterator(){
-    return this.scene.getZoneTargetGridsIterator()
-  }
-  
   async highlightZone(){
     if(this.scene.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
       dangerZoneDimensions.addHighlightZone(this, this.scene.sceneId,  {id: '_tzHL', danger: this.scene.dangerId});
-      await wait(750)
+      await helper.wait(750)
       dangerZoneDimensions.destroyHighlightZone(this.id, '_tzHL', this.scene.dangerId); 
     }
   }

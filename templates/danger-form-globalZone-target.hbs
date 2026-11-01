@@ -7,7 +7,7 @@
             <input type="checkbox" name="target.choose.enable" {{checked zone.target.choose.enable}} data-action="template-toggle"/>
         </div>
     </div>
-    <div class="form-group {{#unless zone.target.choose.enable}}dz-hidden{{/unless}}" id="dz-elevation-prompt-global">
+    <div class="form-group {{#unless zone.target.choose.enable}}dz-hidden{{/unless}} slim" id="dz-elevation-prompt-global">
         <label for="options.noPrompt">{{localize 'DANGERZONE.edit-form.promptElevation.label'}}</label>
         <div class="form-fields">
             <input type="checkbox" name="target.choose.prompt" {{checked zone.target.choose.prompt}} />
@@ -31,7 +31,7 @@
         <div class="form-fields">
             <div class="form-group">
                 <label>
-                    {{localize 'DANGERZONE.edit-form.numberOfTargets.min.label'}}
+                    {{localize 'DANGERZONE.min.label'}}
                 </label>
                 <div class="form-fields">
                     <input type="Number" name="target.quantity.min" min="1" step="1" value={{#if zone.target.quantity.min}}{{zone.target.quantity.min}}{{else}}1{{/if}} required >
@@ -39,7 +39,7 @@
             </div>
             <div class="form-group">
                 <label>
-                    <span>{{localize 'DANGERZONE.edit-form.numberOfTargets.max.label'}}</span>
+                    <span>{{localize 'DANGERZONE.max.label'}}</span>
                 </label>
                 <div class="form-fields">
                     <input type="Number" name="target.quantity.max" min="1" step="1" value={{#if zone.target.quantity.max}}{{zone.target.quantity.max}}{{else}}1{{/if}} required >

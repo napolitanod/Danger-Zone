@@ -1,6 +1,5 @@
 <div class="tab active danger-part-group" data-tab="tile" data-group="sheet">
     <p class="notes">{{localize "DANGERZONE.type-form.tile.description"}}</p>
-    
     <fieldset>
         <legend>{{localize "DANGERZONE.levels.label"}}</legend>
         <div class="form-group">
@@ -11,51 +10,27 @@
             </div>
         </div>
     </fieldset>
-    <div class="form-group">
-        <label for="file">{{localize random.visual.FILE}}</label>
-        <div class="form-fields">
-            <file-picker name="file" type="imagevideo" class="image" placeholder="{{localize random.visual.PLACEHOLDER}}" value="{{data.file}}"></file-picker>
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="randomFile">{{localize random.visual.LABEL}}</label>
-        <div class="form-fields">
-            <input type="checkbox" data-dtype="Boolean" name="randomFile" {{checked data.randomFile}}>
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="scale">{{localize "DANGERZONE.type-form.tile.scale.label"}}
-            <span class="units">{{localize 'DANGERZONE.ratio'}}</span>
+    <div class="form-group slim">
+        <label for="rotation">{{localize "DANGERZONE.type-form.tile.rotation.label"}}
+            <span class="units">{{localize 'DANGERZONE.degrees'}}</span>
         </label>
         <div class="form-fields">
-            <input type="number" required name="scale" min="0.01" max="50" step="0.01" value={{data.scale}}>
+            <input type="number" required min="0" max="360" name="rotation" step="any" value={{#if data.rotation}}{{data.rotation}}{{else}}0{{/if}}>
         </div>
     </div>
-    <div class="form-group">
-        <label for="loop">{{localize "DANGERZONE.type-form.tile.loop.label"}}</label>
-        <div class="form-fields">
-            <input type="checkbox" data-dtype="Boolean" name="loop" {{checked data.loop}}>
-        </div>
-    </div>
-    <div class="form-group">
+    <div class="form-group slim">
         <label for="z">{{localize "DANGERZONE.type-form.tile.z.label"}}</label>
         <div class="form-fields">
-            <input type="number" required data-dtype="Number" name="z" step="1" value={{data.z}}>
+            <input type="number" required  name="z" step="1" value={{data.z}}>
         </div>
     </div>
-    <div class="form-group">
-        <label for="alpha">{{localize "DANGERZONE.type-form.tile.alpha.label"}}</label>
+    <div class="form-group slim">
+        <label for="locked">{{localize "DANGERZONE.locked.label"}}</label>
         <div class="form-fields">
-            <range-picker name="alpha" value="{{data.alpha}}" min="0" max="1" step="0.05"></range-picker>
+            <input type="checkbox" data-dtype="Boolean" name="locked" {{checked data.locked}}>
         </div>
     </div>
-    <div class="form-group">
-        <label for="hidden">{{localize "DANGERZONE.type-form.tile.hidden.label"}}</label>
-        <div class="form-fields">
-            <input type="checkbox" data-dtype="Boolean" name="hidden" {{checked data.hidden}}>
-        </div>
-    </div>
-    <div class="form-group">
+    <div class="form-group slim">
         <label for="delay">{{localize "DANGERZONE.delay.label"}}</label>
         <div class="form-fields">
             <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>

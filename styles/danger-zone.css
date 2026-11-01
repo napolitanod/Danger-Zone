@@ -60,7 +60,7 @@
     display: flex;
 }
 
-#danger-zone-danger-effect .danger-part-form {
+#danger-zone-danger-effect .danger-part-form, .danger-part-group {
     overflow-y: auto;
 }
 

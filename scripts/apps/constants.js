@@ -5,7 +5,7 @@ import {ZoneListForm} from './zone-list-form.js';
  * Defines the metadata for danger parts, including data used when building forms
  */
 export const DANGERZONEPARTS = new Map([
-    ['ambientLight', {icon: 'fa-regular fa-lightbulb', templates: new Map([[1, 'light'], [2, 'offset'], [3, 'animation'], [4,'advanced']])}],
+    ['ambientLight', {icon: 'fa-regular fa-lightbulb', templates: new Map([[1, 'light'], [4, 'offset'], [2, 'animation'], [3,'advanced']])}],
     ['audio', {icon: 'fa-solid fa-volume'}], 
     ['backgroundEffect', {icon:'fas fa-bomb', templates: new Map([[1, 'visual'], [2, 'audio'], [3,'offset']])}], 
     ['canvas', {icon:'fas fa-wind'}], 
@@ -14,8 +14,8 @@ export const DANGERZONEPARTS = new Map([
     ['item', {icon: 'fas fa-suitcase'}], 
     ['foregroundEffect', {icon:'fas fa-bolt', templates: new Map([[1, 'visual'], [2, 'source'], [3,'offset']])}],
     ['globalZone', {icon:'fas fa-radiation', templates: new Map([[1, 'basics'], [2, 'boundary'], [3,'trigger'], [4,'source'], [5,'target'], [6,'clear']])}],
-    ['lastingEffect', {icon:'fa-solid fa-cubes', templates: new Map([[1, 'tile'], [2,'overhead'], [3,'offset']])}], 
-    ['level', {icon: 'fa-fw fa-solid fa-layer-group', templates: new Map([[1, 'settings'], [2,'visual']])}],
+    ['lastingEffect', {icon:'fa-solid fa-cubes', templates: new Map([[1, 'tile'], [2, 'visual'], [3,'overhead'], [4,'offset']])}], 
+    ['level', {icon: 'fa-fw fa-solid fa-layer-group', templates: new Map([[1,'visual'], [2, 'settings'] ])}],
     ['macro', {icon: 'fa-solid fa-code'}],
     ['mutate', {flag: true, icon: 'fas fa-pastafarianism'}],
     ['region', {icon:'fa-regular fa-game-board', templates: new Map([[1, 'settings'], [2, 'visual'], [3, 'offset'], [4, 'behaviors']])}],
@@ -914,7 +914,8 @@ export const WORLDZONE = {
         bleed: false,
         bottom: undefined,
         stretch: '',
-        top: undefined
+        top: undefined,
+        topInclusive: false
     },
     source: {
         area: '',
