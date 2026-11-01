@@ -165,6 +165,7 @@ export class api {
         const ex = await zn.executor()
         return ex
     }
+
 }
 
 export async function _triggerZone(zoneName, sceneId, options){

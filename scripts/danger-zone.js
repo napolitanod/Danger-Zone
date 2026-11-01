@@ -186,7 +186,7 @@ export class dangerZone {
   static #toClass(flag){
     if(!flag.scene?.sceneId){return {}}
     let zn =  new zone(flag.scene.sceneId);
-    return foundry.utils.mergeObject(zn, flag, {insertKeys: false, enforceTypes: true})
+    return foundry.utils.mergeObject(zn, flag, {insertKeys: false, enforceTypes: false})
   }
 
   static sceneHasZone(sceneId){
@@ -198,12 +198,13 @@ export class dangerZone {
     const ar = [];
     const scene = game.scenes?.get(sceneId);
     const zones = scene ? scene.getFlag(this.ID, this.FLAGS.SCENEZONE) : ar; 
+    if(!zones) return ar
     for (const zn of Object.values(zones)) {
         const keep = 
           (!enabled || zn.enabled) 
           && (!triggerRequired || zn.trigger.events.length) 
           && zn.scene?.sceneId
-          && (!levels?.length || !zn.levels.length || levels.some(lvl => zn.levels.includes(lvl)))
+          && (!levels?.length || !zn.levels?.length || levels.some(lvl => zn.levels.includes(lvl)))
         ;
         if(keep) ar.push(dangerZone.#toClass(zn));
     }
@@ -451,6 +452,16 @@ export class dangerZone {
     return dangerZone.#toClass(zn);
   }
 
+  
+  /**Converts an object to a zone
+   * 
+   * @param {object} data zone data
+   * @returns zone
+   */
+  static toZone(data){
+     return dangerZone.#toClass(data);
+  }
+
   static async updateAllSceneZones(sceneId,flag){
     const scene = game.scenes.get(sceneId)
     const updt = await scene.setFlag(dangerZone.ID, dangerZone.FLAGS.SCENEZONE, flag);
@@ -508,9 +519,9 @@ export class zone {
     this.flavor = '',
     this.dimensions = {
       bleed: false,
-      bottom: undefined,
+      bottom: -Infinity,
       stretch: '',
-      top: undefined, 
+      top: Infinity, 
       topInclusive: false
     },
     this.trigger = {
@@ -697,6 +708,7 @@ export class zone {
   }
 
   get hasTargetLevels(){
+    //target of (all) is not implemented yet
     return (!this.target.levels || this.target.levels === 'all') ? false : true
   }
   
@@ -804,7 +816,7 @@ export class zone {
    * private method to save the zone data
    * @param {object} updateData 
    */
-  async _update(updateData, options = {insertKeys: false, enforceTypes: true}){
+  async _update(updateData, options = {insertKeys: false, enforceTypes: false}){
     foundry.utils.mergeObject(this, updateData, options);
     const updt = await this._setFlag();
     return updt
@@ -958,7 +970,7 @@ export class zone {
         } 
         else {
           //iterate through each document and check to see if document is in level
-          for (const document of area) {
+          for (const document of area.documents) {
             if(this.levels.some(l => document.locatedInLevel(l))) onLevel = true
           }
         }
@@ -1096,7 +1108,7 @@ export class zone {
    * @param {object} updateData 
    * @returns returns the zone after update
    */
-  async update(updateData, options = {insertKeys: false, enforceTypes: true}){
+  async update(updateData, options = {insertKeys: false, enforceTypes: false}){
     const updt = await this._update(updateData, options);
     return updt
   }
@@ -1139,6 +1151,11 @@ export class zone {
       return true
  }
 
+  /**Evaluates the tokens in the array for eligiblity based on zone settings but not based on location or zone boundary
+  * 
+  * @param {array} tokens 
+  * @returns array of tokens
+  */
   zoneEligibleTokens(tokens){
     let kept = [];
     if(this.hasTargetActor || this.hasTargetDisposition || this.hasTargetExclusionCondition || this.hasTargetLevels){
@@ -1215,13 +1232,13 @@ export class zone {
 
   async _promptElevation(){
     let promptAnswer
-    const levelOptionsArray = helper.getSceneLevelList(this.scene.sceneId, [this.zoneLevels])
+    const levelOptionsArray = helper.getSceneLevelList(this.scene.sceneId, {filterIds: this.levels})
     const levelOptions = helper.htmlBuildInput(
       {
         type: 'options',
         value: '',
         options: levelOptionsArray,
-        allDefaultLable: levelOptionsArray[0]
+        noBlank: true
       }
     )
     try{

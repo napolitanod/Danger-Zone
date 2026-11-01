@@ -27,12 +27,7 @@ Hooks.once('init', async function() {
 		scope: "world",
 		config: true,
 		default: 0,
-		type: Number,
-		range: {
-			min: -100,
-			max: 0,
-			step: 1
-		}
+		type: Number
 	});
 
 	game.settings.register(modulename, "max-elevation", {
@@ -41,12 +36,7 @@ Hooks.once('init', async function() {
 		scope: "world",
 		config: true,
 		default: 20,
-		type: Number,
-		range: {
-			min: 0,
-			max: 100,
-			step: 1
-		}
+		type: Number
 	});
 
 	game.settings.registerMenu(modulename, "danger-zone-types-config", {

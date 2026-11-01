@@ -415,7 +415,8 @@ class executorData {
     }
 
     get zoneLevelTargets(){
-        return this.zone.target.levels ?? 'all'
+        //should default to 'all' but that is not yet implemented
+        return this.zone.target.levels ?? 'any'
     }
 
     /**
@@ -575,7 +576,9 @@ class executorData {
 
         if(!b) return
 
-        this.eligibleTargets = b.tokensIn(tokens)
+        //include scene tokens for re-assessment to account for stretch
+        const tokenTargets = options.stretch?.type ? this.zone.zoneEligibleTokens(this.sceneTokens) : tokens
+        this.eligibleTargets = b.tokensIn(tokenTargets, options)
 
         //set the boundary to the passed or final test boundary
         this.boundary = b;
@@ -658,7 +661,7 @@ class executorData {
         //handling when levels are specified (else assume all levels)
         if(this.zone.levels.length) {
             switch(this.zoneLevelTargets){
-                //add all zone levels
+                //add all zone levels (this is not yet implemented)
                 case 'all':
                     targetData.all = this.zone.levels
                     break;

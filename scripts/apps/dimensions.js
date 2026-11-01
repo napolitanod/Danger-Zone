@@ -342,7 +342,7 @@ export class boundary{
     }
 
     get elevation(){
-        return this.region.elevation
+        return this.#elevation
     }
 
     get excludes(){
@@ -354,7 +354,7 @@ export class boundary{
     }
 
     get hasRegion(){
-        return !!(this.options.regionUuid || this.options.region);
+        return !!(this.options.regionUuid); //removed check for this.region. If re-added, see how scenes are converted to documents. Downstream effect is boundary is seen as a region boundary, not scene, and elevation becomes wrong.
     }
 
     get hasUniverse(){
@@ -533,7 +533,7 @@ export class boundary{
             const {shapes, levels} = helper.documentToRegion(document, null, {hole: true, asObject: true})
             if(shapes.length) {
                 for(const [id, array] of this.excludes){
-                    if(!levels.length || levels.includes(id)) array.push(...shapes)
+                    if(!levels.size || levels.has(id)) array.push(...shapes)
                 } 
             }
         }
@@ -590,30 +590,29 @@ export class boundary{
     }
 
     #setRegionData(){
-        let regionData
-
-        //for boundaries created from a region, set the region data for this boundary from that region
-        if(this.type === 'region') {
-            const region = this.options.region ?? fromUuidSync(this.options.regionUuid)
-            regionData = region ? region.toObject() : {}
-        } 
-        //else set out the universe stub, which will be further populated by shapes during the set Universe step
-        else {
-            const {bottom, top} = this.#elevation;
-
-            regionData = {
-                elevation: {
-                    bottom,
-                    top,
-                    topInclusive: false
-                },
-                levels:[],
-                name: "Universe Boundary"
-            }
-        }
-
+        
         //insert options
         const opts = this.options;
+
+        let regionData = opts.region ? opts.region.toObject() : {}
+
+        //For boundaries not created by a region, shell out (dimensions) or overwrite (universes) some of the regionData
+        if(this.type !== 'region') {
+            const {bottom, top} = this.#elevation;
+
+            Object.assign(regionData,
+                {
+                    elevation: {
+                        bottom,
+                        top,
+                        topInclusive: false
+                    },
+                    levels:[],
+                    name: "Universe Boundary"
+                }
+            )
+        }
+
 
         if(opts.name) regionData.name = opts.name;
         if(opts.bottom) regionData.elevation.bottom = opts.bottom;
@@ -644,7 +643,7 @@ export class boundary{
                 const {shapes, levels} = helper.documentToRegion(document, null, {asObject: true})
                 if(shapes.length) {
                     for(const [id, array] of this.#universe){
-                        if(!levels.length || levels.includes(id)) array.push(...shapes)
+                        if(!levels.size || levels.has(id)) array.push(...shapes)
                     } 
                 }
             }
@@ -1484,20 +1483,14 @@ export class boundary{
     /**Intakes an array of tokens and outputs an array consisting of those tokens that exist within the document bounds. 
      * 
      * @param {array} tokens //an array of token documents
-     * @param {array} tokenBoundaries //an array of objects with ids and token boundaries, which can be precalculated and passed in to optimize upstream use of this method {
-     *                                  id: token.id,
-     *                                  boundary: token boundary
-     *                              }
+    *  @param {object} options // stretch: the stretch object, including type and elevation                              
      * @returns  array of tokens
      */
-    tokensIn(tokens){
+    tokensIn(tokens, options = {}){
 
         if(!this.levelsRegions?.size) return
 
         let kept = [];
-
-        const options = {}
-        if(this.stretch?.type) options.stretch = this.stretch
     
         //iterate over tokens, keeping those that exist in the boundary
         for(let token of tokens){
@@ -1706,7 +1699,7 @@ export class dimensionBoundary extends boundary {
         options.B = {x: x + (width ?? radius), y: y + (height ?? radius)}
         const e = {bottom: options.elevation?.bottom ?? bottom, top: options.elevation?.top ?? top}
 
-        options.levels = region.levels
+        //options.levels = region.levels
 
         const b = new dimensionBoundary(e, scene, options)
 

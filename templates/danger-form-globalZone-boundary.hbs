@@ -7,11 +7,11 @@
             <label>
                 {{localize 'DANGERZONE.type-form.globalZone.bottom.label'}}
             </label>
-            <input type="Number" name="dimensions.bottom" step="1" placeholder="{{defaultMinElevation}}" value={{zone.dimensions.bottom}}>
+            <input type="Number" name="dimensions.bottom" step="1" placeholder="{{defaultMinElevation}}" value={{#if zone.dimensions.bottom includeZero=true}}{{zone.dimensions.bottom}}{{/if}}>
             <label>
                 {{localize 'DANGERZONE.type-form.globalZone.top.label'}}
             </label>
-            <input type="Number" name="dimensions.top" step="1" placeholder="{{defaultMaxElevation}}" value={{zone.dimensions.top}}>
+            <input type="Number" name="dimensions.top" step="1" placeholder="{{defaultMaxElevation}}" value={{#if zone.dimensions.top includeZero=true}}{{zone.dimensions.top}}{{/if}}>
             <label>
                 {{localize 'DANGERZONE.type-form.globalZone.topInclusive.label'}}
             </label>

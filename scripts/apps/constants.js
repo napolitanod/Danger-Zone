@@ -251,9 +251,9 @@ export const DANGERFORMOPTIONS = {
     },
     GLOBALZONE: {
         TARGETLEVELS: {
-            "all": "DANGERZONE.type-form.globalZone.target.levels.options.all",
+            //"all": "DANGERZONE.type-form.globalZone.target.levels.options.all", //removed for now due to complexity
             "any": "DANGERZONE.type-form.globalZone.target.levels.options.any",
-            "elevation": "DANGERZONE.type-form.globalZone.target.levels.options.elevation",
+            //"elevation": "DANGERZONE.type-form.globalZone.target.levels.options.elevation", //removed for now due to complexity
             "current": "DANGERZONE.type-form.globalZone.target.levels.options.current"
         }
     },
@@ -563,7 +563,7 @@ export const ZONEFORMOPTIONS = {
         "T": "DANGERZONE.stretch.top.label"
     },
     TARGETLEVELS: {
-        "all": "DANGERZONE.edit-form.target.levels.options.all",
+        //"all": "DANGERZONE.edit-form.target.levels.options.all", //removed for now due to complexity
         "any": "DANGERZONE.edit-form.target.levels.options.any",
         //"elevation": "DANGERZONE.edit-form.target.levels.options.elevation", //removed for now due to complexity
         "current": "DANGERZONE.edit-form.target.levels.options.current"
@@ -912,9 +912,9 @@ export const WORKFLOWSTATES = {
 export const WORLDZONE = {
     dimensions: {
         bleed: false,
-        bottom: undefined,
+        bottom: -Infinity,
         stretch: '',
-        top: undefined,
+        top: Infinity,
         topInclusive: false
     },
     source: {
@@ -951,7 +951,7 @@ export const WORLDZONE = {
         exclusion: {
           conditions: []
         },
-        levels: 'all',
+        levels: 'any',
         quantity: {
             min: 1,
             max: 1

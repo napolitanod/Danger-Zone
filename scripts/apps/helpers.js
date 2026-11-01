@@ -76,9 +76,11 @@ export class helper {
       elevation
     } = ambientLight;
 
-    shape.hole = options.hole;
+    const shapeObj = shape.toObject()
 
-    return {name, elevation: {top: elevation + radius, bottom: elevation - radius}, levels, shapes: [shape]};
+    shapeObj.hole = options.hole;
+
+    return {name, elevation: {top: elevation + radius, bottom: elevation - radius}, levels, shapes: [shapeObj]};
   }
 
 
@@ -97,9 +99,11 @@ export class helper {
       elevation
     } = ambientSound;
 
-    shape.hole = options.hole;
+    const shapeObj = shape.toObject()
 
-    return {name, elevation: {top: elevation + radius, bottom: elevation - radius}, levels, shapes: [shape]};
+    shapeObj.hole = options.hole;
+
+    return {name, elevation: {top: elevation + radius, bottom: elevation - radius}, levels, shapes: [shapeObj]};
   }
 
   /**Generates the source object needed to create a region from a drawing document
@@ -122,13 +126,35 @@ export class helper {
 
     shapeObj.hole = options.hole;
 
-    if(shapeObj.type === "r"){
-      Object.assign(shapeObj, {
-        type: "rectangle",
-        x,
-        y
-      })
-    }
+    const width = shape.width
+    const height = shape.height
+
+    switch(shapeObj.type){
+      case 'e':
+        let radiusX = width/2;
+        let radiusY = height/2;
+        Object.assign(shapeObj, {
+          type: "ellipse",
+          x: x + radiusX,
+          y: y + radiusY,
+          radiusX,
+          radiusY
+        })
+        break;
+      case 'r':
+        Object.assign(shapeObj, {
+          type: "rectangle",
+          x,
+          y
+        })
+        break;
+      default:
+        const points = shape.points.map((v, i) => v + (i % 2 === 0 ? x : y));
+        Object.assign(shapeObj, {
+            type: "polygon",
+            points
+          })
+    } 
 
     return {name, elevation: {top: elevation, bottom: elevation}, levels, shapes: [shapeObj]};
   }
@@ -173,9 +199,11 @@ export class helper {
       elevation
     } = tile;
 
-    shape.hole = options.hole;
+    const shapeObj = shape.toObject()
 
-    return {name, elevation: {top: elevation, bottom: elevation}, levels, shapes: [shape]};
+    shapeObj.hole = options.hole;
+
+    return {name, elevation: {top: elevation, bottom: elevation}, levels, shapes: [shapeObj]};
   }
 
   /**Generates the source object needed to create a region from a token document
@@ -213,7 +241,7 @@ export class helper {
     const width = Math.max(initialWidth * gridX, gridX)
     const height = Math.max(initialHeight * gridY, gridY)
 
-    return {name, elevation: {top: elevation + tokenDepth, bottom: elevation}, levels: [level], shapes: [{type, x, y, height, width, hole}]};
+    return {name, elevation: {top: elevation + tokenDepth, bottom: elevation}, levels: new Set([level]), shapes: [{type, x, y, height, width, hole}]};
   }
 
   /**Generates the source object needed to create a region from a wall document
@@ -484,12 +512,13 @@ export class helper {
    *    //filterIds {array}: provide an array of ids to be used to filter down the scene levels
    * @returns object for use in form input select
    */
-  static getSceneLevelList(sceneId, options = {filterIds: []}){
+  static getSceneLevelList(sceneId, options = {}){
     const list = {};
     const scene = game.scenes.get(sceneId)
+    const filterIds = options.filterIds ?? []
     if(scene){
-      const levels = options.filterIds?.length ? scene.levels?.filter(l => options.filterIds.includes(l.id)) : scene.levels
-      for (const level of levels.contents.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
+      const levels = filterIds.length ? scene.levels?.contents.filter(l => filterIds.includes(l.id)) : scene.levels.contents
+      for (const level of levels.sort((a, b) => { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)})) {
         list[level.id] = level.name;
       }
     }
@@ -572,6 +601,7 @@ export class helper {
    *        options: obj of key, value option pairs
    *        allDefaultLable: when selecting 'all' or nothing for optional selects, often this is blank
    *        selected: the value that should be selected to match to the select value
+   *        noBlank: bool  set to false to have no blank added
    * }
    * @returns string html options list
   */
@@ -589,7 +619,7 @@ export class helper {
       case 'options':
         //the options list
         const sortedList = Object.entries(options.options).sort(([,a],[,b]) => a.localeCompare(b))
-        let optionList = `<option value="">${options.allDefaultLable ?? ''}</option>`;
+        let optionList = options.noBlank ? '' : `<option value="">${options.allDefaultLable ?? ''}</option>`;
         for(let i = 0; i < sortedList.length; i++) {
           let selected = '';
           if (sortedList[i][0] === value) selected = ' selected '
