@@ -220,7 +220,10 @@ class plan {
  *      zone: string // whereas single is one of the targeted levels, zone is one of the zone levels, whether or not targeted
  *  }
  * }
- * 
+ * location {
+ *     coords: {x,y},
+ *     elevation: int || z: int
+ *  }
  * }
  * 
  */
@@ -269,6 +272,7 @@ class executorData {
         this.tokenMovement = [],
         this.twinBoundary = {},
         this.valid = true,
+        this.validationMessage = '',
         this.zone = zone,
         this.zoneBoundary,
         this.zoneEligibleTokens = [],
@@ -439,7 +443,6 @@ class executorData {
             let content =
                 `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Workflow Details</div><div class="danger-zone-chat-message-body">
                 <div><label class="danger-zone-label">Danger:</label><span> ${this.danger.name}</span></div>
-                <div><label class="danger-zone-label">Danger dimensions:</label><span> w${this.targetDimensions.w}  h${this.targetDimensions.h}  d${this.targetDimensions.d}${this.zone.dimensions.bleed ? ' (bleed)' : ''}</span></div>
                 <div><label class="danger-zone-label">Zone levels:</label><span> ${this.levelsNames}</span></div>
                <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div>
                 <div><label class="danger-zone-label">Trigger:</label><span> ${game.i18n.localize(EVENTS[this.event]?.label)}</span></div>
@@ -454,6 +457,7 @@ class executorData {
                 }
 
                 content += `
+                <div><label class="danger-zone-label">Danger dimensions:</label><span> w${this.targetDimensions?.w}  h${this.targetDimensions?.h}  d${this.targetDimensions?.d}${this.zone.dimensions.bleed ? ' (bleed)' : ''}</span></div>
                 <div><label class="danger-zone-label">Target location start:</label><span> ${this.boundary.infoBoundaryStart}</span></div>
                 <div><label class="danger-zone-label">Target location end:</label><span> ${this.boundary.infoBoundaryEnd}</span></div>
                 ${stretch}
@@ -461,6 +465,9 @@ class executorData {
                 <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div>
                 <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div></div>`
             } 
+            if(!this.valid){
+                content += `<div><span>Validation checks failed. ${this.validationMessage}</span></div>`
+            }
             ChatMessage.create({
                 content: content,
                 whisper: [game.user.id]
@@ -563,7 +570,8 @@ class executorData {
             bleed: this.zone.dimensions.bleed,
             levels: this.levels,
             stretch: this.zone.scene.zoneBoundaryOptions.stretch,
-            units: this.targetDimensions
+            units: this.targetDimensions,
+            sourceTarget: this.zone.source?.target ?? 'I'
         }
 
         //if targets are already known, that is the pool for target, 
@@ -571,6 +579,8 @@ class executorData {
         if(this.targets.length || this.zone.target.always){
             options.documents = tokens
         } 
+        
+        dangerZone.log(false, `Generating random target boundary`, {data: this, options, tokens})
 
         const b = this.zoneBoundary.getRandomBoundary(options)
 
@@ -598,6 +608,8 @@ class executorData {
     async set(asRun = true){
         //Sets the zone boundary, the zone tokens (scene tokens that are in zone), and the zone eligible tokens
         this.setZone();
+
+        if(!this.valid) return
 
         //set the levels for the executor data
         this._setLevels();
@@ -684,6 +696,7 @@ class executorData {
                     //if the current level is not a zone level, throw the validation error. Set the array to prevent other errors before the plan is abandoned
                     if(!this.zone.levelCurrent) {
                         this.valid = false
+                        this.validationMessage = 'Zone only triggers when GM is viewing the level. The current level viewed by the GM is not a zone level.'
                         targetData.all = []
                     } else {
                         targetData.all = [this.zone.levelCurrent] 
@@ -723,10 +736,13 @@ class executorData {
             levels: this.levelData.target.all
         }
 
+        const {coords, elevation} = this.location;
+        const depth = this.targetDimensions.d
+
         //generate boundary from the location coordinates
         this.boundary = dimensionBoundary.locationToBoundary(
-            this.location.coords, 
-            this.location.elevation, 
+            coords, 
+            {bottom: elevation, top: elevation + depth}, 
             this.targetDimensions, 
             this.scene,
             options
@@ -902,6 +918,14 @@ class executorData {
      */
     setZone(){
         this.zoneBoundary = this.zone.zoneBoundary;
+
+        //confirm the zone boundary is valid
+        //this is hack code to be cleaned up- should be handled in this class's validate 
+        this.valid = this.zoneBoundary.validate()
+        if(!this.valid) {
+            this.validationMessage = 'The zone boundary is not valid. This is often due to incorrect region association (e.g. region associated with zone no longer exists) or zone source settings where one or more required sources is not present in the zone.'
+            return
+        }
         this.setTargetDimensions()
         this.zoneTokens = this.zoneBoundary.tokensIn(this.sceneTokens);
         this.zoneEligibleTokens = this.zone.zoneEligibleTokens(this.zoneTokens);
@@ -945,10 +969,15 @@ class executorData {
      */
     validate(){
         //throw validation error if boundary is not set    
-        if(!this.hasBoundary) return this.valid = false
-
+        if(!this.hasBoundary) {
+            this.validationMessage = 'A target boundary could not be found within the zone.'
+            return this.valid = false
+        }
         //test the boundary
-        if(!this.boundary.validate()) return this.valid = false
+        if(!this.boundary.validate()) {
+            this.validationMessage = 'The target boundary failed validation for elevation or having 0 area.'
+            return this.valid = false
+        }
     }
 }
 
@@ -1187,7 +1216,7 @@ export class executor {
                     continue;
                 }
             }
-            let sourceRegionId = this.zone.scene.regionId, targetRegionId = zn.scene.regionId;            
+            let sourceRegionId = this.zone.scene.region?.id ?? '', targetRegionId = zn.scene.region?.id ?? '';            
             switch(ex.interaction){
                 case 'A':
                     if(!zn.enabled) promises.push(zn.toggleZoneActive())

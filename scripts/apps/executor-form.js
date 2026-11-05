@@ -102,7 +102,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     /** @override */
     async _prepareContext() {
         return {
-            boundary: this.boundaryInfo,
+            boundary: this.isValid ? this.boundaryInfo : this.validationMessage,
             dangerId: this.worldId,
             eligibleTargetList: this.eligibleTargetList,
             eligibleZoneList: this.eligibleZoneList,
@@ -113,6 +113,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
             hasSourcing: this.hasSourcing,
             hasTargeting: this.hasTargeting,
             includesIncludeRandomTrigger: this.triggerZones.find(zn => zn.enabled && zn.hasManualEvent && zn.trigger.random) ? true : false,
+            isValid: this.isValid,
             levelOps: this.levelOps,
             levels: this.levels,
             locked: this.locked,
@@ -205,6 +206,14 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         return this.zones.length ? true : false
     }
 
+    get isValid(){
+        return this.executor.data.valid
+    }
+
+    get validationMessage(){
+        return this.executor.data.validationMessage ?? ''
+    }
+
     get executorOptions(){
         return {
             boundary: this.locked.boundary ? this.boundary  : false,
@@ -280,7 +289,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
             zone: data.parentId, 
             event: event, 
             force: data.target.type === 'button' ? false : true,
-            options: {levels: {target: {all: this.levels}}}
+            options: {levels: this.levels?.length ? {target: {all: this.levels}} : {}}
         }
         if(this.locked.boundary) triggerData.options['location'] = this.boundary.location
         await triggerManager.manualTrigger(triggerData);
@@ -330,6 +339,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
      * 
      */
     static async #boundaryRandom(event){
+        if(!this.isValid) return
         await this.executor.randomBoundary({clearTargets: !this.locked.target, clearLocation: !this.locked.boundary, highlight: true})
         this.refreshBoundary();
     }    
@@ -811,6 +821,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         await this.render(options.force);
         this.#handleSuppress()
         if(tab) this.changeTab(tab, "sheet", {force: true})
+        dangerZone.log(false, `executor refreshed...`, this)
     }
 
     refreshBoundary(){

@@ -71,6 +71,20 @@
         </li>
         {{/each}}
     </ol>
+    <div class="form-group">
+        <label>
+            <i class="fa-fw fa-solid fa-layer-group"></i>&nbsp;
+            {{localize 'DANGERZONE.levels.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.levels.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+    </div>  
+    <div class="form-group">
+        <div class="form-fields">
+            <multi-select name="levels" value="{{levels}}" >
+                {{selectOptions levelOps selected=levels}}
+            </multi-select>
+        </div>
+    </div>  
     <div class="form-group {{#unless hasTargeting}} dz-hidden{{/unless}}">
         <label><i class="fas fa-radiation"></i> {{localize 'DANGERZONE.executor-form.zone.list.label'}}</label>
         <div class="form-fields">
@@ -86,21 +100,9 @@
     <div id="dz-eligible-zone-list" class="dz-executable-info-list {{#unless hasTargeting}} dz-hidden{{/unless}}">
         {{{eligibleZoneList}}}
     </div>
-    <fieldset>
-        <legend>
-            <i class="fa-fw fa-solid fa-layer-group"></i>&nbsp;
-            {{localize 'DANGERZONE.levels.label'}}
-            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.levels.description'}}"><i class="fas fa-info-circle"></i></span>
-        </legend>
-        <div class="form-fields">
-            <multi-select name="levels" value="{{levels}}" >
-                {{selectOptions levelOps selected=levels}}
-            </multi-select>
-        </div>
-    </fieldset> 
     <div class="form-group">
         <label><i class="fas fa-expand"></i> {{localize 'DANGERZONE.executor-form.boundary.label'}}</label>
-        <div class="form-fields">
+        <div class="form-fields {{#unless isValid}} dz-hidden{{/unless}}">
             <div class="controls">
                 <a title="{{localize 'DANGERZONE.executor-form.boundary.highlight.label'}}" data-action="boundary-highlight"><i class="fas fa-highlighter"></i></a>
                 <a title="{{localize 'DANGERZONE.executor-form.boundary.prompt.label'}}" data-action="boundary-prompt"><i class="fas fa-mouse-pointer"></i></a>

@@ -55,8 +55,7 @@ export class dangerZoneDimensions {
      * returns the region document for the given region id
      */
     get region(){
-        const region = this.regionId ? this.scene.getEmbeddedDocument("Region",this.regionId) : {}
-        return region ?? {}
+        if(this.regionId) return this.scene.getEmbeddedDocument("Region",this.regionId)
     }
 
     /**
@@ -95,7 +94,7 @@ export class dangerZoneDimensions {
             exclude: helper.getTagEntities(game.settings.get(dangerZone.ID, 'zone-exclusion-tag'), this.scene),    //Generate the exclusion list of documents 
             levels: this.zoneLevels,    //include the zone levels   
             universe: this.zone?.sourceArea,   //Generate a universe of documents for the boundary to use that consists of the zone's sources
-            regionUuid: this.region.uuid,  //include the region
+            regionUuid: this.region?.uuid,  //include the region
             stretch: this.stretch
         }
     }
@@ -615,8 +614,8 @@ export class boundary{
 
 
         if(opts.name) regionData.name = opts.name;
-        if(opts.bottom) regionData.elevation.bottom = opts.bottom;
-        if(opts.top) regionData.elevation.top = opts.top;
+        if(opts.bottom != null) regionData.elevation.bottom = opts.bottom;
+        if(opts.top != null) regionData.elevation.top = opts.top;
         if(opts.levels) regionData.levels = opts.levels;
 
         this._setRegionData(regionData)
@@ -640,10 +639,29 @@ export class boundary{
             //the insert them into the level applicable for that shape
                 //I = keep as is, A = adjacent, then another is for ajacent or in
             for(const document of documents){  
-                const {shapes, levels} = helper.documentToRegion(document, null, {asObject: true})
+                const {shapes, levels} = helper.documentToRegion(
+                    document, 
+                    this.scene//, {asObject: true}
+
+                )
                 if(shapes.length) {
+                    //confirm that the shape is in the actual region
+                    const finalShapes = [];
+
+                    for (const s of shapes) {
+                        const poly = helper.shapeToPolygon(s, s.type)
+                        if (this.polygonIsInRegion(this.region, poly)) {
+                            //push the shape in, converted to an object
+                            finalShapes.push(s);
+                        }
+                    }
+
+                    if (!finalShapes.length) continue;
+
                     for(const [id, array] of this.#universe){
-                        if(!levels.size || levels.has(id)) array.push(...shapes)
+                        if(!levels.size || levels.has(id)) {
+                            array.push(...finalShapes)
+                        }
                     } 
                 }
             }
@@ -703,21 +721,19 @@ export class boundary{
 
     /**return a boundary region that includes the shape
      * 
-     * @param {PIXI} shape a PIXI shape
+     * @param {polygon} polygon a polygon
      * @param {object} elevation bottom and top of token
      * @param {array} levels array of level ids
      * @param {object} options stretch
      * @returns boolean false or object {region id, region} 
      */
-    findRegionContainingShape(shape, elevation, levels = [], {stretch}){
+    findRegionContainingPolygon(polygon, elevation, levels = [], {stretch}){
 
-        //must be shape and must have regions on the boundary
-        if(!shape || !this.levelsRegions?.size) return false
+        //must be polygon and must have regions on the boundary
+        if(!polygon || !this.levelsRegions?.size) return false
         
-        //convert shape to polygon
-        const poly = shape.toPolygon()
  
-        //test the region polygon tree for including shape. Return region key and region if so
+        //test the region polygon tree for including polygon. Return region key and region if so
         for(const [key, value] of this.levelsRegions) {
             if(levels.length && !levels.includes(key)) continue;
 
@@ -726,12 +742,10 @@ export class boundary{
                 this.#stretch(regionElevation)
             }
 
-            if(elevation) {
-                const inEl = boundary.testElevation(regionElevation, elevation)
-                if(inEl){
-                    const inRegion = this.polygonIsInRegion(value, poly)
-                    if(inRegion) return { key, value }
-                }
+            const inEl = boundary.testElevation(regionElevation, elevation)
+            if(inEl){
+                const inRegion = this.polygonIsInRegion(value, polygon)
+                if(inRegion) return { key, value }
             }
         }
 
@@ -815,9 +829,10 @@ export class boundary{
      *               //fail object {
      *                  noLevel //fail if no level is found under the given options
      *                  }
+     *               //sourceTarget string source targeting rules (In, Adjacent, Both)
      */
     getRandomBoundary(options = {}){
-        const {units: {w, h, d}, bleed, documents, stretch} = options
+        const {units: {w, h, d}, bleed, documents, stretch, sourceTarget} = options
 
         //return a random level and set it for the level to use from here onward.
         const _levels = this.getRandomLevelInBoundary(options)
@@ -826,7 +841,7 @@ export class boundary{
         }
         const level = _levels.levels.selected;
 
-        if(documents?.length){
+        if(!['A', 'B'].includes(sourceTarget) && documents?.length){
             const _documents = this.getRandomDocumentBoundary(level, documents)
             if(_documents.invalid){
                 //currently doesn't break flow
@@ -837,9 +852,19 @@ export class boundary{
         
         let shiftedPoint
 
-        
+        let _point;
+        //depending how the targeting is done, this splits between different methods
+        //getRandomPointInBoundary is intended to be less processing intensive, so is not rolled into the methods used by the other 2 (though can be)  
+        switch(sourceTarget){
+            case 'A':
+            case 'B':
+                _point = this.getRandomIndexedBoundaryPoint(level, options);
+                break;
+            default:
+                _point = this.getRandomPointInBoundary(level, options);
+                break;
+        }
 
-        let _point = this.getRandomPointInBoundary(level, options)
         if(_point.invalid){
             return dangerZone.log(false, `${_point.invalid}`, {options, boundary: this, pointData: _point})
         }
@@ -1182,8 +1207,8 @@ export class boundary{
         const sceneHeight = dimensions.height;
 
         //the boundary will be created based on coordinate settled on being top left coordinate. Thus, size of the final coordinate bottom right cannot exceed scene
-        //this reduces acceptable bottom and right dimensions by the width of the target area
-        const bottomRight = point.shiftPoint({x: sceneWidth, y: sceneHeight}, {w: ((units.w -1) * -1), h: ((units.h - 1) * -1)})
+        //this reduces accept able bottom and right dimensions by the width of the target area
+        const bottomRight =point.shiftPoint({x: sceneWidth, y: sceneHeight}, {w: ((units.w -1) * -1), h: ((units.h - 1) * -1)})
 
         //set a max in case all tests fail
         const max = 500
@@ -1200,8 +1225,7 @@ export class boundary{
             ){
                 const width = test.B.x - test.A.x
                 const height = test.B.y - test.A.y
-                const shape = new PIXI.Rectangle(test.A.x, test.A.y, width, height)
-                const poly = shape.toPolygon()
+                const poly = helper.shapeToPolygon({x:test.A.x, y:test.A.y, width, height})
 
                 //final test to ensure the area overlaps region 
                 if(this.polygonIsInRegion(region, poly)){
@@ -1275,7 +1299,7 @@ export class boundary{
             } else {
                 data.coord.elevation = elevation.bottom
             }
-            locked.elevation = true;
+            locked.d = true;
             locked.fullZone++
         } 
         
@@ -1283,7 +1307,7 @@ export class boundary{
         //then x must be kept as the top left point
         if(units.w === maxX || coord.x === bounds.x || coord.x === bounds.right){
             if(coord.x === bounds.right){
-                const ShiftFromBottomX = point.shiftPoint({w: (w*-1), h: 0}, coord)
+                const ShiftFromBottomX = point.shiftPoint(coord, {w: (units.w*-1), h: 0})
                 data.coord.x = ShiftFromBottomX.x
             } else {
                 data.coord.x = bounds.x;
@@ -1296,7 +1320,7 @@ export class boundary{
         //then y must be kept as the top left point
         if(units.h === maxY || coord.y === bounds.y || coord.y === bounds.bottom){
             if(coord.y === bounds.bottom){
-                const ShiftFromBottomY = point.shiftPoint({w: 0, h: (h*-1)}, coord)
+                const ShiftFromBottomY = point.shiftPoint(coord, {w: 0, h: (units.h*-1)})
                 data.coord.y = ShiftFromBottomY.y
             } else {
                 data.coord.y = bounds.y;
@@ -1332,7 +1356,10 @@ export class boundary{
 
                 i++;
             } while(!inBoundary && i < max);
-        } 
+        } else {
+            //if all of the dimensions are locked, then coordinates are already set from prior tests.
+            inBoundary = true
+        }
         
         //if no point could be found, use top left of the region boundary
         if(!inBoundary){
@@ -1399,6 +1426,136 @@ export class boundary{
     }
 
 
+    /**Iterates through all of the grids in a region and yields the grid offset and top left coordinates
+     * 
+     * @param {region} region
+     */
+    *#iterateRegionGrids(region){
+        const [i0, j0, i1, j1] = canvas.grid.getOffsetRange(region.bounds);
+
+        for(let i = i0; i < i1; i++){
+            for(let j = j0; j < j1; j++){
+                const offset = {i, j};
+                const center = canvas.grid.getCenterPoint(offset);
+                const poly = helper.shapeToPolygon({points: canvas.grid.getVertices(center)}, 'polygon');
+                if(!this.polygonIsInRegion(region, poly)) continue;
+
+                const topLeft = canvas.grid.getTopLeftPoint(center);
+                yield {
+                    i,
+                    j,
+                    x: topLeft.x,
+                    y: topLeft.y
+                };
+            }
+        }
+    }
+
+
+    /**Returns an array of grid indexes that are either in the region or adjacent to it, depending on the sourceTarget option
+     * 
+     * @param {string} level //id of level
+     * @param {array} documents //array of documents, typically tokens
+     * @param {object} options //sourceTarget string source targeting rules (In, Adjacent, Both) 
+     * @returns array of candidate grids that are either in the region or adjacent to it, depending on the sourceTarget option
+     */
+    #getBoundaryGridPool(level, documents = [], {sourceTarget}){
+        const region = this.levelsRegions.get(level);
+        const gridIndex = ({i, j}) => `${i},${j}`;
+
+        const _in = new Map();
+        const _adjacent = new Map();
+
+        // Index all grids that belong to the region
+        for(const grid of this.#iterateRegionGrids(region)){
+            _in.set(gridIndex(grid), grid);
+        }
+
+        // Index all adjacent grids
+        for(const grid of _in.values()){
+
+            for(const adj of canvas.grid.getAdjacentOffsets({i: grid.i, j: grid.j})){
+                const key = gridIndex(adj);
+
+                if(_in.has(key)) continue;
+                if(_adjacent.has(key)) continue;
+
+                const center = canvas.grid.getCenterPoint(adj);
+                const topLeft = canvas.grid.getTopLeftPoint(center);
+
+                _adjacent.set(key, {
+                    i: adj.i,
+                    j: adj.j,
+                    x: topLeft.x,
+                    y: topLeft.y
+                });
+            }
+        }
+
+        const candidates = sourceTarget === 'B' ?
+            [..._in.values(), ..._adjacent.values()] :
+            [..._adjacent.values()];
+
+        // Restrict to document grids if possible
+        if(documents?.length){
+            const documentGrids = candidates.filter(grid => {
+                const center = canvas.grid.getCenterPoint({
+                    x: grid.x,
+                    y: grid.y
+                });
+                return documents.some(doc => {
+                    const poly = helper.shapeToPolygon({
+                        x: doc.x,
+                        y: doc.y,
+                        width: doc.width,
+                        height: doc.height
+                    });
+                    return poly.contains(center.x, center.y);
+                });
+            });
+
+            if(documentGrids.length) return documentGrids;
+        }
+
+        return candidates;
+    }
+    
+    /**
+     * 
+     * @param {string} level //level id
+     * @param {*} options 
+     * @param {*} param2 
+     * @returns 
+     */
+    getRandomIndexedBoundaryPoint(level, options = {}){
+        const {sourceTarget, documents, units} = options;
+
+        //secure all of the grids that are adjacent to the boundary (but not in it)
+        const grids = this.#getBoundaryGridPool(level, documents, {sourceTarget});
+
+        if(!grids.length) return {invalid: `No ${sourceTarget === 'B' ? 'in or ' : ''}adjacent boundary grids found`};
+
+        const selected = helper.pickRandom(grids);
+
+        const regionBounds = this.getLevelRegionBounds(level);
+
+        const {top, bottom, topInclusive} = regionBounds.elevation;
+
+        return {
+            boundary: this,
+            level,
+            region: this.levelsRegions.get(level),
+            regionBounds,
+            invalid: '',
+            units: units,
+            coord: {
+                x: selected.x,
+                y: selected.y,
+                elevation: helper.pickRandom(bottom, topInclusive ? top : top - 1)
+            }
+        };
+    }
+
 
     /**Highlights a grid highlight layer with the dimensions of this boundary
      * 
@@ -1427,39 +1584,14 @@ export class boundary{
         //append to id for the highlight layer the danger zone prefix
         const hId = 'dz-' + name;
 
-        //the bounds for the given region
-        const {x,y, right, bottom} = region.bounds;
-        let {x: iX, y: iY} = canvas.grid.getTopLeftPoint({x,y})
-        let baseY = iY;
-
         //add the highlight level
         canvas.interface.grid.addHighlightLayer(hId);
 
         dangerZone.log(false, `Highlight ${hId} for region...`, {region, boundary: this})
 
-        //iterate through the grids in the region and highlight
-        do{
-            do{//iterate on Y axis, highlighting each grid in boundary level region
-                const options = {x: iX, y: iY, color:color}
-
-                //convert grid to shape
-                const polygon = new PIXI.Polygon(canvas.grid.getVertices(options))
-
-                if(this.polygonIsInRegion(region, polygon)){
-                    canvas.interface.grid.highlightPosition(hId, options);
-                }
-
-                //moves to next grid in downward direction (2)
-                const shiftDown = canvas.grid.getShiftedPoint(options, CONST.MOVEMENT_DIRECTIONS.DOWN)
-                iY = shiftDown.y; iX = shiftDown.x;
-            }
-            while(iY < bottom)
-
-            //moves to the next grid in right direction, keeping index of the Y
-            const shiftRight = canvas.grid.getShiftedPoint({x: iX, y: baseY}, CONST.MOVEMENT_DIRECTIONS.RIGHT)
-            baseY = shiftRight.y; iY = shiftRight.y; iX = shiftRight.x;
+        for(const grid of this.#iterateRegionGrids(region)){
+            canvas.interface.grid.highlightPosition(hId, {x: grid.x, y: grid.y, color});
         }
-        while(iX < right)
     }
 
 
@@ -1487,22 +1619,21 @@ export class boundary{
      * @returns  array of tokens
      */
     tokensIn(tokens, options = {}){
-
-        if(!this.levelsRegions?.size) return
-
         let kept = [];
+        const tokenCount = tokens?.length ?? tokens?.size;
+        if (!this.levelsRegions?.size || !tokenCount) return kept; 
     
         //iterate over tokens, keeping those that exist in the boundary
         for(let token of tokens){
             const{x,y,width,height, elevation} = token
-            const shape = new PIXI.Rectangle(x, y, width, height)
+            const polygon = helper.shapeToPolygon({x, y, width, height})
 
             //get elevation
             const tokenDepth = helper.getTokenDepth(token)
             const e = {bottom: elevation, top: elevation + tokenDepth}
 
-            //checks the shape against the region. Will also check level
-            if(this.findRegionContainingShape(shape, e, [token.level], options)) kept.push(token)
+            //checks the polygon against the region. Will also check level
+            if(this.findRegionContainingPolygon(polygon, e, [token.level], options)) kept.push(token)
         }
 
         return kept
@@ -1515,7 +1646,10 @@ export class boundary{
      * @returns boolen //true = valid boundary, false = invalid
      */
     validate(){
-
+        //at least one level/region is required
+        if(!this.levelsRegions.size){
+            return false
+        }
         //check elevations
         if(!this.bottomIsInfinite && !this.topIsInfinite && this.top < this.bottom) {
             dangerZone.log(true, 'Boundary dimensions are invalid - top at a lower elevation than bottom', {boundary: this})

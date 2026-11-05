@@ -155,7 +155,7 @@ export function setHooks(){
      * in combat hook for when combat ends. Used for managing in combat zone events
      */
     Hooks.on('combatStart', async(combat, options) => {
-        if(game.user.isActiveGM) triggerManager.findcombatEvents(combat, 'combatStart', options)
+        if(game.user.isActiveGM) triggerManager.findCombatEvents(combat, 'combatStart', options)
     });
 
     /**
@@ -184,7 +184,7 @@ export function setHooks(){
      * in combat hook for when combat ends. Used for managing in combat zone events
      */
     Hooks.on('deleteCombat', async(combat, options, id) => {
-        if(game.user.isActiveGM) triggerManager.findcombatEvents(combat, 'deleteCombat', options)
+        if(game.user.isActiveGM) triggerManager.findCombatEvents(combat, 'deleteCombat', options)
     });
 
     /** V13
@@ -211,7 +211,7 @@ export function setHooks(){
      */
     Hooks.on('updateCombat', async(combat, round, options, id) => {
         if(!game.user.isActiveGM) return
-        if(options.advanceTime || options.direction === 1) triggerManager.findcombatEvents(combat, 'updateCombat', options)
+        if(options.advanceTime || options.direction === 1) triggerManager.findCombatEvents(combat, 'updateCombat', options)
     });
 
     Hooks.on("updateToken", async (token, update, options, userId) => {

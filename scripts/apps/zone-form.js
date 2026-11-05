@@ -68,10 +68,11 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
       actorOps: actorOps(),
       defaultMinElevation: dangerZone.minElevation,
       defaultMaxElevation: dangerZone.maxElevation,
-      hideLevels: this.zone.scene.regionId ? true : false,
+      hideLevels: this.region ? true : false,
       hideOperation: this.zone.trigger.loop > 1 ? false : true,
       levelOps: helper.getSceneLevelList(this.sceneId),
       options: ZONEFORMOPTIONS,
+      regionId: this.region?.id ?? '',
       regionOps: helper.getSceneRegionList(this.sceneId),
       eventOps: EVENT_OPTIONS,
       zoneOps: dangerZone.getZoneList(this.sceneId),
@@ -86,6 +87,10 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
   /*******           custom            ********/
 
   /**         GETTERS         **/
+  get region(){
+    return this.zone.scene.region
+  }
+
   get scene(){
     return game.scenes.get(this.sceneId)
   }
