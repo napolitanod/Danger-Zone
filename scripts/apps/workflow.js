@@ -143,7 +143,6 @@ class plan {
     }
 
     errorReport(report){
-        console.log(report)
         console.log(`Danger Zone ${this.title} plan step execution failed ${report?.danger}...`, report)
     }
 
@@ -217,6 +216,7 @@ class plan {
  *  target: {
  *      all: array //an array of all level ids to be used as the target levels by dangers and placeables which can be associated to more than 1 level
  *      single: 'string//a string for the level id to be used by dangers that generate a placeable that can only have 1 level.
+ *      targeted: the final levels after targeting is complete, which typically occurs during boundary definition
  *      zone: string // whereas single is one of the targeted levels, zone is one of the zone levels, whether or not targeted
  *  }
  * }
@@ -234,15 +234,8 @@ class executorData {
         this.clearBypass = options.clearBypass ?? false,
         this._delay = options.delay,
         this.eligibleTargets = [],
-        this.likelihoodResult = 100,
-        this.levelData = {
-            added: '',
-            target: {
-                all: options.levels?.target ? options.levels.target.all : [],
-                single: options.levels?.target ? options.levels.target.single : '',
-                zone: options.levels?.target ? options.levels.target.zone : ''
-            }
-        },
+        this.likelihoodResult = 100
+        this.levelData = this.#normalizeLevelData(options.levels);
         this.location = options.location ? (new point(options.location.coords ?? {x: options.location.x, y: options.location.y}, options.location.elevation ?? options.location.z)) : {},
         this.offset = {
             x:{
@@ -320,8 +313,9 @@ class executorData {
         return (Object.keys(this.location).length) ? true : false
     }
 
-    get hasOverrideLevelTargets(){
-        return this._options?.levels?.target ? true : false
+    get hasOverrideLevelTargets() {
+        return Array.isArray(this._options?.levels)
+            || Boolean(this._options?.levels?.target);
     }
 
     get hasSources(){
@@ -356,6 +350,14 @@ class executorData {
      */
     get levels(){
         return this.levelData.target.all
+    }
+
+    
+    /**
+     * the levels targeted during boundary selection
+     */
+    get levelsTargeted(){
+        return this.levelData.target.targeted
     }
 
     /**
@@ -528,14 +530,34 @@ class executorData {
         this.targets = targets?.length ? this.targets.concat(targets.filter(t => !this.targets.find(tg => tg.id === t.id))) : [];
     }
 
+    #normalizeLevelData(levels = {}) {
+        const input = Array.isArray(levels) ? {} : (levels ?? {});
+        const target = Array.isArray(levels)
+            ? {all: levels}
+            : (input.target ?? {});
+
+        return {
+            added: input.added ?? '',
+            target: {
+                all: Array.isArray(target.all) ? [...target.all] : [],
+                single: target.single ?? '',
+                targeted: Array.isArray(target.targeted) ? [...target.targeted] : [],
+                zone: target.zone ?? ''
+            }
+        };
+    }
+
     /**
      * Prompts user for the boundary, which then records that boundary to the zone as part of the final call
      * Final method also sets boundary eligible targets
      */
     async promptBoundary(){ 
         const choice = await this.zone.promptTemplate()
-        if(!choice) return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
-        
+        if(!choice) {
+            this.valid = false
+            this.validationMessage = game.i18n.localize("DANGERZONE.alerts.user-selection-exited")
+            return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
+        }
         //set the override location on the data
         this.location = new point(
             choice.coords,
@@ -545,15 +567,16 @@ class executorData {
         //set the override levels on the data
         const choiceLevels = choice.levels ?? []
         const zoneLevels = helper.filterLevels(this.scene, {output: 'ids', filterIds: this.zone.levels})
+
+        this.setTargetLevels(choiceLevels, zoneLevels);
+        this.levelData.target.zone = helper.pickRandom(zoneLevels);
+        
         const choiceSingleArray = choiceLevels.length ? choiceLevels : zoneLevels        
         Object.assign(this.levelData.target, {
-                all: choiceLevels,
+                targeted: choiceLevels,
                 single: helper.pickRandom(choiceSingleArray),
                 zone: helper.pickRandom(zoneLevels)
             });
-
-        //set the boundary now
-        this._setLocationBoundary()
     }
 
 
@@ -586,6 +609,8 @@ class executorData {
 
         if(!b) return
 
+        this.setTargetLevels(b.levels)
+
         //include scene tokens for re-assessment to account for stretch
         const tokenTargets = options.stretch?.type ? this.zone.zoneEligibleTokens(this.sceneTokens) : tokens
         this.eligibleTargets = b.tokensIn(tokenTargets, options)
@@ -612,7 +637,7 @@ class executorData {
         if(!this.valid) return
 
         //set the levels for the executor data
-        this._setLevels();
+        this.setLevels();
 
         //set the target boundary and the eligible tokens
         //also sets the twin boundary
@@ -635,14 +660,14 @@ class executorData {
         //if a boundary is already present, set the tokens in that boundary as eligible targets
         if(this.hasBoundary) return this.setBoundaryEligibleTargets();
 
-        //if location is present, set the boundary using the location. This also sets eligible targets
-        if(this.hasLocation) return this._setLocationBoundary();
-
-        //if this involves a prompt at this point, then prompt for boundary. That prompt flow also sets eligible targets
+        //if this involves a prompt at this point, then prompt for boundary. This will set a location, which moves to next step.
         if(asRun && this.zone.target.choose.enable) {
             await this.promptBoundary();
-            return
+            if(!this.valid) return
         }
+
+        //if location is present, set the boundary using the location. This also sets eligible targets
+        if(this.hasLocation) return this._setLocationBoundary();
 
         //default is to pull a random boundary and assign eligible targets
         this.randomBoundary()
@@ -652,7 +677,7 @@ class executorData {
      * Adds levels for the zone to the execution data as an array of ids and a single random selected one
      * Uses settings from zone Targetting
      */
-    _setLevels(){
+    setLevels(){
         
         const targetData = this.levelData.target
 
@@ -660,65 +685,46 @@ class executorData {
         if(this.hasOverrideLevelTargets) {
             if(!targetData.single || !targetData.zone) {
                 const zoneLevels = helper.filterLevels(this.scene, {output: 'ids', filterIds: this.zone.levels})
-                if(!targetData.zone) targetData.zone = helper.pickRandom(zoneLevels);
+                
+                if(!targetData.zone) {
+                    targetData.zone = helper.pickRandom(zoneLevels);
+                }
 
                 if(!targetData.single){
-                    const choiceSingleArray = choiceLevels.length ? choiceLevels : zoneLevels    
+                    const choiceLevels = targetData.targeted.length
+                        ? targetData.targeted
+                        : targetData.all;
+
+                    const choiceSingleArray =  
+                        choiceLevels.length
+                        ? choiceLevels
+                        : zoneLevels;
+
                     targetData.single = helper.pickRandom(choiceSingleArray)
                 }
             }
             return        
         }
 
-        //handling when levels are specified (else assume all levels)
-        if(this.zone.levels.length) {
-            switch(this.zoneLevelTargets){
-                //add all zone levels (this is not yet implemented)
-                case 'all':
-                    targetData.all = this.zone.levels
-                    break;
-                //add random zone level
-                case 'any':
-                    let randomArray
-                    
-                    //if the zone requires a target be token, select levels at random from those where there is an eligible token
-                    if(this.zone.target.always){
-                        const tokenLevels = this.zoneEligibleTokens.map(t => t.level)
-                        randomArray = this.zone.levels.filter(lvl => tokenLevels.includes(lvl))
-                    } 
-                    //if zone doesn't require target, or one could not be found in the levels, assign the zone levels
-                    if(!randomArray?.length) randomArray = this.zone.levels
-                    
-                    targetData.all = [helper.pickRandom(randomArray)]
-                    break;
-                //add zone level that is currently visible to GM
-                case 'current':
-                    //if the current level is not a zone level, throw the validation error. Set the array to prevent other errors before the plan is abandoned
-                    if(!this.zone.levelCurrent) {
-                        this.valid = false
-                        this.validationMessage = 'Zone only triggers when GM is viewing the level. The current level viewed by the GM is not a zone level.'
-                        targetData.all = []
-                    } else {
-                        targetData.all = [this.zone.levelCurrent] 
-                    }
-                    break;
+        //if the current level is not a zone level, throw the validation error. Set the array to prevent other errors before the plan is abandoned
+        if(this.zoneLevelTargets === 'current') {
+            if(!this.zone.levelCurrent) {
+                this.valid = false
+                this.validationMessage = 'Zone only triggers when GM is viewing the level. The current level viewed by the GM is not a zone level.'
+                targetData.all = []
+            } else {
+                //else set the zone to the current viewed zone
+                targetData.all = [this.zone.levelCurrent] 
             }
-            //pick a random one from array for singleton placeables (ones that accept only one level)
-            //should there be an issue with a level not being decided, an individual one must still be assigned to allow for token creation when it happens
-            const single = targetData.all?.length ? targetData.all : this.zone.levels
-            targetData.single = helper.pickRandom(single)
-
-            //finally, set a singleton for the one level to satisfy settings that pick one level from zone
-            targetData.zone = helper.pickRandom(this.zone.levels)
-        } 
-        //case for when all levels are part of zone and array is []
+        }
+        //else set the target levels to the zone levels, which may mean all the scene levels if there are no zone levels specified.
         else {
-            targetData.all = []
-            const sceneLevelIds = helper.filterLevels(this.scene, {output: 'ids'})
-            targetData.single = helper.pickRandom(sceneLevelIds)
-            targetData.zone = helper.pickRandom(sceneLevelIds)
+            targetData.all = this.zone.levels.length ? this.zone.levels : helper.filterLevels(this.scene, {output: 'ids'})
         }
 
+        //set the single and zone levels to random picks from the array of all levels. The targeted levels will be set during boundary selection, which may be a subset of the all levels.
+        targetData.single = helper.pickRandom(targetData.all)
+        targetData.zone = helper.pickRandom(targetData.all)
     }
 
     
@@ -733,7 +739,7 @@ class executorData {
             exclude, 
             limit, 
             stretch,
-            levels: this.levelData.target.all
+            levels: this.levelData.target.targeted
         }
 
         const {coords, elevation} = this.location;
@@ -797,6 +803,35 @@ class executorData {
 
     setLevelAdded(level){
         this.levelData.added = level
+    }
+
+
+    /**Sets the override levels for the executor, which will be used for targeting and other level related operations
+     * 
+     * @param {array} levels 
+     */
+    setOverrideLevels(levels){
+        this._options.levels = levels;
+        this.levelData = this.#normalizeLevelData(levels);
+    }
+
+
+    /**After targeting is complete, updates the level data so the zone targeted is what is passed into the parts
+     * 
+     * @param {array} levels 
+     * @param {array} fallbackLevels 
+     */
+    setTargetLevels(levels, fallbackLevels = []) {
+        const targeted = Array.isArray(levels) ? [...new Set(levels)] : [];
+        const fallback = Array.isArray(fallbackLevels) ? fallbackLevels : [];
+        const choices = targeted.length ? targeted : fallback;
+        const currentSingle = this.levelData.target.single;
+
+        this.levelData.target.targeted = targeted;
+        this.levelData.target.single =
+            choices.includes(currentSingle)
+                ? currentSingle
+                : helper.pickRandom(choices);
     }
 
 
@@ -1373,9 +1408,16 @@ export class executor {
         this.data.setBoundaryEligibleTargets()
     }
 
+    setLevels(levels, fallbackLevels = []){
+        this.data.setOverrideLevels(levels)
+        this.data.setTargetLevels(levels, fallbackLevels)
+        this.data.setLevels()
+    }
+
     setTargets(){
         this.data.setTargets()
     }
+
 
     async updateBoundary(boundary, options={}){
         this.data.updateBoundary(boundary)
@@ -1621,11 +1663,15 @@ class executable {
         switch(this.part.levels){
             //add the level created by this execution
             case 'D':
-                levels = this.data.levelAdded 
+                levels = this.data.levelAdded ?? ''
                 break;
             //add the target levels and the level created by this execution. For singleton, pick between the added and the single level randomly chosen.
             case 'B':
-                levels = helper.pickRandom([this.data.levelSingle, this.data.levelAdded])  
+                if(this.data.levelAdded){
+                    levels = helper.pickRandom([this.data.levelSingle, this.data.levelAdded]) 
+                } else{
+                    levels = this.data.levelSingle
+                } 
                 break;
             //add the zone levels. For singleton, default to the single level randomly chosen.
             case 'Z':
@@ -1648,15 +1694,19 @@ class executable {
         switch(this.part.levels){
             //add the level created by this execution
               case 'D':
-                levels = [this.data.levelAdded]
+                levels = this.data.levelAdded ? [this.data.levelAdded] : []
                 break;
             //add the target levels from this execution. For singleton, default to the single level randomly chosen.
             case 'T':
-                levels = this.data.levels
+                levels = this.data.levelsTargeted
                 break;
             //add the target levels and the level created by this execution. For singleton, pick between the added and the single level randomly chosen.
             case 'B':
-                levels = this.data.levels.concat(this.data.levelAdded)   
+                if(this.data.levelAdded){
+                    levels = this.data.levelsTargeted.concat(this.data.levelAdded)   
+                } else{
+                    levels = this.data.levelsTargeted
+                } 
                 break;
             //add the zone levels. For singleton, default to the single level randomly chosen.
             case 'Z':
@@ -3380,15 +3430,16 @@ class level extends executable {
      */
     _levelsFromParameter(inParameter){
         let levels
+        const sceneLevels = helper.filterLevels(this.data.scene, {output: 'ids'})
         switch(inParameter){
             case 'S':
-                levels = helper.filterLevels(this.data.scene, {output: 'ids'})
+                levels = sceneLevels
                 break;
             case 'Z':
-                levels = this.data.zone.levels
+                levels = this.data.zone.levels.length ? this.data.zone.levels : sceneLevels
                 break;
             case 'T':
-                levels = this.data.levels
+                levels = this.data.levelsTargeted.length ? this.data.levelsTargeted : sceneLevels
                 break;
             default:
                 levels = []
@@ -4778,8 +4829,30 @@ class tokenMove extends executable {
         return this.sToT
     }
 
+    /**The level to move token to, based on part levels settings
+     * 
+     * @returns string level id
+     */
+    get moveLevel(){
+        let level
+        switch(this.part.levels){
+            case 'D':
+                level = this.data.levelAdded 
+                break;
+            case 'Z':
+                level = this.data.levelSingleZone 
+                break;
+            case 'T':
+                level = this.data.levelSingle
+                break;
+            default:
+                level = ''
+        }
+        return level
+    }
+
     get movesTargets(){
-        return (this.v?.dir || this.hz?.dir || this.e?.type) ? true : false
+        return (this.v?.dir || this.hz?.dir || this.e?.type  || this.part.levels) ? true : false
     }
 
     get save(){
@@ -4819,7 +4892,10 @@ class tokenMove extends executable {
             const update = {"_id": token.id,};
 
             //move the level if there is a setting to do so.
-            if(this.levels) update['level'] = this.levels
+            const level = this.moveLevel               
+            if(level){
+                update['level'] = level
+            }
 
             //set height, width, and elevation constants, which may be assigned randomly over a range.
             const h = this.#getV();
@@ -4903,6 +4979,8 @@ class tokenMove extends executable {
         }
         await this.data.scene.updateEmbeddedDocuments("Token", this.tokenUpdates, opts);
     }
+
+
 }
 
 class tokenSays extends executable {  

@@ -182,7 +182,7 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
         return part.active ? true : false
       case 'globalZone': return part.enabled ? true : false
       case 'level': return part.add ? true : false
-      case 'tokenMove': return (part.v.dir || part.hz.dir || part.e.type || part.sToT) ? true : false
+      case 'tokenMove': return (part.v.dir || part.hz.dir || part.e.type || part.sToT || part.levels) ? true : false
       case 'tokenResponse': return (part.save?.enable || part.damage?.enable) ? true : false
       case 'tokenSays': return part.fileType ? true : false
       case 'wall': return (part.top || part.bottom || part.left || part.right) ? true : false

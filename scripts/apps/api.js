@@ -127,7 +127,7 @@ export class api {
      *                          sources {array} an array of token documents that represent zone sources (this overrides and source defined in the zone for purposes of this method)
      *                          targets {array} an array of token documents that will be the targets (overrides any zone targeting)
      */
-     static async _triggerZone(zoneName, sceneId, options = {activeOnly: false, scope: '', location: {}, targets: [], sources: [], boundary: {}}){
+     static async _triggerZone(zoneName, sceneId, options = {activeOnly: false, scope: '', location: {}, targets: [], sources: [], boundary: {}, levels: []}){
         if (!game.user.isActiveGM){
             if( game.modules.get("socketlib")?.active && dangerZone.dangerZoneSocket){
                 if(game.settings.get(dangerZone.ID, 'open-socket')) {
@@ -143,6 +143,7 @@ export class api {
         let zn; const opts = {}; 
         if(options === true || options === false) opts['activeOnly'] = options;
         if(options.boundary && Object.keys(options.boundary).length) opts['boundary'] = options.boundary;
+        if(options.levels?.length && Object.keys(options.levels).length) opts['levels'] = options.levels;
         if(options.location && Object.keys(options.location).length) opts['location'] = options.location;
         if(options.targets?.length) opts['targets'] = options.targets;
         if(options.sources?.length) opts['sources'] = options.sources;

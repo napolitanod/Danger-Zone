@@ -295,13 +295,14 @@ export class triggerManager {
     }
 
     static async findMovementEvents(token, update, options){
+        if(options.end) await token.object.movementAnimationPromise 
+        
         const opt = {levels: [token.level]}
         const sceneZones = options.end ? dangerZone.getMovementCompleteZonesFromScene(options.sceneId, opt) : dangerZone.getMovementNotCompleteZonesFromScene(options.sceneId, opt);
         if(!sceneZones.length) return
 
         const zones = []
         const move = helper.measureTokenMovement(token, update);
-        if(options.end) await token.object.movementAnimationPromise 
 
         for (const zn of sceneZones) {
             if(!(zn.sourceTrigger([token]))){

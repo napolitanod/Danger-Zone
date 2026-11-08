@@ -75,7 +75,8 @@ export class dangerZone {
    * Adds the Dangers button to the scenes side menu if the user settings allows for this.
    * @param {object} app 
    * @param {object} html 
-   * @returns 
+   * 
+   * Has a bug in that the button is not added when no scenes exist
    */
   static addDangersLaunch(app, html) {
     if (!game.user.isActiveGM 
@@ -781,6 +782,10 @@ export class zone {
     return this.sources.filter(t => this.tokenInZoneLevel(t)) 
   }
 
+  get targetsCurrentZone(){
+    return this.target.levels === 'current' ? true : false
+  }
+
   get titleLong(){
       return this.title + (this.scene.dangerId ? ' (' + game.i18n.localize("DANGERZONE.type-form.globalZone.label") + ') ' :' ') + this.eventsDescription + ' ' + game.i18n.localize("DANGERZONE.scene.trigger")
   }
@@ -1064,7 +1069,7 @@ export class zone {
     } 
     
     //if targeting requires the GM be viewing the level that the token is on
-    else if(this.target.levels === 'current'){
+    else if(this.targetsCurrentZone){
       if(this.levelCurrent === token.level) inZone = true
     } 
 
@@ -1210,6 +1215,10 @@ export class zone {
     //add in level and elevation if configured to prompt for this also
     if(this.target.choose.prompt){
       const chosenElevationLevel = await this._promptElevation()
+      
+      //if the elevation prompt is canceled
+      if(chosenElevationLevel == null) return {}
+
       choice.elevation = chosenElevationLevel.elevation
       choice.levels = chosenElevationLevel.levels      
     } else {

@@ -414,7 +414,7 @@ export const DANGERFORMOPTIONS = {
         LEVELSSINGLEOPTIONS: {
             "": "DANGERZONE.type-form.tokenMove.levels.options-single.none",
             "Z": "DANGERZONE.type-form.tokenMove.levels.options-single.zone",
-            "T": "DANGERZONE.type-form.tokenMove.levels.options-single.trigger",
+            "T": "DANGERZONE.type-form.tokenMove.levels.options-single.target",
             "D": "DANGERZONE.type-form.tokenMove.levels.options-single.danger"
         },
         WALLSBLOCK: {
@@ -667,7 +667,7 @@ export function runOnSetup(){
                 name: "config",
                 title: "DANGERZONE.zones",
                 onChange: (event, active) => {
-                    if(active && dangerZone.executorForm.visible) new ZoneListForm(canvas.scene?.id).render(true)
+                    if(active) new ZoneListForm(canvas.scene?.id).render(true)
                 },
                 visible: game.user.isActiveGM
             },

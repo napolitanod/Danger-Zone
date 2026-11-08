@@ -38,6 +38,7 @@ export class helper {
         break;
       case 'Region':
         source = document.toObject();
+        source.shapes.forEach(shape => shape.hole = options.hole);
         break;
       case 'Scene':
         source = helper.sceneRegionSourceDeconstruction(document, options);
@@ -52,8 +53,13 @@ export class helper {
         source = helper.wallRegionSourceDeconstruction(document, options);
         break;
     }
-    console.log(source, document)
+
+    if (!source.name?.trim()) {
+      source.name = "Danger Zone";
+    }
+
     //create the region and return it
+
     return options.asObject ? source : RegionDocument.implementation.fromSource(source, {parent: parent})
   }
 
@@ -80,9 +86,8 @@ export class helper {
 
     shapeObj.hole = options.hole;
 
-    return {name: name ?? 'Danger Zone', elevation: {top: elevation + radius, bottom: elevation - radius}, levels, shapes: [shapeObj]};
+    return {name, elevation: {top: elevation + radius, bottom: elevation - radius}, levels, shapes: [shapeObj]};
   }
-
 
   /**Generates the source object needed to create a region from a ambient sound
    * 
@@ -103,7 +108,7 @@ export class helper {
 
     shapeObj.hole = options.hole;
 
-    return {name: name ?? 'Danger Zone', elevation: {top: elevation + radius, bottom: elevation - radius}, levels, shapes: [shapeObj]};
+    return {name, elevation: {top: elevation + radius, bottom: elevation - radius}, levels, shapes: [shapeObj]};
   }
 
   /**Generates the source object needed to create a region from a drawing document
@@ -156,7 +161,7 @@ export class helper {
           })
     } 
 
-    return {name: name ?? 'Danger Zone', elevation: {top: elevation, bottom: elevation}, levels, shapes: [shapeObj]};
+    return {name, elevation: {top: elevation, bottom: elevation}, levels, shapes: [shapeObj]};
   }
 
 
@@ -182,7 +187,7 @@ export class helper {
     const type = "rectangle";
     const {hole} = options;
 
-    return {name: name ?? 'Danger Zone', elevation, levels, shapes: [{type, x, y, height, width, hole}]};
+    return {name, elevation, levels, shapes: [{type, x, y, height, width, hole}]};
   }
 
   /**Generates the source object needed to create a region from a tile document
@@ -203,7 +208,7 @@ export class helper {
 
     shapeObj.hole = options.hole;
 
-    return {name: name ?? 'Danger Zone', elevation: {top: elevation, bottom: elevation}, levels, shapes: [shapeObj]};
+    return {name, elevation: {top: elevation, bottom: elevation}, levels, shapes: [shapeObj]};
   }
 
   /**Generates the source object needed to create a region from a token document
@@ -241,7 +246,7 @@ export class helper {
     const width = Math.max(initialWidth * gridX, gridX)
     const height = Math.max(initialHeight * gridY, gridY)
 
-    return {name: name ?? 'Danger Zone', elevation: {top: elevation + tokenDepth, bottom: elevation}, levels: new Set([level]), shapes: [{type, x, y, height, width, hole}]};
+    return {name, elevation: {top: elevation + tokenDepth, bottom: elevation}, levels: new Set([level]), shapes: [{type, x, y, height, width, hole}]};
   }
 
   /**Generates the source object needed to create a region from a wall document
@@ -273,7 +278,7 @@ export class helper {
     const width = 1
     const rotation = Math.atan2(boundaryHeight, boundaryWidth) * 180 / Math.PI;
 
-    return {name: name ?? 'Danger Zone', elevation, levels, shapes: [{type, x, y, width, length, rotation, hole}]};
+    return {name, elevation, levels, shapes: [{type, x, y, width, length, rotation, hole}]};
   }
 
   static shapeToPolygon(data = {}, type = 'rectangle'){
@@ -303,6 +308,19 @@ export class helper {
    */
   static biRandom() {
     return Math.random() < 0.5 ? true : false
+  }
+
+
+  /**checks if two arrays of level IDs are the same
+   * 
+   * @param {array} a 
+   * @param {array} b 
+   * @returns boolean
+   */
+  static checkLevelsSame(a, b){
+    if(b.length !== a.length) return false
+    if(!b.length && !a.length) return true
+    return [...a].sort().every((value, index) => value === [...b].sort()[index]);
   }
 
 
