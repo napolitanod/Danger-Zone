@@ -266,7 +266,8 @@ class executorData {
         this.twinBoundary = {},
         this.valid = true,
         this.validationMessage = '',
-        this.zone = zone,
+        this.zone = zone;
+        this.targetQuantity = this.zone.targetQuantity();
         this.zoneBoundary,
         this.zoneEligibleTokens = [],
         this.zoneTokens = [];
@@ -667,7 +668,7 @@ class executorData {
         }
 
         //if location is present, set the boundary using the location. This also sets eligible targets
-        if(this.hasLocation) return this._setLocationBoundary();
+        if(this.hasLocation) return this.setLocationBoundary();
 
         //default is to pull a random boundary and assign eligible targets
         this.randomBoundary()
@@ -731,7 +732,7 @@ class executorData {
     /**
      * Sets the boundary for that executor target using location data passed into the class, typically when the constructor is created
      */
-    _setLocationBoundary(){
+    setLocationBoundary(){
         const {exclude, limit, stretch} = this.zone.scene.zoneBoundaryOptions;
 
         //boundary options
@@ -920,12 +921,9 @@ class executorData {
         //else return from the random target quantity
         else if(this.eligibleTargets.length >= 1){
 
-            //retrieve the zone's target quantity
-            const totalToTarget = this.zone.targetQuantity()
-
             //shallow copy then shuffle then slice
             const shuffled = [...this.eligibleTargets].sort(() => 0.5 - Math.random());
-            const targets = shuffled.slice(0, totalToTarget);
+            const targets = shuffled.slice(0, this.targetQuantity);
             this.targets.push(...targets);
         }    
         
@@ -4270,10 +4268,14 @@ class scene extends executableWithFile {
      * Object
      * the data passed to the scene update which do not invoke render of scene
      */
-    #renderData
+    #levelData
 
     get active(){
         return this.part.active
+    }
+
+    get bottom(){
+        return this.e.min ?? 0
     }
 
     get darkness(){
@@ -4298,20 +4300,28 @@ class scene extends executableWithFile {
         return (super.has && (this.active || this.weather)) ? true : false
     }
 
-    get hasNonRenderInvokingChange(){
+    get hasSceneChange(){
         return Object.keys(this.sceneData).length ? true : false
     } 
 
-    get hasRenderInvokingChange(){
-        return Object.keys(this.renderData).length ? true : false
+    get hasLevelChange(){
+        return Object.keys(this.levelData).length ? true : false
     } 
 
-    get renderData(){
-        return this.#renderData
+    get levelData(){
+        return this.#levelData
     }
 
     get sceneData(){
         return this.#sceneData
+    }
+
+    get targetLevels(){
+        return this.data.levelsTargeted
+    }
+
+    get top(){
+        return this.e.max ?? 0
     }
 
     get weather(){
@@ -4332,7 +4342,7 @@ class scene extends executableWithFile {
     async initialize(){
         await super.initialize()
         this.#sceneData = {}
-        this.#renderData = {}
+        this.#levelData = []
     }
 
     /** @override */
@@ -4345,31 +4355,79 @@ class scene extends executableWithFile {
     async execute(){
         await super.execute()
         this.#build()
-        if(this.hasRenderInvokingChange) await this.#updateWithRender() 
-        if(this.hasNonRenderInvokingChange) await this.#update();
+        if(this.hasLevelChange) await this.#updateLevels() 
+        if(this.hasSceneChange) await this.#update();
     }
 
     #build() {
         if(this.active){
-            if(this.darkness !== - 1) this.#sceneData.darkness = this.darkness;
-            if(this.globalLight) this.#sceneData.globalLight = this.globalLight === 'Y' ? true : false;
-            if(this.e.type) this.#sceneData.foregroundElevation = this.e.type === 'S' ? this.#getE() : this.data.scene.foregroundElevation + this.#getE();
-            if(this.files.image && this.data.scene.background.src !== this.files.image) this.#renderData['background'] = {src: this.files.image}
-            if(this.files.overlay && this.data.scene.foreground !== this.files.overlay) this.#renderData.foreground = this.files.overlay
+            const environment = {}
+            if(this.darkness !== - 1) {
+                environment.darknessLevel = this.darkness;
+            }
+            if(this.globalLight) {
+                environment.globalLight = {enabled: this.globalLight === 'Y' ? true : false};
+            }
+            if(Object.keys(environment).length){
+                this.#sceneData.environment = environment
+            }
         }
-        if(this.weather) this.#renderData.weather = this.weather
+        if(this.weather) this.#sceneData.weather = this.weather
+        this.#buildLevels()
     }
 
-    #getE(){
-        const value = helper.pickRandom(this.e.min, this.e.max)  
-        return value >= 1 ? value : null
+    #buildLevels(){
+        const levels = this.data.scene.levels.filter(lvl => this.targetLevels.includes(lvl.id))
+
+        if(!levels.length) return
+
+        for(const level of levels){
+
+            const update = {"_id": level.id}
+
+            //elevation updates if there is a type set
+            if(this.e.type) {
+                //directly set elevatoin
+                if(this.e.type === 'S'){
+                    const e = {}
+                    if(this.bottom !== level.elevation.bottom){
+                        e.bottom = this.bottom
+                    } 
+                    if(this.top !== level.elevation.top){
+                        e.top = this.top
+                    } 
+                    if(Object.keys(e).length){
+                        update.elevation = e
+                    }
+                }
+                //relative elevation
+                else {
+                    update.elevation = {
+                        bottom: level.elevation.bottom + this.bottom,
+                        top:  level.elevation.top + this.top
+                    }
+                }
+            }
+
+            if(this.files.image && level.background.src !== this.files.image) {
+                update.background = {src: this.files.image}
+            }
+
+            if(this.files.overlay && level.foreground.src !== this.files.overlay) {
+                update.foreground = {src: this.files.overlay}
+            }
+
+            //if there are any changes beyond the id, push into the updates
+            if(Object.keys(update).length > 1){this.#levelData.push(update)}
+        }
+        
     }
 
     async #update(){
         await this.data.scene.update(this.sceneData, this.updateOps);
     }
 
-    async #updateWithRender(){
+    async #updateLevels(){
         let hookId;
       
         const render = new Promise(resolve => {
@@ -4378,7 +4436,7 @@ class scene extends executableWithFile {
           });
         });
 
-        await this.data.scene.update(this.renderData);
+        await this.data.scene.updateEmbeddedDocuments("Level", this.levelData);
 
         // Timeout after 5 seconds
         const timeout = new Promise(resolve => window.setTimeout(() => {

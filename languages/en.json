@@ -9,6 +9,7 @@
         "audio.label": "Audio",
         "behaviors.label": "Behaviors",
         "between": "Between",
+        "bottom.label": "Bottom",
         "cancel": "Cancel",
         "chat.label": "Chat",
         "clear": "Clear",
@@ -77,6 +78,7 @@
         "source.label": "Source",
         "stop": "Stop",
         "tile.label": "Tile", 
+        "top.label": "Top",
         "view": "View",
         "volume.label": "Volume",
         "wall.label": "Wall",
@@ -1016,7 +1018,7 @@
             },
             "scene": {
                 "active.label": "Enable Scene Modifications",
-                "background.label": "Background",
+                "background.label": "Background (Target Level)",
                 "description": "Modifiy scene settings and global illumination",
                 "label": "Scene",
                 "darkness":{
@@ -1025,7 +1027,7 @@
                     "value.label": "Darkness Level"
                 },
                 "foreground":{
-                    "label": "Foreground",    
+                    "label": "Foreground (Target Level)",    
                     "e": {
                         "label": "Foreground Elevation",
                         "distance": {

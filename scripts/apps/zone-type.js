@@ -334,7 +334,8 @@ export class dangerZoneType {
             randomFile: false,
             file: ''
           },
-          globalLight: ''
+          globalLight: '',
+          levels: 'T'
         },
         sound: {
           file:'',

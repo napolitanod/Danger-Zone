@@ -849,6 +849,10 @@ export class boundary{
             }
             options.boundaryRestricted = _documents.boundary
         }
+
+        //Shift and validate the final danger boundary against the original zone bounds.
+        const regionBounds = this.getLevelRegionBounds(level)
+        options.regionBounds = regionBounds
         
         let shiftedPoint
 
@@ -869,7 +873,6 @@ export class boundary{
             return dangerZone.log(false, `${_point.invalid}`, {options, boundary: this, pointData: _point})
         }
 
-
         /* Begin Boundary Testing */
         let testPassed = false
 
@@ -888,12 +891,18 @@ export class boundary{
                 if(!_point.invalid){
                     shiftedPoint = this.#getShiftedNoBleedPoint(_point)
                     if (shiftedPoint.invalid) {
-                        dangerZone.log(false, `${shiftedPoint.invalid}`, {options, boundary: this, originalPoint: _point, shiftedPoint: shiftedPoint})
+                        dangerZone.log(false, `${shiftedPoint.invalid}`, {
+                            options,
+                            boundary: this,
+                            originalPoint: _point,
+                            lastCandidate: shiftedPoint.lastTest,
+                            shiftedPoint
+                        })
                     } else {
                         testPassed = true
                     }
                 } else {
-                    dangerZone.log(false, `${_point.invalid}`, {options, boundary: this, pointData: _point})
+                    dangerZone.log(false, `${shiftedPoint.invalid}`, {options, boundary: this, pointData: shiftedPoint})
                 }
                 
                 nonBleedI++
@@ -911,10 +920,11 @@ export class boundary{
         }
 
         if(!testPassed){
-            dangerZone.log(false, `No valid boundary found. Default to original point`, {options, boundary: this, pointData: shiftedPoint})
+            dangerZone.log(false, `No valid boundary found; aborting boundary generation`, {options, boundary: this, pointData: shiftedPoint})
+            return false
         }
         
-        const {coord: {x, y, elevation: bottom}, regionBounds} = shiftedPoint
+        const {coord: {x, y, elevation: bottom}} = shiftedPoint
 
         const topInclusive = regionBounds?.elevation?.topInclusive
         const b = dimensionBoundary.locationToBoundary(
@@ -925,7 +935,7 @@ export class boundary{
             {levels: [level], stretch}
         )
 
-        dangerZone.log(false, 'Random boundary got got....', {b, _point, shiftedPoint, _levels, options})
+        dangerZone.log(false, 'Random boundary got got....', {b, _point, shiftedPoint, _levels, regionBounds, options})
         
         return b
     }
@@ -1080,7 +1090,7 @@ export class boundary{
      */
     getRandomPointInBoundary(level, options = {}){
         //extract options
-        const {boundaryRestricted, units} = options
+        const {boundaryRestricted, regionBounds, units} = options
 
         //variables to hold the return data 
             //bounds: object //the A and the B and the elevation within with the random point is selected
@@ -1095,7 +1105,7 @@ export class boundary{
             boundary: boundaryRestricted ?? this,
             level: level,
             region: null,
-            regionBounds: null,
+            regionBounds,
             invalid: '',
             coord: {
                 x: 0,
@@ -1125,12 +1135,13 @@ export class boundary{
         const elevation = data.bounds.elevation
         const coord = data.coord
 
-        //get the region for testing
-        data.region = data.boundary.levelsRegions.get(level)
+        //Sample the anchor point inside the restricted boundary, but shift the danger within the original boundary.
+        const sampleRegion = data.boundary.levelsRegions.get(level)
+        data.region = this.levelsRegions.get(level)
 
-        //get remainder of bounds for iterating
-        data.regionBounds = data.boundary.getLevelRegionBounds(level)
-        const {bounds, elevation: {top, bottom, topInclusive}} = data.regionBounds
+        //Use restricted bounds for sampling; regionBounds remains the original zone's bounds for shifting.
+        const sampleBounds = data.boundary.getLevelRegionBounds(level)
+        const {bounds, elevation: {top, bottom, topInclusive}} = sampleBounds
 
         //set the boundary points and shift amounts
         A.x = bounds.x;
@@ -1153,7 +1164,12 @@ export class boundary{
   
             coord.elevation = rs
 
-            inRegion = data.region.testPoint(coord)
+            inRegion = sampleRegion.testPoint(coord)
+
+            //check also against the overall region. The token size may exceed partially the overall region (width, height, depth)
+            if(inRegion){
+                inRegion = data.region.testPoint(coord) 
+            }
 
             i++;
         } while(!inRegion && i < max);
@@ -1202,13 +1218,11 @@ export class boundary{
             regionBounds
         }
 
-        const {scene: dimensions} = regionBounds
-        const sceneWidth = dimensions.width;
-        const sceneHeight = dimensions.height;
-
-        //the boundary will be created based on coordinate settled on being top left coordinate. Thus, size of the final coordinate bottom right cannot exceed scene
-        //this reduces accept able bottom and right dimensions by the width of the target area
-        const bottomRight =point.shiftPoint({x: sceneWidth, y: sceneHeight}, {w: ((units.w -1) * -1), h: ((units.h - 1) * -1)})
+        const {dimensions} = regionBounds.scene
+        const sceneLeft = dimensions.sceneX;
+        const sceneTop = dimensions.sceneY;
+        const sceneRight = sceneLeft + dimensions.sceneWidth;
+        const sceneBottom = sceneTop + dimensions.sceneHeight;
 
         //set a max in case all tests fail
         const max = 500
@@ -1218,10 +1232,11 @@ export class boundary{
         do {
             const test = this.#getShiftedPoints(coord, units)
             
-            //confirm the new boundary fits in the scene overall dimension (Can go into margin)
-            if(Math.min(test.A.x, test.A.y) >=0
-                && test.B.x < bottomRight.x
-                && test.B.y < bottomRight.y
+            //A and B are the outer grid points of the candidate boundary.
+            if(test.A.x >= sceneLeft
+                && test.A.y >= sceneTop
+                && test.B.x < sceneRight
+                && test.B.y < sceneBottom
             ){
                 const width = test.B.x - test.A.x
                 const height = test.B.y - test.A.y
@@ -1266,15 +1281,11 @@ export class boundary{
         const {bounds, elevation, grids: {maxX, maxY}, maxDepth} = regionBounds
 
         //variables to hold the return data 
-            //coord
-            //locked //indicates that the coordinate set was set due to having to boundary being same size as danger units
-            //invalid //message set when any issue is hit
+        //    coord
+        //    locked //indicates that the coordinate set was set due to having to boundary being same size as danger units
+        //    invalid //message set when any issue is hit
         const data = {
-            coord: {
-                x: 0,
-                y: 0,
-                elevation: 0
-            },
+            coord: {...coord},
             locked: {
                 x: false,
                 y: false,
@@ -1295,7 +1306,9 @@ export class boundary{
         //then elevation must be kept as the bottom
         if(units.d === maxDepth || elevation.bottom === coord.elevation || maxElevation === coord.elevation){
             if(coord.elevation === maxElevation){
-                data.coord.elevation = maxElevation - units.d
+                data.coord.elevation = maxElevation >= units.d 
+                    ? maxElevation - units.d
+                    : maxElevation
             } else {
                 data.coord.elevation = elevation.bottom
             }
@@ -1334,6 +1347,7 @@ export class boundary{
         const max = 25
 
         let inBoundary = false
+        let lastTest
 
         //if all of the dimensions are
         if(locked.fullZone < 3){
@@ -1341,15 +1355,21 @@ export class boundary{
             let i=0
             do {
                 //generate a test point that is within a vacinity of the random point
-                const test = this.#getShiftedPoints(coord, units, locked)
+                const testCoord = {...coord};
+                if (locked.x) testCoord.x = data.coord.x;
+                if (locked.y) testCoord.y = data.coord.y;
+                if (locked.d) testCoord.elevation = data.coord.elevation;
+                const test = this.#getShiftedPoints(testCoord, units, locked)
+                const testChecks = {
+                    nonNegativeA: Math.min(test.A.x, test.A.y) >= 0,
+                    pointAInRegion: region.testPoint(test.A),
+                    pointBInRegion: region.testPoint(test.B)
+                };
+                lastTest = {points: test, checks: testChecks}
                 
                 //confirm the test boundary is within the scene bounds and the region
                 //move point B to center, else it will be read as out of zone if it exists on the edge
-                if(
-                    Math.min(test.A.x, test.A.y) >=0 
-                    && region.testPoint(test.A)
-                    && region.testPoint(test.B)
-                ){
+                if(testChecks.nonNegativeA && testChecks.pointAInRegion && testChecks.pointBInRegion){
                     inBoundary = true
                     data.coord = test.A
                 }
@@ -1364,6 +1384,7 @@ export class boundary{
         //if no point could be found, use top left of the region boundary
         if(!inBoundary){
             data.invalid = `No valid non-bleed boundary found for coord x${coord.x}, y${coord.y}, e${coord.elevation}`
+            data.lastTest = lastTest
         } 
 
         return data
@@ -1381,9 +1402,9 @@ export class boundary{
      */
     #getShiftedPoints(coord,{w,h,d}, locked = {}) {
     
-        const left = locked.x ? 0 : (w === 1 ? 0 : helper.pickRandom(0, w));
-        const top = locked.y ? 0 : (h === 1 ? 0 : helper.pickRandom(0, h));
-        const down = locked.d ? 0 : (d === 1 ? 0 : helper.pickRandom(0, d));
+        const left = locked.x ? 0 : (w === 1 ? 0 : helper.pickRandom(0, w - 1));
+        const top = locked.y ? 0 : (h === 1 ? 0 : helper.pickRandom(0, h - 1));
+        const down = locked.d ? 0 : (d === 1 ? 0 : helper.pickRandom(0, d - 1));
 
         const right = locked.x ? w : (w === 1 ? 1 : w - left);
         const bottom = locked.y ? h : (h === 1 ? 1 : h - top);
@@ -1409,7 +1430,7 @@ export class boundary{
             }
         
         //The bottom right point may be out of the region if on the edge, so center and back up one diagonal left for the test\
-        const centerB = point.shiftPoint(canvas.grid.getCenterPoint(B), {w: -1, h: -1});
+        const centerB = canvas.grid.getTopLeftPoint(canvas.grid.getCenterPoint(B));
 
         return {
             A: {
@@ -1420,7 +1441,7 @@ export class boundary{
             B: {
                 x: centerB.x,
                 y: centerB.y,
-                elevation: B.elevation
+                elevation: B.elevation -1//reduce by 1 so non-bleed point doesn't sit on the top elevation, which would be read as out of bounds
             }
         };
     }
@@ -1528,7 +1549,7 @@ export class boundary{
      * @returns 
      */
     getRandomIndexedBoundaryPoint(level, options = {}){
-        const {sourceTarget, documents, units} = options;
+        const {sourceTarget, documents, regionBounds, units} = options;
 
         //secure all of the grids that are adjacent to the boundary (but not in it)
         const grids = this.#getBoundaryGridPool(level, documents, {sourceTarget});
@@ -1536,8 +1557,6 @@ export class boundary{
         if(!grids.length) return {invalid: `No ${sourceTarget === 'B' ? 'in or ' : ''}adjacent boundary grids found`};
 
         const selected = helper.pickRandom(grids);
-
-        const regionBounds = this.getLevelRegionBounds(level);
 
         const {top, bottom, topInclusive} = regionBounds.elevation;
 

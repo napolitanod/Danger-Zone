@@ -1029,12 +1029,10 @@ export class zone {
   }
 
 
-  targetQuantity(){ 
-    let quantity 
-    const min = this.target.quantity.min ?? 1, max = this.target.quantity.max ?? 1;
-    const del = max - min
-    quantity = del <= 0 ?  min : Math.floor(Math.random() * del)
-    return quantity
+  targetQuantity() {
+    const min = this.target.quantity.min ?? 1;
+    const max = this.target.quantity.max ?? 1;
+    return max <= min ? min : min + Math.floor(Math.random() * (max - min + 1));
   }
 
   /**

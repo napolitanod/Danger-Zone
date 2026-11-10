@@ -290,7 +290,7 @@ export class triggerManager {
         const sceneId = token.parent.id;
         const scene = game.scenes.get(sceneId);
         if(!scene?.grid?.type){return dangerZone.log(false,'No Movement Triggers When Gridless ', {token: token, update:update})}
-        triggerManager.findMovementEvents(token, update, {end: false, sceneId: sceneId})
+        await triggerManager.findMovementEvents(token, update, {end: false, sceneId: sceneId})
         triggerManager.findMovementEvents(token, update, {end: true, sceneId: sceneId})
     }
 
@@ -314,15 +314,13 @@ export class triggerManager {
 
             const zoneTokens = zoneBoundary.tokensIn([token], tokenBoundary);
 
-            if('x' in update) token.x = update.x
-            if('y' in update) token.y = update.y
-            if('elevation' in update) token.elevation = update.elevation
             if(zoneTokens.length){
                 zones.push(zn)
             }
         }
 
-        const data = {provokingMove: move, update: update, options: {targets: [token], location: options.end ? move.end : move.start}}
+        const data = {provokingMove: move, update: update, options: {movingToken: [token], location: options.end ? move.end : move.start}}
+       
 
         if(zones.length){
             const tm = new triggerManager(options.sceneId, data, zones, "updateToken");
@@ -362,15 +360,18 @@ export class triggerManager {
     }
 
     async movementTrigger(){
+        if(!this.data?.options) return
         for(const zn of this.sceneZones) { 
             for(const event of zn.movementEvents){
                 if(event === 'aura') {
-                    let targets = zn.zoneEligibleTokens(this.data?.options?.targets)
+                    let targets = zn.zoneEligibleTokens(this.data.options?.movingToken)
                     if(!targets.length){
                         this.log(`Aura trigger bypassed, moving token cannot be targeted..`, {trigger: this, event: event, zone: zn, targets: this.data?.options?.targets});
                         continue //only trigger aura if the moving token can be targted
-                    }
-                }
+                    } 
+                    //only set targets when it is an aura trigger, otherwise the targets will be set by the workflow
+                    this.data.options.targets = targets
+                } 
                 this.#stageZone(zn, event);
             }
         }

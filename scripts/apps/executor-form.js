@@ -170,6 +170,10 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         return (this.hasExecutor && this.executor.zoneEligibleTokens.length) ? this.executor.zoneEligibleTokens.map(t => t.name).join(', ') : '&nbsp;'// game.i18n.localize("DANGERZONE.executor-form.zone.none.label")
     }
 
+    get executorData(){
+        return this.executor.data
+    }
+
     get firstZone(){
         return this.hasZones ? this.zones[0] : {}
     }
@@ -179,11 +183,11 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     }
 
     get hasSaveFails(){
-        return (this.hasExecutor && this.executor.data.hasFails) ? true : false
+        return (this.hasExecutor && this.executorData.hasFails) ? true : false
     }
 
     get hasSaveSuccesses(){
-        return (this.hasExecutor && this.executor.data.hasSuccesses) ? true : false
+        return (this.hasExecutor && this.executorData.hasSuccesses) ? true : false
     }
 
     get hasSources(){
@@ -207,11 +211,11 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     }
 
     get isValid(){
-        return this.executor.data.valid
+        return this.executorData.valid
     }
 
     get validationMessage(){
-        return this.executor.data.validationMessage ?? ''
+        return this.executorData.validationMessage ?? ''
     }
 
     get executorOptions(){
@@ -344,6 +348,9 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
      */
     static async #boundaryPrompt(event){
         await this.executor.promptBoundary({clearTargets: !this.locked.target, clearLocation: !this.locked.boundary, highlight: true})
+        if(!this.executorData.valid || !this.executorData.hasLocation) return
+        //if location is present, set the boundary using the location. This also sets eligible targets
+        this.executorData.setLocationBoundary();
         this.refreshBoundary(); 
     }    
     
