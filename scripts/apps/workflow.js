@@ -410,7 +410,7 @@ class executorData {
     }
 
     get sceneTokens() {
-        return this.scene.tokens
+        return this.scene.tokens.contents
     }
 
     get range(){
@@ -594,8 +594,7 @@ class executorData {
             bleed: this.zone.dimensions.bleed,
             levels: this.levels,
             stretch: this.zone.scene.zoneBoundaryOptions.stretch,
-            units: this.targetDimensions,
-            sourceTarget: this.zone.source?.target ?? 'I'
+            units: this.targetDimensions
         }
 
         //if targets are already known, that is the pool for target, 
@@ -613,8 +612,25 @@ class executorData {
         this.setTargetLevels(b.levels)
 
         //include scene tokens for re-assessment to account for stretch
-        const tokenTargets = options.stretch?.type ? this.zone.zoneEligibleTokens(this.sceneTokens) : tokens
-        this.eligibleTargets = b.tokensIn(tokenTargets, options)
+        //stretch is done here to ensure original targeting selects a grid in the zone if targets a token is checked
+        //from there, the stretch is applied and then from that group, tokens are targeted
+        let tokenTargets
+        if(options.stretch?.type) {
+            const tokenUniverse = this.targets.length ? this.targets : this.sceneTokens
+
+            //refactor the eligible tokens
+            tokenTargets = this.zone.tokensInZone(
+                tokenUniverse, 
+                {stretch: options.stretch}
+            )
+            dangerZone.log(false, `Stretched zone eligible tokens selected...`, {eligible: tokenUniverse, targetable: tokenTargets, stretch: options.stretch})
+        }
+        else {
+            tokenTargets = tokens
+        }
+
+        //the target zone also has to be stretched
+        this.eligibleTargets = b.tokensIn(tokenTargets, {stretch: options.stretch})
 
         //set the boundary to the passed or final test boundary
         this.boundary = b;
@@ -939,8 +955,8 @@ class executorData {
         const grid = this.zoneBoundary.gridDimensions;
 
         this.targetDimensions = {
-            w: units.w ?? grid.w,
-            h: units.h ?? grid.h,
+            w: units.w < 1 ? grid.w : units.w,
+            h: units.h < 1 ? grid.h : units.h,
             d: units.d < 1 ? Math.abs(this.zoneBoundary.elevation.top - this.zoneBoundary.elevation.bottom) : units.d
         };
     }
@@ -1449,6 +1465,10 @@ export class executor {
     
     async setZoneData(asRun = true){
         await this.data.set(asRun)
+        if(!this.data.valid) {
+            this.inform()
+            return this.state = 0
+        }
         return this.report('Data');
     }
 
@@ -2818,7 +2838,7 @@ class damageToken extends executable{
         }));
 
         const message = await ChatMessage.create(
-            {flavor: options.flavor, type: CONST.CHAT_MESSAGE_STYLES.OOC, rolls: options.damageRolls, emote:false, flags: {
+            {flavor: options.flavor, mode: "ooc", rolls: options.damageRolls, emote:false, flags: {
                 dnd5e: { targets: options.targets.map(target => ({
                     name: target.name,
                     img: target.texture.src,

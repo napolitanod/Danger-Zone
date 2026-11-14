@@ -1082,15 +1082,17 @@ export class zone {
   /**
    * 
    * @param {array} tokens //an array of token documents
+   * @param {object} options //stretch
    * @returns 
    */
-  tokensInZone(tokens){
+  tokensInZone(tokens, options = {}){
     if(!tokens?.length) return false
     const b = this.zoneBoundary;
-    const eligible = this.zoneEligibleTokens(b.tokensIn(tokens));
-    dangerZone.log(false, 'Finding tokens in zone...', {boundary: b, tokens: tokens, eligible: eligible})
-    return eligible.length ? true : false
+    const eligible = this.zoneEligibleTokens(b.tokensIn(tokens, options));
+    dangerZone.log(false, 'Finding tokens in zone...', {boundary: b, tokens, eligible, options})
+    return eligible
   }
+
 
   /**v13
    * Launches the confirmation dialog for checking if trigger should proceed.

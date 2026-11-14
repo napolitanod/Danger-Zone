@@ -185,7 +185,7 @@ export class triggerManager {
                                 this._cancelZone(zn, `Failed ${event} combatant in zone check. No tokens in zone.`)
                                 continue
                             }
-                            if(!zn.tokensInZone(inZoneTokens)) {
+                            if(!zn.tokensInZone(inZoneTokens).length) {
                                 this._cancelZone(zn, `Failed ${event} combatant in zone check on combatant ${inZoneTokens.map(t => t.name).join()}`)
                                 continue
                             }

@@ -89,13 +89,16 @@ export class dangerZoneDimensions {
      * returns an object typically submitted into the boundary constructor when pulling the actual zone boundary
      */
     get zoneBoundaryOptions(){
+        const source = this.zone?.source;
+        const sourceArea = this.zone?.sourceArea;
         return {
             elevation: this.elevation,
             exclude: helper.getTagEntities(game.settings.get(dangerZone.ID, 'zone-exclusion-tag'), this.scene),    //Generate the exclusion list of documents 
             levels: this.zoneLevels,    //include the zone levels   
-            universe: this.zone?.sourceArea,   //Generate a universe of documents for the boundary to use that consists of the zone's sources
+            universe: sourceArea,   //Generate a universe of documents for the boundary to use that consists of the zone's sources
             regionUuid: this.region?.uuid,  //include the region
-            stretch: this.stretch
+            stretch: this.stretch,
+            sourceTarget: source?.target || sourceArea?.target || 'I'
         }
     }
 
@@ -298,6 +301,11 @@ export class boundary{
      */
     #universe
 
+    /**Source-target grid pools indexed by level
+     * @type Map()
+     */
+    #targetGridPools = new Map()
+
 
 
     /** GETTERS */
@@ -347,6 +355,22 @@ export class boundary{
     get excludes(){
         return this.#excludes
     }
+
+    get gridDimensions(){
+        const A = this.A;
+        const B = this.B;
+
+        const top = canvas.grid.getOffset(A);
+        const bottom = canvas.grid.getOffset(B);
+        const left = canvas.grid.getOffset({x: A.x, y: B.y});
+        const right = canvas.grid.getOffset({x: B.x, y: A.y});
+
+        const w = Math.max(right.j, bottom.j) - Math.min(top.j, left.j);
+        const h = Math.max(bottom.i, left.i) - Math.min(top.i, right.i);
+
+        return {w, h}
+    }
+
 
     get hasExclusions(){
         return !!this.excludes?.size;
@@ -463,6 +487,9 @@ export class boundary{
 
         //set the region
         this.#setLevelsRegions();
+
+        //cache target grids against the final per-level regions
+        this.#setTargetGridPools();
     }
 
 
@@ -525,7 +552,7 @@ export class boundary{
 
         //reduce the passed in exclusion documents to only those that are applicable (those locate on a level in the boundary)
         const documents = this.#filterDocumentsByBoundaryLevel(this.options.exclude)
-
+        
         //generate the shapes for all of the documents as holes
         //the insert them into the level applicable for that shape
         for(const document of documents){  
@@ -719,40 +746,6 @@ export class boundary{
     
 
 
-    /**return a boundary region that includes the shape
-     * 
-     * @param {polygon} polygon a polygon
-     * @param {object} elevation bottom and top of token
-     * @param {array} levels array of level ids
-     * @param {object} options stretch
-     * @returns boolean false or object {region id, region} 
-     */
-    findRegionContainingPolygon(polygon, elevation, levels = [], {stretch}){
-
-        //must be polygon and must have regions on the boundary
-        if(!polygon || !this.levelsRegions?.size) return false
-        
- 
-        //test the region polygon tree for including polygon. Return region key and region if so
-        for(const [key, value] of this.levelsRegions) {
-            if(levels.length && !levels.includes(key)) continue;
-
-            const regionElevation = foundry.utils.deepClone(value.elevation)
-            if(stretch){
-                this.#stretch(regionElevation)
-            }
-
-            const inEl = boundary.testElevation(regionElevation, elevation)
-            if(inEl){
-                const inRegion = this.polygonIsInRegion(value, polygon)
-                if(inRegion) return { key, value }
-            }
-        }
-
-        //else return false
-        return false
-    }
-
 
     /**
      * 
@@ -832,7 +825,7 @@ export class boundary{
      *               //sourceTarget string source targeting rules (In, Adjacent, Both)
      */
     getRandomBoundary(options = {}){
-        const {units: {w, h, d}, bleed, documents, stretch, sourceTarget} = options
+        const {units: {w, h, d}, bleed, stretch} = options
 
         //return a random level and set it for the level to use from here onward.
         const _levels = this.getRandomLevelInBoundary(options)
@@ -840,86 +833,19 @@ export class boundary{
             return dangerZone.log(false, `${_levels.invalid}`, {options, boundary: this, levelsData: _levels.levels})
         }
         const level = _levels.levels.selected;
-
-        if(!['A', 'B'].includes(sourceTarget) && documents?.length){
-            const _documents = this.getRandomDocumentBoundary(level, documents)
-            if(_documents.invalid){
-                //currently doesn't break flow
-                dangerZone.log(false, `${_documents.invalid}`, {options, boundary: this, documentsData: _documents.documents})
-            }
-            options.boundaryRestricted = _documents.boundary
-        }
-
+        
         //Shift and validate the final danger boundary against the original zone bounds.
         const regionBounds = this.getLevelRegionBounds(level)
         options.regionBounds = regionBounds
         
-        let shiftedPoint
-
-        let _point;
-        //depending how the targeting is done, this splits between different methods
-        //getRandomPointInBoundary is intended to be less processing intensive, so is not rolled into the methods used by the other 2 (though can be)  
-        switch(sourceTarget){
-            case 'A':
-            case 'B':
-                _point = this.getRandomIndexedBoundaryPoint(level, options);
-                break;
-            default:
-                _point = this.getRandomPointInBoundary(level, options);
-                break;
+        const pointData = this.getTargetBoundaryGrids(level, options);
+        if(pointData.invalid){
+            return dangerZone.log(false, `${pointData.invalid}`, {options, boundary: this, pointData})
         }
 
-        if(_point.invalid){
-            return dangerZone.log(false, `${_point.invalid}`, {options, boundary: this, pointData: _point})
-        }
+        const shiftedPoint = this.#getShiftedPoint(pointData, bleed);
 
-        /* Begin Boundary Testing */
-        let testPassed = false
-
-        //the random point can be used if the target dimensions is 1 grid/e
-        if(Math.max(d,w,h) <= 1){
-            shiftedPoint = _point
-            testPassed = true
-        }
-
-        //else boundaries need to be tested. Start with non-bleed testing
-        if(!testPassed && !bleed) {
-            //test for non-bleed (if no valid non-bleed is found, then will attempt as bleed)
-            let maxNonBleed = 1000; 
-            let nonBleedI = 0
-            while (nonBleedI < maxNonBleed && !testPassed){
-                if(!_point.invalid){
-                    shiftedPoint = this.#getShiftedNoBleedPoint(_point)
-                    if (shiftedPoint.invalid) {
-                        dangerZone.log(false, `${shiftedPoint.invalid}`, {
-                            options,
-                            boundary: this,
-                            originalPoint: _point,
-                            lastCandidate: shiftedPoint.lastTest,
-                            shiftedPoint
-                        })
-                    } else {
-                        testPassed = true
-                    }
-                } else {
-                    dangerZone.log(false, `${shiftedPoint.invalid}`, {options, boundary: this, pointData: shiftedPoint})
-                }
-                
-                nonBleedI++
-            }
-        }
-        
-        //test for bleed
-        if(!testPassed){
-            shiftedPoint = this.#getShiftedBleedPoint(_point)
-            if (shiftedPoint.invalid) {
-                dangerZone.log(false, `${shiftedPoint.invalid}`, {options, boundary: this, originalPoint: _point, shiftedPoint: shiftedPoint})
-            } else {
-                testPassed = true
-            }
-        }
-
-        if(!testPassed){
+        if(shiftedPoint.invalid){
             dangerZone.log(false, `No valid boundary found; aborting boundary generation`, {options, boundary: this, pointData: shiftedPoint})
             return false
         }
@@ -935,65 +861,12 @@ export class boundary{
             {levels: [level], stretch}
         )
 
-        dangerZone.log(false, 'Random boundary got got....', {b, _point, shiftedPoint, _levels, regionBounds, options})
+        dangerZone.log(false, 'Random boundary got got....', {b, pointData, shiftedPoint, _levels, regionBounds, options})
         
         return b
     }
 
 
-
-    
-    /**Generate a random point from within the boundary
-     * 
-     * @param {string} level id 
-     * @param {object} options 
-    *               //level array of level ids to restrict search to
-    *               //documents array of documents to restrict point to include
-    *               //fail object {
-    *                  noLevel //fail if no level is found under the given options
-    *                  }
-    *               //testingBoundary boundary is the original boundary to use for testing points, as may be the case when this function is called recursively 
-    *                       in the case larger boundary is restricted down to a token document 
-     * @returns object {point {x,y,elevation}, string level}
-     */
-    getRandomDocumentBoundary(level, documents){
-         //variables to hold the return data 
-            //documents: object 
-                // eligible: array of documents passed into this method
-                // filtered: array of eligible documents in the level to reduce the random point range to 
-                // selected: the document to use for the boundary within to generate the point
-            //invalid: message for invalid data
-        const data = {
-            boundary: null,
-            documents: {
-                eligible: documents,
-                filtered: documents ? this.#filterDocumentsByBoundaryLevel(documents, [level]) : [],
-                selected: ''
-            },
-            invalid: ''
-        }
-
-        //if a document still remains after the , establish that as the new boundary and get a random point from there
-        //this will recursive the process through again
-        if(documents.length){
-            if(data.documents.filtered?.length) {
-                //if documents provided, find a target point located in the document boundary
-                data.documents.selected = helper.pickRandom(data.documents.filtered)
-
-                //create a boundary from this new document
-                data.boundary = dimensionBoundary.documentBoundary(data.documents.selected)
-
-                dangerZone.log(false, 'Document selected for use in restricting random point', {data})
-            } else {
-                data.invalid = 'No passed in document exists on the level being used to select a random point';
-            }
-        } 
-
-        return data
-    }
-
-
-    
 
     /**Returns a random level within the boundary
      * 
@@ -1029,14 +902,17 @@ export class boundary{
 
         //if documents are provided, filter the levels to ones found within the documents
         if(documents) {
+      
             //filter the leves to those that are included in one or more of the passed in documents
-            data.levels.filtered = data.levels.eligible.filter(l => documents.some(d => d.locatedInLevel(l)))
-            dangerZone.log(false, 'Boundary levels filtered by documents...', {data, documents})
+            const filteredLevels = data.levels.eligible.filter(l => documents.some(d => d.level === l || d.locatedInLevel(l)))
+
+            data.levels.filtered = filteredLevels
+            dangerZone.log(false, 'Boundary levels filtered by documents...', {data, documents, filteredLevels})
 
             //if no levels remain
             if(!data.levels.filtered.length){
                 //if fail on no levels, return
-                if(fail?.noLevel) {
+                if(fail?.noLevel) {console.trace()
                     data.invalid = 'no levels met universe document level requirements for this test point in boundary'
                     return data
                 }
@@ -1047,24 +923,6 @@ export class boundary{
         } else {
             //else use the eligible levels
             data.levels.filtered = data.levels.eligible 
-        }
-
-        //if bleed isn't allowed, the level must be large enough to fit the dimensions of the danger
-        if(!bleed && (Math.max(d,w,h) > 1)){
-            const kept = []; 
-            for(const level of data.levels.filtered){
-                const bounds = this.getLevelRegionBounds(level)
-                if (
-                    bounds.grids.maxX >= w 
-                    && bounds.grids.maxY >= h
-                    && bounds.maxDepth >= d
-                ){
-                    kept.push(level)
-                }
-            }
-
-            //update the filtered levels to be only those kept
-            data.levels.filtered = kept
         }
 
         //if no levels remain, set
@@ -1079,371 +937,132 @@ export class boundary{
     }
 
 
+    /**Searches shuffled grid/elevation candidates for a footprint that satisfies the bleed rule.*/
+    #getShiftedPoint(pointData = {}, bleed = false){
+        const {grids, region, regionBounds, units} = pointData;
+        const data = {invalid: '', regionBounds};
+        const {top, bottom, topInclusive} = regionBounds.elevation;
+        const maxElevation = topInclusive ? top : top - 1;
+        const {maxX, maxY} = regionBounds.grids;
+        const maxDepth = regionBounds.maxDepth;
+        const oversized = {
+            w: !bleed && units.w >= maxX,
+            h: !bleed && units.h >= maxY,
+            d: !bleed && units.d >= maxDepth
+        };
+        const maxStartElevation = bleed || oversized.d
+            ? (oversized.d ? bottom : maxElevation)
+            : top - units.d + (topInclusive ? 1 : 0);
+        const minStartElevation = oversized.d
+            ? maxElevation - units.d + 1
+            : bottom;
+        const elevations = [];
 
-
-    /**Generate a random point from within the boundary 
-     * 
-     * @param {string} level id 
-     * @param {object} options 
-    *               //boundaryRestricted boundary //an override boundary to use for selecting the point, typically from a document
-     * @returns object data (see definition in function)
-     */
-    getRandomPointInBoundary(level, options = {}){
-        //extract options
-        const {boundaryRestricted, regionBounds, units} = options
-
-        //variables to hold the return data 
-            //bounds: object //the A and the B and the elevation within with the random point is selected
-            //boundary: the boundary to select the region from, either the overall boundary or the restricted one passed in
-            //region: the region for the level passed in of the boundary 
-            //regionBounds: object containing the boundary for the region on the given level
-            //level: string //the id of the level passed in on options
-            //coord: object x,y,elevation for the selected point. elevation is an integer
-            //invalid: message for invalid data
-            //units: the units passed in on options
-        const data = {
-            boundary: boundaryRestricted ?? this,
-            level: level,
-            region: null,
-            regionBounds,
-            invalid: '',
-            coord: {
-                x: 0,
-                y: 0,
-                elevation: 0
-            },
-            bounds: {
-                A: {
-                    x: 0,
-                    y: 0
-                },
-                B: {
-                    x: 0,
-                    y: 0
-                },
-                elevation: {
-                    bottom: 0,
-                    top: 0
-                }
-            },
-            units: units
+        for(let elevation = minStartElevation; elevation <= maxStartElevation; elevation++){
+            elevations.push(elevation);
         }
 
-        //for simpler code, set some of the data boundaries into variables
-        const A = data.bounds.A
-        const B = data.bounds.B
-        const elevation = data.bounds.elevation
-        const coord = data.coord
+        const [i0, j0, i1, j1] = canvas.grid.getOffsetRange(region.bounds);
+        const {x: regionLeft, y: regionTop, right: regionRight, bottom: regionBottom} = region.bounds;
+        const candidateGridIndices = new Set(grids.map(({i, j}) => `${i},${j}`));
 
-        //Sample the anchor point inside the restricted boundary, but shift the danger within the original boundary.
-        const sampleRegion = data.boundary.levelsRegions.get(level)
-        data.region = this.levelsRegions.get(level)
+        const isInRegionOrCandidateGrid = testPoint => {
+            const {i, j} = canvas.grid.getOffset(testPoint);
+            return region.testPoint(testPoint) || candidateGridIndices.has(`${i},${j}`);
+        };
 
-        //Use restricted bounds for sampling; regionBounds remains the original zone's bounds for shifting.
-        const sampleBounds = data.boundary.getLevelRegionBounds(level)
-        const {bounds, elevation: {top, bottom, topInclusive}} = sampleBounds
-
-        //set the boundary points and shift amounts
-        A.x = bounds.x;
-        A.y = bounds.y;
-        B.x = bounds.right;
-        B.y = bounds.bottom;
-        elevation.top = (topInclusive ? top : (top - 1));
-        elevation.bottom = bottom;
-
-        //set a max in case all tests fail (should not happen)
-        const max = 1000
-
-        //Perform the tests
-        let i=0, inRegion = false;
-        do {
-            //pull the next randomly targeted area from within the overall boundary
-            coord.x = helper.pickRandom(A.x, B.x)
-            coord.y = helper.pickRandom(A.y, B.y)
-            const rs = helper.pickRandom(elevation.bottom, elevation.top)
-  
-            coord.elevation = rs
-
-            inRegion = sampleRegion.testPoint(coord)
-
-            //check also against the overall region. The token size may exceed partially the overall region (width, height, depth)
-            if(inRegion){
-                inRegion = data.region.testPoint(coord) 
-            }
-
-            i++;
-        } while(!inRegion && i < max);
-        
-        if(!inRegion){
-            data.invalid = 'No random point could be found within the provided boundary'
-        } else {
-            //set the coordinate to grid top left
-            const topLeft = canvas.grid.getTopLeftPoint(coord)
-            coord.x = topLeft.x
-            coord.y = topLeft.y
-        }
-
-        return data
-    }
-
-
-    /**Generate a random point from within the boundary when units are allowed to bleed over the boundary perimeter
-     * Because the original point targeted within the boundary, this shifting allows for targeting to occur outside boundary
-     * but bleed into, which increases likelihood of targeting around edges of boundary
-     * @param {string} level id 
-     * @param {object} options 
-    *               //level array of level ids to restrict search to
-    *               //documents array of documents to restrict point to include
-    *               //fail object {
-    *                  noLevel //fail if no level is found under the given options
-    *                  }
-    *               //testingBoundary boundary is the original boundary to use for testing points, as may be the case when this function is called recursively 
-    *                       in the case larger boundary is restricted down to a token document 
-     * @returns object {point {x,y,elevation}, string level}
-     */
-    #getShiftedBleedPoint(pointData = {}){
-        //extract options
-        const {coord, regionBounds, units, region} = pointData
-
-        //variables to hold the return data 
-            //coord
-            //invalid //message set when any issue is hit
-        const data = {
-            coord: {
-                x: 0,
-                y: 0,
-                elevation: 0
-            },
-            invalid: '',
-            regionBounds
-        }
-
-        const {dimensions} = regionBounds.scene
+        const {dimensions} = regionBounds.scene;
         const sceneLeft = dimensions.sceneX;
         const sceneTop = dimensions.sceneY;
         const sceneRight = sceneLeft + dimensions.sceneWidth;
         const sceneBottom = sceneTop + dimensions.sceneHeight;
+        const spansSceneWidth = !bleed && units.w >= Math.ceil(dimensions.sceneWidth / dimensions.size);
+        const spansSceneHeight = !bleed && units.h >= Math.ceil(dimensions.sceneHeight / dimensions.size);
+        const singleGrid = units.w === 1 && units.h === 1;
 
-        //set a max in case all tests fail
-        const max = 500
-
-        //Perform the tests
-        let i=0, inScene = false;
-        do {
-            const test = this.#getShiftedPoints(coord, units)
-            
-            //A and B are the outer grid points of the candidate boundary.
-            if(test.A.x >= sceneLeft
-                && test.A.y >= sceneTop
-                && test.B.x < sceneRight
-                && test.B.y < sceneBottom
-            ){
-                const width = test.B.x - test.A.x
-                const height = test.B.y - test.A.y
-                const poly = helper.shapeToPolygon({x:test.A.x, y:test.A.y, width, height})
-
-                //final test to ensure the area overlaps region 
-                if(this.polygonIsInRegion(region, poly)){
-                    //establish new boundary
-                    data.coord = test.A
-                    inScene = true
+        for(const grid of grids){
+            const coord = {x: grid.x, y: grid.y};
+            const shifts = singleGrid ? [{w: 0, h: 0}] : [];
+            if(!singleGrid){
+                for(let x = 0; x < units.w; x++){
+                    for(let y = 0; y < units.h; y++){
+                        shifts.push({w: x, h: y});
+                    }
                 }
             }
-            
-            i++;
-        } while(!inScene && i < max);
-        
-        //if no point could be found, use top left of the region boundary
-        if(!inScene){
-            data.invalid = `No valid bleed boundary found for coord x${coord.x}, y${coord.y}, e${coord.elevation}`
-            data.coord = coord
-        } 
 
-        return data
-    }
+            for(const shift of helper.shuffleArray(shifts)){
+                const shiftedCoord = point.shiftPoint(coord, {
+                    w: -shift.w,
+                    h: -shift.h
+                });
+                if(spansSceneWidth) shiftedCoord.x = sceneLeft;
+                if(spansSceneHeight) shiftedCoord.y = sceneTop;
+               
+                const pointB = point.shiftPoint(shiftedCoord, units);
+                const inScene = shiftedCoord.x >= sceneLeft
+                    && shiftedCoord.y >= sceneTop
+                    && (bleed || (pointB.x <= sceneRight && pointB.y <= sceneBottom));
+                 if(!inScene) continue;
 
-    /**Generate a random point from within the boundary when units are allowed to bleed over the boundary perimeter
-     * 
-     * @param {string} level id 
-     * @param {object} options 
-    *               //level array of level ids to restrict search to
-    *               //documents array of documents to restrict point to include
-    *               //fail object {
-    *                  noLevel //fail if no level is found under the given options
-    *                  }
-    *               //testingBoundary boundary is the original boundary to use for testing points, as may be the case when this function is called recursively 
-    *                       in the case larger boundary is restricted down to a token document 
-     * @returns object {point {x,y,elevation}, string level}
-     */
-    #getShiftedNoBleedPoint(pointData = {}){
-        //extract options
-        const {coord, region, regionBounds, units} = pointData
-        const {bounds, elevation, grids: {maxX, maxY}, maxDepth} = regionBounds
-
-        //variables to hold the return data 
-        //    coord
-        //    locked //indicates that the coordinate set was set due to having to boundary being same size as danger units
-        //    invalid //message set when any issue is hit
-        const data = {
-            coord: {...coord},
-            locked: {
-                x: false,
-                y: false,
-                elevation: false,
-                fullZone: 0
-            },
-            invalid: '',
-            regionBounds
-        }
-
-        const locked = data.locked
-        const maxElevation = (elevation.topInclusive ? elevation.top : elevation.top -1)
-
-        //lock in coordinates when the unit value matches the boundary dimension.
-        //Reminder that the shifted points need to keep the original coordinate in the boundary
-
-        //if the target has same dimensions as boundary for depth, or the test coordinate is on the bottom
-        //then elevation must be kept as the bottom
-        if(units.d === maxDepth || elevation.bottom === coord.elevation || maxElevation === coord.elevation){
-            if(coord.elevation === maxElevation){
-                data.coord.elevation = maxElevation >= units.d 
-                    ? maxElevation - units.d
-                    : maxElevation
-            } else {
-                data.coord.elevation = elevation.bottom
-            }
-            locked.d = true;
-            locked.fullZone++
-        } 
-        
-        //if the target has same dimensions as boundary for x, or the test coordinate is on the x edge
-        //then x must be kept as the top left point
-        if(units.w === maxX || coord.x === bounds.x || coord.x === bounds.right){
-            if(coord.x === bounds.right){
-                const ShiftFromBottomX = point.shiftPoint(coord, {w: (units.w*-1), h: 0})
-                data.coord.x = ShiftFromBottomX.x
-            } else {
-                data.coord.x = bounds.x;
-            }
-            locked.x = true;
-            locked.fullZone++
-        }
-
-        //if the target has same dimensions as boundary for y, or the test coordinate is on the y edge
-        //then y must be kept as the top left point
-        if(units.h === maxY || coord.y === bounds.y || coord.y === bounds.bottom){
-            if(coord.y === bounds.bottom){
-                const ShiftFromBottomY = point.shiftPoint(coord, {w: 0, h: (units.h*-1)})
-                data.coord.y = ShiftFromBottomY.y
-            } else {
-                data.coord.y = bounds.y;
-            }
-            
-            locked.y = true;
-            locked.fullZone++
-        } 
-
-        //set a max in case all tests fail
-        const max = 25
-
-        let inBoundary = false
-        let lastTest
-
-        //if all of the dimensions are
-        if(locked.fullZone < 3){
-            //Perform the tests
-            let i=0
-            do {
-                //generate a test point that is within a vacinity of the random point
-                const testCoord = {...coord};
-                if (locked.x) testCoord.x = data.coord.x;
-                if (locked.y) testCoord.y = data.coord.y;
-                if (locked.d) testCoord.elevation = data.coord.elevation;
-                const test = this.#getShiftedPoints(testCoord, units, locked)
-                const testChecks = {
-                    nonNegativeA: Math.min(test.A.x, test.A.y) >= 0,
-                    pointAInRegion: region.testPoint(test.A),
-                    pointBInRegion: region.testPoint(test.B)
-                };
-                lastTest = {points: test, checks: testChecks}
-                
-                //confirm the test boundary is within the scene bounds and the region
-                //move point B to center, else it will be read as out of zone if it exists on the edge
-                if(testChecks.nonNegativeA && testChecks.pointAInRegion && testChecks.pointBInRegion){
-                    inBoundary = true
-                    data.coord = test.A
+                if(!singleGrid && !spansSceneWidth && !spansSceneHeight){
+                    if(bleed){
+                        const footprint = helper.shapeToPolygon({
+                            x: shiftedCoord.x,
+                            y: shiftedCoord.y,
+                            width: pointB.x - shiftedCoord.x,
+                            height: pointB.y - shiftedCoord.y
+                        });
+                        if(!this.polygonIsInRegion(region, footprint)) continue;
+                    } else {
+                        if(oversized.w){
+                            const startJ = canvas.grid.getOffset(shiftedCoord).j;
+                            if(startJ > j0 || startJ + units.w < j1) continue;
+                        }
+                        if(oversized.h){
+                            const startI = canvas.grid.getOffset(shiftedCoord).i;
+                            if(startI > i0 || startI + units.h < i1) continue;
+                        }
+                    }
                 }
 
-                i++;
-            } while(!inBoundary && i < max);
-        } else {
-            //if all of the dimensions are locked, then coordinates are already set from prior tests.
-            inBoundary = true
+                for(const elevation of helper.shuffleArray([...elevations])){
+                    shiftedCoord.elevation = elevation;
+                    pointB.elevation = elevation + units.d - 1;
+
+                    if(!bleed && !singleGrid && !spansSceneWidth && !spansSceneHeight){
+                        if(oversized.d && (elevation > bottom || pointB.elevation < maxElevation)){
+                            continue;
+                        }
+
+                        const testA = {...shiftedCoord};
+                        const testB = {...pointB};
+
+                        if(oversized.w){
+                            testA.x = Math.min(Math.max(testA.x, regionLeft), regionRight - 1);
+                            testB.x = Math.min(Math.max(testB.x, regionLeft), regionRight - 1);
+                        }
+                        if(oversized.h){
+                            testA.y = Math.min(Math.max(testA.y, regionTop), regionBottom - 1);
+                            testB.y = Math.min(Math.max(testB.y, regionTop), regionBottom - 1);
+                        }
+                        if(oversized.d){
+                            testA.elevation = bottom;
+                            testB.elevation = maxElevation;
+                        }
+                        if(!isInRegionOrCandidateGrid(testA) || !isInRegionOrCandidateGrid(testB)){
+                            continue;
+                        }
+                    }
+
+                    data.coord = shiftedCoord;
+                    return data;
+                }
+            }
         }
-        
-        //if no point could be found, use top left of the region boundary
-        if(!inBoundary){
-            data.invalid = `No valid non-bleed boundary found for coord x${coord.x}, y${coord.y}, e${coord.elevation}`
-            data.lastTest = lastTest
-        } 
 
-        return data
-    }
-
-
-
-
-    /**Returns a randomly shifted coordinate based on units provided and existing coordinate
-     * 
-     * @param {object} coord {x,y,elevation}
-     * @param {object} units {w,h,d}
-     * @param {object} locked {x,y,elevation,fullZone}
-     * @returns object {A,B} coordinates marking top left and bottom right
-     */
-    #getShiftedPoints(coord,{w,h,d}, locked = {}) {
-    
-        const left = locked.x ? 0 : (w === 1 ? 0 : helper.pickRandom(0, w - 1));
-        const top = locked.y ? 0 : (h === 1 ? 0 : helper.pickRandom(0, h - 1));
-        const down = locked.d ? 0 : (d === 1 ? 0 : helper.pickRandom(0, d - 1));
-
-        const right = locked.x ? w : (w === 1 ? 1 : w - left);
-        const bottom = locked.y ? h : (h === 1 ? 1 : h - top);
-        const up = locked.d ? d : (d === 1 ? 1 : d - down);
-
-        const coordA = point.shiftPoint(coord, {
-            w: -1 * left,
-            h: -1 * top,
-            d: -1 * down
-        });
-
-        //after shift, center it to not have failures on tests at the edges of the boundary
-        const coordB = point.shiftPoint(coord, {
-            w: right,
-            h: bottom,
-            d: up
-        });
-
-        const B = {
-                x: Math.max(coordA.x, coordB.x),
-                y: Math.max(coordA.y, coordB.y),
-                elevation: Math.max(coordA.elevation, coordB.elevation)
-            }
-        
-        //The bottom right point may be out of the region if on the edge, so center and back up one diagonal left for the test\
-        const centerB = canvas.grid.getTopLeftPoint(canvas.grid.getCenterPoint(B));
-
-        return {
-            A: {
-                x: Math.min(coordA.x, centerB.x),
-                y: Math.min(coordA.y, centerB.y),
-                elevation: Math.min(coordA.elevation, coordB.elevation)
-            },
-            B: {
-                x: centerB.x,
-                y: centerB.y,
-                elevation: B.elevation -1//reduce by 1 so non-bleed point doesn't sit on the top elevation, which would be read as out of bounds
-            }
-        };
+        data.invalid = `No valid ${bleed ? 'bleed' : 'non-bleed'} boundary found for the candidate grids`;
+        return data;
     }
 
 
@@ -1472,73 +1091,69 @@ export class boundary{
         }
     }
 
+    #setTargetGridPools(){
+        this.#targetGridPools = new Map();
+        const sourceTarget = ['A', 'B'].includes(this.options.sourceTarget)
+            ? this.options.sourceTarget
+            : 'I';
 
-    /**Returns an array of grid indexes that are either in the region or adjacent to it, depending on the sourceTarget option
+        for(const [level, region] of this.levelsRegions){
+            const inside = [...this.#iterateRegionGrids(region)];
+            if(sourceTarget === 'I'){
+                this.#targetGridPools.set(level, inside);
+                continue;
+            }
+
+            const insideIndices = new Set(inside.map(({i, j}) => `${i},${j}`));
+            const adjacent = new Map();
+
+            for(const grid of inside){
+                for(const offset of canvas.grid.getAdjacentOffsets({i: grid.i, j: grid.j})){
+                    const key = `${offset.i},${offset.j}`;
+                    if(insideIndices.has(key) || adjacent.has(key)) continue;
+
+                    const topLeft = canvas.grid.getTopLeftPoint(canvas.grid.getCenterPoint(offset));
+                    adjacent.set(key, {
+                        i: offset.i,
+                        j: offset.j,
+                        x: topLeft.x,
+                        y: topLeft.y
+                    });
+                }
+            }
+
+            const adjacentGrids = [...adjacent.values()];
+            const grids = sourceTarget === 'A'
+                ? adjacentGrids
+                : sourceTarget === 'B'
+                    ? [...inside, ...adjacentGrids]
+                    : inside;
+            this.#targetGridPools.set(level, grids);
+        }
+    }
+
+
+    /**Returns this level's cached target grids, optionally narrowed to documents
      * 
      * @param {string} level //id of level
      * @param {array} documents //array of documents, typically tokens
-     * @param {object} options //sourceTarget string source targeting rules (In, Adjacent, Both) 
-     * @returns array of candidate grids that are either in the region or adjacent to it, depending on the sourceTarget option
+     * @returns array of candidate grids
      */
-    #getBoundaryGridPool(level, documents = [], {sourceTarget}){
-        const region = this.levelsRegions.get(level);
-        const gridIndex = ({i, j}) => `${i},${j}`;
+    #getBoundaryGridPool(level, documents = []){
+        const candidates = this.#targetGridPools.get(level) ?? [];
+        if(!documents?.length) return candidates;
 
-        const _in = new Map();
-        const _adjacent = new Map();
+        const documentPolygons = documents.map(document => helper.shapeToPolygon({
+            x: document.x,
+            y: document.y,
+            width: document.width,
+            height: document.height
+        }));
 
-        // Index all grids that belong to the region
-        for(const grid of this.#iterateRegionGrids(region)){
-            _in.set(gridIndex(grid), grid);
-        }
-
-        // Index all adjacent grids
-        for(const grid of _in.values()){
-
-            for(const adj of canvas.grid.getAdjacentOffsets({i: grid.i, j: grid.j})){
-                const key = gridIndex(adj);
-
-                if(_in.has(key)) continue;
-                if(_adjacent.has(key)) continue;
-
-                const center = canvas.grid.getCenterPoint(adj);
-                const topLeft = canvas.grid.getTopLeftPoint(center);
-
-                _adjacent.set(key, {
-                    i: adj.i,
-                    j: adj.j,
-                    x: topLeft.x,
-                    y: topLeft.y
-                });
-            }
-        }
-
-        const candidates = sourceTarget === 'B' ?
-            [..._in.values(), ..._adjacent.values()] :
-            [..._adjacent.values()];
-
-        // Restrict to document grids if possible
-        if(documents?.length){
-            const documentGrids = candidates.filter(grid => {
-                const center = canvas.grid.getCenterPoint({
-                    x: grid.x,
-                    y: grid.y
-                });
-                return documents.some(doc => {
-                    const poly = helper.shapeToPolygon({
-                        x: doc.x,
-                        y: doc.y,
-                        width: doc.width,
-                        height: doc.height
-                    });
-                    return poly.contains(center.x, center.y);
-                });
-            });
-
-            if(documentGrids.length) return documentGrids;
-        }
-
-        return candidates;
+        const documentGrids = candidates.filter(grid =>
+            documentPolygons.some(polygon => polygon.contains(grid.x, grid.y))
+        );
+        return documentGrids.length ? documentGrids : candidates;
     }
     
     /**
@@ -1548,17 +1163,14 @@ export class boundary{
      * @param {*} param2 
      * @returns 
      */
-    getRandomIndexedBoundaryPoint(level, options = {}){
-        const {sourceTarget, documents, regionBounds, units} = options;
+    getTargetBoundaryGrids(level, options = {}){
+        const {documents, regionBounds, units} = options;
 
-        //secure all of the grids that are adjacent to the boundary (but not in it)
-        const grids = this.#getBoundaryGridPool(level, documents, {sourceTarget});
+        const grids = this.#getBoundaryGridPool(level, documents);
 
-        if(!grids.length) return {invalid: `No ${sourceTarget === 'B' ? 'in or ' : ''}adjacent boundary grids found`};
+        if(!grids.length) return {invalid: 'No target boundary grids found'};
 
-        const selected = helper.pickRandom(grids);
-
-        const {top, bottom, topInclusive} = regionBounds.elevation;
+        dangerZone.log(false, `Grids iterator created...`, {options, grids, documents, regionBounds, units})
 
         return {
             boundary: this,
@@ -1566,12 +1178,8 @@ export class boundary{
             region: this.levelsRegions.get(level),
             regionBounds,
             invalid: '',
-            units: units,
-            coord: {
-                x: selected.x,
-                y: selected.y,
-                elevation: helper.pickRandom(bottom, topInclusive ? top : top - 1)
-            }
+            units,
+            grids: helper.shuffleArray([...grids])
         };
     }
 
@@ -1608,7 +1216,7 @@ export class boundary{
 
         dangerZone.log(false, `Highlight ${hId} for region...`, {region, boundary: this})
 
-        for(const grid of this.#iterateRegionGrids(region)){
+        for(const grid of this.#targetGridPools.get(level) ?? []){
             canvas.interface.grid.highlightPosition(hId, {x: grid.x, y: grid.y, color});
         }
     }
@@ -1644,15 +1252,26 @@ export class boundary{
     
         //iterate over tokens, keeping those that exist in the boundary
         for(let token of tokens){
-            const{x,y,width,height, elevation} = token
-            const polygon = helper.shapeToPolygon({x, y, width, height})
+            const {elevation, object} = token
+            const {x, y, w, h} = object
 
-            //get elevation
-            const tokenDepth = helper.getTokenDepth(token)
-            const e = {bottom: elevation, top: elevation + tokenDepth}
+            const polygon = helper.shapeToPolygon({x, y, width: w, height: h})
+            if(!polygon) continue
 
-            //checks the polygon against the region. Will also check level
-            if(this.findRegionContainingPolygon(polygon, e, [token.level], options)) kept.push(token)
+            const region = this.levelsRegions.get(token.level);
+            if(!region) continue;
+
+            const regionElevation = foundry.utils.deepClone(region.elevation);
+            if(options.stretch) this.#stretch(regionElevation);
+
+            const tokenElevation = {
+                bottom: elevation,
+                top: elevation + helper.getTokenDepth(token)
+            };
+            if(!boundary.testElevation(regionElevation, tokenElevation)) continue;
+
+            const targetGrids = this.#targetGridPools.get(token.level) ?? [];
+            if(targetGrids.some(grid => polygon.contains(grid.x, grid.y))) kept.push(token);
         }
 
         return kept
@@ -1710,22 +1329,6 @@ export class dimensionBoundary extends boundary {
     get B(){
         return this.#B
     }
-
-    get gridDimensions(){
-        const A = this.A;
-        const B = this.B;
-
-        const top = canvas.grid.getOffset(A);
-        const bottom = canvas.grid.getOffset(B);
-        const left = canvas.grid.getOffset({x: A.x, y: B.y});
-        const right = canvas.grid.getOffset({x: B.x, y: A.y});
-
-        const w = Math.max(right.j, bottom.j) - Math.min(top.j, left.j);
-        const h = Math.max(bottom.i, left.i) - Math.min(top.i, right.i);
-
-        return {w, h}
-    }
-
 
     /**
      * @override
