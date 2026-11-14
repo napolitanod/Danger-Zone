@@ -4,7 +4,7 @@ import {DangerForm} from './danger-form.js';
 import {ZoneForm} from './zone-form.js';
 import {triggerManager} from './trigger-handler.js';
 import {CONTROLTRIGGERS, DANGERZONECONFIG} from './constants.js';
-import {getEventData} from './helpers.js';
+import {helper} from './helpers.js';
 
 export class ExecutorForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
     constructor(sceneId, executor = {}, zones, ...args) {
@@ -102,7 +102,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     /** @override */
     async _prepareContext() {
         return {
-            boundary: this.boundaryInfo,
+            boundary: this.isValid ? this.boundaryInfo : this.validationMessage,
             dangerId: this.worldId,
             eligibleTargetList: this.eligibleTargetList,
             eligibleZoneList: this.eligibleZoneList,
@@ -113,6 +113,9 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
             hasSourcing: this.hasSourcing,
             hasTargeting: this.hasTargeting,
             includesIncludeRandomTrigger: this.triggerZones.find(zn => zn.enabled && zn.hasManualEvent && zn.trigger.random) ? true : false,
+            isValid: this.isValid,
+            levelOps: this.levelOps,
+            levels: this.levels,
             locked: this.locked,
             randomTitle: game.i18n.localize("DANGERZONE.scene.random-trigger.label"),
             saveList: this.saveList,
@@ -140,7 +143,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     }
 
     get boundaryInfo(){
-        return this.boundary ? `x: ${this.boundary.A.x} y: ${this.boundary.A.y} bottom: ${this.boundary.bottomIsInfinite ? '&infin;' : this.boundary.bottom} to x: ${this.boundary.B.x} y: ${this.boundary.B.y} top: ${this.boundary.topIsInfinite ? '&infin;' : this.boundary.top}` : '&nbsp;'//game.i18n.localize("DANGERZONE.executor-form.boundary.none.label")
+        return this.boundary ? `${this.boundary.infoBoundaryStart} to ${this.boundary.infoBoundaryEnd}.\nLevels: ${this.boundary.levelsNames}` : ''
     }
 
     get control(){
@@ -167,6 +170,10 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         return (this.hasExecutor && this.executor.zoneEligibleTokens.length) ? this.executor.zoneEligibleTokens.map(t => t.name).join(', ') : '&nbsp;'// game.i18n.localize("DANGERZONE.executor-form.zone.none.label")
     }
 
+    get executorData(){
+        return this.executor.data
+    }
+
     get firstZone(){
         return this.hasZones ? this.zones[0] : {}
     }
@@ -176,11 +183,11 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     }
 
     get hasSaveFails(){
-        return (this.hasExecutor && this.executor.data.hasFails) ? true : false
+        return (this.hasExecutor && this.executorData.hasFails) ? true : false
     }
 
     get hasSaveSuccesses(){
-        return (this.hasExecutor && this.executor.data.hasSuccesses) ? true : false
+        return (this.hasExecutor && this.executorData.hasSuccesses) ? true : false
     }
 
     get hasSources(){
@@ -203,6 +210,14 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         return this.zones.length ? true : false
     }
 
+    get isValid(){
+        return this.executorData.valid
+    }
+
+    get validationMessage(){
+        return this.executorData.validationMessage ?? ''
+    }
+
     get executorOptions(){
         return {
             boundary: this.locked.boundary ? this.boundary  : false,
@@ -213,6 +228,14 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
             },
             targets: this.locked.target ? this.executor.targets : []
         }
+    }
+
+    get levelOps(){
+        return helper.getSceneLevelList(this.sceneId);
+    }
+
+    get levels(){
+        return this.zone.levels
     }
 
     get saveList(){
@@ -263,7 +286,8 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     */
     static async #triggerZone(event) {
         event.preventDefault();
-        const data = getEventData(event)
+        const data = helper.getEventData(event)
+
         const triggerData = {
             scene: this.sceneId, 
             dangerId: data.targetId, 
@@ -272,20 +296,31 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
             force: data.target.type === 'button' ? false : true,
             options: {}
         }
+
+        //exclude the triggers for the buttons and then include the levels on the exploded form when a trigger happens
+        if(!data.target.classList.contains('danger-zone-scene-trigger-button')) {
+           const levels = this.getSelectedLevels()
+            //if levels are selected and they are different than the zone levels, then add them to the trigger options so they constrain the workflow level targeting
+            if(levels.length) {
+                triggerData.options['levels'] = levels
+            }
+        }
+
         if(this.locked.boundary) triggerData.options['location'] = this.boundary.location
+        
         await triggerManager.manualTrigger(triggerData);
     }
 
    /************ PRIVATE METHODS  ***************/
    _getExecutable(event){
-        const data = getEventData(event)
+        const data = helper.getEventData(event)
         data['executable'] = data.parentId ? this.executor.executable[data.parentId] : {}
         return data
     }
 
     _getEventIds(event){
         if(this.sceneId !== canvas.scene?.id || !canvas.scene?.grid?.type) return false
-        const data = getEventData(event)
+        const data = helper.getEventData(event)
         const obj = {
             zoneId: data.parentId ?? this.zoneId,
             dangerId: data.parentId ? data.targetId : this.worldId
@@ -313,6 +348,9 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
      */
     static async #boundaryPrompt(event){
         await this.executor.promptBoundary({clearTargets: !this.locked.target, clearLocation: !this.locked.boundary, highlight: true})
+        if(!this.executorData.valid || !this.executorData.hasLocation) return
+        //if location is present, set the boundary using the location. This also sets eligible targets
+        this.executorData.setLocationBoundary();
         this.refreshBoundary(); 
     }    
     
@@ -320,6 +358,8 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
      * 
      */
     static async #boundaryRandom(event){
+        if(!this.isValid) return
+        this.levelUpdate()
         await this.executor.randomBoundary({clearTargets: !this.locked.target, clearLocation: !this.locked.boundary, highlight: true})
         this.refreshBoundary();
     }    
@@ -402,6 +442,16 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         dangerZoneDimensions.destroyHighlightZone(data.zoneId, '', data.dangerId);
     }
 
+
+    /**Updates executor data levels if there are levels selected on the form, and they are different than the zone levels
+     * 
+     * @param {event} cursor event 
+     */
+    #levelUpdate(event){
+        this.levelUpdate()
+    }
+
+
     /**v13
      * 
      */
@@ -461,7 +511,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     #showZoneHighlight(event){
         const data = this._getEventIds(event)
         if(!data) return
-        dangerZoneDimensions.addHighlightZone(data.zoneId, this.sceneId, '', data.dangerId);
+        dangerZoneDimensions.addHighlightZone(data.zoneId, this.sceneId, {id:'', danger: data.dangerId});
     } 
 
     /**v13
@@ -597,7 +647,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
      * 
     */
     static #toggleLock(event){
-        const data = getEventData(event)
+        const data = helper.getEventData(event)
         const icon = data.target.firstChild
         if(this.locked[data.targetId]){
             icon.classList.add('fa-unlock')
@@ -637,8 +687,8 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     /**v13
      * 
     */
-    static async #zoneRefresh(event){
-        await this.refreshZone();
+    static #zoneRefresh(event){
+        this.refreshZone();
     }
 
     /**v13
@@ -669,7 +719,9 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
             el.addEventListener("mouseleave", (event => {this.#hideZoneHighlight(event)}))
             el.addEventListener("contextmenu", (event => {this.#handleRightClick(event)}))
         })
+        this.element.querySelector('multi-select[name="levels"]')?.addEventListener("change", (event => {this.#levelUpdate(event)}))
     }
+
 
     draw(elementId, obj, setPosition = false){
         const html = document.getElementById(elementId)
@@ -706,6 +758,26 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     drawZoneEligible(){
         this.draw(`dz-eligible-zone-list`, this.eligibleZoneList, true);
     }
+
+        /**returns the selected levels from the multi-select on the form
+     * First it checks to confirm that the levels are different than the zone levels, and if so, it returns them. Else it returns an empty array.
+     * @returns array of level ids 
+     */
+    getSelectedLevels(){
+        const multi = this.form.querySelector('multi-select[name="levels"]');
+        if(multi){
+            const tags = multi.querySelectorAll('.tag[data-key]');
+            if(tags) {
+                const levels = Array.from(tags).map(tag => tag.dataset.key);
+                
+                if(levels && !helper.checkLevelsSame(levels, this.levels)) {
+                   return levels
+                }
+            }
+        }
+        return []
+    }
+
 
     async initialize(){
         await this.executor.initialize()
@@ -768,6 +840,16 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         });
     }
 
+
+    levelUpdate(){
+        //if there are levels selected on the form, update the executor data levels.
+        const levels = this.getSelectedLevels()
+        if(levels.length) {
+            this.executor.setLevels(levels, this.levels)
+        }
+    }
+
+
     /**v13
      * Called when executor is intended to be opened on scene
      * @param {string} sceneId 
@@ -801,6 +883,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         await this.render(options.force);
         this.#handleSuppress()
         if(tab) this.changeTab(tab, "sheet", {force: true})
+        dangerZone.log(false, `executor refreshed...`, this)
     }
 
     refreshBoundary(){
@@ -809,8 +892,8 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
         this.drawBoundaryEligible();
     }
 
-    async refreshZone(){
-        await this.executor.setZone();
+    refreshZone(){
+        this.executor.setZone();
         if(this.rendered){
             this.drawZoneEligible();
             this.drawBoundaryEligible();
@@ -820,7 +903,7 @@ export class ExecutorForm extends foundry.applications.api.HandlebarsApplication
     async #setExecutor(){
         this.executor = this.zoneId ? await this.zone.executor(this.executorOptions): {}
         await this.initialize()
-        await this.refreshZone();
+        this.refreshZone();
     }
 
     setVisible(isVisible = true){

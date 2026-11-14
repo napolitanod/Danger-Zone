@@ -1,9 +1,51 @@
 import {api, _triggerZone} from "./api.js";
 import {runOnSetup, setExecutableOptions} from './constants.js';
 import {dangerZone} from '../danger-zone.js';
-import {addSceneFormLaunch, addDangerButton, requestSavingThrow} from './helpers.js';
+import {requestSavingThrow} from './helpers.js';
 import {migrateDanger, migrateScene} from './migration.js';
 import {triggerManager}  from './trigger-handler.js';
+
+
+/** v13
+ * Adds the dangers launch button to the Scenes sidebar
+ * @param {object} app 
+ * @param {object} html 
+ * @param {object} updates 
+ */
+function addDangerButton(app, html, updates) {
+  dangerZone.addDangersLaunch(app, html);
+} 
+
+
+
+/** V13
+ * Adds to the controls for the given appliactiona launch for zones form
+ */
+function addSceneFormLaunch(application, controls){
+  const scene = application?.document?.documentName === 'Scene' ? application?.document : canvas.scene
+  if(!game.user.isActiveGM) return
+  controls.push({
+      onClick: (event) => {
+          launchSceneForm(scene, application)
+      },
+      icon: 'fas fa-radiation',
+      label: 'DANGERZONE.zones'
+  })
+}
+
+
+
+/**v13
+ * Launches the form that lists all zones associated to the given scene.
+ * @param {object} scene the scene class
+ * @param {object} application 
+ */
+function launchSceneForm(scene, application = ''){ 
+  application ? application.renderChild(new ZoneListForm(scene.id)) : new ZoneListForm(scene.id).render(true)
+}
+
+
+
 
 export function setHooks(){
     /**
@@ -71,13 +113,19 @@ export function setHooks(){
         Hooks.on("renderSceneDirectory", addDangerButton); 
 
         Hooks.on("token-says.sayingComplete", (saying) => {
+            
+             //right now only rolltables generate triggers, so eject if not rolltable
             if(!saying.table?.id || !saying.scene?.id) return
+
+            //build a quasi chat message and pass in the rolltable id as data
             const chatMessage = {
                 results: [saying.message],
                 speaker: saying.speaker
             };
-            const options = {table: saying.table};
-            triggerManager.findChatEvents(chatMessage, "tokenSaysTrigger", options)
+            const data = {table: saying.table};
+
+            //no blocking for gm only - this hook should only call on a single session
+            triggerManager.findChatEvents(chatMessage, "tokenSaysTrigger", data)
         })
 
         setExecutableOptions();
@@ -107,19 +155,23 @@ export function setHooks(){
      * in combat hook for when combat ends. Used for managing in combat zone events
      */
     Hooks.on('combatStart', async(combat, options) => {
-        if(game.user.isActiveGM) triggerManager.findcombatEvents(combat, 'combatStart', options)
+        if(game.user.isActiveGM) triggerManager.findCombatEvents(combat, 'combatStart', options)
     });
 
     /**
      * Hook for creating the chat message
      */
     Hooks.on("createChatMessage", async(chatMessage, updates, id) => {
+
         //right now only rolltables generate triggers, so eject if not rolltable
         const rollTableId = chatMessage?.flags?.core?.RollTable
-        if(!rollTableId) return
-        if(!chatMessage.rolls?.length) return
-        const options = {rollTableId: rollTableId}
-        if(game.user.isActiveGM) triggerManager.findChatEvents(chatMessage, "createChatMessage", options)
+        if(!rollTableId || !chatMessage.rolls?.length) return
+
+        //trigger manager uses the roll table id
+        const data = {rollTableId: rollTableId}
+
+        //activate the trigger manager if this is the gm's session
+        if(game.user.isActiveGM) triggerManager.findChatEvents(chatMessage, "createChatMessage", data)
     })
 
     Hooks.on('createScene', async (scene, options, userId) => {
@@ -132,7 +184,7 @@ export function setHooks(){
      * in combat hook for when combat ends. Used for managing in combat zone events
      */
     Hooks.on('deleteCombat', async(combat, options, id) => {
-        if(game.user.isActiveGM) triggerManager.findcombatEvents(combat, 'deleteCombat', options)
+        if(game.user.isActiveGM) triggerManager.findCombatEvents(combat, 'deleteCombat', options)
     });
 
     /** V13
@@ -159,7 +211,7 @@ export function setHooks(){
      */
     Hooks.on('updateCombat', async(combat, round, options, id) => {
         if(!game.user.isActiveGM) return
-        if(options.advanceTime || options.direction === 1) triggerManager.findcombatEvents(combat, 'updateCombat', options)
+        if(options.advanceTime || options.direction === 1) triggerManager.findCombatEvents(combat, 'updateCombat', options)
     });
 
     Hooks.on("updateToken", async (token, update, options, userId) => {

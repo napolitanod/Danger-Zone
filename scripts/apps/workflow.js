@@ -1,15 +1,8 @@
 import {dangerZone, zone} from '../danger-zone.js';
-import {point, boundary} from './dimensions.js';
-import {EVENTS, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES} from './constants.js';
-import {furthestShiftPosition, getActorOwner, getFilesFromPattern, getRandomNumber,getTagEntities, limitArray, shuffleArray, stringToObj, wait, maybe, joinWithAnd} from './helpers.js';
+import {point, dimensionBoundary} from './dimensions.js';
+import {EVENTS, EXECUTABLEOPTIONS, FVTTMOVETYPES, FVTTSENSETYPES, WORKFLOWSTATES, ZONEFORMOPTIONS} from './constants.js';
+import {helper} from './helpers.js';
 
-async function delay(delay){
-    if(delay) await wait(delay)
-}
-
-function biRandom() {
-    return Math.random() < 0.5 ? true : false
-}
 
 export class workflow {
 
@@ -179,7 +172,7 @@ class plan {
 
     async _newStep(time){
         const del = time-this.elapsedTime;
-        await delay(time-this.elapsedTime);
+        await helper.wait(time-this.elapsedTime);
         this.setElapsedTime(time)
         return {"danger": `Delay ${del} millisecond`, "data": this}
     }
@@ -212,6 +205,28 @@ class plan {
     }
 }
 
+/**
+ * 
+ * 
+ * 
+ * Options 
+ * ** provide overrides and other settings to the data, passed into the constructor
+ * ** keys {
+ * levels {
+ *  target: {
+ *      all: array //an array of all level ids to be used as the target levels by dangers and placeables which can be associated to more than 1 level
+ *      single: 'string//a string for the level id to be used by dangers that generate a placeable that can only have 1 level.
+ *      targeted: the final levels after targeting is complete, which typically occurs during boundary definition
+ *      zone: string // whereas single is one of the targeted levels, zone is one of the zone levels, whether or not targeted
+ *  }
+ * }
+ * location {
+ *     coords: {x,y},
+ *     elevation: int || z: int
+ *  }
+ * }
+ * 
+ */
 class executorData {
     constructor(zone, options, parent){
         this.id = foundry.utils.randomID(16),
@@ -219,16 +234,17 @@ class executorData {
         this.clearBypass = options.clearBypass ?? false,
         this._delay = options.delay,
         this.eligibleTargets = [],
-        this.likelihoodResult = 100,
+        this.likelihoodResult = 100
+        this.levelData = this.#normalizeLevelData(options.levels);
         this.location = options.location ? (new point(options.location.coords ?? {x: options.location.x, y: options.location.y}, options.location.elevation ?? options.location.z)) : {},
         this.offset = {
             x:{
                 random: Math.random(),
-                flipLocation: biRandom()
+                flipLocation: helper.biRandom()
             },
             y:{
                 random: Math.random(),
-                flipLocation: biRandom()
+                flipLocation: helper.biRandom()
             }
         },
         this._options = options,
@@ -244,20 +260,27 @@ class executorData {
         this.sourceAreas = [],
         this.sourcesBlended = [],
         this.sourceLimit = zone.generateSourceCount(),
+        this.targetDimensions,
         this.targets = options.targets ?? [],
         this.tokenMovement = [],
         this.twinBoundary = {},
         this.valid = true,
-        this.zone = zone,
+        this.validationMessage = '',
+        this.zone = zone;
+        this.targetQuantity = this.zone.targetQuantity();
         this.zoneBoundary,
         this.zoneEligibleTokens = [],
         this.zoneTokens = [];
         this.initializeSpawn()
     }
 
+    //the boundary used when targeting
+    
+
     get danger(){
         return this.zone.danger
     }
+
 
     get dualBoundaries(){
         return Object.keys(this.twinBoundary).length ? [this.boundary, this.twinBoundary] : [this.boundary]
@@ -284,11 +307,16 @@ class executorData {
     }
 
     get hasBoundary(){
-        return (Object.keys(this.boundary).length) ? true : false
+        return (this.boundary?.type) ? true : false
     }
 
     get hasLocation(){
         return (Object.keys(this.location).length) ? true : false
+    }
+
+    get hasOverrideLevelTargets() {
+        return Array.isArray(this._options?.levels)
+            || Boolean(this._options?.levels?.target);
     }
 
     get hasSources(){
@@ -309,6 +337,49 @@ class executorData {
 
     get twinDanger(){
         return (this.zone.danger.hasTwinBoundary) ? true : false
+    }
+
+    /**
+     * the level added by this danger
+     */
+    get levelAdded(){
+        return this.levelData.added
+    }
+
+    /**
+     * the levels associated to this danger's targeting
+     */
+    get levels(){
+        return this.levelData.target.all
+    }
+
+    
+    /**
+     * the levels targeted during boundary selection
+     */
+    get levelsTargeted(){
+        return this.levelData.target.targeted
+    }
+
+    /**
+     * Names of the levels associated with this danger's targeting
+     */
+    get levelsNames(){
+        return helper.getLevelsNames(this.scene, this.levels)
+    }
+    
+    /**
+     * For documents created that an only have one level, use this
+     */
+    get levelSingle(){
+        return this.levelData.target.single
+    }
+
+    /**
+     * For documents created that an only have one level, use this for the random zone level
+     */
+    get levelSingleZone(){
+        return this.levelData.target.zone
     }
 
     get likelihoodMet(){
@@ -334,36 +405,72 @@ class executorData {
         }
     }
 
+    get sceneLevelNames(){
+        return helper.sceneLevelsNames(this.scene)
+    }
+
     get sceneTokens() {
-        return this.scene.tokens
+        return this.scene.tokens.contents
     }
 
     get range(){
-        return this.scene.dimensions.distance * Math.max(this.danger.dimensions.units.w, this.danger.dimensions.units.h)
+        return this.scene.dimensions.distance * Math.max(this.targetDimensions.w, this.targetDimensions.h)
     }
 
     get targetBoundary(){
         return this.boundary
     }
 
+    get zoneLevelTargets(){
+        //should default to 'all' but that is not yet implemented
+        return this.zone.target.levels ?? 'any'
+    }
+
+    /**
+     * Creates a whispered chat to the GM with details on the trigger, danger, target range, and tokens targeted
+     */
     about() {
         if(game.user.isActiveGM && game.settings.get(dangerZone.ID, 'chat-details-to-gm')) {   
+            let tokenTargets
+            const minTarget = this.zone.target.quantity?.min ?? 1
+            const maxTarget = this.zone.target.quantity?.max ?? 1
+
+            if(this.zone.target.all){
+                tokenTargets = 'Hits all eligible tokens'
+            } else if(minTarget < maxTarget ){
+                tokenTargets = `Hits between ${minTarget} and ${maxTarget} eligible tokens`
+            } else {
+                tokenTargets = `Hits ${minTarget} eligible tokens`
+            }
+
             let content =
                 `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Workflow Details</div><div class="danger-zone-chat-message-body">
                 <div><label class="danger-zone-label">Danger:</label><span> ${this.danger.name}</span></div>
-                <div><label class="danger-zone-label">Dimensions:</label><span> w${this.danger.dimensions.units.w}  h${this.danger.dimensions.units.h}  d${this.danger.dimensions.units.d}${this.zone.dimensions.bleed ? ' (bleed)' : ''}</span></div>
-                <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => t.name)}</span></div>
+                <div><label class="danger-zone-label">Zone levels:</label><span> ${this.levelsNames}</span></div>
+               <div><label class="danger-zone-label">Eligible zone tokens:</label><span> ${this.zoneEligibleTokens.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div>
                 <div><label class="danger-zone-label">Trigger:</label><span> ${game.i18n.localize(EVENTS[this.event]?.label)}</span></div>
                 <div><label class="danger-zone-label">Likelihood:</label><span> ${this.zone.trigger.likelihood}</span> <label class="danger-zone-label">Likelihood result:</label><span> ${this.likelihoodResult}</span></div>
-                <div><label class="danger-zone-label">Targeting:</label><span> ${this.zone.target.always ? 'Must target a location with a token' : 'Can target any location in zone'}. ${this.zone.target.all ? 'Hits all eligible tokens' : 'Hits one eligible token'} at location.</span></div>
+                <div><label class="danger-zone-label">Targeting:</label><span> ${this.zone.target.always ? 'Must target a location with a token' : 'Can target any location in zone'}. ${tokenTargets} at location.</span></div>
                 `;
             if(this.hasBoundary){
+                let stretch = ''
+
+                if(this.boundary.stretch?.type) {
+                    stretch =`<div><label class="danger-zone-label">Stretch:</label><span> ${ game.i18n.localize(ZONEFORMOPTIONS.STRETCH[this.boundary.stretch?.type])}</span></div>`
+                }
+
                 content += `
-                <div><label class="danger-zone-label">Target location start:</label><span> x${this.boundary.A.x}  y${this.boundary.A.y}  e${this.boundary.bottomIsInfinite ? '-&infin;' : this.boundary.bottom}</span></div>
-                <div><label class="danger-zone-label">Target location end:</label><span> x${this.boundary.B.x}  y${this.boundary.B.y}  e${this.boundary.topIsInfinite ? '&infin;' : this.boundary.top}</span></div>
-                <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => t.name)}</span></div>
-                <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => t.name)}</span></div></div>`
+                <div><label class="danger-zone-label">Danger dimensions:</label><span> w${this.targetDimensions?.w}  h${this.targetDimensions?.h}  d${this.targetDimensions?.d}${this.zone.dimensions.bleed ? ' (bleed)' : ''}</span></div>
+                <div><label class="danger-zone-label">Target location start:</label><span> ${this.boundary.infoBoundaryStart}</span></div>
+                <div><label class="danger-zone-label">Target location end:</label><span> ${this.boundary.infoBoundaryEnd}</span></div>
+                ${stretch}
+                <div><label class="danger-zone-label">Target level:</label><span> ${this.boundary.levelsNames}</span></div>
+                <div><label class="danger-zone-label">Eligible targets:</label><span> ${this.eligibleTargets.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div>
+                <div><label class="danger-zone-label">Hit targets:</label><span> ${this.targets.map(t => `@UUID[${t.uuid}]{${t.name}}`)}</span></div></div>`
             } 
+            if(!this.valid){
+                content += `<div><span>Validation checks failed. ${this.validationMessage}</span></div>`
+            }
             ChatMessage.create({
                 content: content,
                 whisper: [game.user.id]
@@ -373,25 +480,25 @@ class executorData {
 
     async checkLikelihood() {
         if(this.zone.trigger.likelihood < 100){
-            const roll = await maybe();
+            const roll = await helper.rollLikelihood();
             this.likelihoodResult = roll.result;
         }
         return this.likelihoodMet
     }
 
-    async fillSources(){
-        await this._setSources(true);
+    fillSources(){
+        this._setSources(true);
     }
 
-    async fillSourceAreas(){
-        await this.setSourceAreas(true)
+    fillSourceAreas(){
+        this.setSourceAreas(true)
         this.setBlendedSources(true) 
     }
 
     async highlightBoundary(override = false){
         if(this.hasBoundary && game.user.isActiveGM && (override || game.settings.get(dangerZone.ID, 'display-danger-boundary'))){
-            this.boundary.highlight(this.id, 16711719)
-            await wait(1000)
+            this.boundary.highlight({id: this.id, color: 16711719})
+            await helper.wait(1000)
             this.boundary.destroyHighlight(this.id);
         }
     }
@@ -407,130 +514,7 @@ class executorData {
         }
     }
 
-    updateSpawn(tokens){
-        this.spawn.mutate = true;
-        this.spawn.tokens = tokens;
-    }
-
-    async promptBoundary(){ 
-        this.location = await this.zone.promptTemplate();
-        if(!this.hasLocation) {
-            return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
-        }
-        return this._setLocationBoundary()
-    }
-
-    async randomBoundary() {
-        let max = 1, i=0;
-        const test = await this.zone.scene.randomDangerBoundary();
-        const targetPool = this.targets.length ? this.targets : this.zoneEligibleTokens;
-        if((this.targets.length || this.zone.target.always) && targetPool.length) max = 10000;
-        do {
-            i++;
-            const b = test.next()
-            if(!b || b.done) return
-            this.boundary = b.value;
-            this.eligibleTargets = this.boundary.tokensIn(targetPool);
-        } while(!this.eligibleTargets.length && i < max);
-        (test.done && !this.hasDualBoundaries) ? this.twinBoundary = this.boundary : this.twinBoundary = test.next().value
-    }
-
-    async set(asRun = true){
-        await this.setZone();
-        await this.setBoundary(asRun)
-        await this._setSources();
-        this.setTargets()
-        if(this.danger.hasTwinBoundary) await this.setTwinBoundary()
-        if(!this.hasBoundary) this.valid = false
-    }
     
-    async setBoundary(asRun = false) {
-        if(this.hasBoundary) return this.setBoundaryEligibleTargets();
-        if(this.hasLocation) return this._setLocationBoundary();
-        if(asRun && this.zone.target.choose.enable) {
-            await this.promptBoundary();
-            return
-        }
-        await this.randomBoundary()
-    }
-
-    async _setSources(fill = false){
-        this.setTokenSources(fill);
-        await this.setSourceAreas(fill);
-        this.setBlendedSources(fill);
-    }
-
-    setBlendedSources(fill = false){
-        const all = this.sourceAreas.concat(this.sources.filter(s => !this.sourceAreas.find(a => a.id === s.id)))
-        if (this.sourceLimit === -1 || all.length <= this.sourceLimit) {this.sourcesBlended = all} 
-        else if(!fill){this.sourcesBlended = limitArray(shuffleArray(all),this.sourceLimit)} 
-        else {
-            const fillCount = this.sourceLimit - all.length;
-            if(fillCount) this.sourcesBlended = this.sourcesBlended.concat(limitArray(shuffleArray(all),fillCount))
-        }
-    }
-
-    setTokenSources(fill = false){
-        if(this._sources.length) {this.sources = this._sources}
-        else if (this.sourceLimit === -1 || this.zone.sources.length <= this.sourceLimit) {this.sources = this.zone.sources}
-        else if(!fill){this.sources = limitArray(shuffleArray(this.zone.sources),this.sourceLimit)} 
-        else {
-            const fillCount = this.sourceLimit - this.zone.sources.length;
-            if(fillCount) this.sources = this.sources.concat(limitArray(shuffleArray(this.eligibleSources),fillCount))
-        }
-    }
-
-    async setSourceAreas(fill = false){
-        if(this._sourceAreas.length){this.sourceAreas = this._sourceAreas}
-        else {
-            let area;
-            if(this.zone.source.area === 'A') {area = this.sources}
-            else {
-                const ar = await this.zone.sourceArea();
-                area = ar.documents;
-            } 
-            if (this.sourceLimit === -1) {this.sourceAreas = area}
-            else if(!fill){this.sourceAreas = limitArray(shuffleArray(area),this.sourceLimit)} 
-            else {
-                const fillCount = this.sourceLimit - this.sourceAreas.length;
-                if(fillCount) this.sourceAreas = this.sourceAreas.concat(limitArray(shuffleArray(area.filter(s => !this.sourceAreas.find(c => c.id === s.id))),fillCount))
-            }
-        }
-        if(!this.sourceAreas) this.sourceAreas = []
-    }
-    
-    setTargets(){
-        if (this.hasTargets) return this.eligibleTargets.filter(e => this.targets.find(t => e.id === t.id))
-        if(!this.zone.target.all){
-            if(this.eligibleTargets.length > 1){
-                return this.targets.push(this.eligibleTargets[Math.floor(Math.random() * this.eligibleTargets.length)])
-            }
-        }
-        return this.targets = this.eligibleTargets
-    }
-
-    async setTwinBoundary(){
-        const itr = await this.zone.scene.randomDangerBoundary();
-        this.twinBoundary = itr.next().value
-    }
-
-    async setZone(){
-        this.zoneBoundary = await this.zone.scene.getZoneBoundary();
-        this.zoneTokens = this.zoneBoundary.tokensIn(this.sceneTokens);
-        this.zoneEligibleTokens = this.zone.zoneEligibleTokens(this.zoneTokens);
-    }
-
-    setBoundaryEligibleTargets(){
-        this.eligibleTargets = !this.hasBoundary ? [] : this.boundary.tokensIn(this.zoneEligibleTokens);
-    }
-
-    _setLocationBoundary(){
-        const options = {excludes: this.zoneBoundary.excludes, universe: this.zoneBoundary.universe}
-        this.zone.stretch(options);
-        this.boundary = boundary.locationToBoundary(this.location.coords, {bottom: this.location.elevation, top: this.location.elevation}, this.danger.dimensions.units, options);
-        this.setBoundaryEligibleTargets();
-    }
-
     insertSaveFailed(failed){
         this.save.failed = failed?.length ? this.save.failed.concat(failed.filter(t => !this.save.failed.find(tg => tg.id === t.id))) : [];
     }
@@ -546,6 +530,456 @@ class executorData {
     insertTargets(targets){
         this.targets = targets?.length ? this.targets.concat(targets.filter(t => !this.targets.find(tg => tg.id === t.id))) : [];
     }
+
+    #normalizeLevelData(levels = {}) {
+        const input = Array.isArray(levels) ? {} : (levels ?? {});
+        const target = Array.isArray(levels)
+            ? {all: levels}
+            : (input.target ?? {});
+
+        return {
+            added: input.added ?? '',
+            target: {
+                all: Array.isArray(target.all) ? [...target.all] : [],
+                single: target.single ?? '',
+                targeted: Array.isArray(target.targeted) ? [...target.targeted] : [],
+                zone: target.zone ?? ''
+            }
+        };
+    }
+
+    /**
+     * Prompts user for the boundary, which then records that boundary to the zone as part of the final call
+     * Final method also sets boundary eligible targets
+     */
+    async promptBoundary(){ 
+        const choice = await this.zone.promptTemplate()
+        if(!choice) {
+            this.valid = false
+            this.validationMessage = game.i18n.localize("DANGERZONE.alerts.user-selection-exited")
+            return ui.notifications?.warn(game.i18n.localize("DANGERZONE.alerts.user-selection-exited"));
+        }
+        //set the override location on the data
+        this.location = new point(
+            choice.coords,
+            choice.elevation
+        )
+
+        //set the override levels on the data
+        const choiceLevels = choice.levels ?? []
+        const zoneLevels = helper.filterLevels(this.scene, {output: 'ids', filterIds: this.zone.levels})
+
+        this.setTargetLevels(choiceLevels, zoneLevels);
+        this.levelData.target.zone = helper.pickRandom(zoneLevels);
+        
+        const choiceSingleArray = choiceLevels.length ? choiceLevels : zoneLevels        
+        Object.assign(this.levelData.target, {
+                targeted: choiceLevels,
+                single: helper.pickRandom(choiceSingleArray),
+                zone: helper.pickRandom(zoneLevels)
+            });
+    }
+
+
+
+    /**
+     * Iterates over the possible target grids within the zone, seeking one to target
+     * @returns nothing returned, but sets the boundary and eligible target list
+     */
+    randomBoundary() {
+
+        const tokens = this.targets.length ? this.targets : this.zoneEligibleTokens
+
+        const options = {
+            bleed: this.zone.dimensions.bleed,
+            levels: this.levels,
+            stretch: this.zone.scene.zoneBoundaryOptions.stretch,
+            units: this.targetDimensions
+        }
+
+        //if targets are already known, that is the pool for target, 
+        // else when the zone is set to always target a token, add the tokens that are eligible to be targeted within the zone boundary
+        if(this.targets.length || this.zone.target.always){
+            options.documents = tokens
+        } 
+        
+        dangerZone.log(false, `Generating random target boundary`, {data: this, options, tokens})
+
+        const b = this.zoneBoundary.getRandomBoundary(options)
+
+        if(!b) return
+
+        this.setTargetLevels(b.levels)
+
+        //include scene tokens for re-assessment to account for stretch
+        //stretch is done here to ensure original targeting selects a grid in the zone if targets a token is checked
+        //from there, the stretch is applied and then from that group, tokens are targeted
+        let tokenTargets
+        if(options.stretch?.type) {
+            const tokenUniverse = this.targets.length ? this.targets : this.sceneTokens
+
+            //refactor the eligible tokens
+            tokenTargets = this.zone.tokensInZone(
+                tokenUniverse, 
+                {stretch: options.stretch}
+            )
+            dangerZone.log(false, `Stretched zone eligible tokens selected...`, {eligible: tokenUniverse, targetable: tokenTargets, stretch: options.stretch})
+        }
+        else {
+            tokenTargets = tokens
+        }
+
+        //the target zone also has to be stretched
+        this.eligibleTargets = b.tokensIn(tokenTargets, {stretch: options.stretch})
+
+        //set the boundary to the passed or final test boundary
+        this.boundary = b;
+
+        //set the twin boundary if there is one remaining to pull and danger involves twinning
+        if(this.hasDualBoundaries) {
+            this.twinBoundary = this.zoneBoundary.getRandomBoundary({units: options.units, levels: b.levels})
+
+            //if twin boundary cannot be found, assign the boundary as twin
+            if(!this.twinBoundary){
+                this.twinBoundary = b
+            }
+        }
+    }
+
+
+    async set(asRun = true){
+        //Sets the zone boundary, the zone tokens (scene tokens that are in zone), and the zone eligible tokens
+        this.setZone();
+
+        if(!this.valid) return
+
+        //set the levels for the executor data
+        this.setLevels();
+
+        //set the target boundary and the eligible tokens
+        //also sets the twin boundary
+        await this.setBoundary(asRun)
+
+        //perform data validations here because the currently only involve boundary validations
+        this.validate()
+
+        if(!this.valid) return
+
+        //populate executor source data
+        this._setSources();
+
+        //set the targets
+        this.setTargets()
+    }
+    
+    async setBoundary(asRun = false) {
+
+        //if a boundary is already present, set the tokens in that boundary as eligible targets
+        if(this.hasBoundary) return this.setBoundaryEligibleTargets();
+
+        //if this involves a prompt at this point, then prompt for boundary. This will set a location, which moves to next step.
+        if(asRun && this.zone.target.choose.enable) {
+            await this.promptBoundary();
+            if(!this.valid) return
+        }
+
+        //if location is present, set the boundary using the location. This also sets eligible targets
+        if(this.hasLocation) return this.setLocationBoundary();
+
+        //default is to pull a random boundary and assign eligible targets
+        this.randomBoundary()
+    }
+
+    /**
+     * Adds levels for the zone to the execution data as an array of ids and a single random selected one
+     * Uses settings from zone Targetting
+     */
+    setLevels(){
+        
+        const targetData = this.levelData.target
+
+        //levels are already determined - were passed in. Check to ensure the singletons are populated
+        if(this.hasOverrideLevelTargets) {
+            if(!targetData.single || !targetData.zone) {
+                const zoneLevels = helper.filterLevels(this.scene, {output: 'ids', filterIds: this.zone.levels})
+                
+                if(!targetData.zone) {
+                    targetData.zone = helper.pickRandom(zoneLevels);
+                }
+
+                if(!targetData.single){
+                    const choiceLevels = targetData.targeted.length
+                        ? targetData.targeted
+                        : targetData.all;
+
+                    const choiceSingleArray =  
+                        choiceLevels.length
+                        ? choiceLevels
+                        : zoneLevels;
+
+                    targetData.single = helper.pickRandom(choiceSingleArray)
+                }
+            }
+            return        
+        }
+
+        //if the current level is not a zone level, throw the validation error. Set the array to prevent other errors before the plan is abandoned
+        if(this.zoneLevelTargets === 'current') {
+            if(!this.zone.levelCurrent) {
+                this.valid = false
+                this.validationMessage = 'Zone only triggers when GM is viewing the level. The current level viewed by the GM is not a zone level.'
+                targetData.all = []
+            } else {
+                //else set the zone to the current viewed zone
+                targetData.all = [this.zone.levelCurrent] 
+            }
+        }
+        //else set the target levels to the zone levels, which may mean all the scene levels if there are no zone levels specified.
+        else {
+            targetData.all = this.zone.levels.length ? this.zone.levels : helper.filterLevels(this.scene, {output: 'ids'})
+        }
+
+        //set the single and zone levels to random picks from the array of all levels. The targeted levels will be set during boundary selection, which may be a subset of the all levels.
+        targetData.single = helper.pickRandom(targetData.all)
+        targetData.zone = helper.pickRandom(targetData.all)
+    }
+
+    
+    /**
+     * Sets the boundary for that executor target using location data passed into the class, typically when the constructor is created
+     */
+    setLocationBoundary(){
+        const {exclude, limit, stretch} = this.zone.scene.zoneBoundaryOptions;
+
+        //boundary options
+        const options = {
+            exclude, 
+            limit, 
+            stretch,
+            levels: this.levelData.target.targeted
+        }
+
+        const {coords, elevation} = this.location;
+        const depth = this.targetDimensions.d
+
+        //generate boundary from the location coordinates
+        this.boundary = dimensionBoundary.locationToBoundary(
+            coords, 
+            {bottom: elevation, top: elevation + depth}, 
+            this.targetDimensions, 
+            this.scene,
+            options
+        );
+
+        //fill in the eligible targets
+        this.setBoundaryEligibleTargets();
+    }
+    
+
+    /**
+     * Populates the different source data stored on this executor data class
+     * @param {boolean} fill //true = insert more into the existing array. false = replace existing array
+     */
+    _setSources(fill = false){
+
+        //sets the executors token sources
+        this.setTokenSources(fill);
+
+        //sets the executors source areas
+        this.setSourceAreas(fill);
+
+        //blends the source areas with the source tokens
+        this.setBlendedSources(fill);
+    }
+
+
+     /**
+     * sets this executor data's sourcesBlended, which combines tokens and source areas, sticking within the limit
+     * @param {boolean} fill //true = new sources are added to existing array. false = any existing sources are replaced entirely by new
+     */
+    setBlendedSources(fill = false){
+        const all = this.sourceAreas.concat(this.sources.filter(s => !this.sourceAreas.find(a => a.id === s.id)))
+        if (this.sourceLimit === -1 || all.length <= this.sourceLimit) {this.sourcesBlended = all} 
+        else if(!fill){this.sourcesBlended = helper.limitArray(helper.shuffleArray(all),this.sourceLimit)} 
+        else {
+            const fillCount = this.sourceLimit - all.length;
+            if(fillCount) this.sourcesBlended = this.sourcesBlended.concat(helper.limitArray(helper.shuffleArray(all),fillCount))
+        }
+    }
+
+
+
+    /**
+     * takes the eligible zone tokens and selects those that are in this executor boundary and sets those as the eligible targets
+     * The tokensIn does check for level criteria
+     */
+    setBoundaryEligibleTargets(){
+        this.eligibleTargets = !this.hasBoundary ? [] : this.boundary.tokensIn(this.zoneEligibleTokens);
+    }
+
+
+    setLevelAdded(level){
+        this.levelData.added = level
+    }
+
+
+    /**Sets the override levels for the executor, which will be used for targeting and other level related operations
+     * 
+     * @param {array} levels 
+     */
+    setOverrideLevels(levels){
+        this._options.levels = levels;
+        this.levelData = this.#normalizeLevelData(levels);
+    }
+
+
+    /**After targeting is complete, updates the level data so the zone targeted is what is passed into the parts
+     * 
+     * @param {array} levels 
+     * @param {array} fallbackLevels 
+     */
+    setTargetLevels(levels, fallbackLevels = []) {
+        const targeted = Array.isArray(levels) ? [...new Set(levels)] : [];
+        const fallback = Array.isArray(fallbackLevels) ? fallbackLevels : [];
+        const choices = targeted.length ? targeted : fallback;
+        const currentSingle = this.levelData.target.single;
+
+        this.levelData.target.targeted = targeted;
+        this.levelData.target.single =
+            choices.includes(currentSingle)
+                ? currentSingle
+                : helper.pickRandom(choices);
+    }
+
+
+    /**
+     * sets this executor data's token sources
+     * @param {boolean} fill //true = new sources are added to existing array. false = any existing sources are replaced entirely by new
+     */
+    setTokenSources(fill = false){
+
+        //if the sources were passed into the constructor, then set the sources to those
+        if(this._sources.length) {
+            this.sources = this._sources
+        }
+
+        //if the source limit is not set or cannot be exceed by the max sources, then set sources to all eligible sources
+        else if (this.sourceLimit === -1 || this.zone.sources.length <= this.sourceLimit) {
+            this.sources = this.zone.sources
+        }
+
+        //if not additive (if full replace), then set the sources up to the source limit
+        else if(!fill){
+            this.sources = helper.limitArray(helper.shuffleArray(this.zone.sources),this.sourceLimit)
+        } 
+
+        //if additive, then add in more sources until the limit is reached
+        else {
+            const fillCount = this.sourceLimit - this.zone.sources.length;
+            if(fillCount) this.sources = this.sources.concat(helper.limitArray(helper.shuffleArray(this.eligibleSources),fillCount))
+        }
+    }
+
+    /**
+     * sets this executor data's  source areas
+     * @param {boolean} fill //true = new sources are added to existing array. false = any existing sources are replaced entirely by new
+     */
+    setSourceAreas(fill = false){
+
+        //if the sources were passed into the constructor, then set the sources to those
+        if(this._sourceAreas.length){
+            this.sourceAreas = this._sourceAreas
+        }
+        else {
+            let area;
+            if(this.zone.source.area === 'A') {
+                area = this.sources
+            }
+
+            else {
+                const ar = this.zone.sourceArea;
+                area = ar.documents;
+            } 
+
+            //if the source limit is not set or cannot be exceed by the max sources, then set sources to all eligible sources
+            if (this.sourceLimit === -1) {
+                this.sourceAreas = area
+            }
+
+            //if not additive (if full replace), then set the sources up to the source limit
+            else if(!fill){
+                this.sourceAreas = helper.limitArray(helper.shuffleArray(area),this.sourceLimit)
+            } 
+
+            //if additive, then add in more sources until the limit is reached
+            else {
+                const fillCount = this.sourceLimit - this.sourceAreas.length;
+                if(fillCount) this.sourceAreas = this.sourceAreas.concat(helper.limitArray(helper.shuffleArray(area.filter(s => !this.sourceAreas.find(c => c.id === s.id))),fillCount))
+            }
+        }
+        if(!this.sourceAreas) this.sourceAreas = []
+    }
+
+    
+    /**Sets the targets for the executor
+     * 
+     */
+    setTargets(){
+
+        //if has targets, then just return 
+        if (this.hasTargets) return
+        
+        //if targets all tokens, set targets to all eligible tokens
+        else if(this.zone.target.all) {
+            this.targets.push(...this.eligibleTargets) 
+        } 
+        
+        //else return from the random target quantity
+        else if(this.eligibleTargets.length >= 1){
+
+            //shallow copy then shuffle then slice
+            const shuffled = [...this.eligibleTargets].sort(() => 0.5 - Math.random());
+            const targets = shuffled.slice(0, this.targetQuantity);
+            this.targets.push(...targets);
+        }    
+        
+    }
+
+
+
+    /**Sets the dimensions used for targeting, which is based on the danger else boundary when danger has no value for h,w,d
+     * 
+     */
+    setTargetDimensions(){
+        const units= this.danger.dimensions.units;
+        const grid = this.zoneBoundary.gridDimensions;
+
+        this.targetDimensions = {
+            w: units.w < 1 ? grid.w : units.w,
+            h: units.h < 1 ? grid.h : units.h,
+            d: units.d < 1 ? Math.abs(this.zoneBoundary.elevation.top - this.zoneBoundary.elevation.bottom) : units.d
+        };
+    }
+
+
+    /**
+     * sets the executors zone boundary, zone tokens, and the eligible tokens in the zone
+     */
+    setZone(){
+        this.zoneBoundary = this.zone.zoneBoundary;
+
+        //confirm the zone boundary is valid
+        //this is hack code to be cleaned up- should be handled in this class's validate 
+        this.valid = this.zoneBoundary.validate()
+        if(!this.valid) {
+            this.validationMessage = 'The zone boundary is not valid. This is often due to incorrect region association (e.g. region associated with zone no longer exists) or zone source settings where one or more required sources is not present in the zone.'
+            return
+        }
+        this.setTargetDimensions()
+        this.zoneTokens = this.zoneBoundary.tokensIn(this.sceneTokens);
+        this.zoneEligibleTokens = this.zone.zoneEligibleTokens(this.zoneTokens);
+    }
+
 
     updateBoundary(boundary){
         this.boundary = boundary ?? {}
@@ -564,6 +998,11 @@ class executorData {
         this.save.succeeded = saves?.length ? saves : [] 
     }
 
+    updateSpawn(tokens){
+        this.spawn.mutate = true;
+        this.spawn.tokens = tokens;
+    }
+
     updateSources(sources){
         this._sources = sources?.length ? sources : []
         this.sources = this._sources
@@ -571,6 +1010,23 @@ class executorData {
 
     updateTargets(targets){
         this.targets = targets?.length ? targets : [];
+    }
+
+    /**
+     * Perform a validation of the data to ensure it is ready for use 
+     * Set to invalid should an issue be encountered
+     */
+    validate(){
+        //throw validation error if boundary is not set    
+        if(!this.hasBoundary) {
+            this.validationMessage = 'A target boundary could not be found within the zone.'
+            return this.valid = false
+        }
+        //test the boundary
+        if(!this.boundary.validate()) {
+            this.validationMessage = 'The target boundary failed validation for elevation or having 0 area.'
+            return this.valid = false
+        }
     }
 }
 
@@ -612,6 +1068,9 @@ export class executor {
                     break;
                 case 'lastingEffect': 
                     be = new lastingEffect(this.danger.lastingEffect, this.data, name, EXECUTABLEOPTIONS[name]); 
+                    break;
+                case 'level': 
+                    be = new level(this.danger.level, this.data, name, EXECUTABLEOPTIONS[name]); 
                     break;
                 case 'macro': 
                     be = new macro(this.danger.macro, this.data, name, EXECUTABLEOPTIONS[name]); 
@@ -750,7 +1209,7 @@ export class executor {
     }
 
     async delay(){
-        if(this.data._delay) await wait(this.data._delay)
+        if(this.data._delay) await helper.wait(this.data._delay)
     }
 
     async done(){
@@ -799,14 +1258,14 @@ export class executor {
                 }
             }
             if(ex.likelihood < 100){
-                const roll = await maybe();
+                const roll = await helper.rollLikelihood();
                 dangerZone.log(false,'Extension likelihood result', {extension: ex, roll: roll})
                 if(roll.result > ex.likelihood) {
                     console.log(`Zone extension likelihood of ${ex.likelihood} was not met with a roll of ${roll.result}`)
                     continue;
                 }
             }
-            let sourceRegionId = this.zone.scene.regionId, targetRegionId = zn.scene.regionId;            
+            let sourceRegionId = this.zone.scene.region?.id ?? '', targetRegionId = zn.scene.region?.id ?? '';            
             switch(ex.interaction){
                 case 'A':
                     if(!zn.enabled) promises.push(zn.toggleZoneActive())
@@ -838,6 +1297,7 @@ export class executor {
     async extensionTrigger(extension, zn){
         const ops = {};
         if(extension.boundary) ops.boundary = this.data.boundary;
+        if(extension.levels) ops.levels = this.data.levelData;
         if(extension.target) ops.targets = this.data.targets;
         if(extension.save) ops.save = this.data.save;
         if(extension.source) ops.sources = this.data.sources;
@@ -860,7 +1320,7 @@ export class executor {
     async load(){
         if(this.previouslyExecuted) return true
         const promises = this.partsWithFile.map(p => p.load());
-        const files = await Promise.all(promises).then((results) => {return results.filter(r => r)}).catch((e) => {return console.log('Danger Zone file caching failed.')});
+        await Promise.all(promises).then((results) => {return results.filter(r => r)}).catch((e) => {return console.log('Danger Zone file caching failed.')});
         return this.report('Load')
     }
 
@@ -962,9 +1422,16 @@ export class executor {
         this.data.setBoundaryEligibleTargets()
     }
 
+    setLevels(levels, fallbackLevels = []){
+        this.data.setOverrideLevels(levels)
+        this.data.setTargetLevels(levels, fallbackLevels)
+        this.data.setLevels()
+    }
+
     setTargets(){
         this.data.setTargets()
     }
+
 
     async updateBoundary(boundary, options={}){
         this.data.updateBoundary(boundary)
@@ -992,12 +1459,16 @@ export class executor {
         this.data.updateTargets(targets)
     }
     
-    async setZone(){
-       await this.data.setZone()
+    setZone(){
+       this.data.setZone()
     }
     
     async setZoneData(asRun = true){
         await this.data.set(asRun)
+        if(!this.data.valid) {
+            this.inform()
+            return this.state = 0
+        }
         return this.report('Data');
     }
 
@@ -1122,6 +1593,10 @@ class executable {
         return this.scope === 'boundary' ? true : false
     }
 
+    get hasOffset(){
+        return (this.part.offset?.x?.type || this.part.offset?.y?.type) ? true : false 
+    }
+
     /**v13
      * getter that indicates one or more targets is eligible based on save settings and save results
      */
@@ -1181,6 +1656,87 @@ class executable {
         return this.#likelihoodResult
     }
 
+    /**
+     * generate the levels based on what this part accepts - multiple levels or single
+     */
+    get levels(){
+        let levels
+
+        //take in the levels metadata to determine if this outputs a single level 'S' or multiple 'Y'
+        let opt = this.#options.levels
+
+        if(!['Y', 'S'].includes(opt)) return
+
+        levels = opt === 'S' ?  this.levelSingle : this.levelsMulti
+           
+        return levels
+    }
+    
+    /**
+     * the level to use when a single level is accepted
+     */
+    get levelSingle(){
+        let levels
+
+        switch(this.part.levels){
+            //add the level created by this execution
+            case 'D':
+                levels = this.data.levelAdded ?? ''
+                break;
+            //add the target levels and the level created by this execution. For singleton, pick between the added and the single level randomly chosen.
+            case 'B':
+                if(this.data.levelAdded){
+                    levels = helper.pickRandom([this.data.levelSingle, this.data.levelAdded]) 
+                } else{
+                    levels = this.data.levelSingle
+                } 
+                break;
+            //add the zone levels. For singleton, default to the single level randomly chosen.
+            case 'Z':
+                levels = this.data.levelSingleZone 
+                break;
+            //add the target levels from this execution. For singleton, default to the single level randomly chosen. (T)
+            //default has to assign something to singleton. For many, leave as all levels
+            default:
+                levels = this.data.levelSingle
+        }    
+        return levels
+    }
+
+    /**
+     * the level to use when multiple levels are accepted
+     */
+    get levelsMulti(){
+        let levels
+
+        switch(this.part.levels){
+            //add the level created by this execution
+              case 'D':
+                levels = this.data.levelAdded ? [this.data.levelAdded] : []
+                break;
+            //add the target levels from this execution. For singleton, default to the single level randomly chosen.
+            case 'T':
+                levels = this.data.levelsTargeted
+                break;
+            //add the target levels and the level created by this execution. For singleton, pick between the added and the single level randomly chosen.
+            case 'B':
+                if(this.data.levelAdded){
+                    levels = this.data.levelsTargeted.concat(this.data.levelAdded)   
+                } else{
+                    levels = this.data.levelsTargeted
+                } 
+                break;
+            //add the zone levels. For singleton, default to the single level randomly chosen.
+            case 'Z':
+                levels = this.data.zone.levels
+                break;
+            //default has to assign something to singleton. For many, leave as all levels
+            default:
+                levels =  []
+        }    
+        return levels
+    }
+
     get report(){
         return {"danger": this.name, "data": this, "executed": this.#executed, "modules": this.modules}
     }
@@ -1208,7 +1764,7 @@ class executable {
     get sourcesSelected(){
         switch(this.part.target){
             case 'A':
-                return this.data.sources;
+                return this.sources;
             case 'R':
                 return this.data.sourceAreas;
             default:
@@ -1218,6 +1774,10 @@ class executable {
     
     get save(){
         return 0
+    }
+
+    get sources(){
+        return this.data.sources
     }
 
     get stoppable(){
@@ -1233,7 +1793,7 @@ class executable {
     }
     
     get targets(){
-        return this.zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.data.sources);
+        return this.zone.sourceTreatment(this.source, (this.save ? (this.save > 1 ? this.data.save.failed : this.data.save.succeeded) : this.data.targets), this.sources);
     }  
 
     get wipeable(){
@@ -1263,7 +1823,7 @@ class executable {
     
     async checkLikelihood() {
         if(this.likelihood < 100){
-            const roll = await maybe();
+            const roll = await helper.rollLikelihood();
             this.setLikelihoodResult(roll.result);
         }
     }
@@ -1285,7 +1845,7 @@ class executable {
         if (typeof this.offset[axis].flip == "boolean") {
             return false
         }
-        return ((this.offset[axis].flip === 'A' || (this.offset[axis].flip === 'N' && biRandom()) || (['B','S'].includes(this.offset[axis].flip) && this.data.offset[axis].flipLocation)) ? true : false)
+        return ((this.offset[axis].flip === 'A' || (this.offset[axis].flip === 'N' && helper.biRandom()) || (['B','S'].includes(this.offset[axis].flip) && this.data.offset[axis].flipLocation)) ? true : false)
     }
 
     informLikelihood(){
@@ -1309,16 +1869,16 @@ class executable {
     }
 
     randomize(){
-        return (!this.random || Math.random() < 0.5)
+        return (!this.random || helper.biRandom())
     }
 
     #setBoundary(){
-        if(!this.offset){
+        if(!this.hasOffset){
             this.boundary = this.data.boundary;
             this.twinBoundary = this.data.twinBoundary
         } else {
-            this.boundary = boundary.offsetBoundary(this.data.boundary, this.data.offset, this.offset, this.data.scene)
-            if(this.data.danger.hasTwinBoundary) this.twinBoundary = boundary.offsetBoundary(this.data.twinBoundary, this.data.offset, this.offset, this.data.scene)
+            this.boundary = dimensionBoundary.offsetBoundary(this.data.boundary, this.data.offset, this.offset, this.data.scene)
+            if(this.data.danger.hasTwinBoundary) this.twinBoundary = dimensionBoundary.offsetBoundary(this.data.twinBoundary, this.data.offset, this.offset, this.data.scene)
         }
        
     }
@@ -1480,7 +2040,7 @@ class executableWithFile extends executable{
         if(!path || !random) {
             this.#files[fileType] = path
         } else {
-            const files = await getFilesFromPattern(path);
+            const files = await helper.getFilesFromPattern(path);
             this.#files[fileType] = files[Math.floor(Math.random() * files.length)]
         }
         if(dangerZone.MODULES.sequencerOn && this.#files[fileType] ) Sequencer.Preloader.preloadForClients(this.#files[fileType])
@@ -1592,6 +2152,10 @@ class activeEffect extends executable {
      */
     #updates
 
+    get add(){
+        return this.data.danger.effectAddEffects
+    }
+
     get delay(){
         return this.flag.delay ? this.flag.delay : 0
     }
@@ -1623,6 +2187,21 @@ class activeEffect extends executable {
 
     get flag(){
         return this.hasFlag ? this.effect.flags[dangerZone.ID] : {}
+    }
+
+    //data not within flags was deprecated in v14 
+    get hasDeprecatedEffect(){
+        if(
+            this.effect.name ||
+            this.effect.icon ||
+            this.effect.duration ||
+            this.effect.description ||
+            this.effect.img ||
+            this.effect.changes
+        ) {
+            return true
+        }
+        return false
     }
 
     get hasFlag(){
@@ -1657,11 +2236,29 @@ class activeEffect extends executable {
     }
 
     async #addEffects(token){
-        if(this.limit && token.actor.effects.find(e => e.flags[dangerZone.ID]?.origin === this.data.danger.id)){
-            return;
+        const tokenEffects = token.actor.effects
+        const adds = []
+        const uuidList = this.add.filter(
+            uuid => !this.limit || !tokenEffects.find(e => e.flags[dangerZone.ID]?.uuid === uuid)
+            )
+                
+        if(uuidList.length){
+            uuidList.map(u => adds.push(
+                    Object.assign(fromUuidSync(u), {flags: {[dangerZone.ID]: {uuid: u}}})
+                )
+            )
+        }       
+        if(this.hasDeprecatedEffect) {//v14 deprecated data handling
+            if(!this.limit || !tokenEffects.find(e => e.flags[dangerZone.ID]?.origin === this.data.danger.id)){
+                adds.push(this.effect)
+            }
+            
         }
-        const add = await token.actor.createEmbeddedDocuments("ActiveEffect", [this.effect]);
-        this.#adds.push({token: token, data: add}) 
+        
+        if(adds.length){
+            const add = await token.actor.createEmbeddedDocuments("ActiveEffect", adds);
+            this.#adds.push({token: token, data: add}) 
+        }
     }
 
     async #deleteEffects(token){
@@ -1737,12 +2334,20 @@ class ambientLight extends executable{
         return flg
     }
 
+    get hidden(){
+        return this.part.hidden ?? false
+    }
+
     get lightAnimation(){
         return this.part.lightAnimation
     }
 
     get lights(){
         return this.#lights
+    }
+
+    get locked(){
+        return this.part.locked
     }
 
     get luminosity(){
@@ -1818,7 +2423,9 @@ class ambientLight extends executable{
                 shadows: this.shadows
             },   
             elevation: this.boundary.bottomToElevation,            
-            hidden: false,
+            hidden: this.hidden,
+            levels: this.levels,
+            locked: this.locked,
             rotation: this.#flipRotation(),
             vision: this.vision,
             x: this.boundary.center.x,
@@ -1827,7 +2434,6 @@ class ambientLight extends executable{
             flags: this.flag
         }
         if(dangerZone.MODULES.taggerOn && this.tag) light.flags['tagger'] = this.taggerTag
-        if(dangerZone.MODULES.wallHeightOn) light.flags['levels'] = {rangeTop: this.boundary.topToElevation}
         return light
     }
 
@@ -1842,7 +2448,7 @@ class ambientLight extends executable{
         await super.execute()
         this.#lights = await this.data.scene.createEmbeddedDocuments("AmbientLight",[this.#lightData]);
         if(this.part.clear.type) this.#postEvent() 
-        if(this.part.clear.type !== 'D') await this.data.fillSourceAreas()
+        if(this.part.clear.type !== 'D') this.data.fillSourceAreas()
     }
 
     #flipRotation(){
@@ -1859,7 +2465,7 @@ class ambientLight extends executable{
     }
 
     async #postEvent(){
-        if(this.part.clear.delay) await wait(this.part.clear.delay);
+        if(this.part.clear.delay) await helper.wait(this.part.clear.delay);
         switch(this.part.clear.type){
             case 'O':
                 const updates = this.lights.filter(l => this.data.scene.lights.find(lt => lt.id === l.id)).map((data) => ({
@@ -1925,7 +2531,7 @@ class audio extends executableWithFile {
 
     async #schedule(){
         if(this.duration){
-            await wait(this.preFadeDown)
+            await helper.wait(this.preFadeDown)
             if(this.fade) await this.#fade()
             await this.stop();            
         }
@@ -2025,7 +2631,7 @@ class combat extends executable {
         } else if(this.initiative ==='S'){
             await this.#setInitiative()
         }
-        if(this.start & !this.combat.started) await this.combat.startCombat()
+        if(this.start && !this.combat.started) await this.combat.startCombat()
     }
 
     async #addToCombat(){
@@ -2055,7 +2661,7 @@ class combat extends executable {
     async #rollInitiative(){
         const rollIds = []
         for(const token of this.initiativeTargets){
-            if(!this.initiativePlayer && getActorOwner(token)) continue
+            if(!this.initiativePlayer && helper.getActorOwner(token)) continue
             const combatantId = this.#tokenCombatant(token)?.id
             if(combatantId) rollIds.push(combatantId) 
         }
@@ -2064,7 +2670,7 @@ class combat extends executable {
     
     async #setInitiative(){
         for(const token of this.initiativeTargets){
-            if(!this.initiativePlayer && getActorOwner(token)) continue
+            if(!this.initiativePlayer && helper.getActorOwner(token)) continue
             if(this.#tokenCombatant(token)?.id) await this.combat.setInitiative(this.#tokenCombatant(token).id, this.initiativeValue)
         }
     }
@@ -2075,7 +2681,7 @@ class combat extends executable {
 
     #setTargets(){
         if(this.addTargets) this.#setInitiativeTargets(this.targets)
-        if(this.addSource && this.data.hasSources) this.#appendInitiativeTargets(this.data.sources)
+        if(this.addSource && this.data.hasSources) this.#appendInitiativeTargets(this.sources)
         if(dangerZone.MODULES.portalOn && this.spawn) this.#appendInitiativeTargets(this.data.spawn.tokens)
     }
 
@@ -2195,11 +2801,11 @@ class damageToken extends executable{
     } 
     
     get targets(){
-        return this.data.zone.sourceTreatment(this.source, this.data.targets, this.data.sources);
+        return this.data.zone.sourceTreatment(this.source, this.data.targets, this.sources);
     }
 
     get targetNames(){
-        return joinWithAnd(this.targets.map(t => t.name))
+        return helper.joinWithAnd(this.targets.map(t => t.name))
     }
     
     get type(){
@@ -2232,7 +2838,7 @@ class damageToken extends executable{
         }));
 
         const message = await ChatMessage.create(
-            {flavor: options.flavor, type: CONST.CHAT_MESSAGE_STYLES.OOC, rolls: options.damageRolls, emote:false, flags: {
+            {flavor: options.flavor, mode: "ooc", rolls: options.damageRolls, emote:false, flags: {
                 dnd5e: { targets: options.targets.map(target => ({
                     name: target.name,
                     img: target.texture.src,
@@ -2321,7 +2927,7 @@ class damageToken extends executable{
                 text += `<span class="danger-zone-label">${primary.value}</span> ${primary.type}${primSaveMessage}`
             }
             text += `.<br><hr></div>`
-            if(getActorOwner(damage.token)) {
+            if(helper.getActorOwner(damage.token)) {
                 this.#chatMessageResults += text
             } else {
                 this.#gmDamageCount = ++this.#gmDamageCount
@@ -2497,7 +3103,14 @@ class item extends executable {
         }
         if(this.pile && dangerZone.MODULES.itemPileOn) {
             const pilePos = canvas.grid.getTopLeftPoint({x:this.boundary.center.x, y:this.boundary.center.y})
-            await ItemPiles.API.createItemPile({position: {x: pilePos.x, y: pilePos.y}, sceneId: this.data.scene.id, items: this.items, pileActorName: false})
+            await ItemPiles.API.createItemPile({
+                position: {x: pilePos.x, y: pilePos.y}, 
+                sceneId: this.data.scene.id, 
+                items: this.items, 
+                pileActorName: false,
+                tokenOverrides: {levels: this.levels}
+                }
+            )
             return
         }
         for (const token of this.targets) { 
@@ -2544,7 +3157,7 @@ class item extends executable {
     }
 
     #updates(item){
-        const updates = this.part.updates ? stringToObj(this.part.updates, {document:item}) : {}
+        const updates = this.part.updates ? helper.stringToObj(this.part.updates, {document:item}) : {}
         const update = updates[item.name]
         if(update && this.tag) update['flags'] = {"tagger": this.taggerTag}
         return update
@@ -2568,8 +3181,21 @@ class lastingEffect extends executableWithFile{
         return this.part.alpha
     }
 
+    get autoplay(){
+        return this.part.autoplay === false ? false : true
+    }
+
     get hidden(){
         return this.part.hidden
+    }
+
+    /**@override */
+    /*get levels(){
+        return this.boundary.levels
+    }
+*/
+    get locked(){
+        return this.part.locked ?? false
     }
 
     get loop(){
@@ -2587,12 +3213,28 @@ class lastingEffect extends executableWithFile{
         }
     }
 
+    get rotation(){
+        return this.part.rotation ?? 0
+    }
+
     get save(){
         return this.data.danger.save.le ? parseInt(this.data.danger.save.le) : super.save
     }
 
+    get scaleY(){
+        return this.part.scaleY !== undefined ? this.part.scaleY : this.scale
+    }
+
     get tiles(){
         return this.#tiles
+    }
+
+    get tint(){
+        return this.part.tint ?? ''
+    }
+
+    get volumne(){
+        return this.part.volume ?? 0
     }
 
     get z(){
@@ -2611,7 +3253,7 @@ class lastingEffect extends executableWithFile{
             this.#build();
             await this.data.scene.createEmbeddedDocuments("Tile", this.tiles);
         }
-        await this.data.fillSourceAreas()
+        this.data.fillSourceAreas()
     }
 
     #build(){
@@ -2624,8 +3266,9 @@ class lastingEffect extends executableWithFile{
             elevation: this.boundary.topToElevation, 
             flags: this.data.flag,
             hidden: this.hidden,
-            locked: false,
+            locked: this.locked,
             height: this.boundary.height,
+            levels: this.levels,
             occlusion: {
                 alpha: this.occlusion.alpha,
                 mode: CONST.TILE_OCCLUSION_MODES[this.occlusion.mode] 
@@ -2633,13 +3276,16 @@ class lastingEffect extends executableWithFile{
             restrictions: this.restrictions,
             sort: this.z,
             texture: {
-                rotation: 0,
+                anchorX: 0,
+                anchorY: 0,
+                rotation: this.rotation,
                 src: this.files.image,
                 scaleX: this.flipContent('x') ? this.scale * -1 : this.scale,
-                scaleY: this.flipContent('y') ? this.scale * -1 : this.scale
+                scaleY: this.flipContent('y') ? this.scaleY * -1 : this.scaleY,
+                tint: this.tint
             },
             width: this.boundary.width,
-            video: {autoplay: true, loop: this.loop, volume: 0},
+            video: {autoplay: this.autoplay, loop: this.loop, volume: this.volume},
             x: this.boundary.A.x,
             y: this.boundary.A.y
         };
@@ -2647,6 +3293,191 @@ class lastingEffect extends executableWithFile{
         
         return tile
     } 
+}
+
+class level extends executable {
+
+    //holds the level class that is built
+    #level
+
+    //name of the level
+    #name
+
+    //update obj used in update to other levels on scene
+    #otherLevelsUpdate = []
+
+    get background(){
+        return this.part.background
+    }
+
+    /**@override */
+    /**
+     * Within plan, this comes after save (-2) and before all else, so the dimensions are available for use
+     */
+    get delay(){
+        return -1
+    }
+
+    get elevationSource(){
+        return this.part.elevation ?? 'T'
+    }
+
+    /**Elevation is set either to zone or target elevation
+        Z: Zone
+        T: Target
+     */
+    get elevation(){
+        let elevation
+        if(this.elevationSource === 'Z'){ //zone elevation
+            elevation = {bottom: this.zone.scene.elevation.bottom, top: this.zone.scene.elevation.top, base: 0}
+        } else { //target elevation
+            elevation = {bottom: this.boundary.bottom, top: this.boundary.top, base: 0}
+        }
+        return elevation
+    }
+
+    get flag(){
+        const flg = foundry.utils.mergeObject({}, this.data.flag)
+        return flg
+    }
+
+    get fog(){
+        return this.part.fog
+    }
+
+    get foreground(){
+        return this.part.foreground
+    }
+    
+    get has(){
+        //don't trigger if executable has not met or this is not enabled
+        if (!super.has || !this.data.danger.hasLevel) return false
+
+        return true
+    }
+
+    get levelId(){
+        return this.#level?.[0]?.id ?? ''
+    }
+
+    /**
+     * Levels this level is visible from
+     */
+    get levelsVisibleFrom(){
+         return this._levelsFromParameter(this.part.visibility.to)
+    }
+
+    /**
+     * return the name
+     */
+    get name(){
+        return this.#name
+    }
+
+    get textures(){
+        return this.part.textures
+    }
+    
+    get updateData(){
+        return [{
+            background: this.background,
+            elevation: this.elevation,
+            fog: this.fog,
+            flags: this.flag,
+            foreground: this.foreground,
+            name: this.name,
+            textures: this.textures,
+            visibility: {levels: this.visibleLevels}
+        }]
+    }
+
+    /**
+     * Levels visible to this level
+     */
+    get visibleLevels(){
+        return this._levelsFromParameter(this.part.visibility.from)
+    }
+
+    /** @override */
+    async execute(){
+        await super.execute()
+        await this.#build();
+        this.data.setLevelAdded(this.levelId)
+    }
+
+    async #build(){
+
+        //don't trigger if set to only add if name doesn't already exits
+        if(this.part.add === 'X' && this._nameExists()) {
+            this.#level = this.data.scene.levels.filter(l => l.name === this.part.name)
+            return 
+        }
+
+        //set a unique name
+        this._setName()
+
+        //create the level
+        this.#level = await this.data.scene.createEmbeddedDocuments("Level", this.updateData);
+
+        //update the other levels on the scene to see this level, as applicable
+        if(this.levelsVisibleFrom.length) await this.#updateOtherLevels()
+    }
+
+    //
+    async #updateOtherLevels(){
+
+        //iterate through each level id in the array and 
+        for(const id of this.levelsVisibleFrom){
+            let level = this.data.scene.levels.get(id)
+            if(level){
+                const arr = [...level.visibility.levels.add(this.levelId)]
+                const updateObj = {
+                    _id: id, 
+                    visibility: {levels: arr}
+                }
+                this.#otherLevelsUpdate.push(updateObj);
+            }
+        }
+        await this.data.scene.updateEmbeddedDocuments("Level", this.#otherLevelsUpdate)
+    }
+
+    /**
+     * 
+     * @param {string} inParameter //code from constant that represents a set of levels to return
+     * @returns 
+     */
+    _levelsFromParameter(inParameter){
+        let levels
+        const sceneLevels = helper.filterLevels(this.data.scene, {output: 'ids'})
+        switch(inParameter){
+            case 'S':
+                levels = sceneLevels
+                break;
+            case 'Z':
+                levels = this.data.zone.levels.length ? this.data.zone.levels : sceneLevels
+                break;
+            case 'T':
+                levels = this.data.levelsTargeted.length ? this.data.levelsTargeted : sceneLevels
+                break;
+            default:
+                levels = []
+        }
+        return levels
+    }
+
+    _nameExists(){
+        return this.data.sceneLevelNames.includes(this.part.name) ? true : false
+    }
+
+    _setName(){
+        let name
+        if(!this._nameExists()) {
+            name = this.part.name
+        } else {
+            name =  helper.nameIterator(this.part.name, new Set(this.data.sceneLevelNames))
+        }
+        this.#name = name
+    }
 }
 
 class macro extends executable{
@@ -2689,7 +3520,7 @@ class mutate extends executable {
     }
 
     get embedded(){
-        return this.hasEmbedded ? stringToObj(this.part.embedded) : {}
+        return this.hasEmbedded ? helper.stringToObj(this.part.embedded) : {}
     }
 
     get hasActor(){
@@ -2744,18 +3575,18 @@ class mutate extends executable {
             if(!token.actorLink) await this.#mutateActor(token);
         }
         await this.#mutateToken()
-        await this.data.fillSources()
+        this.data.fillSources()
     }
 
     #appendTokenUpdateData(token){
-        const tok = stringToObj(this.part.token, {document: token})
+        const tok = helper.stringToObj(this.part.token, {document: token})
         if(this.tag) tok['flags'] = {"tagger":this.taggerTag}
         tok['_id'] = token.id
         this.#tokenUpdates.push(tok)
     }
 
     #getActorUpdateData(token){
-        const actor = stringToObj(this.part.actor, {document: token.actor})
+        const actor = helper.stringToObj(this.part.actor, {document: token.actor})
         actor['_id'] = token.actorId
         this.#actorUpdates.push(actor)
         return actor
@@ -2822,26 +3653,25 @@ class primaryEffect extends executableWithAnimation {
     async executePre(){
         await super.executePre()
         if(this.hasSaveTargets){
-            await this.#build();
+            this.#build();
         } else {
             this.setCanceled()
         }
     }
 
-    async #build(){
+    #build(){
         const boundaries = this.data.twinDanger ? this.data.dualBoundaries : [this.boundary]
         for (const bound of boundaries){
             if(this.hasSources || this.hasSourcing){
                 if(this.source.name) {
-                    const taggerEntities = await getTagEntities(this.source.name, this.data.scene)
-                    this.#partSources = limitArray(shuffleArray(taggerEntities),this.data.sourceLimit)
+                    const taggerEntities = helper.getTagEntities(this.source.name, this.data.scene)
+                    this.#partSources = helper.limitArray(helper.shuffleArray(taggerEntities),this.data.sourceLimit)
                  } else {
                     this.#partSources = this.sourcesSelected
                  } 
                 if(this.partSources.length){
                     for(const document of this.partSources){
-                        const documentName = document.documentName ? document.documentName : document.document.documentName;
-                        const source = boundary.documentBoundary(documentName, document, {retain:true});
+                        const source = dimensionBoundary.documentBoundary(document, this.data.scene, {retain:true});
                         if(source.A.x === bound.A.x && source.A.y === bound.A.y && source.B.x === bound.B.x && source.B.y === bound.B.y){continue}
                         this.source.swap ? this.#buildSequence(source, bound) : this.#buildSequence(bound, source);
                     }
@@ -2859,6 +3689,7 @@ class primaryEffect extends executableWithAnimation {
             this.sequence.effect()
                 .file(this.files.image)
                 .zIndex(boundary.topToElevation)
+                .elevation([boundary.bottom, boundary.top])
                 .mirrorX(this.flipContent('x'))
                 .mirrorY(this.flipContent('y'))
                 .name(`${this.data.id}primaryEffect`)
@@ -2903,6 +3734,25 @@ class region extends executable{
      */
     #regionUpdates
 
+    get attachedToken(){
+        return this.part.attachedToken ?? ""
+    }
+
+    get attachedTokenArray(){
+        const arr = []
+
+        //attach to source tokens
+        if(this.attachedToken === 'S'){
+            arr.push(...this.sources) 
+        } 
+        //attach to tokens
+        else if(this.attachedToken === 'T') {
+            arr.push(...this.targets) 
+        }
+
+        return arr
+    }
+
     get boundaries(){
         return this.#boundaries
     }
@@ -2911,16 +3761,34 @@ class region extends executable{
         return this.part.color ?? ''
     }
 
+    get displayMeasurements(){
+        return this.part.displayMeasurements ?? false
+    }
+
     get has(){
         return (super.has && this.data.danger.hasRegion) ? true : false
+    }
+
+    get highlightMode(){
+        return this.part.highlightMode ?? 'shapes'
     }
 
     get hole(){
         return this.part.hole ?? false
     }
 
+    /**Override
+     * if wall restriction is enabled then only a single level can be returned, though field expects array
+     */
+    get levels(){
+        return this.restriction.enabled ? [this.levelSingle] : super.levels    
+    }
+
     get macro(){
-        return this.part.behavior.macro?.uuid ? this.part.behavior.macro : false
+        if(this.part.behavior.macro?.uuid && this.part.behavior.macro?.events?.length){
+            return this.part.behavior.macro
+        }
+        return false
     }
 
     get pause(){
@@ -2937,6 +3805,15 @@ class region extends executable{
 
     get regions(){
         return this.#regions
+    }
+
+    get restriction(){
+        const obj = {
+              enabled: this.part.restriction?.enabled ?? false,
+              type: this.part.restriction?.type ?? 'move',
+              priority: this.part.restriction?.priority ?? 0
+            }
+        return obj
     }
 
     get scale(){
@@ -2956,11 +3833,20 @@ class region extends executable{
     }
 
     get type(){
-        return this.part.type ?? 'rectangle'
+        let type = this.part.type ?? 'rectangle'
+
+        //if the boundary is not equal width and height, convert to an ellipse
+        if(type === 'circle' && this.boundary.width !== this.boundary.height){
+            type = 'ellipse'
+        }
+
+        return type
     }
 
     get visibility(){
-        return CONST.REGION_VISIBILITY[this.part.visibility] ?? 0
+        let v
+        if(this.part.visibility) v = CONST.REGION_VISIBILITY[this.part.visibility] 
+        return v ?? 0
     }
 
     /** @override */
@@ -2979,7 +3865,7 @@ class region extends executable{
             this.#regions = await this.data.scene.createEmbeddedDocuments("Region", this.regionUpdates);
             await this.#addBehaviors()
         }
-        await this.data.fillSourceAreas()
+        this.data.fillSourceAreas()
     }
 
     async #addBehaviors(){
@@ -2991,8 +3877,36 @@ class region extends executable{
 
     #build(){
         this.#boundaries = this.data.twinDanger ? this.dualBoundaries : [this.boundary]
+        const tokenDuplicationCount = this.attachedTokenArray.length 
+
+        //for each boundary, of which there are 2 when twinned
         for(let i = 0; i < this.boundaries.length; i++){
-            this.#regionUpdates.push(this.#getRegionData(this.boundaries[i], i))
+            
+            const baseObj = this.#getRegionData(this.boundaries[i], i)
+
+            //if not attaching to token, then insert the object ready for update
+            if(!tokenDuplicationCount) {
+                this.#regionUpdates.push(baseObj);
+                continue
+            } 
+
+            //for each token being attached to. If there is no token attachment, the array will have ''
+            //must have at least 1 iteration
+            for(let j = 0; j < tokenDuplicationCount; j++){
+
+                const token = this.attachedTokenArray[j]
+
+                const obj = structuredClone(baseObj);
+
+                //set the region to attach to token and update the name to the token name plus the existing name
+                if(token){
+                    obj['attachment'] = {token: token.id} 
+                    obj['levels'] = [token.level] //level of region must match token level
+                    if(tokenDuplicationCount > 1) obj['name'] = `${obj.name} ${token.name}`;
+                }
+
+                this.#regionUpdates.push(obj)
+            }
         }
     }
 
@@ -3048,15 +3962,40 @@ class region extends executable{
     }
 
     #buildShape(boundary){
-        return Object.assign( {
+        const obj = {
             type: this.type,
             hole: this.hole,
-            rotation: 0,
-            x: boundary.A.x,
-            y: boundary.A.y
-        }, this.type ==='rectangle' ? 
-            {x: boundary.A.x, y: boundary.A.y, width: boundary.width, height: boundary.height} : 
-            {x: boundary.center.x, y: boundary.center.y, radiusX: boundary.width/2, radiusY: boundary.height/2})
+            rotation: 0
+        }
+        let dim
+
+        const width = (boundary.width * this.scale);
+        const height = (boundary.height * this.scale);
+
+        //dimensions differ based on shape
+        if(this.type ==='rectangle'){
+           dim = {
+                    x: boundary.A.x,
+                    y: boundary.A.y,
+                    width: width, 
+                    height: height
+                }
+        } else if (this.type ==='ellipse'){
+           dim = {
+                x: boundary.center.x, 
+                y: boundary.center.y, 
+                radiusX: width/2, 
+                radiusY: height/2
+            }
+        } else {
+           dim = {
+                x: boundary.center.x, 
+                y: boundary.center.y, 
+                radius: width/2
+            }
+        }
+
+        return Object.assign(obj, dim)
     }
 
     #buildSuppressWeather(){
@@ -3082,21 +4021,30 @@ class region extends executable{
     }
 
     #getRegionData(boundary, index){
+
         let shape = this.#buildShape(boundary);
+
         const rg = {
             color: this.color,
+            displayMeasurements: this.displayMeasurements,
             elevation: {bottom: boundary.bottom, top: boundary.top}, 
             flags: this.data.flag,
+            highlightMode: this.highlightMode,
+            levels: this.levels,
             name: this.regionName,
+            restriction: this.restriction,
             shapes: [shape],
             visibility: this.visibility
         };
+
         if(dangerZone.MODULES.taggerOn && this.tag) rg.flags['tagger'] = this.taggerTag
+
         if(index) {
             rg.flags[dangerZone.ID][dangerZone.FLAGS.SCENETILE].istwin = true
         } else {
             this.data.regionData.shapes.push(shape)
         }
+
         return rg
     } 
 }
@@ -3192,7 +4140,7 @@ class save extends executable{
     }
 
     get delay(){
-        return -1
+        return -2
     }
 
     get diff(){
@@ -3269,7 +4217,7 @@ class save extends executable{
         } 
         if(this.playerPrompted.length){
             ChatMessage.create({
-                content: `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Saving Throw Prompted</div><div class="danger-zone-chat-message-body">${joinWithAnd(this.playerPrompted)} ${this.playerPrompted.length > 1 ? 'have' : 'has'} been prompted to make a DC${this.diff} ${game.dnd5e.config.abilities[this.type]} saving throw.</div><div class="danger-zone-chat-message-footer">They have ${this.timeAlloted} seconds to respond.</div>`,
+                content: `<div class="danger-zone-chat-message-title"><i class="fas fa-radiation"></i> Danger Zone Saving Throw Prompted</div><div class="danger-zone-chat-message-body">${helper.joinWithAnd(this.playerPrompted)} ${this.playerPrompted.length > 1 ? 'have' : 'has'} been prompted to make a DC${this.diff} ${game.dnd5e.config.abilities[this.type]} saving throw.</div><div class="danger-zone-chat-message-footer">They have ${this.timeAlloted} seconds to respond.</div>`,
                 whisper: ChatMessage.getWhisperRecipients("GM") 
             })
         }
@@ -3292,13 +4240,13 @@ class save extends executable{
 
     async #rollAbilitySave(token){
         let result, roll;
-        const owner = getActorOwner(token), fastforward = game.settings.get(dangerZone.ID, 'saving-throw-fast-forward');
+        const owner = helper.getActorOwner(token), fastforward = game.settings.get(dangerZone.ID, 'saving-throw-fast-forward');
         if (!fastforward && dangerZone.MODULES.socketLibOn && owner) {
             const time = this.timeAlloted
             if(time){ 
                 this.#playerPrompted.push(`${token.name} (${owner.name})`)
                 const query = dangerZone.dangerZoneSocket.executeAsUser("requestSavingThrow", owner.id, token.uuid, this.type, time)
-                const race = wait(time)
+                const race = helper.wait(time)
                 await Promise.race([query, race]).then((value) => {result = value})
             }
         }
@@ -3340,10 +4288,14 @@ class scene extends executableWithFile {
      * Object
      * the data passed to the scene update which do not invoke render of scene
      */
-    #renderData
+    #levelData
 
     get active(){
         return this.part.active
+    }
+
+    get bottom(){
+        return this.e.min ?? 0
     }
 
     get darkness(){
@@ -3368,20 +4320,28 @@ class scene extends executableWithFile {
         return (super.has && (this.active || this.weather)) ? true : false
     }
 
-    get hasNonRenderInvokingChange(){
+    get hasSceneChange(){
         return Object.keys(this.sceneData).length ? true : false
     } 
 
-    get hasRenderInvokingChange(){
-        return Object.keys(this.renderData).length ? true : false
+    get hasLevelChange(){
+        return Object.keys(this.levelData).length ? true : false
     } 
 
-    get renderData(){
-        return this.#renderData
+    get levelData(){
+        return this.#levelData
     }
 
     get sceneData(){
         return this.#sceneData
+    }
+
+    get targetLevels(){
+        return this.data.levelsTargeted
+    }
+
+    get top(){
+        return this.e.max ?? 0
     }
 
     get weather(){
@@ -3402,7 +4362,7 @@ class scene extends executableWithFile {
     async initialize(){
         await super.initialize()
         this.#sceneData = {}
-        this.#renderData = {}
+        this.#levelData = []
     }
 
     /** @override */
@@ -3415,31 +4375,79 @@ class scene extends executableWithFile {
     async execute(){
         await super.execute()
         this.#build()
-        if(this.hasRenderInvokingChange) await this.#updateWithRender() 
-        if(this.hasNonRenderInvokingChange) await this.#update();
+        if(this.hasLevelChange) await this.#updateLevels() 
+        if(this.hasSceneChange) await this.#update();
     }
 
     #build() {
         if(this.active){
-            if(this.darkness !== - 1) this.#sceneData.darkness = this.darkness;
-            if(this.globalLight) this.#sceneData.globalLight = this.globalLight === 'Y' ? true : false;
-            if(this.e.type) this.#sceneData.foregroundElevation = this.e.type === 'S' ? this.#getE() : this.data.scene.foregroundElevation + this.#getE();
-            if(this.files.image && this.data.scene.background.src !== this.files.image) this.#renderData['background'] = {src: this.files.image}
-            if(this.files.overlay && this.data.scene.foreground !== this.files.overlay) this.#renderData.foreground = this.files.overlay
+            const environment = {}
+            if(this.darkness !== - 1) {
+                environment.darknessLevel = this.darkness;
+            }
+            if(this.globalLight) {
+                environment.globalLight = {enabled: this.globalLight === 'Y' ? true : false};
+            }
+            if(Object.keys(environment).length){
+                this.#sceneData.environment = environment
+            }
         }
-        if(this.weather) this.#renderData.weather = this.weather
+        if(this.weather) this.#sceneData.weather = this.weather
+        this.#buildLevels()
     }
 
-    #getE(){
-        const value = getRandomNumber(this.e.min, this.e.max)  
-        return value >= 1 ? value : null
+    #buildLevels(){
+        const levels = this.data.scene.levels.filter(lvl => this.targetLevels.includes(lvl.id))
+
+        if(!levels.length) return
+
+        for(const level of levels){
+
+            const update = {"_id": level.id}
+
+            //elevation updates if there is a type set
+            if(this.e.type) {
+                //directly set elevatoin
+                if(this.e.type === 'S'){
+                    const e = {}
+                    if(this.bottom !== level.elevation.bottom){
+                        e.bottom = this.bottom
+                    } 
+                    if(this.top !== level.elevation.top){
+                        e.top = this.top
+                    } 
+                    if(Object.keys(e).length){
+                        update.elevation = e
+                    }
+                }
+                //relative elevation
+                else {
+                    update.elevation = {
+                        bottom: level.elevation.bottom + this.bottom,
+                        top:  level.elevation.top + this.top
+                    }
+                }
+            }
+
+            if(this.files.image && level.background.src !== this.files.image) {
+                update.background = {src: this.files.image}
+            }
+
+            if(this.files.overlay && level.foreground.src !== this.files.overlay) {
+                update.foreground = {src: this.files.overlay}
+            }
+
+            //if there are any changes beyond the id, push into the updates
+            if(Object.keys(update).length > 1){this.#levelData.push(update)}
+        }
+        
     }
 
     async #update(){
         await this.data.scene.update(this.sceneData, this.updateOps);
     }
 
-    async #updateWithRender(){
+    async #updateLevels(){
         let hookId;
       
         const render = new Promise(resolve => {
@@ -3448,7 +4456,7 @@ class scene extends executableWithFile {
           });
         });
 
-        await this.data.scene.update(this.renderData);
+        await this.data.scene.updateEmbeddedDocuments("Level", this.levelData);
 
         // Timeout after 5 seconds
         const timeout = new Promise(resolve => window.setTimeout(() => {
@@ -3514,6 +4522,7 @@ class secondaryEffect extends executableWithAnimation {
                     .file(this.files.image)
                     .zIndex(boundary.bottomToElevation)
                     .atLocation(boundary.center)
+                    .elevation([boundary.bottom, boundary.top])
                     .mirrorX(this.flipContent('x'))
                     .mirrorY(this.flipContent('y'))
                     .scale(this.scale)
@@ -3557,12 +4566,19 @@ class sound extends executableWithFile {
         return this.part.effects
     }
 
+    get hidden(){
+        return this.part.hidden
+    }
+
     get #soundData() {
         const sound = {
             elevation: this.boundary.bottomToElevation,  
             easing: this.easing,
             effects: this.effects,
             flags: this.data.flag,
+            hidden: this.hidden,
+            locked: this.locked,
+            levels: this.levels,
             path: this.files.audio,
             radius: this.radius,
             volume: this.volume, 
@@ -3571,6 +4587,10 @@ class sound extends executableWithFile {
             y: this.boundary.center.y
         }
         return sound
+    }
+
+    get locked(){
+        return this.part.locked
     }
 
     get radius(){
@@ -3634,9 +4654,8 @@ class sourceEffect extends executableWithAnimation {
 
     async #build(){
         for (const source of this.sourcesSelected){
-            const documentName = source.documentName ? source.documentName : source.document.documentName;
-            const docBound = boundary.documentBoundary(documentName, source)
-            const bound = !this.offset ? docBound : boundary.offsetBoundary(docBound, this.data.offset, this.offset, this.data.scene)
+            const docBound = dimensionBoundary.documentBoundary(source, this.data.scene)
+            const bound = !this.hasOffset ? docBound : dimensionBoundary.offsetBoundary(docBound, this.data.offset, this.offset, this.data.scene)
             this.#buildSequence(bound);
         }
     }
@@ -3648,6 +4667,7 @@ class sourceEffect extends executableWithAnimation {
                     .file(this.files.image)
                     .zIndex(boundary.bottomToElevation)
                     .atLocation(boundary.center)
+                    .elevation([boundary.bottom, boundary.top])
                     .mirrorX(this.flipContent('x'))
                     .mirrorY(this.flipContent('y'))
                     .scale(this.scale)
@@ -3741,16 +4761,12 @@ class spawn extends executable {
         return this.#rollTable
     }
 
-    get spawnDelay(){
-        return this.part.spawnDelay 
-    }
-
     get texture(){
         return game.actors.getName(this.actor)?.thumbnail
     }
 
     get updates(){
-        const updates = {token: {}}
+        const updates = {token: {level: this.levels}}
         if(this.tag) updates.token['flags'] = {"tagger":this.taggerTag}
         return updates
     }
@@ -3768,7 +4784,6 @@ class spawn extends executable {
         const obj = Object.assign(this.settings, {updateData: this.updates});
         this.#portal = await new Portal()
         //if(this.color) this.data.spawn.portal = this.data.spawn.portal.color(this.color)
-        //if(this.spawnDelay) this.data.spawn.portal = this.data.spawn.portal.delay(this.spawnDelay)
         //if(this.texture) this.data.spawn.portal = this.data.spawn.portal.texture(this.texture)
         this.#portal = this.#portal.addCreature(this.actor, obj).origin(this.location).setLocation(this.location)//.range(this.range)
     }
@@ -3803,7 +4818,7 @@ class spawn extends executable {
     async #spawn(){
         const tokens = await this.portal.spawn();
         this.data.updateSpawn(tokens, this.part.mutate)
-        await this.data.fillSources()
+        this.data.fillSources()
     }
 }
 
@@ -3833,7 +4848,7 @@ class  tokenEffect extends executableWithAnimation {
         this.replaceSequence(
             this.sequence.effect()
                 .file(this.files.image)
-                .attachTo(target)
+                .attachTo(target, {bindElevation: true})
                 .scale(this.scale)
         )
         if(this.duration) {
@@ -3854,7 +4869,7 @@ class tokenMove extends executable {
      * array
      * the update data passed into the token update call
      */
-    #wallUpdates
+    #tokenUpdates
 
     get e(){
         return this.part.e
@@ -3892,8 +4907,30 @@ class tokenMove extends executable {
         return this.sToT
     }
 
+    /**The level to move token to, based on part levels settings
+     * 
+     * @returns string level id
+     */
+    get moveLevel(){
+        let level
+        switch(this.part.levels){
+            case 'D':
+                level = this.data.levelAdded 
+                break;
+            case 'Z':
+                level = this.data.levelSingleZone 
+                break;
+            case 'T':
+                level = this.data.levelSingle
+                break;
+            default:
+                level = ''
+        }
+        return level
+    }
+
     get movesTargets(){
-        return (this.v?.dir || this.hz?.dir || this.e?.type) ? true : false
+        return (this.v?.dir || this.hz?.dir || this.e?.type  || this.part.levels) ? true : false
     }
 
     get save(){
@@ -3902,7 +4939,7 @@ class tokenMove extends executable {
     
     get targets(){
         let targets = super.targets
-        if(this.sToT) targets = targets.concat(this.data.sources.filter(s => targets.find(t => t.id !== s.id))) 
+        if(this.sToT) targets = targets.concat(this.sources.filter(s => targets.find(t => t.id !== s.id))) 
         return targets
     }
 
@@ -3910,14 +4947,14 @@ class tokenMove extends executable {
         return this.part.teleport
     }
 
-    get wallUpdates(){
-        return this.#wallUpdates
+    get tokenUpdates(){
+        return this.#tokenUpdates
     }
 
     /** @override */
     async initialize(){
         await super.initialize()
-        this.#wallUpdates = []
+        this.#tokenUpdates = []
     }
 
     /** @override */
@@ -3930,46 +4967,86 @@ class tokenMove extends executable {
 
     #build(){
         for (const token of this.targets) { 
-            let h = this.#getV(), w = this.#getHz(), amtE = this.#getE(), e, x, y;
-            if(this.sToT && this.data.sources.find(s => s.id === token.id)){
+            const update = {"_id": token.id,};
+
+            //move the level if there is a setting to do so.
+            const level = this.moveLevel               
+            if(level){
+                update['level'] = level
+            }
+
+            //set height, width, and elevation constants, which may be assigned randomly over a range.
+            const h = this.#getV();
+            const w = this.#getHz();
+            const amtE = this.#getE();
+            
+            //set variables for use in the final update
+            let e, x, y;
+
+            //identify is source to target and a source
+            const isSToTSource = this.sToT && this.sources.some(s => s.id === token.id);
+
+            //when source to target is set and this token is a source - move the source to the target
+            if(isSToTSource){
                 let location = this.boundary.center;
-                let tokenBoundary = boundary.documentBoundary("Token", token);
-                x = location.x - (tokenBoundary.center.x - tokenBoundary.A.x), y = location.y - (tokenBoundary.center.y - tokenBoundary.A.y);
+                let tokenBoundary = dimensionBoundary.documentBoundary(token, this.data.scene);
+
+                //given various token sizes, calculate the differ for use in the final placement of token in the new location
+                const adjX = tokenBoundary.center.x - tokenBoundary.A.x;
+                const adjY = tokenBoundary.center.y - tokenBoundary.A.y;
+
+                //place source in new location
+                x = location.x - adjX; 
+                y = location.y - adjY;
                 e = this.boundary.bottomToElevation;
-            } else if (this.movesTargets) {
-                const shift = this.walls ? furthestShiftPosition(token, [w, h]) : point.shiftPoint(token, {w: w, h: h})
-                x = shift.x; y = shift.y;
-                e = this.e.type === 'S' ? amtE : token.elevation + amtE;
-                this.data.tokenMovement.push({tokenId: token.id, hz: Math.abs(w), v: Math.abs(h), e: Math.abs(e - token.elevation)})
+            } 
+            
+            //else if the targets are moved
+            else if (this.movesTargets) {
+
+                //calculate the grid coordinates based on the grid shift
+                const shift = this.walls ? helper.furthestShiftPosition(token, [w, h]) : point.shiftPoint(token, {w: w, h: h})
+                const adjE = this.e.type === 'S' ? amtE : token.elevation + amtE;
+
+                x = shift.x; 
+                y = shift.y;
+                e = adjE;
+
+                //record the token movement into the executor data for reference by other parts
+                this.data.tokenMovement.push({tokenId: token.id, hz: Math.abs(w), v: Math.abs(h), e: Math.abs(adjE - token.elevation)})
             }
-            if(x < this.data.sceneBoundary.x.min) {
-                x = this.data.sceneBoundary.x.min
-            } else if (x > this.data.sceneBoundary.x.max) {
-                x = this.data.sceneBoundary.x.max
-            }
-            if(y < this.data.sceneBoundary.y.min) {
-                y = this.data.sceneBoundary.y.min
-            } else if (y > this.data.sceneBoundary.y.max) {
-                y = this.data.sceneBoundary.y.max
-            }
-            this.#wallUpdates.push({"_id": token.id,"x": x,"y": y, "elevation": e});
+
+            //get the sceneBoundary, and then perform updates that ensure token is not moved off of the scene
+            const { x: xBounds, y: yBounds } = this.data.sceneBoundary
+
+            x = Math.min(Math.max(x, xBounds.min), xBounds.max);
+            y = Math.min(Math.max(y, yBounds.min), yBounds.max);
+
+            //merge the updates and add to the final update
+            this.#tokenUpdates.push(
+                Object.assign(update, {
+                "x": x,
+                "y": y, 
+                "elevation": e
+                })
+            );
         }
     }
 
     #getE(){
-        return this.e?.type ? getRandomNumber(this.e.min,this.e.max) : 0
+        return this.e?.type ? helper.pickRandom(this.e.min,this.e.max) : 0
     }
     
     #getHz(){
         if(!this.hz?.dir) return 0
         const adjH = (this.hz.dir === "D" || (this.hz.dir === "R" && Math.round(Math.random()))) ? -1 : 1
-        return (getRandomNumber(this.hz.min,this.hz.max)  * adjH)
+        return (helper.pickRandom(this.hz.min,this.hz.max)  * adjH)
     }
 
     #getV(){
         if(!this.v?.dir) return 0
         const adjV = (this.v.dir === "U" || (this.v.dir === "R" && Math.round(Math.random()))) ? -1 : 1
-        return (getRandomNumber(this.v.min,this.v.max) * adjV)
+        return (helper.pickRandom(this.v.min,this.v.max) * adjV)
     }
 
     async #update(){
@@ -3978,8 +5055,10 @@ class tokenMove extends executable {
             opts.teleport = true;
             opts.forced = true;
         }
-        await this.data.scene.updateEmbeddedDocuments("Token", this.wallUpdates, opts);
+        await this.data.scene.updateEmbeddedDocuments("Token", this.tokenUpdates, opts);
     }
+
+
 }
 
 class tokenSays extends executable {  
@@ -4152,7 +5231,7 @@ class wall extends executable {
             this.#build();
             if(this.wallUpdates.length) await this.data.scene.createEmbeddedDocuments("Wall",this.wallUpdates)
         }
-        await this.data.fillSourceAreas()
+        this.data.fillSourceAreas()
     }
 
     #build(){
@@ -4172,11 +5251,11 @@ class wall extends executable {
             move: this.move,
             sight: this.sense,
             sound: this.sound,
+            levels: this.levels,
             light: this.light,
             threshold: this.threshold,
             flags: this.data.flag
         }
-        if(dangerZone.MODULES.wallHeightOn && !this.boundary.depthIsInfinite) wall.flags['wall-height'] = {"top": this.boundary.top, "bottom": this.boundary.bottom}
         if(dangerZone.MODULES.taggerOn && this.tag) wall.flags['tagger'] = this.taggerTag
         return wall;
     }  
@@ -4273,7 +5352,7 @@ class weather extends executable{
     }
 
     async #for(){
-        if(this.duration) await delay(this.duration);
+        if(this.duration) await helper.wait(this.duration);
         await this.#off();
     }
 

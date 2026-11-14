@@ -1,6 +1,6 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneType} from './zone-type.js';
-import {boundary, dangerZoneDimensions} from './dimensions.js';
+import {dimensionBoundary} from './dimensions.js';
 import {triggerManager} from './trigger-handler.js';
 
 export class api {
@@ -45,10 +45,10 @@ export class api {
      * @param {string} sceneId - the scene id
      * @param {string} identifier - an identifier that user provides that differentiates this highlight layer from other highlight layers created for this zone
      */
-    static async _addHighlightZone(zoneName, sceneId, identifier = ''){
+    static _addHighlightZone(zoneName, sceneId, identifier = ''){
         if(!sceneId){sceneId = canvas.scene?.id}
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        zn ? await dangerZoneDimensions.addHighlightZone(zn.id, sceneId, identifier) : console.log(`A zone with the name provided was not found on scene ${sceneId}`)
+        zn ? zn.addHighlightZone({id: identifier}) : console.log(`A zone with the name provided was not found on scene ${sceneId}`)
     }
 
     /**
@@ -60,7 +60,7 @@ export class api {
     static _destroyHighlightZone(zoneName, sceneId, identifier = ''){
         if(!sceneId){sceneId = canvas.scene?.id}
         const zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
-        zn ? dangerZoneDimensions.destroyHighlightZone(zn.id, identifier) : console.log(`A scene zone with the name provided was not found on scene ${sceneId}`)
+        zn ? zn.destroyHighlightZone(identifier) : console.log(`A scene zone with the name provided was not found on scene ${sceneId}`)
     }
 
     /**
@@ -101,7 +101,7 @@ export class api {
     static _tokensInBoundary(A,B, elevation = {bottom: -Infinity, top: Infinity}){
         if(elevation.bottom === -Infinity && A.z) elevation.bottom = A.z
         if(elevation.top === Infinity && B.z) elevation.top = B.z
-        const b = new boundary(A,B,elevation);
+        const b = new dimensionBoundary(elevation,canvas.scene,{A,B});
         return b.tokensIn(canvas.scene.tokens);
     }
 
@@ -111,7 +111,7 @@ export class api {
      * @returns a danger zone boundary
      */
     static _boundary(document){
-        return boundary.documentBoundary(document.documentName, document);
+        return dimensionBoundary.documentBoundary(document);
     }
     
     /**
@@ -127,7 +127,7 @@ export class api {
      *                          sources {array} an array of token documents that represent zone sources (this overrides and source defined in the zone for purposes of this method)
      *                          targets {array} an array of token documents that will be the targets (overrides any zone targeting)
      */
-     static async _triggerZone(zoneName, sceneId, options = {activeOnly: false, scope: '', location: {}, targets: [], sources: [], boundary: {}}){
+     static async _triggerZone(zoneName, sceneId, options = {activeOnly: false, scope: '', location: {}, targets: [], sources: [], boundary: {}, levels: []}){
         if (!game.user.isActiveGM){
             if( game.modules.get("socketlib")?.active && dangerZone.dangerZoneSocket){
                 if(game.settings.get(dangerZone.ID, 'open-socket')) {
@@ -143,6 +143,7 @@ export class api {
         let zn; const opts = {}; 
         if(options === true || options === false) opts['activeOnly'] = options;
         if(options.boundary && Object.keys(options.boundary).length) opts['boundary'] = options.boundary;
+        if(options.levels?.length && Object.keys(options.levels).length) opts['levels'] = options.levels;
         if(options.location && Object.keys(options.location).length) opts['location'] = options.location;
         if(options.targets?.length) opts['targets'] = options.targets;
         if(options.sources?.length) opts['sources'] = options.sources;
@@ -165,6 +166,7 @@ export class api {
         const ex = await zn.executor()
         return ex
     }
+
 }
 
 export async function _triggerZone(zoneName, sceneId, options){

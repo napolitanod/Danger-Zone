@@ -37,14 +37,14 @@
             <input type="checkbox" name="enabled" {{checked zone.enabled}} />
         </div>
     </div>
-    <hr>
-    <div class="form-group">
-        <label>
+    
+    <fieldset>
+        <legend>
             {{localize 'DANGERZONE.edit-form.flavor.label'}}
             <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.flavor.description'}}"><i class="fas fa-info-circle"></i></span>
-        </label>
+        </legend>
         <div class="form-fields">
             <input type="text" name="flavor" value="{{zone.flavor}}">
         </div>
-    </div>
+    </fieldset> 
 </div>

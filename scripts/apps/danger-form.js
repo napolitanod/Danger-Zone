@@ -1,7 +1,7 @@
 import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {actorOps,  DANGERZONEPARTS, DANGERZONECONFIG, DANGERFORMOPTIONS,determineMacroList,  getCompendiumOps, weatherParameters, WORLDZONE, ZONEFORMOPTIONS} from './constants.js';
-import { helper, getEventData, stringToObj} from './helpers.js';
+import { helper} from './helpers.js';
 
 /**v13
  * The main danger form from which danger part forms are launched. Used to configure a danger.
@@ -101,7 +101,7 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
    */
   static async #edit(event) {
     event.preventDefault();
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     
     const options = {
       partId: data.parentId,
@@ -120,7 +120,7 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
    */
   static async #delete(event) {
     event.preventDefault();
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
   
     const choice = await foundry.applications.api.DialogV2.confirm({
       content: `${game.i18n.localize("DANGERZONE.type-form.clear")} ${data.label}?`,
@@ -181,7 +181,8 @@ export class DangerForm extends foundry.applications.api.HandlebarsApplicationMi
       case 'scene': 
         return part.active ? true : false
       case 'globalZone': return part.enabled ? true : false
-      case 'tokenMove': return (part.v.dir || part.hz.dir || part.e.type || part.sToT) ? true : false
+      case 'level': return part.add ? true : false
+      case 'tokenMove': return (part.v.dir || part.hz.dir || part.e.type || part.sToT || part.levels) ? true : false
       case 'tokenResponse': return (part.save?.enable || part.damage?.enable) ? true : false
       case 'tokenSays': return part.fileType ? true : false
       case 'wall': return (part.top || part.bottom || part.left || part.right) ? true : false
@@ -300,7 +301,7 @@ export class DangerPartConfig extends foundry.applications.api.HandlebarsApplica
    * @param {SubmitEvent} event         The pointer event.
    */
   static #random(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     const meta = DANGERZONECONFIG.RANDOM[data.targetId]
     const filepicker = this.element.querySelector([`[data-id='${meta.SELECTOR}']`])
     if(data.target.checked){
@@ -514,46 +515,73 @@ export class CombatDangerPartConfig extends DangerPartConfig {
  * Configures the combat danger part
  */
 export class EffectDangerPartConfig extends DangerPartConfig {
+
   static #partId = 'effect'
 
+  //v14 deprecate - flags true to manage the delete of old data once it is exported.
+  #clearDeprecatedEffect = 0
+
   /** @inheritDoc */
-  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId, {actions: {'edit': this.#activeEffectConfig}, form: {handler: this.#onSubmit}})
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId, {actions: {'convert': EffectDangerPartConfig.#convertEffect}, form: {handler: this.#onSubmit}})
 
   /** @override */
   static PARTS = this._parts(this.#partId)
 
+  get clearDeprecatedEffect(){
+    return this.#clearDeprecatedEffect
+  }
+
+  /** @override */
   async _prepareContext() {
-    const parentData = await super._prepareContext();
-    const origin = this.parentApp.dangerId;
-    const merged = foundry.utils.mergeObject(parentData, {origin: origin})
-    return merged
+  const parentData = await super._prepareContext();
+  return foundry.utils.mergeObject(parentData, {
+      hasDeprecatedEffect: Object.keys(this.data).some(k => ['name', 'icon', 'duration', 'changes', 'description'].includes(k))
+    } )
   }
 
-  static #activeEffectConfig(event) {
-    const data = getEventData(event)
-    if (!this.data.hasOwnProperty('name') && !this.data.hasOwnProperty('label')){
-      this._mergeData( {
-        name: this.parentApp.element.querySelector('input[name="name"]').value,
-        icon: this.parentApp.element.querySelector('file-picker').value,
-        origin: this.parentApp.dangerId
-      })
+  /**
+   * converts an active effect that was previously created directly on this danger to one on an actor, then deletes the data.
+   * Data is now deprecated
+   * @param {event} event 
+   * @returns 
+   */
+  static async #convertEffect(event){
+    //do this to prevent the button from submitting the form
+    event.preventDefault();
+
+    let updates = []
+
+    //user is guided to target who they want to add the deprecated effects to
+    const targets = game.user.targets
+    if(!targets.size) return ui.notifications.warn('You must select at least one token')
+
+    //add the effect to each target. 
+    targets.forEach((value) => {
+      const result = value.actor.createEmbeddedDocuments("ActiveEffect", [this.data])
+      updates.push(result)
+    } ) 
+    await Promise.all(updates)
+
+    //if at least one token updated, hide the button and mark the data for delete on final submit. Else warn that something went wrong.
+    if(updates.length) {
+      ui.notifications.info('Effect transfered to tokens')
+      this._setClearDeprecatedEffect(1)
+      const button = this.element.querySelector(`#dz-effect-deprecated-button`);
+      button.classList.add('dz-hidden') 
+    } else {
+      ui.notifications.warn('Effect did not transfer successfully to targeted tokens')
     }
-  
-    const effect = Object.assign(this.data, {
-      documentName: "ActiveEffect",
-      testUserPermission: (...args) => { return true},
-      parent: {documentName: "Actor"},
-      apps: {},
-      isOwner: true,
-      uuid: `ActiveEffect.${this.parentApp.dangerId}`
-    });
-    
-    const doc = new ActiveEffect(effect, {})
-    
-    this.renderChild(new DangerZoneActiveEffectForm(data.parent, this.parentApp.dangerId, doc))
+     
   }
 
-  /**v13
+  /**
+   * Marks this record so that it will not retain the effect data, deprecated in V14, when form is saved.
+   */
+  _setClearDeprecatedEffect(){
+    this.#clearDeprecatedEffect = 1
+  }
+
+  /**v14
    * Save the changes to the danger part.
    * @this {ApplicationV2}
    * @param {SubmitEvent} _event         The form submission event.
@@ -562,111 +590,19 @@ export class EffectDangerPartConfig extends DangerPartConfig {
    */
   static async #onSubmit(_event, _form, submitData) {
     const expandedData = foundry.utils.expandObject(submitData.object);
-    this._mergeData(expandedData)
-    this.parentApp.updatePart(this.partId, this.data, this.parentHtml);
+    let data
+
+    //if the deprecated data is marked for delete then don't merge in the update object to the deprecated data. This will effectively cause it to be saved over.
+    if(this.clearDeprecatedEffect) {
+      data = expandedData
+    } else {
+      this._mergeData(expandedData)
+      data = this.data
+    }
+    this.parentApp.updatePart(this.partId, data, this.parentHtml);
   }
 }
 
-/**v13
- * form that extends the activeeffectconfig form to collect active effect data
- */
-class DangerZoneActiveEffectForm extends foundry.applications.sheets.ActiveEffectConfig {
-  constructor(eventParent, origin, ...args) {
-    super(...args);
-    this.eventParent = eventParent,
-    this.origin = origin
-    }
-
-    static get defaultOptions(){
-        const defaults = super.defaultOptions;
-
-        return foundry.utils.mergeObject(defaults, {
-          sheetConfig: false,
-          height: "600px"
-        });
-      }
-
-    get title() {
-      const reference = this.document.name ? ` ${this.document.name}` : "";
-      return `${game.i18n.localize("DANGERZONE.zone-active-effect-form.form-name")}${reference}`;
-    }
-
-    getData(options) {
-      const d = this.parent.data
-      const data = {
-        changes: d.changes ?? [],
-        description: d.description ?? "",
-        disabled: d.disabled ?? false,
-        duration: d.duration ?? {},
-        flags: d.flags ?? {},
-        img: d.icon,
-        isSuppressed: false,
-        name: d.name ?? d.label ?? "",
-        origin: this.origin,
-        tint: d.tint,
-        transfer: true
-      }
-      return {
-        cssClass: "editable",
-        data: data,
-        editable: true,
-        isActorEffect: true,
-        isItemEffect: false,
-        limited: false,
-        owner: true, 
-        submitText: "EFFECT.Submit",
-        modes: Object.entries(CONST.ACTIVE_EFFECT_MODES).reduce((obj, e) => {
-          obj[e[1]] = game.i18n.localize("EFFECT.MODE_"+e[0]);
-          return obj;
-        }, {}),
-        title: this.title
-      };
-    }
-
-    render(force=false, options={}) {
-      super.render(force, options)
-    }
-
-    activateListeners(html) {
-      super.activateListeners(html);
-    }
-    
-
-    _onEffectControl(event) {
-      event.preventDefault();
-      const button = event.currentTarget;
-      switch (button.dataset.action) {
-        case "add":
-          this._addEffectChange(button);
-          break;
-        case "delete":
-          button.closest(".effect-change").remove();
-          this.setPosition()
-          break;
-      }
-    }
-  
-   _addEffectChange(button) {
-      super._addEffectChange(button)
-      const changes = button.closest(".tab").querySelector(".changes-list");
-      const last = changes.lastElementChild;
-      const idx = last ? last.dataset.index + + 1 : 0;
-      const change = $(`<li class="effect-change flexrow" data-index="${idx}"><div class="key"><input type="text" name="changes.${idx}.key" value=""/></div><div class="mode"><select name="changes.${idx}.mode" data-dtype="Number">
-        <option value="0">Custom</option><option value="1">Multiply</option><option value="2" selected="">Add</option><option value="3">Downgrade</option><option value="4">Upgrade</option><option value="5">Override</option></select></div>
-        <div class="value"><input type="text" name="changes.${idx}.value" value="0"/></div>
-      </li>`);
-      let del = $('<div>').addClass("effect-controls").append($('<a>').addClass("effect-control").attr("data-action", "delete").click(this._onEffectControl).append($('<i>').addClass("fas fa-trash")))
-      change.append(del);
-      changes.appendChild(change[0]);
-      this.setPosition()
-    }  
-  
-    async _updateObject(event, formData) {
-      const expandedData = foundry.utils.expandObject(formData);
-      this.parent.data = expandedData;
-      this.parent.data['icon'] = this.parent.data['img']; delete this.parent.data['img'];//v12 compat
-    }
-}
 
 /**v13
  * Configures the item danger part
@@ -689,6 +625,7 @@ export class ItemDangerPartConfig extends DangerPartConfig {
    */
   static #pile(event) {
     helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'hide', html: this.element, id: `dz-token-fields`})
+    helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'show', html: this.element, id: `dz-token-levels`})
   }
 }
 
@@ -731,7 +668,9 @@ export class GlobalZoneDangerPartConfig extends DangerPartConfig {
         zone: obj,
         actorOps: actorOps(),
         hideOperation: obj.trigger.loop > 1 ? false : true,
-        zoneTypeOps: dangerZoneType.dangerList
+        zoneTypeOps: dangerZoneType.dangerList,
+        defaultMinElevation: dangerZone.minElevation,
+        defaultMaxElevation: dangerZone.maxElevation
       } )
   }
 
@@ -745,11 +684,12 @@ export class GlobalZoneDangerPartConfig extends DangerPartConfig {
       super._onRender(context, options);
       this.element.querySelector(`[data-action="loop-change"]`).addEventListener("change", (event => {this.#loopChange(event)}))
       this.element.querySelector(`[data-action="source-area"]`).addEventListener("change", (event => {this.handleSourceTag(event)}))
+      this.element.querySelector(`[data-action="target-all-toggle"]`).addEventListener("change", (event => {this.#targetAllTokensEnablementToggle(event)}))
       this.element.querySelector(`[data-action="template-toggle"]`).addEventListener("change", (event => {this.#templateToggle(event)}))
   }
 
   handleSourceTag(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     const sourceArea = data.target.value ?? this.data?.source?.area ?? ''
     const tag = this.element.querySelector('#dz-source-tag-global')
     const sourceT = this.element.querySelector('#dz-source-tag-tag-global')
@@ -789,8 +729,12 @@ export class GlobalZoneDangerPartConfig extends DangerPartConfig {
     helper.htmlToggleElement(this, {event: event, condition: 'less_than', test: 2, type: 'hide', html: this.element, id: `dz-operation-global`})
   }
 
+  #targetAllTokensEnablementToggle(event){
+    helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'hide', html: this.element, id: `dz-target-quantity-global`})
+  }
+
   #templateToggle(event){
-    helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'hide', html: this.element, id: `dz-elevation-prompt-global`})
+    helper.htmlToggleElement(this, {event: event, condition: 'check', type: 'show', html: this.element, id: `dz-elevation-prompt-global`})
   }
   
 }
@@ -830,9 +774,9 @@ export class MutateDangerPartConfig extends DangerPartConfig {
    */
   static async #onSubmit(_event, _form, submitData) {
     const expandedData = foundry.utils.expandObject(submitData.object);
-    if (expandedData.token) stringToObj(expandedData.token, {type: 'Token', notify: true})
-    if (expandedData.actor) stringToObj(expandedData.actor, {type: 'Actor', notify: true})
-    if (expandedData.embedded) stringToObj(expandedData.embedded, {type:'Embedded', notify:true})
+    if (expandedData.token) helper.stringToObj(expandedData.token, {type: 'Token', notify: true})
+    if (expandedData.actor) helper.stringToObj(expandedData.actor, {type: 'Actor', notify: true})
+    if (expandedData.embedded) helper.stringToObj(expandedData.embedded, {type:'Embedded', notify:true})
     this.parentApp.updatePart(this.partId, expandedData, this.parentHtml);
   }
 }
@@ -851,6 +795,23 @@ export class LastingEffectDangerPartConfig extends DangerPartConfig {
 
   /** @override */
   static TABS = this._tabs(this.#partId) 
+}
+
+/**v14
+ * Configures the level danger part
+ */
+export class LevelDangerPartConfig extends DangerPartConfig {
+  static #partId = 'level'
+
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = this._defaultOptions(this.#partId)
+
+  /** @override */
+  static PARTS = this._parts(this.#partId)
+
+  /** @override */
+  static TABS = this._tabs(this.#partId) 
+
 }
 
 /**v13
@@ -1073,7 +1034,7 @@ export class WallDangerPartConfig extends DangerPartConfig {
    * @param {SubmitEvent} event         The pointer event.
    */
   #toggleProximity(event) {
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     switch(data.action){
       case "door":
         this.element.querySelector(".door-options").classList.toggle("hidden", data.target.value === '0' ? true : false)

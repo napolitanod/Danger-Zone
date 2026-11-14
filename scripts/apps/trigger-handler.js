@@ -1,8 +1,8 @@
 import {dangerZone} from '../danger-zone.js';
-import {dangerZoneDimensions, boundary} from './dimensions.js'
+import {dimensionBoundary} from './dimensions.js'
 import {workflow} from './workflow.js';
 import {COMBAT_EVENTS, DANGERZONETRIGGERSORT, COMBAT_PERIOD_COMBAT_EVENTS, COMBAT_THRESHOLD_END_EVENTS, COMBAT_PERIOD_INITIATIVE_EVENTS} from './constants.js';
-
+import {helper} from './helpers.js';
 
 /**
  * 
@@ -14,18 +14,18 @@ import {COMBAT_EVENTS, DANGERZONETRIGGERSORT, COMBAT_PERIOD_COMBAT_EVENTS, COMBA
 export class triggerManager {
 
     constructor(sceneId, data, sceneZones, hook, options = {}) {
-        this._cancels = [],
-        this.combatEvents = [],
-        this.combatStart = false,
-        this.data = data,
-        this.hook = (hook === undefined) ? '' : hook,
-        this.randomEvents = new Set(),
-        this.randomZones = [],
-        this.roundStart = false, 
-        this.sceneZones = (sceneZones === undefined) ? null : sceneZones,
-        this.turnChange = false,
-        this.sceneId = sceneId,
-        this.options = options,
+        this._cancels = [];
+        this.combatEvents = [];
+        this.combatStart = false;
+        this.data = data;
+        this.hook = (hook === undefined) ? '' : hook;
+        this.randomEvents = new Set();
+        this.randomZones = [];
+        this.roundStart = false;
+        this.sceneZones = (sceneZones === undefined) ? null : sceneZones;
+        this.turnChange = false;
+        this.sceneId = sceneId;
+        this.options = options;
         this.zones = []
     }
 
@@ -34,11 +34,11 @@ export class triggerManager {
     }
 
     get combatants(){
-        return this.data.combatants ?? new Set()
+        return this.data.combatants ?? new foundry.utils.Collection()
     }
 
     get hasCombatant(){
-        return this.data?.combatant ? true : false
+        return !!this.data?.combatant
     }
 
     get previousCombatant(){
@@ -46,15 +46,19 @@ export class triggerManager {
     }
 
     get currentInitiative(){
-        return this.combatant.initiative ? Math.floor(this.combatant.initiative) :  (this.combatStart ? Math.max(...this.combatants.map(t => t.initiative)) : undefined)
+        if(typeof this.combatant.initiative === 'number')
+        return Math.floor(this.combatant.initiative) 
+        
+        const initiatives = this.combatants.map(t => t.initiative);
+        return initiatives.length ? Math.max(...initiatives) : undefined;
     }
 
     get isInitiativeEvent(){
-        return this.combatEvents.find(e => COMBAT_PERIOD_INITIATIVE_EVENTS.includes(e)) ? true : false
+        return this.combatEvents.some(e => COMBAT_PERIOD_INITIATIVE_EVENTS.includes(e))
     }
 
     get previousInitiative(){
-        return this.previousCombatant.initiative ? Math.floor(this.previousCombatant.initiative) : (this.combatStart ? 99999 : undefined)
+        return typeof this.previousCombatant.initiative === 'number' ? Math.floor(this.previousCombatant.initiative) : (this.combatStart ? 99999 : undefined)
     }
 
     get scene(){
@@ -81,7 +85,8 @@ export class triggerManager {
         const options = {}
         if(!['move'].includes(event)){
             if(this.data?.options?.location && Object.keys(this.data.options.location).length && !['aura'].includes(event)) options['location'] = this.data.options.location
-            if(this.data?.options?.boundary && Object.keys(this.data.options.boundary).length) options['boundary'] = new boundary(this.data.options.boundary.A, this.data.options.boundary.B)
+            if(this.data?.options?.boundary && Object.keys(this.data.options.boundary).length) options['boundary'] = new dimensionBoundary(this.data.options.boundary.elevation, this.data.options.boundary.scene, {A: this.data.options.boundary.A, B:this.data.options.boundary.B})
+            if(this.data?.options?.levels && Object.keys(this.data.options.levels).length) options['levels'] = this.data.options.levels
             if(this.data?.options?.targets && this.data.options.targets.length) options.targets = this._loadTokens(this.data.options.targets, {zone: zone, event: event, type: 'target'})
             if(this.data?.options?.sources && this.data.options.sources.length) options.sources = this._loadTokens(this.data.options.sources, {zone: zone, event: event, type: 'source'})
             if(zone.target.isCombatant && COMBAT_EVENTS.includes(event)){
@@ -100,30 +105,53 @@ export class triggerManager {
     static async apiDirectTrigger(zn, sceneId, options = {}){
         const event = 'api'
         const tm = new triggerManager(sceneId, {zone: 'direct', scene: sceneId, options: options});
-        tm.zones.loadZone(zn, event);
+        tm.loadZone(zn, event);
         (zn.enabled || !options.activeOnly) ? await tm.next() : console.log('API trigger bypassed scene disabled ', {zone: zn, trigger: tm, options: options});
         return tm
     }
 
-    static async findChatEvents(chatMessage, hook, options) {
-        let rollResult, table, results;
+    /**
+     * 
+     * @param {object} chatMessage chat message class or object quasi of class
+     * @param {string} hook name of hoook
+     * @param {object} data {table, rollTableId}  the rolltable or rolltable id
+     * @returns 
+     */
+    static async findChatEvents(chatMessage, hook, data) {
+
+        //establish the scene
 	    const sceneId = chatMessage.speaker?.scene ?? canvas.scene.id
-        const sceneZones = dangerZone.getRolltableZonesFromScene(sceneId)
-        if(!sceneZones.length) return
+        const scene = game.scenes.get(sceneId)
+        if(!scene) return
+        
+        //establish the speaker
+	    const tokenId = chatMessage.speaker?.token
+        const token = tokenId ? scene.tokens.get(tokenId) : ''
+
+        //const options
+        const options = token ? {levels: [token.level]} : {}
+
+        //return the zones
+        const zones = dangerZone.getRolltableZonesFromScene(sceneId, options)
+        if(!zones.length) return
+
+        let table, results, rollResult;
         if(hook === "createChatMessage"){
             rollResult = chatMessage.rolls[0].result
             if(!rollResult) return
-            table = game.tables.get(options.rollTableId)
+            table = game.tables.get(data.rollTableId)
             if(!table) return
-            results = table.getResultsForRoll(rollResult).map(r => r.text) 
+            results = table.getResultsForRoll(rollResult).map(r => r.description) 
         } else {
-            table = options.table
+            table = data.table
             results = chatMessage.results
         }
         if(!results) return
         
-        const eligibleZones = sceneZones.filter(s => s.trigger.chat.phrases.find(r => results.includes(r)))
-        dangerZone.log(false, 'Searching for Rolltable Result Trigger', {chatMessage: chatMessage, sceneZones: sceneZones, eligibleZones: eligibleZones, rollResult: rollResult, table: table, tableResults: results})
+        const eligibleZones = zones.filter(s => s.trigger.chat.phrases.find(r => results.includes(r)))
+
+        dangerZone.log(false, 'Searching for Rolltable Result Trigger', {chatMessage: chatMessage, sceneZones: zones, eligibleZones: eligibleZones, rollResult: rollResult, table: table, tableResults: results})
+        
         if(eligibleZones.length){
             const tm = new triggerManager(sceneId, chatMessage, eligibleZones, hook);
             await tm.chatTrigger();
@@ -132,7 +160,7 @@ export class triggerManager {
 
     async chatTrigger(){
         for(const zn of this.sceneZones) { 
-            if(!(await zn.sourceTrigger(this.scene.tokens))){
+            if(!(zn.sourceTrigger(this.scene.tokens))){
                 this._cancelZone(zn, `Failed manual source trigger check on zone`)
                 continue
             }
@@ -153,7 +181,11 @@ export class triggerManager {
                     if(zn.trigger.combatantInZone){
                         if(this.combatants.size){
                             const inZoneTokens = this.getTriggerCombatant(event)
-                            if(!await zn.tokensInZone(inZoneTokens)) {
+                            if(!inZoneTokens.length){
+                                this._cancelZone(zn, `Failed ${event} combatant in zone check. No tokens in zone.`)
+                                continue
+                            }
+                            if(!zn.tokensInZone(inZoneTokens).length) {
                                 this._cancelZone(zn, `Failed ${event} combatant in zone check on combatant ${inZoneTokens.map(t => t.name).join()}`)
                                 continue
                             }
@@ -162,19 +194,19 @@ export class triggerManager {
                         }
                     }  
                     if(event === 'turn-start'){
-                        if(!(await zn.sourceTrigger([this.combatant.token]))){
+                        if(!(zn.sourceTrigger([this.combatant.token]))){
                             this._cancelZone(zn, `Failed ${event} source trigger check on combatant ${this.combatant.name}`)
                             continue
                         }
                     }
-                    else if(event == 'turn-end'){
-                        if(!(await zn.sourceTrigger([this.previousCombatant.token]))){
+                    else if(event === 'turn-end'){
+                        if(!(zn.sourceTrigger([this.previousCombatant.token]))){
                             this._cancelZone(zn, `Failed ${event} source trigger check on previous combatant ${this.previousCombatant.name}`)
                             continue
                         }
                     } 
                     else {
-                        if(!(await zn.sourceTrigger(this.combatants.map(c => c.token)))){
+                        if(!(zn.sourceTrigger(this.combatants.map(c => c.token)))){
                             this._cancelZone(zn, `Failed ${event} source trigger check on combatants ${this.combatants.map(c => c.name)}`)
                             continue
                         }
@@ -216,12 +248,29 @@ export class triggerManager {
             }
         }
         await this.#reconcileRandomZones();
-        this.zones.sort((a, b) => {let _a = (COMBAT_PERIOD_INITIATIVE_EVENTS.includes(a.event) ? a.zone.trigger.initiative : 0), _b = (COMBAT_PERIOD_INITIATIVE_EVENTS.includes(b.event) ? b.zone.trigger.initiative : 0); return _a < _b ? -1 : _a > _b ? 1 : 0});
-        this.zones.sort((a, b) => { return DANGERZONETRIGGERSORT[a.event] < DANGERZONETRIGGERSORT[b.event] ? -1 : (DANGERZONETRIGGERSORT[a.event] > DANGERZONETRIGGERSORT[b.event] ? 1 : 0)});
+        
+        this.zones.sort((a,b) => {
+            const eventCmp =
+                DANGERZONETRIGGERSORT[a.event] -
+                DANGERZONETRIGGERSORT[b.event];
+
+            if(eventCmp) return eventCmp;
+
+            const ai = COMBAT_PERIOD_INITIATIVE_EVENTS.includes(a.event)
+                ? a.zone.trigger.initiative
+                : 0;
+
+            const bi = COMBAT_PERIOD_INITIATIVE_EVENTS.includes(b.event)
+                ? b.zone.trigger.initiative
+                : 0;
+
+            return ai - bi;
+        });
+        
         this.next();
     }
 
-    static async findcombatEvents(combat, hook, options){
+    static async findCombatEvents(combat, hook, options){
         const sceneId = combat.scene?.id ?? canvas.scene.id
         if(game.user.isActiveGM && sceneId && (combat.started || hook === 'combatStart')) {
             const sceneZones = dangerZone.getCombatZonesFromScene(sceneId);
@@ -241,35 +290,37 @@ export class triggerManager {
         const sceneId = token.parent.id;
         const scene = game.scenes.get(sceneId);
         if(!scene?.grid?.type){return dangerZone.log(false,'No Movement Triggers When Gridless ', {token: token, update:update})}
-        triggerManager.findMovementEvents(token, update, {end: false, sceneId: sceneId})
+        await triggerManager.findMovementEvents(token, update, {end: false, sceneId: sceneId})
         triggerManager.findMovementEvents(token, update, {end: true, sceneId: sceneId})
     }
 
     static async findMovementEvents(token, update, options){
-        const sceneZones = options.end ? dangerZone.getMovementCompleteZonesFromScene(options.sceneId) : dangerZone.getMovementNotCompleteZonesFromScene(options.sceneId);
+        if(options.end) await token.object.movementAnimationPromise 
+        
+        const opt = {levels: [token.level]}
+        const sceneZones = options.end ? dangerZone.getMovementCompleteZonesFromScene(options.sceneId, opt) : dangerZone.getMovementNotCompleteZonesFromScene(options.sceneId, opt);
         if(!sceneZones.length) return
 
         const zones = []
-        const move = dangerZoneDimensions.tokenMovement(token, update);
-        if(options.end) await token.object.movementAnimationPromise 
+        const move = helper.measureTokenMovement(token, update);
 
         for (const zn of sceneZones) {
-            if(!(await zn.sourceTrigger([token]))){
+            if(!(zn.sourceTrigger([token]))){
                 continue;
             }
-            const zoneBoundary = await zn.scene.getZoneBoundary();
+            const zoneBoundary = zn.zoneBoundary;
 
-            const zoneTokens = zoneBoundary.tokensIn([token]);
+            const tokenBoundary = helper.getTokenBoundarys([token]);
 
-            if('x' in update) token.x = update.x
-            if('y' in update) token.y = update.y
-            if('elevation' in update) token.elevation = update.elevation
+            const zoneTokens = zoneBoundary.tokensIn([token], tokenBoundary);
+
             if(zoneTokens.length){
                 zones.push(zn)
             }
         }
 
-        const data = {provokingMove: move, update: update, options: {targets: [token], location: options.end ? move.end : move.start}}
+        const data = {provokingMove: move, update: update, options: {movingToken: [token], location: options.end ? move.end : move.start}}
+       
 
         if(zones.length){
             const tm = new triggerManager(options.sceneId, data, zones, "updateToken");
@@ -279,9 +330,19 @@ export class triggerManager {
     }
 
     getTriggerCombatant(event){
-        if(COMBAT_PERIOD_COMBAT_EVENTS.includes(event)) return this.combatants.map(t => t.token)
-        if(COMBAT_THRESHOLD_END_EVENTS.includes(event)) return [this.previousCombatant.token]
-        return [this.combatant.token]
+        if(COMBAT_PERIOD_COMBAT_EVENTS.includes(event)) {
+            return this.combatants.map(t => t.token)
+        }
+
+        if(COMBAT_THRESHOLD_END_EVENTS.includes(event)) {
+            return this.previousCombatant.token 
+                ? [this.previousCombatant.token] 
+                : []
+        }
+        
+        return this.combatant.token 
+            ? [this.combatant.token] 
+            : []
     }
     
     /**v13
@@ -299,15 +360,18 @@ export class triggerManager {
     }
 
     async movementTrigger(){
+        if(!this.data?.options) return
         for(const zn of this.sceneZones) { 
             for(const event of zn.movementEvents){
                 if(event === 'aura') {
-                    let targets = zn.zoneEligibleTokens(this.data?.options?.targets)
+                    let targets = zn.zoneEligibleTokens(this.data.options?.movingToken)
                     if(!targets.length){
                         this.log(`Aura trigger bypassed, moving token cannot be targeted..`, {trigger: this, event: event, zone: zn, targets: this.data?.options?.targets});
                         continue //only trigger aura if the moving token can be targted
-                    }
-                }
+                    } 
+                    //only set targets when it is an aura trigger, otherwise the targets will be set by the workflow
+                    this.data.options.targets = targets
+                } 
                 this.#stageZone(zn, event);
             }
         }
@@ -341,7 +405,7 @@ export class triggerManager {
             this.addCombatTrigger('round-start');
             if(this.data.current.round > 1){this.addCombatTrigger('round-end')}
         }
-        if(this.hook==='updateCombat' && this.options.direction === 1 || this.roundStart){
+        if((this.hook==='updateCombat' && this.options.direction === 1) || this.roundStart){
             this.turnChange = true;
             this.addCombatTrigger('turn-start');
             if(!this.combatStart){this.addCombatTrigger('turn-end')}
@@ -350,7 +414,11 @@ export class triggerManager {
             this.addCombatTrigger('combat-end')
         }
         if(this.turnChange){
-            if(this.currentInitiative && this.previousInitiative  || this.combatStart || this.roundStart){
+            if(
+                (this.currentInitiative !== undefined && this.previousInitiative !== undefined)  
+                || this.combatStart 
+                || this.roundStart
+            ){
                 this.addCombatTrigger('initiative-start')
                 this.addCombatTrigger('initiative-end')
             }
@@ -374,7 +442,7 @@ export class triggerManager {
         if(!this.zones.length) return
 
         if(this.zones[0].event === 'manual' || this.data.force){
-            if(!(await this.zones[0].zone.sourceTrigger(this.scene.tokens))){
+            if(!(this.zones[0].zone.sourceTrigger(this.scene.tokens))){
                 this._cancelZone(this.zones[0].zone, `Failed manual source trigger check on zone`)
                 ui.notifications?.error(game.i18n.localize("The zone was not triggered due to failing the zone's source trigger condition."));
                 return
@@ -392,27 +460,48 @@ export class triggerManager {
      */
     async #reconcileRandomZones() {
         if(this.randomZones.length) {
-            for (let event of this.randomEvents){
-                const zone = await dangerZone.getRandomZoneFromScene(this.sceneId, event, this.randomZones.filter(z => z.event === event).map(z => z.zone))
+            for (const event of this.randomEvents){
+                const zone =
+                    await dangerZone.getRandomZoneFromScene(
+                        this.sceneId,
+                        event,
+                        this.randomZones
+                            .filter(z => z.event === event)
+                            .map(z => z.zone)
+                    );
+
                 if(zone){
-                    this.#stageZone(zone, event)
-                    this.log(`Random trigger zone found...`, {eventData: this.data, event: event})
+                    this.zones.push({zone, event});
+
+                    this.log(
+                        `Random trigger zone found...`,
+                        {eventData: this.data, event}
+                    );
                 } else{
-                    this.log(`Random trigger zone not found...`, {eventData: this.data, event: event});
+                    this.log(`Random trigger zone not found...`, 
+                        {eventData: this.data, event: event}
+                    );
                 }
             }
-        } 
+        }
     }
+
 
     /**v13
      * During manual trigger of a random event, selects 1 zone and sends it to be staged for random handling
      */
-    async #stageRandomManualZone(){
-        const zn = await dangerZone.getRandomZoneFromScene(this.sceneId, 'manual')
-        this.#stageZone(zn, 'manual')
-        await this.#reconcileRandomZones()
+    async #stageRandomManualZone() {
+
+        for(const zn of dangerZone.getRandomZonesFromScene(this.sceneId)){
+
+            if(!zn.hasManualEvent) continue;
+
+            this.#stageZone(zn, 'manual');
+        }
+
+        await this.#reconcileRandomZones();
     }
-    
+
     /**v13
      * For random zones, adds the event to the random event array for use in random triggering
      * @param {string} event      the trigger event 

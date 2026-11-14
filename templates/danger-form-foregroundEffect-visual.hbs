@@ -12,7 +12,7 @@
             <input type="checkbox" data-dtype="Boolean" name="randomFile" {{checked data.randomFile}}>
         </div>
     </div>
-    <div class="form-group">
+    <div class="form-group slim">
         <label for="scale">{{localize "DANGERZONE.type-form.foregroundEffect.scale.label"}}
             <span class="units">{{localize 'DANGERZONE.ratio'}}</span>
         </label>
@@ -26,14 +26,14 @@
             <range-picker name="repeat" value="{{data.repeat}}" min="0" max="20" step="1"></range-picker>
         </div>
     </div>
-    <div class="form-group">
+    <div class="form-group slim">
         <label for="duration">{{localize "DANGERZONE.type-form.foregroundEffect.duration.label"}}</label>
         <div class="form-fields">
             <input type="number" required data-dtype="Number" name="duration" placeholder="{{localize "DANGERZONE.ms"}}" step="1" value={{data.duration}}>
         </div>
     </div>
-    <div class="form-group">
-        <label for="delay">{{localize "DANGERZONE.type-form.foregroundEffect.delay.label"}}</label>
+    <div class="form-group slim">
+        <label for="delay">{{localize "DANGERZONE.delay.label"}}</label>
         <div class="form-fields">
             <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{data.delay}}>
         </div>

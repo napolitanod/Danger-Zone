@@ -76,6 +76,11 @@
                 <label>{{localize 'DANGERZONE.type-form.tile.label'}}</label>
                 <a class="danger-zone-type-delete" data-action="delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
             </li>
+            <li data-id="level" {{#if has.level}}class="active"{{/if}} title="{{localize "DANGERZONE.type-form.level.label"}}">
+                <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.level.description"}}"><i class="{{icons.DANGERPART.level}}"></i></button>   
+                <label>{{localize 'DANGERZONE.type-form.level.label'}}</label>
+                <a class="danger-zone-type-delete" data-action="delete" title="{{localize labels.DELETE}}" data-action="delete"><i class="{{icons.TRASH}}"></i></a>
+            </li>
             <li data-id="macro" {{#if has.macro}}class="active"{{/if}} title="{{localize "DANGERZONE.type-form.macro.label"}}">
                 <button type="button" class="danger-zone-type-button" data-action="edit" title="{{localize "DANGERZONE.type-form.macro.description"}}"><i class="{{icons.DANGERPART.macro}}"></i></button>   
                 <label>{{localize 'DANGERZONE.type-form.macro.label'}}</label>

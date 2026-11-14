@@ -2,7 +2,7 @@ import {dangerZone} from "../danger-zone.js";
 import {dangerZoneType} from './zone-type.js';
 import {DangerForm} from './danger-form.js';
 import {DANGERZONECONFIG} from './constants.js';
-import {getEventData} from './helpers.js';
+import {helper} from './helpers.js';
 
 export class DangerListForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
 
@@ -84,14 +84,14 @@ export class DangerListForm extends foundry.applications.api.HandlebarsApplicati
   }
 
   static async #copy(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     const copied = await dangerZoneType.copyDanger(data.parentId)
     this.refresh();
     this.renderChild(new DangerForm(copied)) 
   }
 
   static async #delete(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     const choice = await foundry.applications.api.DialogV2.confirm({
         content: `${game.i18n.localize("DANGERZONE.delete")} ${data.label}?`,
         rejectClose: false,
@@ -104,12 +104,12 @@ export class DangerListForm extends foundry.applications.api.HandlebarsApplicati
   }
 
   static async #edit(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     this.renderChild(new DangerForm(data.parentId)) 
   }
 
   static async #export(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     await this._export(data.parentId)
   }
 
@@ -152,7 +152,7 @@ export class DangerListForm extends foundry.applications.api.HandlebarsApplicati
   }
 
   static async #worldZoneToggle(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     const danger = dangerZoneType.getDanger(data.parentId);
     Object.keys(danger.options.globalZone).length ? await danger.toggleWorldZone() : await danger.activateWorldZone();
     this.refresh();

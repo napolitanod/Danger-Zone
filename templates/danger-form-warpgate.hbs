@@ -32,6 +32,16 @@
             <range-picker name="range" value="{{#if data.range}}{{data.range}}{{else}}0{{/if}}" min="0" step="1"></range-picker>  
         </div>
     </div>
+    <fieldset id="dz-token-levels" class="{{#unless data.pile}}dz-hidden{{/unless}}">
+        <legend>{{localize "DANGERZONE.levels.label"}}</legend>
+        <div class="form-group">
+            <div class="form-fields">
+                <select name="levels" value="{{data.levels}}" >
+                    {{selectOptions options.LEVELSSINGLEOPTIONS selected=data.levels localize=true}}
+                </select>
+            </div>
+        </div>
+    </fieldset>
     <div class="form-group">
         <label for="mutate">{{localize "DANGERZONE.type-form.warpgate.mutate.label"}}
             <span class="dz-toolt" title="{{localize 'DANGERZONE.type-form.warpgate.mutate.description'}}"><i class="fas fa-info-circle"></i></span>
@@ -40,16 +50,10 @@
             <input type="checkbox" data-dtype="Boolean" name="mutate" {{checked data.mutate}}>
         </div>
     </div>
-    <div class="form-group">
-        <label for="delay">{{localize "DANGERZONE.type-form.warpgate.delay.label"}}</label>
+    <div class="form-group slim">
+        <label for="delay">{{localize "DANGERZONE.delay.label"}}</label>
         <div class="form-fields">
             <input type="number" required data-dtype="Number" name="delay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.delay}}{{data.delay}}{{else}}0{{/if}}>
-        </div>
-    </div>
-    <div class="form-group dz-hidden">
-        <label for="spawnDelay">{{localize "DANGERZONE.type-form.warpgate.spawnDelay.label"}}</label>
-        <div class="form-fields">
-            <input type="number" required data-dtype="Number" name="spawnDelay" placeholder="{{localize "DANGERZONE.ms"}}" min="0" step="1" value={{#if data.spawnDelay}}{{data.spawnDelay}}{{else}}0{{/if}}>
         </div>
     </div>
     <div class="form-group {{#unless modules.taggerOn}}dz-hidden{{/unless}}">

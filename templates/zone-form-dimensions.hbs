@@ -7,11 +7,56 @@
             <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.region.description'}}"><i class="fas fa-info-circle"></i></span>
         </label>
         <div class="form-fields">
-            <select name="scene.regionId" value="{{zone.scene.regionId}}">
-                {{selectOptions regionOps selected=zone.scene.regionId localize=true}}
+            <select data-action="region-change" name="scene.regionId" value="{{regionId}}">
+                {{selectOptions regionOps selected=regionId localize=true}}
             </select>
         </div>
     </div>
+    
+    <div class="form-group  {{#if hideLevels}} dz-hidden{{/if}}" id="dz-dimensions">
+        <label>
+            {{localize 'DANGERZONE.edit-form.dimensions.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.dimensions.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields" >
+            <label>
+                {{localize 'DANGERZONE.edit-form.dimensions.bottom.label'}}
+            </label>
+            <input type="Number" name="dimensions.bottom" step="1" placeholder="{{defaultMinElevation}}" value={{#if zone.dimensions.bottom includeZero=true}}{{zone.dimensions.bottom}}{{/if}}>
+            <label>
+                {{localize 'DANGERZONE.edit-form.dimensions.top.label'}}
+            </label>
+            <input type="Number" name="dimensions.top" step="1" placeholder="{{defaultMaxElevation}}" value={{#if zone.dimensions.top includeZero=true}}{{zone.dimensions.top}}{{/if}}>
+            <label>
+                {{localize 'DANGERZONE.edit-form.dimensions.topInclusive.label'}}
+            </label>
+            <input type="checkbox" name="dimensions.topInclusive" {{checked zone.dimensions.topInclusive}} />
+        </div>
+    </div>
+    
+    <div class="form-group {{#unless hideLevels}} dz-hidden{{/unless}}" id="dz-dimensions-region">
+        <label>
+            {{localize 'DANGERZONE.edit-form.dimensions.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.dimensions.description'}}"><i class="fas fa-info-circle"></i></span>
+        </label>
+        <div class="form-fields" >
+            <span>{{localize 'DANGERZONE.edit-form.dimensions.usesRegion.description'}}</span>
+        </div>
+    </div>
+
+    <fieldset class="{{#if hideLevels}} dz-hidden{{/if}}" >
+        <legend>{{localize 'DANGERZONE.edit-form.levels.label'}}
+            <span class="dz-toolt" title="{{localize 'DANGERZONE.edit-form.levels.description'}}"><i class="fas fa-info-circle"></i></span>
+        </legend>
+        <div class="form-fields levels-select" id="dz-levels">
+            <multi-select name="scene.levels" value="{{zone.scene.levels}}" >
+                {{selectOptions levelOps selected=zone.scene.levels}}
+            </multi-select>
+        </div>
+        <div class="form-fields {{#unless hideLevels}} dz-hidden{{/unless}}" id="dz-levels-region">
+            <span>{{localize 'DANGERZONE.edit-form.levels.usesRegion.description'}}</span>
+        </div>
+    </fieldset> 
     <div class="form-group">
         <label>
             {{localize 'DANGERZONE.edit-form.bleed.label'}}

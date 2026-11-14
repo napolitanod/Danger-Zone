@@ -1,5 +1,5 @@
 import {dangerZone} from '../danger-zone.js';
-import {circleAreaGrid, getTagEntities, rayIntersectsGrid} from './helpers.js';
+import {helper} from './helpers.js';
 
 export class dangerZoneDimensions {
     /**
@@ -8,174 +8,336 @@ export class dangerZoneDimensions {
      * @param {string} regionId - the id of the region that defines the zone dimensions. Can be blank, which indicates full scene dimensions.
     */
     constructor (sceneId, zoneId, regionId = '') {
-        this.zoneId = zoneId,
-        this.sceneId = sceneId,
+        this.zoneId = zoneId;
+        this.sceneId = sceneId;
         this.regionId = regionId;
+        this.levels = [];
     }
 
-    get boundary(){
-        return this.region?.id ? boundary.documentBoundary("Region", this.region) : boundary.documentBoundary("Scene", this.scene, this.dangerId ? {global: {bottom: this.danger.globalZone?.options?.bottom ?? null, top: this.danger.globalZone?.options?.top ?? null}} : {})
-    }
+    dangerId
 
-    get hasRegion(){
-        return this.region?.id ? true : false
-    }
-
-    get region(){
-        const region = this.regionId ? this.scene.getEmbeddedDocument("Region",this.regionId) : {}
-        return region ?? {}
-    }
-
-    get scene(){
-        return game.scenes.get(this.sceneId);
-    }
-
+    /**Returns the danger class for the zone
+     * 
+     */
     get danger(){
         return this.zone.danger;
     }
 
-    get dangerRelativeDimensions(){
-        return {
-                w: this.danger.dimensions.units.w ?? this.boundary.dimensions.w, 
-                h: this.danger.dimensions.units.h ?? this.boundary.dimensions.h, 
-                d: this.danger.dimensions.units.d < 1 ? this.boundary.depth : this.danger.dimensions.units.d 
-            }
+    /**
+     * Create the zone elevation, also patching up infinities to allow for some boundary to the zone targeting
+     */
+    get elevation(){
+        const e = this.hasRegion ? this.region.elevation : this.zone.dimensions
+        const elevation = {
+            top: helper.fallbackElevationTop(e.top),
+            bottom: helper.fallbackElevationBottom(e.bottom)
+        }
+        return elevation
     }
+
+    /**
+     * The presence of a danger id means that this dangerZoneDimensions class was created as part of a pseudo zone to facilitate global danger functionality
+     * This is a temporary class and thus the id is also transient
+     */
+    get hasWorldZone(){
+        return !!this.dangerId 
+    }
+
+    /**
+     * A region is associated to this zone
+     */
+    get hasRegion(){
+        return !!this.region?.id;
+    }
+
+
+    /**
+     * returns the region document for the given region id
+     */
+    get region(){
+        if(this.regionId) return this.scene.getEmbeddedDocument("Region",this.regionId)
+    }
+
+    /**
+     * returns the scene document for the given zone scene id
+     */
+    get scene(){
+        return game.scenes.get(this.sceneId);
+    }
+
 
     get zone(){
         return this.dangerId ? dangerZone.getGlobalZone(this.dangerId, this.sceneId) : dangerZone.getZoneFromScene(this.zoneId, this.sceneId);
     }
 
-    async _excludedTagged(){
-        return getTagEntities(game.settings.get(dangerZone.ID, 'zone-exclusion-tag'), this.scene)
+    /**
+     * Generates the boundary for this zone
+     * @returns boundary class
+     */
+    get zoneBoundary(){
+        const region = this.hasRegion ? this.region : helper.documentToRegion(this.scene, this.scene)
+        const options = this.zoneBoundaryOptions
+        options.region = region
+        
+        //return the boundary for the zone, with settings for exclude, universe, and region
+        dangerZone.log(false, 'Creating zone boundary on zone dimensions', {zone: this.zone, region: region, options: options})
+
+        return new boundary(this.elevation, this.scene, options) 
     }
 
-    async boundaryBleed(options = {}){
-        const b = await this.getZoneBoundary();
-        const topLeft = canvas.grid.getTopLeftPoint({j:b.dimensions.j -(Math.min(b.dimensions.j, (this.danger.dimensions.units.w -1))), i:b.dimensions.i - (Math.min(b.dimensions.i, (this.danger.dimensions.units.h-1)))});
-        const p = new point(topLeft, b.bottom - this.danger.dimensions.units.d )
-        return new boundary(p.coords, b.B, {bottom: p.elevation, top: b.top}, Object.assign(options, {excludes: b.excludes, universe: b.universe, regionUuid: this.region.uuid, inclusive: false}))
+    /**
+     * returns an object typically submitted into the boundary constructor when pulling the actual zone boundary
+     */
+    get zoneBoundaryOptions(){
+        const source = this.zone?.source;
+        const sourceArea = this.zone?.sourceArea;
+        return {
+            elevation: this.elevation,
+            exclude: helper.getTagEntities(game.settings.get(dangerZone.ID, 'zone-exclusion-tag'), this.scene),    //Generate the exclusion list of documents 
+            levels: this.zoneLevels,    //include the zone levels   
+            universe: sourceArea,   //Generate a universe of documents for the boundary to use that consists of the zone's sources
+            regionUuid: this.region?.uuid,  //include the region
+            stretch: this.stretch,
+            sourceTarget: source?.target || sourceArea?.target || 'I'
+        }
     }
 
-    async boundaryConstrained(options = {}){
-        const b = await this.getZoneBoundary();
-        const dim = {d:b.depth - this.dangerRelativeDimensions.d, h: b.dimensions.h - (this.dangerRelativeDimensions.h - 1), w: b.dimensions.w - (this.dangerRelativeDimensions.w - 1)}
-        return boundary.locationToBoundary(b.A, b.elevation, dim, Object.assign(options, {excludes: b.excludes, universe: b.universe, regionUuid: this.region.uuid, inclusive: false}))
+    /**Provides data for use in performing the stretch on the top and bottom elevation
+     * 
+     * @returns {object} elevation //top and bottom if stretched
+    */
+    get stretch(){
+
+        const stretch = {type: '', elevation: {}}
+        
+        stretch.type = this.zone?.dimensions?.stretch
+        
+        if(!stretch.type) return stretch
+        
+        switch(stretch.type){
+            case "B":
+                stretch.elevation.bottom = this.elevation.bottom
+                break;
+            case "G":
+                stretch.elevation.bottom = 0
+                break;
+            case "S":
+                stretch.elevation.top = Infinity
+                break;
+            case "T":
+                stretch.elevation.top = this.elevation.top
+                break;
+            }
+
+        return stretch
     }
 
-    async getZoneBoundary(){
-        const ex = await this._excludedTagged();
-        const un = await this.zone.sourceArea();
-        return new boundary(this.boundary.A, this.boundary.B, this.boundary.elevation, {exclude: ex, limit: un, regionUuid: this.region.uuid})
+    /**
+     * Array of zone level ids
+     * An empty array = all levels
+     */
+    get zoneLevels(){
+        let levels
+        if(this.hasRegion){
+            levels = this.region.levels.size ? [...this.region.levels] : []
+        } else if(this.levels.length) {
+            //filter out level ids on zone that are no longer on the scene (were deleted)
+            levels = helper.filterLevels(this.scene, {output: 'ids', filterIds: this.levels}) 
+        } else {
+            levels = []
+        }
+        return levels
     }
 
-    async grids(){
-        const b = await this.getZoneBoundary();
-        return b.grids()
+    /**
+     * id of zone level visible to GM. 
+     * Is blank if no zone level is visible to GM
+     * Assumes that all danger zone processing is on the GM's instance
+     */
+    get zoneLevelGMVisible(){
+        let visible
+
+        //return array of level documents from scene that are considered zone levels
+        const arr = helper.filterLevels(this.scene, {output: 'documents', filterIds:this.zoneLevels}) 
+
+        //return the id for the level in view
+        if(arr.length){
+            visible = arr.find(lvl => lvl.isView)?.id
+        }
+
+        return visible
     }
 
-    async randomDangerBoundary() {
-        const options = {range: this.dangerRelativeDimensions}
-        const b = this.zone.dimensions.bleed ? await this.boundaryBleed(options) : await this.boundaryConstrained(options);
-        this.zone.stretch(options);
-        const grids = b.randomBoundary();
-        dangerZone.log(false,'Random Area Variables ', {"zoneScene": this, boundary: b, grids: grids, zone: this.zone, options: options})
-        return grids
+
+    /****Highlighting methods */
+
+    /**Add a highlight for a zone on the given scene
+     * 
+     * @param {zone} zone 
+     * @param {string} sceneId id of a scene
+     * @param {object} options {danger: string id of danger, level: string id of level to use for highlighting, id: string that is used to build the name of the highlight layer}
+     */
+    static addHighlightZone(zone, sceneId, options = {}){
+        const zn = zone.scene ?? (options.danger ? dangerZone.getGlobalZone(options.danger, sceneId)?.scene : dangerZone.getZoneFromScene(zone, sceneId)?.scene)
+        if(zn) zn.addHighlightZone(options)
     }
 
-    static tokenMovement(token, update){
-        const endPos = {
-            coords: {
-                x: update.x ? update.x : token.x,
-                y: update.y ? update.y : token.y
-            },
-            elevation: update.elevation ? update.elevation : token.elevation 
-        };
-        const startPos = {
-            coords: {
-                x: token.x,
-                y: token.y
-            },
-            elevation: token.elevation
-        };
-		const startGrid = canvas.grid.getOffset(token);
-		const endGrid = canvas.grid.getOffset(endPos.coords);
-		return {
-            start:startPos,
-            end: endPos,
-            dimensions: {
-                h:  Math.abs(startGrid.i - endGrid.i),
-                w: Math.abs(startGrid.j - endGrid.j),
-                d: Math.abs(startPos.elevation - endPos.elevation)
-            },
-			height: Math.abs(startPos.coords.y - endPos.coords.y ),
-			width: Math.abs(startPos.coords.x - endPos.coords.x)
-		}
+
+    /**Add a highlight for a zone's level
+     * 
+     * @param {object} options {level: string id of level to use for highlighting, id: string that is used to build the name of the highlight layer}
+     */
+    addHighlightZone(options = {}){
+
+        const name = options.id ?? ''
+        const level = options.level ?? helper.getDefaultLevel(this.scene.sceneId)
+
+        let namePrefix, color;
+
+        if (this.dangerId) {
+            namePrefix = this.dangerId
+            color = 10737280
+        } else {
+            namePrefix = this.zoneId
+            color = 16737280
+        }
+
+        this.zoneBoundary.highlight({level: level, id: namePrefix + name, color: color})
     }
 
-    static async addHighlightZone(zoneId, sceneId, nameModifier = '', dangerId = ''){
-        const zn = dangerId ? dangerZone.getGlobalZone(dangerId, sceneId)?.scene : dangerZone.getZoneFromScene(zoneId, sceneId)?.scene;
-        if(zn) await zn.addHighlightZone(nameModifier)
-    }
 
-    async addHighlightZone(nameModifier = ''){
-        const boundary = await this.getZoneBoundary()
-        this.dangerId ? boundary.highlight(this.dangerId + nameModifier, 10737280) : boundary.highlight(this.zoneId + nameModifier, 16737280)
-    }
-
-    static destroyHighlightZone(zoneId, nameModifier = '', dangerId = ''){
-        const name = 'dz-' + (dangerId ? dangerId : zoneId) + nameModifier;
+    /**Deletes a highlight layer for the given zone. 
+     * 
+     * @param {string} zoneId 
+     * @param {string} id name of the highlight layer
+     * @param {string} dangerId 
+     */
+    static destroyHighlightZone(zoneId, id = '', dangerId = ''){
+        const name = 'dz-' + (dangerId ? dangerId : zoneId) + id;
         if(canvas.interface.grid.highlightLayers[name]) canvas.interface.grid.destroyHighlightLayer(name)
     }
 
-    destroyHighlightZone(nameModifier = ''){
-        const name = 'dz-'+ (this.dangerId ? this.dangerId : this.zoneId) + nameModifier;
+
+
+    /**Deletes a highlight layer for this zone
+     * 
+     * @param {string} id name of the highlight layer
+     */
+    destroyHighlightZone(id = ''){
+        const name = 'dz-'+ (this.dangerId ? this.dangerId : this.zoneId) + id;
         if(canvas.interface.grid.highlightLayers[name]) canvas.interface.grid.destroyHighlightLayer(name)
     }
 }
 
 
     /*
-        options:{ 
-            inclusive: bool //indicates whether the bottom and right edges are included in the boundary
+        options:{
+            name: string //name of region. Default is Boundary Region
+            bottom: Integer //override value for bottom
+            top: Integer //override value for top
+            universe: object { //object for universe definition that is returned from the SourceArea() functionA
+                target: string// the source.target (A: Adjacent, I: In, B: Both)
+                documents: array //an array of documents that are used to build the universe for establishing boundary dimensions
+                }   
+            exclude: array //an array of documents that are used to exclude areas from the boundary
+            levels: array// passed in for constructor. These are the leves that further define the boundary
+            stretch: the stretched dimensions (as override object)
+
+            regionUuid: a Uuid to select back a region that is permanent
+            region: the region. used when region is temporary
         }
     */
 export class boundary{
-    constructor (a = {x:0, y:0}, b = {x:0, y:0}, elevation = {bottom: -Infinity, top: Infinity}, options = {}) {
-        this.A = {
-            x: a.x ? Math.min(a.x, a.x ? b.x : b.x) : 0,
-            y: a.y ? Math.min(a.y, a.y ? b.y : b.y) : 0
-        },
-        this.B = {
-            x: b.x ? Math.max(a.x ? a.x : b.x, b.x) : 0,
-            y: b.y ? Math.max(a.y ? a.y : b.y, b.y) : 0
-        },
-        this.elevation = elevation,
-        this.excludes = new Set(),
-        this.gridIndex = new Set(),
-        this.options = options,
-        this.universe = options.universe ?? (options.limit?.target ? new Set() : '');
-        this._init()
+    constructor ( elevation = {bottom: -Infinity, top: Infinity, topInclusive: false}, scene, options = {}) {
+        this.#options = options;
+        this.#scene = scene;
+        this.#elevation = elevation;
+
+        if (new.target === boundary) {
+            this._init();
+        }
     }
+
+    /**Elevation as passed in to the constructor
+     * @type object {bottom, top}
+     */
+    #elevation
+
+    /**shapes that make up the excludes (holes) by level
+     * @type Map()
+     */
+    #excludes 
+
+    /**Regions that make up the boundary by level
+     * @type Map()
+     */
+    #levelsRegions = new Map()
+
+    /**Options passed into the construcoor
+     * @type object
+     */
+    #options
+
+    #region 
+
+    /**Object data used to construct regions when building out the boundary levels regions
+     * @type object
+     */
+    #regionData = {}
+
+    /**Scene the boundary exists on
+     * @type scene
+     */
+    #scene
     
-    get region(){
-        return this.regionUuid ? fromUuidSync(this.regionUuid) : {}
+    /**The type of boundary, which is determined by the data used to create it
+     * //'dimension', 'region', 'universe'
+     * @type string
+     */
+    #type 
+
+    /**Shapes that make up the universe by level
+     * @type Map()
+     */
+    #universe
+
+    /**Source-target grid pools indexed by level
+     * @type Map()
+     */
+    #targetGridPools = new Map()
+
+
+
+    /** GETTERS */
+
+    get A(){
+        const {x, y} = this.bounds
+        return {x: x, y:y}
     }
-    
+
+    get B(){
+        const {x, y, width, height} = this.bounds
+        return {x: x + width, y: y + height}
+    }
+
     get bottom(){
-        return this.options.bottom ?? this.elevation.bottom
+        return this.elevation.bottom
     }
 
     get bottomIsInfinite(){
-        return this.bottom === -Infinity || this.bottom === null
+        return helper.isInfinite(this.bottom)
     }
     
     get bottomToElevation(){
         return this.bottomIsInfinite ? 0 : this.bottom
     }
 
+    get bounds(){
+        return this.region.bounds
+    }
+
     get center(){
-        return {x: this.A.x + (this.width/2), y: this.A.y + (this.height/2)}
+        return this.bounds.center
     }
 
     get depth(){
@@ -186,340 +348,1237 @@ export class boundary{
         return this.topIsInfinite || this.bottomIsInfinite
     }
 
-    get dimensions(){
-        const top = canvas.grid.getOffset(this.A);
-        const left = canvas.grid.getOffset({x:this.A.x, y:this.B.y});
-        const right = canvas.grid.getOffset({x:this.B.x, y:this.A.y});
-        const bottom = canvas.grid.getOffset(this.B);
-        const w = Math.max(right.j,bottom.j) - Math.min(top.j,left.j);
-        const h = Math.max(bottom.i,left.i) - Math.min(top.i,right.i);
-
-        return {w: w, h: h, j:top.j, i:top.i, top: top, left: left, right: right, bottom: bottom}
+    get elevation(){
+        return this.#elevation
     }
 
-    get elevationArray(){
-        if (this.depthIsInfinite) return [0]
-        const arr = []
-        for (let i = 0; i < this.depth; i++) {
-            arr.push(this.bottom + i);
-        }
-        return arr
+    get excludes(){
+        return this.#excludes
     }
 
-    get exclude(){
-        return this.options.exclude
+    get gridDimensions(){
+        const A = this.A;
+        const B = this.B;
+
+        const top = canvas.grid.getOffset(A);
+        const bottom = canvas.grid.getOffset(B);
+        const left = canvas.grid.getOffset({x: A.x, y: B.y});
+        const right = canvas.grid.getOffset({x: B.x, y: A.y});
+
+        const w = Math.max(right.j, bottom.j) - Math.min(top.j, left.j);
+        const h = Math.max(bottom.i, left.i) - Math.min(top.i, right.i);
+
+        return {w, h}
+    }
+
+
+    get hasExclusions(){
+        return !!this.excludes?.size;
+    }
+
+    get hasRegion(){
+        return !!(this.options.regionUuid); //removed check for this.region. If re-added, see how scenes are converted to documents. Downstream effect is boundary is seen as a region boundary, not scene, and elevation becomes wrong.
+    }
+
+    get hasUniverse(){
+        return !!this.options.universe?.target;
     }
 
     get height(){
-        return Math.abs(this.B.y - this.A.y)
+        return this.bounds.height 
     }
 
-    get inclusive(){
-        return (this.options.inclusive || (!('inclusive' in this.options) && this.region?.id)) ? true : false
+    get infoBoundaryStart(){
+        const {x, y} = this.A
+        return `x: ${x} y: ${y} bottom: ${this.bottomIsInfinite ? '-&infin;' : this.bottom}`
     }
 
-    get limit(){
-        return this.options.limit ?? {}
+    get infoBoundaryEnd(){
+        const {x, y} = this.B
+        return `x: ${x} y: ${y} top: ${this.topIsInfinite ? '&infin;' : this.top}`
+    }
+
+    get levelIds(){
+        return this.levels.length ? this.levels : helper.filterLevels(this.scene, {output: 'ids'})
+    }
+    
+    get levels(){
+        return [...this.region.levels]
+    }
+
+    /**
+     * Names of the levels associated with this danger's targeting
+     */
+    get levelsNames(){
+        return helper.getLevelsNames(this.scene, this.levels)
+    }
+
+    get levelsRegions(){
+        return this.#levelsRegions
     }
 
     get location(){
-        return {x:this.A.x, y:this.A.y, elevation: this.bottom}
+        return {x:this.bounds.x, y:this.bounds.y, elevation: this.bottom}
     }
 
-    get offset(){
-        return this.options.offset
+    get options(){
+        return this.#options
     }
 
-    get range(){
-        return this.options.range ?? {w: 1, h:1, d:0}
+    get regionData(){
+        return this.#regionData
     }
 
-    get regionUuid(){
-        return this.options.regionUuid ?? ''
+    get region(){
+        return this.#region
+    }
+
+    get scene(){
+        return this.#scene
+    }
+
+    get stretch(){
+        return this.options.stretch ?? {}
     }
 
     get top(){
-        return this.options.top ?? this.elevation.top
+        return this.elevation.top
     }
 
     get topIsInfinite(){
-        return this.top === Infinity || this.top === null
+        return helper.isInfinite(this.top)
     }
     
     get topToElevation(){
         return this.topIsInfinite ? 0 : this.top
     }
 
+    get type(){
+        return this.#type
+    }
+
+    get universe(){
+        return this.#universe
+    }
+
     get width(){
-        return Math.abs(this.B.x - this.A.x)
+        return this.bounds.width
+    }
+
+    /**  PRIVATE METHODS */
+    /**
+     * Initializes additional index and positional data for boundary
+     */
+    _init(){
+
+        //set the type of boundary
+        this._setType()
+
+        //set the data object used for generating boundary regions
+        this.#setRegionData()
+        
+        this.#setBoundaryRegion()
+
+        //index the exclusion grids
+        this.#setExcludes();
+
+        //index the universe grids
+        this.#setUniverse();
+
+        //set the region
+        this.#setLevelsRegions();
+
+        //cache target grids against the final per-level regions
+        this.#setTargetGridPools();
+    }
+
+
+
+    /**Delete on the levelsRegions map the level id 
+     * 
+     * @param {string} level  level id 
+     */
+    #deleteLevelRegion(level){
+        this.#levelsRegions.delete(level)
+    }
+
+
+
+    /**
+     * Intakes a set of documents and outputs an array of documents that are within this boundary's levels
+     * @param {set} documents //set of documents
+     * @param {array} levels //array of level ids to filter down to
+     * @returns 
+     */
+    #filterDocumentsByBoundaryLevel(documents, levels = []){
+        //all leves are included
+        if(!this.levels.length) return documents
+
+        //if levels are passed in, use those, making sure they exist in this boundary
+        const filterLevels = levels.length ? levels.filter(l => this.levelIds.includes(l)) : this.levelIds
+
+        //boundary specifies levels
+        return documents.filter(doc => filterLevels.some(id => doc.locatedInLevel(id)));
+    }
+
+
+
+    /**
+     * creates a Map of all of the level ids on this boundary. 
+     * The ids will each be associated to a region document once set
+     */
+    #initializeExcludes(){
+        this.#excludes = new Map(this.levelIds.map(id => [id, []]));
+    }
+
+
+    /**
+     * Set the boundary region - used for calculating overall size. Possibly deprecated in future
+     */
+    #setBoundaryRegion(){
+        this.#region = RegionDocument.implementation.fromSource(this.regionData, {parent: this.scene})
+    }
+
+
+    /**
+     * run through the documents in the exclude option and create shapes that will then be part of creating this boundary's region
+     * @returns 
+     */
+    #setExcludes(){
+        if(!this.options.exclude?.length) return 
+
+        //initialize excludes
+        this.#initializeExcludes();
+
+        //reduce the passed in exclusion documents to only those that are applicable (those locate on a level in the boundary)
+        const documents = this.#filterDocumentsByBoundaryLevel(this.options.exclude)
+        
+        //generate the shapes for all of the documents as holes
+        //the insert them into the level applicable for that shape
+        for(const document of documents){  
+            const {shapes, levels} = helper.documentToRegion(document, null, {hole: true, asObject: true})
+            if(shapes.length) {
+                for(const [id, array] of this.excludes){
+                    if(!levels.size || levels.has(id)) array.push(...shapes)
+                } 
+            }
+        }
+    }
+
+
+
+
+    /**Set on the levelsRegions map the region associated to the level id as key
+     * 
+     * @param {string} level  level id 
+     * @param {document} region region document 
+     */
+    #setLevelRegion(level, region){
+        this.#levelsRegions.set(level, region)
+    }
+
+
+    /**Iterate through each level of this boundary and
+     * set a region, assigning it to that level
+     * Region includes consideration towards exclusion and universe
+     */
+    #setLevelsRegions(){
+        for(const level of this.levelIds){
+            //get the generic options
+            let source = foundry.utils.deepClone(this.regionData)
+
+            //check for universe. 
+            if(this.hasUniverse){
+                //if universe exists, get the shapes for this level
+                const universeShapes = this.universe.get(level)
+
+                //if there are no universe shapes for this level, delete the level from the map and continue
+                if(!universeShapes.length) {
+                    this.#deleteLevelRegion(level)
+                    continue
+                }
+
+                //else replace the source shapes with the universe shapes
+                source.shapes = universeShapes
+            }
+
+            //add the exclusions
+            if(this.hasExclusions){
+                const exclusions = this.excludes.get(level)
+                if(exclusions?.length) source.shapes = source.shapes.concat(exclusions)
+            }
+
+            //create the region
+            const region = RegionDocument.implementation.fromSource(source, {parent: this.scene})
+
+            this.#setLevelRegion(level, region)
+        } 
+    }
+
+    #setRegionData(){
+        
+        //insert options
+        const opts = this.options;
+
+        let regionData = opts.region ? opts.region.toObject() : {}
+
+        //For boundaries not created by a region, shell out (dimensions) or overwrite (universes) some of the regionData
+        if(this.type !== 'region') {
+            const {bottom, top} = this.#elevation;
+
+            Object.assign(regionData,
+                {
+                    elevation: {
+                        bottom,
+                        top,
+                        topInclusive: false
+                    },
+                    levels:[],
+                    name: "Universe Boundary"
+                }
+            )
+        }
+
+
+        if(opts.name) regionData.name = opts.name;
+        if(opts.bottom != null) regionData.elevation.bottom = opts.bottom;
+        if(opts.top != null) regionData.elevation.top = opts.top;
+        if(opts.levels) regionData.levels = opts.levels;
+
+        this._setRegionData(regionData)
+    }
+
+
+
+    /**Generate the universe as an array of shapes associated to each level the document exists in
+     * Include handling for source area settings (adjance, in, in and adjacent)
+     */
+    #setUniverse(){
+        if(this.hasUniverse){
+
+            this.#universe = new Map(this.levelIds.map(id => [id, []]))
+
+            //reduce the passed in universe documents to only those that are applicable (those locate on a level in the boundary)
+            const documents = this.#filterDocumentsByBoundaryLevel(this.options.universe.documents)
+
+            
+            //generate the shapes for all of the documents as holes
+            //the insert them into the level applicable for that shape
+                //I = keep as is, A = adjacent, then another is for ajacent or in
+            for(const document of documents){  
+                const {shapes, levels} = helper.documentToRegion(
+                    document, 
+                    this.scene//, {asObject: true}
+
+                )
+                if(shapes.length) {
+                    //confirm that the shape is in the actual region
+                    const finalShapes = [];
+
+                    for (const s of shapes) {
+                        const poly = helper.shapeToPolygon(s, s.type)
+                        if (this.polygonIsInRegion(this.region, poly)) {
+                            //push the shape in, converted to an object
+                            finalShapes.push(s);
+                        }
+                    }
+
+                    if (!finalShapes.length) continue;
+
+                    for(const [id, array] of this.#universe){
+                        if(!levels.size || levels.has(id)) {
+                            array.push(...finalShapes)
+                        }
+                    } 
+                }
+            }
+        }
     }
     
-    _exclude(){
-        this._indexDocuments(this.exclude, this.excludes)
-    }
 
-    _universe(){
-        this._indexDocuments(this.limit.documents, this.universe)
-        if(this.limit.target === 'I') return
-        const newUniv = new Set() 
-        this.universe.forEach((value) => {
-            const[i, j] = value.split('_')
-            const nghbrs = canvas.grid.getAdjacentOffsets({i:Number(i), j:Number(j)})
-            for(const pos of nghbrs){
-                let index = boundary.makeIndex(pos)
-                if(this.limit.target === 'A') {
-                    if (!this.universe.has(index)) newUniv.add(index)
-                } else {
-                    newUniv.add(index)
-                }
-            }
-        })
-        this.universe = newUniv
-    }
-
-    _indexDocuments(documents, indices){
-        for(const document of documents){
-            const documentName = document.documentName ?? document.document.documentName;
-            const b = boundary.documentBoundary(documentName, document, {inclusive: (documentName === "Token" ? false : true)});
-            const grids = b.grids()  
-            for(const grid of grids){
-                let index = boundary.makeIndex(grid);
-                if(indices.has(index)) continue
-                switch(documentName){
-                    case "Wall":
-                        if(!rayIntersectsGrid(grid, document.object.toRay())) continue
-                        break
-                    case "AmbientLight":
-                        if(!circleAreaGrid(grid.shift.w, grid.shift.h, b.dimensions)) continue
-                        break
-                    default:
-                }
-                indices.add(index)
-            }
-        }
-        dangerZone.log(false, 'Tagged ', {tagged: documents, boundary: this, indices: indices});
-    }
-
-    _init(){
-        if(!('retain' in this.options)) this._toTopLeft();
-        if(this.exclude) this._exclude();
-        if(this.limit.target) this._universe();
-        this._setGridIndex();
-    }
-
-    _setGridIndex(){
-        const grids = this.grids();
-        for(const grid of grids){
-            this.gridIndex.add(boundary.makeIndex(grid))
-        }
-    }
-
-    _testGridToRegion(dim = {}){
-        let inRegion = false, i = 0;
-        let vertices = []//canvas.grid.getVertices(dim)
-        if(this.range.h > 1) vertices = vertices.concat(canvas.grid.getCenterPoint(canvas.grid.getTopLeftPoint({i: dim.i + (this.range.h-1), j: dim.j})))//vertices = vertices.concat(canvas.grid.getVertices({i: dim.i + (this.range.h-1), j: dim.j}))
-        if(this.range.w > 1) vertices = vertices.concat(canvas.grid.getCenterPoint(canvas.grid.getTopLeftPoint({i: dim.i, j: dim.j + (this.range.w - 1)})))//vertices = vertices.concat(canvas.grid.getVertices({i: dim.i, j: dim.j + (this.range.w - 1)}))
-        if(this.range.h > 1 && this.range.w  > 1) vertices = vertices.concat(canvas.grid.getCenterPoint(canvas.grid.getTopLeftPoint({i: dim.i + (this.range.h-1), j: dim.j + (this.range.w - 1)}))) //vertices = vertices.concat(canvas.grid.getVertices({i: dim.i + (this.range.h-1), j: dim.j + (this.range.w - 1)}))
-        vertices.push(canvas.grid.getCenterPoint(dim))
-        //dangerZone.log(true, "Testing Grid to Region", {dimensions: this, region: this.region, coord: dim, vertices: vertices})
-        do {
-            const testPoint = vertices[i];
-            for(const d of this.elevationArray){
-                inRegion = this.region.testPoint({x: testPoint.x, y: testPoint.y, elevation: d})
-                if(inRegion) break;
-            }
-            i++
-        } while (!inRegion && i < vertices.length)
-        return inRegion
-    }
-
-    _toTopLeft(){    
-        this.A = canvas.grid.getTopLeftPoint(this.A);
-        this.B = canvas.grid.getTopLeftPoint(this.B);
-    }
-
-    * grids(){
-        const dim = this.dimensions; 
-        for(let m=0; (this.inclusive ? m<=dim.w : m<dim.w) || m===0; m++){
-            for(let n=0; (this.inclusive ? n<=dim.h: n<dim.h) || n===0; n++){
-                let coord = {i: dim.i+n, j: dim.j+m}; let coordIndex = boundary.makeIndex(coord);
-                if(this.excludes.has(coordIndex)) continue;
-                if((this.universe && !this.universe.has(coordIndex))) continue;
-                if(!this.region?.object || this._testGridToRegion(coord)){
-                    yield {i:coord.i, j:coord.j, e: this.bottom, index: coordIndex, shift: {w:n, h:m}}
-                }
-            }
-        }
-    } 
-
-    * randomBoundary (){
-        const grids = this.grids(), all = [], ops = {excludes: this.excludes, universe: this.universe};
-        for(const grid of grids){all.push(grid)}
-        if('inclusive' in this.options){ops.inclusive = this.options.inclusive}
-        if('regionUuid' in this.options){ops.regionUuid = this.options.regionUuid}
-        if('bottom' in this.options){ops.bottom = this.options.bottom}
-        if('top' in this.options){ops.top = this.options.top}
-        if('range' in this.options) ops.range = this.range
-        if(all.length < 1 || this.depth < 0){
-            if(this.depth < 0 && game.user.isActiveGM){
-                ui.notifications?.error(game.i18n.localize("DANGERZONE.alerts.danger-depth-exceeds-zone"));
-            }
-            return dangerZone.log(false,'Invalid zone settings ', {boundary: this})
-        }
-        const zAdj = this.depth ? (this.range.d ?? this.depth-1) : 0 
-        while(true){
-            const test = all[Math.floor(Math.random() * all.length)]
-            const topLeft = canvas.grid.getTopLeftPoint(test); 
-            const bottomRight = point.shiftPoint(topLeft, this.range);
-            const e = test.e + Math.floor(Math.random() * this.depth);
-            const top = e === -Infinity ? Infinity : e + zAdj;
-            yield new boundary(topLeft, bottomRight, {bottom: e, top: top}, ops)
-        }
-
+    /**Stretches the given elevation object based on zone stretch settings
+     * 
+     * @param {object} elevation 
+     * @returns object
+     */
+    #stretch(elevation){
+        return Object.assign(elevation, this.stretch.elevation)
     }
 
     /**
-     * 
-     * @param {*} documentName 
-     * @param {*} document 
-     * @param {*} options 
-     *  {
-     *      global: {bottom: integar, top: integer}} //used to pass in bottom and top of zone for world zones
-     *  }
-     * @returns 
+     * Exposed private method for setting region data
+     * @param {object} data 
      */
-    static documentBoundary(documentName, document, options = {}){
-        //dangerZone.log(false,'Determine document boundary ', {documentName: documentName, document: document, options: options})
-        let dim;
-        switch(documentName){
-            case "Wall":
-                const wallHeight = (dangerZone.MODULES.wallHeightOn && document.flags?.['wall-height']) ? document.flags?.['wall-height'] : {bottom: 0, top: 0}
-                dim={x: document.object.bounds.x, y:document.object.bounds.y, width: document.object.bounds.width, height: document.object.bounds.height, bottom: wallHeight.bottom, top: wallHeight.top}
-                break
-            case "AmbientLight":
-                const radius = document.object.radius
-                const dm = (radius*2)-1
-                dim={x:document.object.bounds.x, y:document.object.bounds.y, width: dm, height: dm, bottom: document.elevation - radius , top: document.elevation + radius} 
-                break
-            case "Drawing":
-                dim={x: document.x, y:document.y, width: document.shape.width, height: document.shape.height, bottom: document.elevation, top: document.elevation}
-                break;
-            case "Region":
-                dim={x: document.object.bounds.x, y:document.object.bounds.y, width: document.object.bounds.width, height: document.object.bounds.height, bottom: document.elevation.bottom, top: document.elevation.top}
-                break;
-            case "Scene":
-                dim={x: document.dimensions.sceneX, y:document.dimensions.sceneY, width: document.dimensions.sceneWidth, height: document.dimensions.sceneHeight, bottom: options.global ? options.global.bottom : null, top: options.global ? options.global.top : null}
-                break;
-            case "Tile":
-                dim={x: document.x, y:document.y, width: document.width - 1, height: document.height - 1, bottom: document.elevation, top: document.elevation}
-                break;
-            case "Token":
-                const multiplier = game.settings.get(dangerZone.ID, 'token-depth-multiplier');
-                const position = canvas.grid.getOffset(document);
-                const topLeft = canvas.grid.getTopLeftPoint({j:position.j + document.width, i:position.i + document.height}); 
-                const distance = document.parent?.dimensions?.distance ? document.parent?.dimensions?.distance : 1
-                const Td = (dangerZone.MODULES.wallHeightOn && document.getFlag('wall-height', 'tokenHeight')) ? document.getFlag('wall-height', 'tokenHeight') : (distance * Math.max(document.width, document.height) * multiplier);
-                dim = {x:document.x, y:document.y, width: topLeft.x - document.x, height: topLeft.y - document.y, bottom:document.elevation, top: document.elevation + Td};
-                break
-            default: 
-                dim=document
-        }
-        const b = new boundary({x:dim.x, y:dim.y}, {x: dim.x + dim.width, y: dim.y + dim.height}, {bottom:dim.bottom, top: dim.top}, options)
-        return b
+    _setRegionData(data = {}){
+        Object.assign(this.#regionData, data)
     }
 
-    static locationToBoundary(coords, elevation, units, options={}){
-        let position = point.shiftPoint(coords, units)
-        dangerZone.log(false,'Location to boundary...', {point: coords, units: units, options: options});
-        return new boundary(coords, position, {bottom: elevation.bottom, top: elevation.bottom + units.d}, options)
+
+    /**Set a type identifier
+     *  @param {string} type 
+     */
+    _setType(intype = ''){
+        let type
+
+        if(intype){
+            type = intype
+        }
+        else if(this.hasRegion){
+            type = 'region'
+        } else {
+            type = 'universe'
+        }
+
+        this.#type = type
     }
 
-    static makeIndex(coords) {
-        return coords.i + '_' + coords.j
-    }
 
-    static offsetAxis(offsetAxis, flip, scene, random){
-        function randomRange(min, max, random){
-            if(min === max) return min
-            return (Math.floor(random * (max - min + 1)) + min)
-        }
-        switch(offsetAxis.type){
-            case "pxl":
-                return (randomRange(offsetAxis.min, offsetAxis.max, random) * flip)
-            case "pct":
-                return (Math.floor((randomRange(offsetAxis.min, offsetAxis.max, random)/100) * scene.dimensions.size) * flip)
-            default:
-                return 0
-        }
-    }
+    /**  METHODS */
 
-    static offsetBoundary(bndry, globalOffset, offset, scene = canvas.scene){
-        function flip(flip, flipLocation){
-            if (typeof flip == "boolean") {
-                return ((flip && flipLocation) ? -1 : 1)
-            }
-            return ((['N', 'L', 'B'].includes(flip) && flipLocation) ? -1 : 1 )
-        }
-        const obj = {A: {x: 0, y: 0}, B: {x: 0, y: 0}, elevation: bndry.elevation,options: {offset: {x: {flip: 0, amt: 0}, y: {flip: 0, amt: 0}}, retain: true}};
-        obj.options.offset.x.flip = flip(offset.x.flip, globalOffset.x.flipLocation)
-        obj.options.offset.y.flip = flip(offset.y.flip, globalOffset.y.flipLocation)
-        obj.options.offset.x.amt = boundary.offsetAxis(offset.x, obj.options.offset.x.flip, scene, globalOffset.x.random)
-        obj.options.offset.y.amt = boundary.offsetAxis(offset.y, obj.options.offset.y.flip, scene, globalOffset.y.random)
-        Object.assign(obj.A, {x: bndry.A.x + obj.options.offset.x.amt, y:bndry.A.y + obj.options.offset.y.amt})
-        Object.assign(obj.B, {x: bndry.B.x + obj.options.offset.x.amt, y:bndry.B.y + obj.options.offset.y.amt})
-        return new boundary(obj.A, obj.B, obj.elevation, obj.options)
-    }
 
-    tokensIn(tokens){
-        let kept = [];
-        for(let token of tokens){
-            const b = boundary.documentBoundary('Token', token);
-            if(this.intersectsBoundary(b)){
-                kept.push(token)
-            }
-        }
-        return kept
-    } 
-
-    intersectsBoundary(bound = boundary){
-        if((this.bottomIsInfinite || this.bottom < bound.top) && (this.topIsInfinite || this.top >= bound.bottom)) {
-            const grids = bound.grids()
-            for(const grid of grids){
-                if(this.gridIndex.has(grid.index)) return true
-            }
-        }
-        return false
-    }
-
-    highlight(name, color = 16737280){
-        let hId = 'dz-' + name;
-        canvas.interface.grid.addHighlightLayer(hId);
-        const grids = this.grids();
-        for(const grid of grids){ 
-            let position = canvas.grid.getTopLeftPoint(grid);
-            canvas.interface.grid.highlightPosition(hId, {x: position.x, y: position.y, color:color});
-        }
-    }
-
+    /**destroy a highlight layer previously created for displaying this boundary in highlight
+     * 
+     * @param {string} name the name of the highlight layer
+     */
     destroyHighlight(name){
         canvas.interface.grid.destroyHighlightLayer('dz-' + name)
     }
+    
+
+
+
+    /**
+     * 
+     * @param {object} elevation testing againt with top, bottom, topInclusive 
+     * @param {object} elevation to test top / bottom
+     * @returns boolean test, true if the elevation to test is within the elevation to test against
+     */
+    static testElevation({bottom, top, topInclusive}, elevation){
+        if ( elevation.top < bottom ) return false;
+        if (
+            elevation.top === elevation.bottom &&
+            elevation.bottom === bottom &&
+            bottom === top
+        ) {
+            return true
+        }
+        if ( topInclusive ) return elevation.bottom <= top;
+        return elevation.bottom < top;
+    }
+
+
+
+    /**Generates an object containing bounds for the boundary region associated with the given level
+     * 
+     * @param {string or level} level level id or the level class
+     * @returns object
+     */
+    getLevelRegionBounds(level){
+
+        const id = level?.id ?? level
+        const region = this.levelsRegions.get(id)
+        const dim = this.scene.dimensions
+        const elevation = region.elevation
+        const {x, y, bottom: lower, right} = region.bounds
+        const {top, bottom, topInclusive} = elevation
+
+        //establish grid points
+        const topLeft = canvas.grid.getOffset({x, y})
+        const bottomRight = canvas.grid.getOffset({x: right, y: lower})
+
+        //establish how many grids can fit in this dimension
+        const maxXGrids = Math.max((bottomRight.j - topLeft.j),1)
+        const minYGrids = Math.max((bottomRight.i - topLeft.i),1)
+
+        const bounds = {
+            grids: {
+                size: dim.size,
+                maxX: maxXGrids,
+                maxY: minYGrids
+            },
+            scene: this.scene,
+            level: id,
+            bounds: region.bounds,
+            elevation: elevation,
+            maxDepth: (top - bottom) + (topInclusive ? 1 : 0)
+        }
+
+        return bounds
+    }
+
+
+
+    /**
+     * 
+     * @param {object} options 
+     *               //bleed boolean
+     *               //range object {
+     *                          d: int //depth in elevation 
+     *                          w: int //width in grid spaces
+     *                          h: int //height in grid spaces
+     *                      }
+     *               //levels array of level ids to restrict search to
+    *                //documents array of documents to restrict point to include
+     *               //fail object {
+     *                  noLevel //fail if no level is found under the given options
+     *                  }
+     *               //sourceTarget string source targeting rules (In, Adjacent, Both)
+     */
+    getRandomBoundary(options = {}){
+        const {units: {w, h, d}, bleed, stretch} = options
+
+        //return a random level and set it for the level to use from here onward.
+        const _levels = this.getRandomLevelInBoundary(options)
+        if(_levels.invalid){
+            return dangerZone.log(false, `${_levels.invalid}`, {options, boundary: this, levelsData: _levels.levels})
+        }
+        const level = _levels.levels.selected;
+        
+        //Shift and validate the final danger boundary against the original zone bounds.
+        const regionBounds = this.getLevelRegionBounds(level)
+        options.regionBounds = regionBounds
+        
+        const pointData = this.getTargetBoundaryGrids(level, options);
+        if(pointData.invalid){
+            return dangerZone.log(false, `${pointData.invalid}`, {options, boundary: this, pointData})
+        }
+
+        const shiftedPoint = this.#getShiftedPoint(pointData, bleed);
+
+        if(shiftedPoint.invalid){
+            dangerZone.log(false, `No valid boundary found; aborting boundary generation`, {options, boundary: this, pointData: shiftedPoint})
+            return false
+        }
+        
+        const {coord: {x, y, elevation: bottom}} = shiftedPoint
+
+        const topInclusive = regionBounds?.elevation?.topInclusive
+        const b = dimensionBoundary.locationToBoundary(
+            {x,y}, 
+            {bottom, top: bottom + d, topInclusive}, 
+            {w, h, d}, 
+            this.scene, 
+            {levels: [level], stretch}
+        )
+
+        dangerZone.log(false, 'Random boundary got got....', {b, pointData, shiftedPoint, _levels, regionBounds, options})
+        
+        return b
+    }
+
+
+
+    /**Returns a random level within the boundary
+     * 
+     * @param {boundary} testBoundary //boundary to use for selecting the random level and checking for fitting dimensions
+     * @param {object} options 
+    *               //level array of level ids to restrict search to
+    *               //documents array of documents to restrict point to include
+    *               //fail object {
+    *                  noLevel //fail if no level is found under the given options
+    *                  }
+    *               //units object //the units height, width, depth that must fit within the boundary when bleed is not allowed. Typically these are from the danger
+    *               //bleed boolean //when bleed is false, the units must fully fit in the bounds of the selected level
+     * @returns object data (see definition in function)
+     */
+    getRandomLevelInBoundary(options = {}){
+        //extract options
+        const {units: {w, h, d}, levels, documents, bleed, fail} = options
+
+        //variables to hold the return data 
+            //levels: object
+                //eligible: array levels to test within using the levels passed in else the test boundary's levels
+                //filtered: array levels filtered to those that are included in one or more of the passed in documents, if applicable. Also must be large enough to fit the danger dimensions.
+                //selected: the level selected at random
+            //invalid: message for invalid data
+        const data = {
+            levels: {
+                filtered: [],
+                eligible: levels?.length ? levels : this.levelIds,
+                selected: ''
+            },
+            invalid: ''
+        }
+
+        //if documents are provided, filter the levels to ones found within the documents
+        if(documents) {
+      
+            //filter the leves to those that are included in one or more of the passed in documents
+            const filteredLevels = data.levels.eligible.filter(l => documents.some(d => d.level === l || d.locatedInLevel(l)))
+
+            data.levels.filtered = filteredLevels
+            dangerZone.log(false, 'Boundary levels filtered by documents...', {data, documents, filteredLevels})
+
+            //if no levels remain
+            if(!data.levels.filtered.length){
+                //if fail on no levels, return
+                if(fail?.noLevel) {console.trace()
+                    data.invalid = 'no levels met universe document level requirements for this test point in boundary'
+                    return data
+                }
+            
+                //else set levels back to eligible levels
+                data.levels.filtered = data.levels.eligible 
+            } 
+        } else {
+            //else use the eligible levels
+            data.levels.filtered = data.levels.eligible 
+        }
+
+        //if no levels remain, set
+        if(!data.levels.filtered.length) {
+            data.invalid = 'No levels meet target dimension requirements for this test point in boundary'
+        } else {
+            //generate random level as selected level
+            data.levels.selected = data.levels.filtered.length < 2 ? data.levels.filtered[0] : helper.pickRandom(data.levels.filtered);
+        }     
+
+        return data
+    }
+
+
+    /**Searches shuffled grid/elevation candidates for a footprint that satisfies the bleed rule.*/
+    #getShiftedPoint(pointData = {}, bleed = false){
+        const {grids, region, regionBounds, units} = pointData;
+        const data = {invalid: '', regionBounds};
+        const {top, bottom, topInclusive} = regionBounds.elevation;
+        const maxElevation = topInclusive ? top : top - 1;
+        const {maxX, maxY} = regionBounds.grids;
+        const maxDepth = regionBounds.maxDepth;
+        const oversized = {
+            w: !bleed && units.w >= maxX,
+            h: !bleed && units.h >= maxY,
+            d: !bleed && units.d >= maxDepth
+        };
+        const maxStartElevation = bleed || oversized.d
+            ? (oversized.d ? bottom : maxElevation)
+            : top - units.d + (topInclusive ? 1 : 0);
+        const minStartElevation = oversized.d
+            ? maxElevation - units.d + 1
+            : bottom;
+        const elevations = [];
+
+        for(let elevation = minStartElevation; elevation <= maxStartElevation; elevation++){
+            elevations.push(elevation);
+        }
+
+        const [i0, j0, i1, j1] = canvas.grid.getOffsetRange(region.bounds);
+        const {x: regionLeft, y: regionTop, right: regionRight, bottom: regionBottom} = region.bounds;
+        const candidateGridIndices = new Set(grids.map(({i, j}) => `${i},${j}`));
+
+        const isInRegionOrCandidateGrid = testPoint => {
+            const {i, j} = canvas.grid.getOffset(testPoint);
+            return region.testPoint(testPoint) || candidateGridIndices.has(`${i},${j}`);
+        };
+
+        const {dimensions} = regionBounds.scene;
+        const sceneLeft = dimensions.sceneX;
+        const sceneTop = dimensions.sceneY;
+        const sceneRight = sceneLeft + dimensions.sceneWidth;
+        const sceneBottom = sceneTop + dimensions.sceneHeight;
+        const spansSceneWidth = !bleed && units.w >= Math.ceil(dimensions.sceneWidth / dimensions.size);
+        const spansSceneHeight = !bleed && units.h >= Math.ceil(dimensions.sceneHeight / dimensions.size);
+        const singleGrid = units.w === 1 && units.h === 1;
+
+        for(const grid of grids){
+            const coord = {x: grid.x, y: grid.y};
+            const shifts = singleGrid ? [{w: 0, h: 0}] : [];
+            if(!singleGrid){
+                for(let x = 0; x < units.w; x++){
+                    for(let y = 0; y < units.h; y++){
+                        shifts.push({w: x, h: y});
+                    }
+                }
+            }
+
+            for(const shift of helper.shuffleArray(shifts)){
+                const shiftedCoord = point.shiftPoint(coord, {
+                    w: -shift.w,
+                    h: -shift.h
+                });
+                if(spansSceneWidth) shiftedCoord.x = sceneLeft;
+                if(spansSceneHeight) shiftedCoord.y = sceneTop;
+               
+                const pointB = point.shiftPoint(shiftedCoord, units);
+                const inScene = shiftedCoord.x >= sceneLeft
+                    && shiftedCoord.y >= sceneTop
+                    && (bleed || (pointB.x <= sceneRight && pointB.y <= sceneBottom));
+                 if(!inScene) continue;
+
+                if(!singleGrid && !spansSceneWidth && !spansSceneHeight){
+                    if(bleed){
+                        const footprint = helper.shapeToPolygon({
+                            x: shiftedCoord.x,
+                            y: shiftedCoord.y,
+                            width: pointB.x - shiftedCoord.x,
+                            height: pointB.y - shiftedCoord.y
+                        });
+                        if(!this.polygonIsInRegion(region, footprint)) continue;
+                    } else {
+                        if(oversized.w){
+                            const startJ = canvas.grid.getOffset(shiftedCoord).j;
+                            if(startJ > j0 || startJ + units.w < j1) continue;
+                        }
+                        if(oversized.h){
+                            const startI = canvas.grid.getOffset(shiftedCoord).i;
+                            if(startI > i0 || startI + units.h < i1) continue;
+                        }
+                    }
+                }
+
+                for(const elevation of helper.shuffleArray([...elevations])){
+                    shiftedCoord.elevation = elevation;
+                    pointB.elevation = elevation + units.d - 1;
+
+                    if(!bleed && !singleGrid && !spansSceneWidth && !spansSceneHeight){
+                        if(oversized.d && (elevation > bottom || pointB.elevation < maxElevation)){
+                            continue;
+                        }
+
+                        const testA = {...shiftedCoord};
+                        const testB = {...pointB};
+
+                        if(oversized.w){
+                            testA.x = Math.min(Math.max(testA.x, regionLeft), regionRight - 1);
+                            testB.x = Math.min(Math.max(testB.x, regionLeft), regionRight - 1);
+                        }
+                        if(oversized.h){
+                            testA.y = Math.min(Math.max(testA.y, regionTop), regionBottom - 1);
+                            testB.y = Math.min(Math.max(testB.y, regionTop), regionBottom - 1);
+                        }
+                        if(oversized.d){
+                            testA.elevation = bottom;
+                            testB.elevation = maxElevation;
+                        }
+                        if(!isInRegionOrCandidateGrid(testA) || !isInRegionOrCandidateGrid(testB)){
+                            continue;
+                        }
+                    }
+
+                    data.coord = shiftedCoord;
+                    return data;
+                }
+            }
+        }
+
+        data.invalid = `No valid ${bleed ? 'bleed' : 'non-bleed'} boundary found for the candidate grids`;
+        return data;
+    }
+
+
+    /**Iterates through all of the grids in a region and yields the grid offset and top left coordinates
+     * 
+     * @param {region} region
+     */
+    *#iterateRegionGrids(region){
+        const [i0, j0, i1, j1] = canvas.grid.getOffsetRange(region.bounds);
+
+        for(let i = i0; i < i1; i++){
+            for(let j = j0; j < j1; j++){
+                const offset = {i, j};
+                const center = canvas.grid.getCenterPoint(offset);
+                const poly = helper.shapeToPolygon({points: canvas.grid.getVertices(center)}, 'polygon');
+                if(!this.polygonIsInRegion(region, poly)) continue;
+
+                const topLeft = canvas.grid.getTopLeftPoint(center);
+                yield {
+                    i,
+                    j,
+                    x: topLeft.x,
+                    y: topLeft.y
+                };
+            }
+        }
+    }
+
+    #setTargetGridPools(){
+        this.#targetGridPools = new Map();
+        const sourceTarget = ['A', 'B'].includes(this.options.sourceTarget)
+            ? this.options.sourceTarget
+            : 'I';
+
+        for(const [level, region] of this.levelsRegions){
+            const inside = [...this.#iterateRegionGrids(region)];
+            if(sourceTarget === 'I'){
+                this.#targetGridPools.set(level, inside);
+                continue;
+            }
+
+            const insideIndices = new Set(inside.map(({i, j}) => `${i},${j}`));
+            const adjacent = new Map();
+
+            for(const grid of inside){
+                for(const offset of canvas.grid.getAdjacentOffsets({i: grid.i, j: grid.j})){
+                    const key = `${offset.i},${offset.j}`;
+                    if(insideIndices.has(key) || adjacent.has(key)) continue;
+
+                    const topLeft = canvas.grid.getTopLeftPoint(canvas.grid.getCenterPoint(offset));
+                    adjacent.set(key, {
+                        i: offset.i,
+                        j: offset.j,
+                        x: topLeft.x,
+                        y: topLeft.y
+                    });
+                }
+            }
+
+            const adjacentGrids = [...adjacent.values()];
+            const grids = sourceTarget === 'A'
+                ? adjacentGrids
+                : sourceTarget === 'B'
+                    ? [...inside, ...adjacentGrids]
+                    : inside;
+            this.#targetGridPools.set(level, grids);
+        }
+    }
+
+
+    /**Returns this level's cached target grids, optionally narrowed to documents
+     * 
+     * @param {string} level //id of level
+     * @param {array} documents //array of documents, typically tokens
+     * @returns array of candidate grids
+     */
+    #getBoundaryGridPool(level, documents = []){
+        const candidates = this.#targetGridPools.get(level) ?? [];
+        if(!documents?.length) return candidates;
+
+        const documentPolygons = documents.map(document => helper.shapeToPolygon({
+            x: document.x,
+            y: document.y,
+            width: document.width,
+            height: document.height
+        }));
+
+        const documentGrids = candidates.filter(grid =>
+            documentPolygons.some(polygon => polygon.contains(grid.x, grid.y))
+        );
+        return documentGrids.length ? documentGrids : candidates;
+    }
+    
+    /**
+     * 
+     * @param {string} level //level id
+     * @param {*} options 
+     * @param {*} param2 
+     * @returns 
+     */
+    getTargetBoundaryGrids(level, options = {}){
+        const {documents, regionBounds, units} = options;
+
+        const grids = this.#getBoundaryGridPool(level, documents);
+
+        if(!grids.length) return {invalid: 'No target boundary grids found'};
+
+        dangerZone.log(false, `Grids iterator created...`, {options, grids, documents, regionBounds, units})
+
+        return {
+            boundary: this,
+            level,
+            region: this.levelsRegions.get(level),
+            regionBounds,
+            invalid: '',
+            units,
+            grids: helper.shuffleArray([...grids])
+        };
+    }
+
+
+    /**Highlights a grid highlight layer with the dimensions of this boundary
+     * 
+     * @param {object} options {
+     *              id //highlight layer name to use for locating the highlight and turning it off
+     *              level //id for the level holding the region to highlight
+     *              color //the color to use for highlight
+     */
+    highlight(options = {} ){
+
+        //highlight only if the scene of this boundary matches the canvas scene
+        if(canvas.scene.id !== this.scene.id) return
+
+        //set variables
+        const color = options.color ?? 16737280
+        const name = options.id ?? ''
+        const level = options.level ?? helper.getDefaultLevel()
+        const region = this.levelsRegions.get(level)
+
+        //the boundary must exist on the level in order to highlight
+        if(!region) return dangerZone.log(false, 'Boundary does not exist on this level. No highlighting applied')
+
+        //level must be the visible one
+        if(helper.getVisibleLevel().id !== level) return dangerZone.log(false, 'Level to highlight is not visible')
+
+        //append to id for the highlight layer the danger zone prefix
+        const hId = 'dz-' + name;
+
+        //add the highlight level
+        canvas.interface.grid.addHighlightLayer(hId);
+
+        dangerZone.log(false, `Highlight ${hId} for region...`, {region, boundary: this})
+
+        for(const grid of this.#targetGridPools.get(level) ?? []){
+            canvas.interface.grid.highlightPosition(hId, {x: grid.x, y: grid.y, color});
+        }
+    }
+
+
+
+    /**Tests a polygon within a region to see if they intersect
+     * This is a temporary approach until I can figure out how to use polygon tree and/or clipper paths
+     * Original attempt could not deal with a region that had a whole entirely within a larger shape.
+     * @param {region} region 
+     * @param {polygon} poly 
+     * @returns boolean
+     */
+    polygonIsInRegion(region, poly){
+        const tree = region.polygonTree.intersectPolygon(poly);
+        return !tree.isEmpty;
+    }
+
+
+
+
+
+    /**Intakes an array of tokens and outputs an array consisting of those tokens that exist within the document bounds. 
+     * 
+     * @param {array} tokens //an array of token documents
+    *  @param {object} options // stretch: the stretch object, including type and elevation                              
+     * @returns  array of tokens
+     */
+    tokensIn(tokens, options = {}){
+        let kept = [];
+        const tokenCount = tokens?.length ?? tokens?.size;
+        if (!this.levelsRegions?.size || !tokenCount) return kept; 
+    
+        //iterate over tokens, keeping those that exist in the boundary
+        for(let token of tokens){
+            const {elevation, object} = token
+            const {x, y, w, h} = object
+
+            const polygon = helper.shapeToPolygon({x, y, width: w, height: h})
+            if(!polygon) continue
+
+            const region = this.levelsRegions.get(token.level);
+            if(!region) continue;
+
+            const regionElevation = foundry.utils.deepClone(region.elevation);
+            if(options.stretch) this.#stretch(regionElevation);
+
+            const tokenElevation = {
+                bottom: elevation,
+                top: elevation + helper.getTokenDepth(token)
+            };
+            if(!boundary.testElevation(regionElevation, tokenElevation)) continue;
+
+            const targetGrids = this.#targetGridPools.get(token.level) ?? [];
+            if(targetGrids.some(grid => polygon.contains(grid.x, grid.y))) kept.push(token);
+        }
+
+        return kept
+    } 
+
+
+
+    /**
+     * Checks boundary data for correctness
+     * @returns boolen //true = valid boundary, false = invalid
+     */
+    validate(){
+        //at least one level/region is required
+        if(!this.levelsRegions.size){
+            return false
+        }
+        //check elevations
+        if(!this.bottomIsInfinite && !this.topIsInfinite && this.top < this.bottom) {
+            dangerZone.log(true, 'Boundary dimensions are invalid - top at a lower elevation than bottom', {boundary: this})
+            return false
+        }
+        return true
+    }
 }
+
+/*
+    options:{
+        A: top left coordinate of boundary (x,y)
+        B: bottom right coordinate of boundary (x,y)
+        retain: bool //prevents the boundary during initialization to locking the boundary points to the grid. Instead, point may be anywhere and not residing on a grid intersection
+    }
+*/
+export class dimensionBoundary extends boundary {
+
+    constructor(...args){
+        super(...args)
+
+        this._init()
+    }
+
+    /****Initialization Activities */
+    #A
+
+    #B
+
+        /** GETTERS */
+    //this initial coordinate passed in for top left
+    /**@override */
+    get A(){
+        return this.#A
+    }
+
+    //this initial coordinate passed in for bottom right
+    /**@override */
+    get B(){
+        return this.#B
+    }
+
+    /**
+     * @override
+     */    
+    _init(){
+        const {A,B} = this.options
+        const ax = A.x ?? 0;
+        const ay = A.y ?? 0;
+        const bx = B.x ?? 0;
+        const by = B.y ?? 0;
+
+        this.#setA({
+            x: Math.min(ax, bx),
+            y: Math.min(ay, by)
+        });
+
+        this.#setB({
+            x: Math.max(ax, bx),
+            y: Math.max(ay, by)
+        });
+
+        //if not set to keep points where they are, locks the boundary points to the grid 
+        if(!('retain' in this.options)) this.#toTopLeft();
+
+        const x1 = this.A.x;
+        const y1 = this.A.y;
+        const x2 = this.B.x;
+        const y2 = this.B.y;
+
+        const regionData = {
+            shapes: [
+                {
+                    type: 'rectangle',
+                    x: Math.min(x1, x2),
+                    y: Math.min(y1, y2),
+                    width: Math.abs(x2 - x1),
+                    height: Math.abs(y2 - y1),
+                    hole: false
+                }
+            ]
+        }
+        this._setRegionData(regionData)
+
+        super._init()
+    }
+
+    
+      
+    /**Offsets an x or y axis
+     * 
+     * @param {number} axis x or y
+     * @param {boolean} flip performs mirroring
+     * @param {scene} scene 
+     * @param {number} random a generated random number, often at the global level to keep results consistent
+     * @returns 
+     */
+    static _offsetAxis(axis, flip, scene, random){
+
+        const rand = (min, max) =>
+            min === max ? min : (Math.floor(random * (max - min + 1)) + min);
+
+        const value = rand(axis.min, axis.max);
+
+        if (axis.type === "pxl") return value * flip
+
+        if (axis.type === "pct") return Math.floor((value / 100) * scene.dimensions.size) * flip
+
+        return 0
+    }
+
+    /**
+     * sets x and y for A (top left)
+     * @param {object} data 
+     */
+    #setA(data){
+        this.#A = data
+    }
+
+    /**
+     * sets x and y for B (bottom right) 
+     * @param {object} data 
+     */
+    #setB(data){
+        this.#B = data
+    }
+   
+
+    /**
+     * @override
+     */
+    _setType(){
+        super._setType('dimension')
+    }
+
+
+    
+    /**Initialization: lock into grid
+     * Used to ensure that that boundary points are locked to the grid points (as opposed to mid-grid)
+     */
+    #toTopLeft(){    
+        this.#setA(canvas.grid.getTopLeftPoint(this.A));
+        this.#setB(canvas.grid.getTopLeftPoint(this.B));
+    }
+
+    
+    /**Converts a foundry document into a Danger Zone boundary
+     * 
+     * @param {document} document 
+     * @param {scene} scene
+     * @param {object} options  //options not used here are also passed through into the boundary method
+     *  {
+     *      elevation: {bottom: integar, top: integer}} //used to pass in bottom and top of zone for world zones,
+     *  }
+     * @returns 
+     */
+    static documentBoundary(document, scene = document.scene, options = {}){
+        const region = helper.documentToRegion(document, scene)
+
+        //generate the new bound
+        const {x, y, width, height, radius} = region.shapes[0]
+        const {top, bottom} = region.elevation
+
+        options.A = {x, y}
+        options.B = {x: x + (width ?? radius), y: y + (height ?? radius)}
+        const e = {bottom: options.elevation?.bottom ?? bottom, top: options.elevation?.top ?? top}
+
+        //options.levels = region.levels
+
+        const b = new dimensionBoundary(e, scene, options)
+
+        dangerZone.log(false, 'Creating document boundary', {boundary: b, document: document})
+        //return the boundary
+        return b
+    }
+
+    
+
+
+    /**Generates a new boundary based on a given location and dimensions
+     * 
+     * @param {*} startingCoords 
+     * @param {*} elevation 
+     * @param {*} dimension 
+     * @param {*} options 
+     * @returns 
+     */
+    static locationToBoundary(startingCoords, elevation, dimension, scene, options={}){
+
+        //Define the ending coordinates for the boundary end point given the start point and dimension
+        options.B = point.shiftPoint(startingCoords, dimension)
+        options.A = startingCoords;
+
+        //generate the new boundary
+        const b = new dimensionBoundary(elevation, scene, options)
+
+        dangerZone.log(false,'Creating location dimension boundary...', {newBoundary: b, startingCoords: startingCoords, dimension: dimension, options: options});
+        return b
+    }
+
+
+
+    /**Offsets a boundary based on passed in settings
+     * 
+     * @param {boundary} bndry 
+     * @param {object} globalOffset offset random generated settings at global level {random: number; biRandom: boolean}
+     * @param {object} offset offset settings for x and y, typically set on the danger part
+     * @param {scene} scene 
+     * @returns 
+     */
+    static offsetBoundary(bndry, globalOffset, offset, scene = canvas.scene){
+        const resolveFlip = (flip, flipLocation) => {
+            const isBool = typeof flip === "boolean";
+            const shouldFlip = isBool ? flip : ['N', 'L', 'B'].includes(flip);
+            return shouldFlip && flipLocation ? -1 : 1;
+        };
+
+        const opts = Object.assign(
+                bndry.options, {
+                offset: {
+                    x: { flip: resolveFlip(offset.x.flip, globalOffset.x.flipLocation), amt: 0 },
+                    y: { flip: resolveFlip(offset.y.flip, globalOffset.y.flipLocation), amt: 0 }
+                },
+                retain: true
+            }
+        );
+
+        opts.offset.x.amt = dimensionBoundary._offsetAxis(offset.x, opts.offset.x.flip, scene, globalOffset.x.random);
+        opts.offset.y.amt = dimensionBoundary._offsetAxis(offset.y, opts.offset.y.flip, scene, globalOffset.y.random);
+
+        opts.A = {
+            x: bndry.A.x + opts.offset.x.amt,
+            y: bndry.A.y + opts.offset.y.amt
+        };
+
+        opts.B = {
+            x: bndry.B.x + opts.offset.x.amt,
+            y: bndry.B.y + opts.offset.y.amt
+        };
+
+        dangerZone.log(false, 'Creating dimension boundary from offset', {
+            globalOffset,
+            offset,
+            scene,
+            options: opts,
+            originalBoundary: bndry
+        });
+
+        return new dimensionBoundary(bndry.elevation, scene, opts);
+    }
+}
+
 
 export class point{
     constructor(coords = {x: 0, y: 0}, elevation = null){
         this.coords = coords,
         this.elevation = elevation;
-        this._toTopLeft();
+        this.#toTopLeft();
     }
     
-    _toTopLeft(){    
+    #toTopLeft(){    
         this.coords = canvas.grid.getTopLeftPoint(this.coords);
     }
 
     static shiftPoint(reference = {}, shift = {}){
-        for(let i=0;i<Math.abs(shift.w);i++){reference = canvas.grid.getShiftedPoint(reference, shift.w > 0 ? CONST.MOVEMENT_DIRECTIONS.RIGHT : CONST.MOVEMENT_DIRECTIONS.LEFT)}
-        for(let i=0;i<Math.abs(shift.h);i++){reference = canvas.grid.getShiftedPoint(reference, shift.h > 0 ? CONST.MOVEMENT_DIRECTIONS.DOWN : CONST.MOVEMENT_DIRECTIONS.UP)}
-        return reference
+        const {w, h, d} = shift
+        let shifted = foundry.utils.deepClone(reference)
+
+        for(let i=0;i<Math.abs(w);i++){
+            shifted = canvas.grid.getShiftedPoint(
+                shifted, 
+                w > 0 ? 
+                CONST.MOVEMENT_DIRECTIONS.RIGHT : 
+                CONST.MOVEMENT_DIRECTIONS.LEFT
+             )
+            } 
+        
+        for(let i=0;i<Math.abs(h);i++){
+            shifted = canvas.grid.getShiftedPoint(
+                shifted, 
+                h > 0 ? 
+                CONST.MOVEMENT_DIRECTIONS.DOWN : 
+                CONST.MOVEMENT_DIRECTIONS.UP
+                )
+            }
+        
+        if(d && shifted.elevation !== undefined){
+            const elevation = shifted.elevation + d
+            shifted.elevation = elevation 
+        }
+        
+        return shifted
     }
 }

@@ -5,7 +5,7 @@ import {ZoneListForm} from './zone-list-form.js';
  * Defines the metadata for danger parts, including data used when building forms
  */
 export const DANGERZONEPARTS = new Map([
-    ['ambientLight', {icon: 'fa-regular fa-lightbulb', templates: new Map([[1, 'light'], [2, 'offset'], [3, 'animation'], [4,'advanced']])}],
+    ['ambientLight', {icon: 'fa-regular fa-lightbulb', templates: new Map([[1, 'light'], [4, 'offset'], [2, 'animation'], [3,'advanced']])}],
     ['audio', {icon: 'fa-solid fa-volume'}], 
     ['backgroundEffect', {icon:'fas fa-bomb', templates: new Map([[1, 'visual'], [2, 'audio'], [3,'offset']])}], 
     ['canvas', {icon:'fas fa-wind'}], 
@@ -14,10 +14,11 @@ export const DANGERZONEPARTS = new Map([
     ['item', {icon: 'fas fa-suitcase'}], 
     ['foregroundEffect', {icon:'fas fa-bolt', templates: new Map([[1, 'visual'], [2, 'source'], [3,'offset']])}],
     ['globalZone', {icon:'fas fa-radiation', templates: new Map([[1, 'basics'], [2, 'boundary'], [3,'trigger'], [4,'source'], [5,'target'], [6,'clear']])}],
-    ['lastingEffect', {icon:'fa-solid fa-cubes', templates: new Map([[1, 'tile'], [2,'overhead'], [3,'offset']])}], 
+    ['lastingEffect', {icon:'fa-solid fa-cubes', templates: new Map([[1, 'tile'], [2, 'visual'], [3,'overhead'], [4,'offset']])}], 
+    ['level', {icon: 'fa-fw fa-solid fa-layer-group', templates: new Map([[1,'visual'], [2, 'settings'] ])}],
     ['macro', {icon: 'fa-solid fa-code'}],
     ['mutate', {flag: true, icon: 'fas fa-pastafarianism'}],
-    ['region', {icon:'fa-regular fa-game-board', templates: new Map([[1, 'settings'], [2, 'offset'], [3, 'behaviors']])}],
+    ['region', {icon:'fa-regular fa-game-board', templates: new Map([[1, 'settings'], [2, 'visual'], [3, 'offset'], [4, 'behaviors']])}],
     ['rolltable', {icon: 'fas fa-th-list'}], 
     ['scene', {icon: 'fas fa-map', templates: new Map([[1, 'settings'], [2,'light']])}], 
     ['sound', {icon:'fa-solid fa-music', templates: new Map([[1, 'audio'], [2,'effects'], [3,'offset']])}],
@@ -102,6 +103,7 @@ export const DANGERZONECONFIG = {
         DELETE: 'DANGERZONE.delete',
         EFFECTS: 'DANGERZONE.effects.label',
         LIGHT: 'DANGERZONE.light.label',
+        LEVEL: 'DANGERZONE.level.label',
         MACRO: 'DANGERZONE.macro.label',
         MOVEMENT: 'DANGERZONE.movement.label',
         OFFSET: 'DANGERZONE.offset.label',
@@ -247,6 +249,14 @@ export const DANGERFORMOPTIONS = {
             "endEveryTurn": "DANGERZONE.times-up-macro.end"
         }
     },
+    GLOBALZONE: {
+        TARGETLEVELS: {
+            //"all": "DANGERZONE.type-form.globalZone.target.levels.options.all", //removed for now due to complexity
+            "any": "DANGERZONE.type-form.globalZone.target.levels.options.any",
+            //"elevation": "DANGERZONE.type-form.globalZone.target.levels.options.elevation", //removed for now due to complexity
+            "current": "DANGERZONE.type-form.globalZone.target.levels.options.current"
+        }
+    },
     ITEM: {
         TARGET: {
             "A": "DANGERZONE.item.target.add",
@@ -263,6 +273,46 @@ export const DANGERFORMOPTIONS = {
             "RADIAL": "DANGERZONE.occlusionmodes.radial",
             "VISION": "DANGERZONE.occlusionmodes.vision"
         }
+    },
+    LEVEL: {
+        ADD: {
+            "": "DANGERZONE.type-form.level.add.options.no",
+            "X": "DANGERZONE.type-form.level.add.options.not-exists",
+            "A": "DANGERZONE.type-form.level.add.options.add"
+        },
+        ELEVATION: {
+            "Z": "DANGERZONE.type-form.level.elevation.options.zone",
+            "T": "DANGERZONE.type-form.level.elevation.options.target"
+        },
+        TEXTURESFITMODES: CONST.TEXTURE_DATA_FIT_MODES.reduce((obj, key) => {
+            obj[key] = `TEXTURE_DATA.FIT.${key}`;
+            return obj;
+        }, {}),
+        VISIBILITYFROM:{
+            "": "DANGERZONE.type-form.level.visibility.from.options.none",
+            "S": "DANGERZONE.type-form.level.visibility.from.options.scene",
+            "Z": "DANGERZONE.type-form.level.visibility.from.options.zone",
+            "T": "DANGERZONE.type-form.level.visibility.from.options.target",
+        },
+        VISIBILITYTO:{
+            "": "DANGERZONE.type-form.level.visibility.to.options.none",
+            "S": "DANGERZONE.type-form.level.visibility.to.options.scene",
+            "Z": "DANGERZONE.type-form.level.visibility.to.options.zone",
+            "T": "DANGERZONE.type-form.level.visibility.to.options.target",
+        }
+    },
+    LEVELSOPTIONS: {
+        "": "DANGERZONE.levels.options.all",
+        "Z": "DANGERZONE.levels.options.zone",
+        "T": "DANGERZONE.levels.options.target",
+        "D": "DANGERZONE.levels.options.danger",
+        "B": "DANGERZONE.levels.options.both"
+    },
+    LEVELSSINGLEOPTIONS: {
+        "Z": "DANGERZONE.levels.options-single.zone",
+        "T": "DANGERZONE.levels.options-single.target",
+        "D": "DANGERZONE.levels.options-single.danger",
+        "B": "DANGERZONE.levels.options-single.both"
     },
     MIRRORIMAGEOPTIONS: {
         "": "DANGERZONE.type-form.offset.flip.options.none.label",
@@ -286,19 +336,34 @@ export const DANGERFORMOPTIONS = {
         "pxl": "DANGERZONE.type-form.offset.type.options.pxl.label"
     },
     REGION: {
+        ATTACHEDTOKEN: {
+            "": "DANGERZONE.type-form.region.attachedToken.options.none",
+            "S": "DANGERZONE.type-form.region.attachedToken.options.source",
+            "T": "DANGERZONE.type-form.region.attachedToken.options.target"
+        },
         EVENTS: Object.keys(CONST.REGION_EVENTS).reduce((obj, key) => {
                 let k = CONST.REGION_EVENTS[key];
                 let v = `DANGERZONE.region.events.options.${k}`
                 obj[k] = v === key ? key.titleCase().replace('_',' ').replace('_',' ') : v;
                 return obj;
             }, {}),
+        HIGHLIGHTMODE: {
+            "shapes": "DANGERZONE.type-form.region.highlightMode.shapes.label", 
+            "coverage": "DANGERZONE.type-form.region.highlightMode.coverage.label"
+        },
+        RESTRICTIONTYPE: Object.fromEntries(
+            CONST.EDGE_RESTRICTION_TYPES.map(key => [key, `REGION.RESTRICTION_TYPES.${key}.label`])
+        ),
         SHAPETYPE: {
+            "circle": "DANGERZONE.type-form.region.type.options.circle",
             "ellipse": "DANGERZONE.type-form.region.type.options.ellipse",
             "rectangle": "DANGERZONE.type-form.region.type.options.rectangle"
         },
         VISIBILITY: {
+            'LAYER_UNLOCKED': "DANGERZONE.type-form.region.visibility.options.layer_unlocked",
             'LAYER': "DANGERZONE.type-form.region.visibility.options.layer",
             'GAMEMASTER': "DANGERZONE.type-form.region.visibility.options.gamemaster",
+            'OBSERVER': "DANGERZONE.type-form.region.visibility.options.observer",
             'ALWAYS': "DANGERZONE.type-form.region.visibility.options.always"
         }
     },
@@ -345,6 +410,12 @@ export const DANGERFORMOPTIONS = {
             "": "",
             "R": "DANGERZONE.type-form.tokenMove.elevation-types.relative.label",
             "S": "DANGERZONE.type-form.tokenMove.elevation-types.set.label"
+        },
+        LEVELSSINGLEOPTIONS: {
+            "": "DANGERZONE.type-form.tokenMove.levels.options-single.none",
+            "Z": "DANGERZONE.type-form.tokenMove.levels.options-single.zone",
+            "T": "DANGERZONE.type-form.tokenMove.levels.options-single.target",
+            "D": "DANGERZONE.type-form.tokenMove.levels.options-single.danger"
         },
         WALLSBLOCK: {
             "" : "DANGERZONE.walls-block.none.label",
@@ -479,6 +550,8 @@ export const ZONEFORMOPTIONS = {
     },
     SOURCETRIGGERS: {
         "": "DANGERZONE.edit-form.source.triggers.any",
+       // "Z": "DANGERZONE.edit-form.source.triggers.zone", //removed for now because this is complicated - requires comparing document boundaries to zone boundaries
+        "L": "DANGERZONE.edit-form.source.triggers.level",
         "C": "DANGERZONE.edit-form.source.triggers.scene",
         "S": "DANGERZONE.edit-form.source.triggers.source"
     },
@@ -488,6 +561,12 @@ export const ZONEFORMOPTIONS = {
         "G": "DANGERZONE.stretch.ground.label",
         "S": "DANGERZONE.stretch.sky.label",
         "T": "DANGERZONE.stretch.top.label"
+    },
+    TARGETLEVELS: {
+        //"all": "DANGERZONE.edit-form.target.levels.options.all", //removed for now due to complexity
+        "any": "DANGERZONE.edit-form.target.levels.options.any",
+        //"elevation": "DANGERZONE.edit-form.target.levels.options.elevation", //removed for now due to complexity
+        "current": "DANGERZONE.edit-form.target.levels.options.current"
     },
     TOKENDISPOSITION: {
         "0": "DANGERZONE.token-disposition.neutral.label",
@@ -588,7 +667,7 @@ export function runOnSetup(){
                 name: "config",
                 title: "DANGERZONE.zones",
                 onChange: (event, active) => {
-                    if(active && dangerZone.executorForm.visible) new ZoneListForm(canvas.scene?.id).render(true)
+                    if(active) new ZoneListForm(canvas.scene?.id).render(true)
                 },
                 visible: game.user.isActiveGM
             },
@@ -833,9 +912,10 @@ export const WORKFLOWSTATES = {
 export const WORLDZONE = {
     dimensions: {
         bleed: false,
-        bottom: 0,
+        bottom: -Infinity,
         stretch: '',
-        top: 0
+        top: Infinity,
+        topInclusive: false
     },
     source: {
         area: '',
@@ -870,6 +950,11 @@ export const WORLDZONE = {
         dispositions: [],
         exclusion: {
           conditions: []
+        },
+        levels: 'any',
+        quantity: {
+            min: 1,
+            max: 1
         }
     },
     trigger: {
@@ -1136,6 +1221,7 @@ export function setExecutableOptions(){
             'effect': {
                 title: "Active Effect", 
                 icon: "fas fa-hand-sparkles",
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.activeEffectOn, name: "game-system", dependent: true}],
                 scope: "token"
             },
@@ -1143,12 +1229,14 @@ export function setExecutableOptions(){
                 fileTypes: ['audio'],
                 title: "Audio", 
                 icon: "fas fa-music", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: false}],
                 scope: "scene"
             },
             'combat': {
                 title: "Combat", 
                 icon: "fas fa-swords", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.portalOn, name: "portal", dependent: false}],
                 scope: "scene"
             },
@@ -1156,6 +1244,7 @@ export function setExecutableOptions(){
                 fileTypes: ['image'],
                 title: "Primary Effect", 
                 icon: "fas fa-bolt", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
@@ -1164,8 +1253,8 @@ export function setExecutableOptions(){
                 icon: "fa-regular fa-lightbulb", 
                 document: "AmbientLight", 
                 wipeable: true, 
+                levels: 'Y',
                 modules: [
-                    {active: dangerZone.MODULES.wallHeightOn, name: "wall-height", dependent: false}, 
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
@@ -1173,6 +1262,7 @@ export function setExecutableOptions(){
             'canvas': {
                 title: "Canvas", 
                 icon: "fas fa-wind", 
+                levels: 'N',
                 modules: [
                     {active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}
                 ],
@@ -1181,11 +1271,13 @@ export function setExecutableOptions(){
             'damage': {
                 title: "Damage", 
                 icon: "fas fa-skull", 
+                levels: 'N',
                 scope: "token"
             },
             'item': {
                 title: "Item", 
                 icon: "fas fa-suitcase", 
+                levels: 'S',
                 modules: [{active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false},{active: dangerZone.MODULES.itemPileOn, name: "item-piles", dependent: false}],
                 scope: "token"
             },
@@ -1195,19 +1287,31 @@ export function setExecutableOptions(){
                 icon: "fa-solid fa-cubes", 
                 document: "Tile",  
                 wipeable: true, 
+                levels: 'Y',
                 modules: [
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
             },
+            'level': {
+                fileTypes: ['image'],
+                title: "Level", 
+                icon: "fa-fw fa-solid fa-layer-group", 
+                document: "Level",  
+                levels: 'Y',
+                wipeable: false, 
+                scope: "scene"
+            },
             'macro': {
                 title: "Macro", 
                 icon: "fas fa-file-code",
+                levels: 'N',
                 scope: "scene"
             },
             'mutate': {
                 title: "Mutate", 
                 icon: "fas fa-pastafarianism", 
+                levels: 'N',
                 modules:[
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
@@ -1217,6 +1321,7 @@ export function setExecutableOptions(){
                 fileTypes: ['image', 'audio'],
                 title: "Secondary Effect", 
                 icon: "fas fa-bomb", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
@@ -1224,17 +1329,20 @@ export function setExecutableOptions(){
                 document: "Region", 
                 title: "Region", 
                 icon: "fa-regular fa-game-board",
+                levels: 'Y',
                 scope: "boundary",
                 wipeable: true
             },
             'rolltable':{
                 title: 'Roll Table',
                 icon: "fas fa-th-list",
+                levels: 'N',
                 scope: "scene"
             },
             'save': {
                 title: "Save", 
                 icon: "fas fa-shield-alt",
+                levels: 'N',
                 scope: "token"
             },
             'scene': {
@@ -1242,6 +1350,7 @@ export function setExecutableOptions(){
                 title: "Scene", 
                 icon: "fas fa-map", 
                 document: 'scene',
+                levels: 'Y',
                 wipeable: false,
                 modules:[],
                 scope: "scene"
@@ -1251,6 +1360,7 @@ export function setExecutableOptions(){
                 title: "Sound", 
                 icon: "fa-solid fa-music", 
                 document: "AmbientSound", 
+                levels: 'Y',
                 modules:[],
                 wipeable: true, 
                 scope: "boundary"
@@ -1259,12 +1369,14 @@ export function setExecutableOptions(){
                 fileTypes: ['image', 'audio'],
                 title: "Source Effect", 
                 icon: "fas fa-dragon", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "boundary"
             },
             'warpgate': {
                 title: "Spawn", 
                 icon: "fas fa-circle-notch", 
+                levels: 'S',
                 modules:[
                     {active: dangerZone.MODULES.portalOn, name: "portal", dependent: true}, 
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
@@ -1274,18 +1386,21 @@ export function setExecutableOptions(){
             'tokenMove': {
                 title: "Token Move", 
                 icon: "fas fa-arrows-alt",
+                levels: 'N',
                 scope: "token"
             },
             'tokenEffect': {
                 fileTypes: ['image'],
                 title: "Token Effect", 
                 icon: "fas fa-male", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.sequencerOn, name: "sequencer", dependent: true}],
                 scope: "token"
             },
             'tokenSays': {
                 title: "Token Says", 
                 icon: "fas fa-comment", 
+                levels: 'N',
                 modules: [{active: dangerZone.MODULES.tokenSaysOn, name: "token-says", dependent: true}],
                 scope: "token"
             },
@@ -1294,8 +1409,8 @@ export function setExecutableOptions(){
                 icon: "fa-solid fa-block-brick", 
                 document: "Wall",  
                 wipeable: true,
+                levels: 'Y',
                 modules:[
-                    {active: dangerZone.MODULES.wallHeightOn, name: "wall-height", dependent: false}, 
                     {active: dangerZone.MODULES.taggerOn, name: "tagger", dependent: false}
                 ],
                 scope: "boundary"
@@ -1305,6 +1420,7 @@ export function setExecutableOptions(){
                 icon: "fas fa-cloud-rain", 
                 document: 'fxmaster-particle',
                 wipeable: true,
+                levels: 'N',
                 modules:[
                     {active: dangerZone.MODULES.fxMasterOn, name: "fxmaster", dependent: false}
                 ],
@@ -1313,6 +1429,7 @@ export function setExecutableOptions(){
             'flavor': {
                 title: "Flavor", 
                 icon:"fas fa-book",
+                levels: 'N',
                 scope: "scene"
             } 
         });

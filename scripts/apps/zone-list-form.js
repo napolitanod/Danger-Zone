@@ -1,7 +1,7 @@
 import {dangerZone} from '../danger-zone.js';
 import {dangerZoneDimensions} from './dimensions.js';
 import {DANGERZONECONFIG, sceneOps, regionOps} from './constants.js';
-import {getEventData} from './helpers.js';
+import {helper} from './helpers.js';
 import {ZoneForm} from './zone-form.js';
 
 export class ZoneListForm extends foundry.applications.api.HandlebarsApplicationMixin(foundry.applications.api.ApplicationV2) {
@@ -46,10 +46,13 @@ export class ZoneListForm extends foundry.applications.api.HandlebarsApplication
 
     /** @override */
   async _prepareContext() {
+    const level = helper.getDefaultLevel()
+    const levelName = canvas.scene?.levels.find(l => l.id === level).name
     return {
           dangerZones: dangerZone.getAllZonesFromScene(this.sceneId, {enabled: false, typeRequired: false, triggerRequired: false}).sort((a, b) => a.title.localeCompare(b.title)),
           sceneId: this.sceneId,
-          regions: regionOps(this.sceneId)
+          regions: regionOps(this.sceneId),
+          visibleLevel: levelName ? `${levelName}` : ''
       }
   }
 
@@ -76,7 +79,7 @@ export class ZoneListForm extends foundry.applications.api.HandlebarsApplication
    * Deletes a zone on scene
    */
   static async #delete(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     const choice = await foundry.applications.api.DialogV2.confirm({
       content: `${game.i18n.localize("DANGERZONE.delete")} ${data.parent.dataset.name}?`,
       rejectClose: false,
@@ -92,7 +95,7 @@ export class ZoneListForm extends foundry.applications.api.HandlebarsApplication
    * Edits a zone on scene
    */
   static async #edit(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     this.renderChild(new ZoneForm(data.parentId, this.sceneId, ''));
   }
 
@@ -103,7 +106,7 @@ export class ZoneListForm extends foundry.applications.api.HandlebarsApplication
    * highlights the zone boundary for the hovered zone
    */
   #showZoneHighlight(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     const zoneId = data.parentId;
     if(zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
         dangerZoneDimensions.addHighlightZone(zoneId, this.sceneId);
@@ -115,7 +118,7 @@ export class ZoneListForm extends foundry.applications.api.HandlebarsApplication
    * remove highlight of the zone boundary for the hovered zone
    */
   #hideZoneHighlight(event){
-    const data = getEventData(event)
+    const data = helper.getEventData(event)
     const zoneId = data.parentId;
     if(zoneId && this.sceneId === canvas.scene?.id && canvas.scene?.grid?.type){
         dangerZoneDimensions.destroyHighlightZone(zoneId);
