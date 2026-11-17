@@ -309,7 +309,7 @@ export class ZoneForm extends foundry.applications.api.HandlebarsApplicationMixi
         tag.classList.remove('dz-hidden');
         sourceT.classList.remove('dz-hidden');
         tag.querySelector('label').innerHTML = game.i18n.localize('DANGERZONE.edit-form.source.tag.tag.label')
-        sourceD.setAttribute("name", 'source.tags')
+        sourceT.setAttribute("name", 'source.tags')
         break;
       case 'Y':
       case 'Z':
