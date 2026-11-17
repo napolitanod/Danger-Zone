@@ -129,7 +129,12 @@ export class triggerManager {
         const token = tokenId ? scene.tokens.get(tokenId) : ''
 
         //const options
-        const options = token ? {levels: [token.level]} : {}
+        const options = {
+            enabled: true, 
+            typeRequired: true, 
+            triggerRequired: true
+        }
+        if(token) options.levels = [token.level];
 
         //return the zones
         const zones = dangerZone.getRolltableZonesFromScene(sceneId, options)
@@ -297,7 +302,12 @@ export class triggerManager {
     static async findMovementEvents(token, update, options){
         if(options.end) await token.object.movementAnimationPromise 
         
-        const opt = {levels: [token.level]}
+        const opt = {
+            enabled: true, 
+            levels: [token.level],
+            typeRequired: true, 
+            triggerRequired: true
+        }
         const sceneZones = options.end ? dangerZone.getMovementCompleteZonesFromScene(options.sceneId, opt) : dangerZone.getMovementNotCompleteZonesFromScene(options.sceneId, opt);
         if(!sceneZones.length) return
 

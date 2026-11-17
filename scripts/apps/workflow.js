@@ -224,6 +224,8 @@ class plan {
  *     coords: {x,y},
  *     elevation: int || z: int
  *  }
+ * targets: array of tokens to target,
+ * targetsLocked: boolean, indicating that targets passed in are targeted, not considering zone eligible 
  * }
  * 
  */
@@ -925,20 +927,32 @@ class executorData {
      * 
      */
     setTargets(){
+        let tokenPool
 
         //if has targets, then just return 
-        if (this.hasTargets) return
+        if (this.hasTargets) {
+
+            //if targets are locked, return and use those
+            if(this._options.targetsLocked) return
+
+            tokenPool = this.targets.filter(t => this.eligibleTargets.some(e => e.id === t.id))
+        } else {
+            tokenPool = this.eligibleTargets
+        }
+
+        //initialize
+        this.targets = []
         
         //if targets all tokens, set targets to all eligible tokens
-        else if(this.zone.target.all) {
-            this.targets.push(...this.eligibleTargets) 
+        if(this.zone.target.all) {
+            this.targets.push(...tokenPool) 
         } 
         
         //else return from the random target quantity
-        else if(this.eligibleTargets.length >= 1){
+        else if(tokenPool.length >= 1){
 
             //shallow copy then shuffle then slice
-            const shuffled = [...this.eligibleTargets].sort(() => 0.5 - Math.random());
+            const shuffled = [...tokenPool].sort(() => 0.5 - Math.random());
             const targets = shuffled.slice(0, this.targetQuantity);
             this.targets.push(...targets);
         }    

@@ -145,7 +145,10 @@ export class api {
         if(options.boundary && Object.keys(options.boundary).length) opts['boundary'] = options.boundary;
         if(options.levels?.length && Object.keys(options.levels).length) opts['levels'] = options.levels;
         if(options.location && Object.keys(options.location).length) opts['location'] = options.location;
-        if(options.targets?.length) opts['targets'] = options.targets;
+        if(options.targets?.length) {
+            opts['targets'] = options.targets;
+            opts['targetsLocked'] = true; //lock in the targets
+        }
         if(options.sources?.length) opts['sources'] = options.sources;
 
         if(options.scope !== 'world') zn = dangerZone.getZoneNameFromScene(zoneName, sceneId);
